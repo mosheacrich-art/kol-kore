@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tikkun</title>
+  <link rel="stylesheet" href="https://tikkun.io/css/master.css" media="screen" />
+  <style>
+    /* Read theme from query param ?dark */
+    :root {
+      --paper-color: #f5f0e4;
+    }
+    .dark-mode {
+      --paper-color: #07060f;
+    }
+
+    /* Hide header */
+    .app-toolbar {
+      display: none !important;
+    }
+
+    /* Remove top padding that accounts for the hidden header */
+    .app-body {
+      padding-top: 0 !important;
+      margin-top: 0 !important;
+    }
+
+    /* Fill the full iframe height */
+    html, body, .app {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Dark mode text colors for tikkun content */
+    .dark-mode .tikkun-book,
+    .dark-mode .tikkun-page,
+    .dark-mode .he {
+      color: rgba(240, 235, 210, 0.9) !important;
+    }
+
+    .dark-mode .tikkun-page--annotations .he {
+      color: rgba(240, 235, 210, 0.7) !important;
+    }
+
+    /* Annotations toggle button dark mode */
+    .dark-mode .annotations-toggle {
+      background: rgba(255,255,255,0.08) !important;
+      border-color: rgba(255,255,255,0.15) !important;
+    }
+
+    .dark-mode .toggle-state {
+      color: rgba(240, 235, 210, 0.8) !important;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(108,51,230,0.35); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(108,51,230,0.55); }
+
+  </style>
+  <script>
+    // Apply dark mode class if ?dark param present
+    ;(function () {
+      var params = new URLSearchParams(window.location.search)
+      if (params.get('theme') === 'dark') {
+        document.documentElement.classList.add('dark-mode')
+      }
+    })()
+
+    // Redirect relative /data/ and /assets/ fetches to tikkun.io (CORS-enabled)
+    var _fetch = window.fetch.bind(window)
+    window.fetch = function (url, opts) {
+      if (typeof url === 'string' && url.charAt(0) === '/') {
+        url = 'https://tikkun.io' + url
+      }
+      return _fetch(url, opts)
+    }
+  </script>
+</head>
+<body>
+  <div class="app">
+    <header class="app-toolbar">
+      <div class="toolbar-content u-page-wrap">
+        <div class="toolbar-wrapper mod-left"><div class="toolbar-item"></div></div>
+        <div class="toolbar-wrapper mod-center">
+          <div class="toolbar-item">
+            <button class="parsha-title" data-target-id="parsha-title">בראשית</button>
+          </div>
+        </div>
+        <div class="toolbar-wrapper mod-right"><div class="toolbar-item"></div></div>
+      </div>
+    </header>
+    <div id="js-app" class="app-body" style="direction: rtl">
+      <div class="tikkun-book mod-annotations-on" data-target-id="tikkun-book"></div>
+      <div class="" data-target-id="parsha-picker"></div>
+    </div>
+    <div style="position: fixed; bottom: 1.5em; right: 1.5em">
+      <button class="annotations-toggle" data-test-id="annotations-toggle"
+        data-tooltip='Hold "Shift" to toggle' data-tooltip-position="top-left">
+        <label class="toggle">
+          <div class="shadowed-circle">
+            <input data-target-id="annotations-toggle" type="checkbox" checked />
+            <span class="toggle-state mod-off">א</span>
+            <span class="toggle-state mod-on">אֶ֨</span>
+          </div>
+        </label>
+      </button>
+    </div>
+    <div id="debug" class="u-hidden"></div>
+  </div>
+  <script src="https://tikkun.io/bundle.js"></script>
+</body>
+</html>

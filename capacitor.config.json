@@ -1,0 +1,16 @@
+{
+  "appId": "com.perasha.app",
+  "appName": "Perashá",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#07060f",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    }
+  }
+}
