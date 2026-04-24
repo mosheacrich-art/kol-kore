@@ -111,44 +111,6 @@ export function AudioProvider({ children }) {
       },
     }))
 
-    // Process word-level timestamps via Whisper in the background (non-blocking)
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY
-    if (apiKey && file.size < 24 * 1024 * 1024) {
-      ;(async () => {
-        try {
-          const form = new FormData()
-          form.append('file', file, file.name || 'audio.webm')
-          form.append('model', 'whisper-1')
-          form.append('response_format', 'verbose_json')
-          form.append('timestamp_granularities[]', 'word')
-          form.append('language', 'he')
-
-          const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${apiKey}` },
-            body: form,
-          })
-          if (!res.ok) return
-
-          const json = await res.json()
-          const wordTimestamps = json.words ?? []
-          if (!wordTimestamps.length) return
-
-          await supabase.from('audio_files')
-            .update({ word_timestamps: wordTimestamps })
-            .eq('teacher_id', teacherId)
-            .eq('parasha_id', parashaId)
-            .eq('aliyah_idx', aliyahIdx)
-
-          setAudios(prev => ({
-            ...prev,
-            [key]: { ...prev[key], wordTimestamps },
-          }))
-        } catch (e) {
-          console.error('Whisper sync error:', e)
-        }
-      })()
-    }
   }, [])
 
   const remove = useCallback(async (parashaId, aliyahIdx) => {
@@ -181,55 +143,9 @@ export function AudioProvider({ children }) {
   }, [audios])
 
   const generateSync = useCallback(async (parashaId, aliyahIdx) => {
-    const key = `${parashaId}-${aliyahIdx}`
-    const audio = audios[key]
-    if (!audio?.url) return false
-
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY
-    if (!apiKey) return false
-
-    try {
-      const audioRes = await fetch(audio.url)
-      if (!audioRes.ok) return false
-      const blob = await audioRes.blob()
-      if (blob.size > 24 * 1024 * 1024) return false
-
-      const file = new File([blob], audio.name, { type: audio.type || blob.type })
-      const form = new FormData()
-      form.append('file', file, file.name)
-      form.append('model', 'whisper-1')
-      form.append('response_format', 'verbose_json')
-      form.append('timestamp_granularities[]', 'word')
-      form.append('language', 'he')
-
-      const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${apiKey}` },
-        body: form,
-      })
-      if (!res.ok) return false
-
-      const json = await res.json()
-      const wordTimestamps = json.words ?? []
-      if (!wordTimestamps.length) return false
-
-      let q = supabase.from('audio_files')
-        .update({ word_timestamps: wordTimestamps })
-        .eq('parasha_id', parashaId)
-        .eq('aliyah_idx', aliyahIdx)
-      if (audio.teacherId) q = q.eq('teacher_id', audio.teacherId)
-      await q
-
-      setAudios(prev => ({
-        ...prev,
-        [key]: { ...prev[key], wordTimestamps },
-      }))
-      return true
-    } catch (e) {
-      console.error('generateSync error:', e)
-      return false
-    }
-  }, [audios])
+    console.warn('Audio sync generation requires a protected backend and is disabled on GitHub Pages.', { parashaId, aliyahIdx })
+    return false
+  }, [])
 
   return (
     <AudioCtx.Provider value={{ upload, remove, get, hasAny, audios, generateSync }}>

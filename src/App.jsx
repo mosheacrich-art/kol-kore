@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AudioProvider } from './context/AudioContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider } from './context/AuthContext'
@@ -36,7 +36,7 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <AudioProvider>
-          <BrowserRouter>
+          <HashRouter>
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
@@ -67,7 +67,7 @@ export default function App() {
                 <Route path="notifications" element={<TeacherNotifications />} />
               </Route>
             </Routes>
-          </BrowserRouter>
+          </HashRouter>
         </AudioProvider>
       </AuthProvider>
     </ThemeProvider>

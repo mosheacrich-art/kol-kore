@@ -3,14 +3,14 @@ import { PARASHOT, BOOK_COLORS, SEFARIM_LIST } from '../../data/parashot'
 import { useAudio } from '../../context/AudioContext'
 import AudioPlayer from '../../components/AudioPlayer'
 
-const HAS_OPENAI = !!import.meta.env.VITE_OPENAI_API_KEY
+const HAS_OPENAI = false
 
 export default function TeacherAudioPanel() {
   const [selectedParasha, setSelectedParasha] = useState(PARASHOT[0])
   const [selectedAliyah, setSelectedAliyah] = useState(0)
   const [dragging, setDragging] = useState(false)
   const [bookFilter, setBookFilter] = useState('all')
-  const [syncing, setSyncing] = useState(null) // key being synced
+  const [syncing, setSyncing] = useState(null)
   const fileInputRef = useRef(null)
   const { upload, remove, get, audios, generateSync } = useAudio()
 
