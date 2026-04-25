@@ -288,6 +288,17 @@ export default function TeacherHomework() {
                     </span>
                   )}
                 </div>
+                {item.status === 'submitted' && item.recording_url && (
+                  <div className="mt-2">
+                    <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Grabación del alumno:</p>
+                    <audio
+                      controls
+                      src={item.recording_url}
+                      preload="none"
+                      style={{ width: '100%', height: '28px', borderRadius: '6px' }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )

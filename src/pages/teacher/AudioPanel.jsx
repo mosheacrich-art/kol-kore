@@ -3,7 +3,7 @@ import { PARASHOT, BOOK_COLORS, SEFARIM_LIST } from '../../data/parashot'
 import { useAudio } from '../../context/AudioContext'
 import AudioPlayer from '../../components/AudioPlayer'
 
-const HAS_OPENAI = false
+const HAS_OPENAI = !!import.meta.env.VITE_OPENAI_API_KEY
 
 export default function TeacherAudioPanel() {
   const [selectedParasha, setSelectedParasha] = useState(PARASHOT[0])

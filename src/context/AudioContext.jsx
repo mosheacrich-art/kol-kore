@@ -37,16 +37,12 @@ export function AudioProvider({ children }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  const upload = useCallback(async (parashaId, aliyahIdx, file, notifData = null) => {
+  // Teacher-only: upload reference audio, stored in audio_files and visible in the reader
+  const upload = useCallback(async (parashaId, aliyahIdx, file) => {
     const key = `${parashaId}-${aliyahIdx}`
 
-    // Teacher uploads directly → use their own auth UID
-    // Student records and sends → teacherId comes from notifData
-    let teacherId = notifData?.teacherId ?? null
-    if (!teacherId) {
-      const { data: { session } } = await supabase.auth.getSession()
-      teacherId = session?.user?.id ?? null
-    }
+    const { data: { session } } = await supabase.auth.getSession()
+    const teacherId = session?.user?.id ?? null
     if (!teacherId) {
       alert('No se pudo determinar el profesor. Inicia sesión de nuevo.')
       return
@@ -83,19 +79,6 @@ export function AudioProvider({ children }) {
       return
     }
 
-    if (notifData?.teacherId) {
-      await supabase.from('notifications').insert({
-        teacher_id: notifData.teacherId,
-        student_id: notifData.studentId,
-        student_name: notifData.studentName,
-        parasha_id: parashaId,
-        aliyah_idx: aliyahIdx,
-        aliyah_label: notifData.aliyahLabel,
-        message: `${notifData.studentName} ha subido audio de ${notifData.parashaName} · ${notifData.aliyahLabel}`,
-        type: 'audio',
-      })
-    }
-
     setAudios(prev => ({
       ...prev,
       [key]: {
@@ -110,7 +93,39 @@ export function AudioProvider({ children }) {
         teacherId,
       },
     }))
+  }, [])
 
+  // Student-only: upload recording and notify teacher — never touches audio_files or the reader
+  const uploadStudentRecording = useCallback(async (parashaId, aliyahIdx, file, notifData) => {
+    const { studentId, teacherId, studentName, parashaName, aliyahLabel } = notifData
+    const storagePath = `students/${studentId}/${parashaId}/${aliyahIdx}/${Date.now()}`
+    const contentType = file.type === 'video/mp4' ? 'audio/mp4' : (file.type || 'audio/webm')
+
+    const { error: uploadError } = await supabase.storage
+      .from('Audios')
+      .upload(storagePath, file, { upsert: false, contentType })
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError)
+      alert(`Error al subir el audio: ${uploadError.message}`)
+      return null
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from('Audios').getPublicUrl(storagePath)
+
+    await supabase.from('notifications').insert({
+      teacher_id: teacherId,
+      student_id: studentId,
+      student_name: studentName,
+      parasha_id: parashaId,
+      aliyah_idx: aliyahIdx,
+      aliyah_label: aliyahLabel,
+      message: `${studentName} ha subido audio de ${parashaName} · ${aliyahLabel}`,
+      type: 'audio',
+      recording_url: publicUrl,
+    })
+
+    return publicUrl
   }, [])
 
   const remove = useCallback(async (parashaId, aliyahIdx) => {
@@ -143,12 +158,51 @@ export function AudioProvider({ children }) {
   }, [audios])
 
   const generateSync = useCallback(async (parashaId, aliyahIdx) => {
-    console.warn('Audio sync generation requires a protected backend and is disabled on GitHub Pages.', { parashaId, aliyahIdx })
-    return false
-  }, [])
+    const key = `${parashaId}-${aliyahIdx}`
+
+    // Leer desde BD para evitar race condition con setAudios
+    const { data: row } = await supabase
+      .from('audio_files')
+      .select('public_url, file_type, teacher_id')
+      .eq('parasha_id', parashaId)
+      .eq('aliyah_idx', aliyahIdx)
+      .maybeSingle()
+    if (!row?.public_url) return false
+
+    try {
+      // Llamar a la Edge Function (la API key de OpenAI vive solo en el servidor)
+      const { data, error } = await supabase.functions.invoke('generate-sync', {
+        body: { audioUrl: row.public_url, fileType: row.file_type || 'audio/webm' },
+      })
+
+      if (error || !data?.words?.length) {
+        console.error('generate-sync:', error ?? 'sin palabras')
+        return false
+      }
+
+      const wordTimestamps = data.words.map(w => ({ word: w.word, start: w.start, end: w.end }))
+
+      await supabase
+        .from('audio_files')
+        .update({ word_timestamps: wordTimestamps })
+        .eq('parasha_id', parashaId)
+        .eq('aliyah_idx', aliyahIdx)
+        .eq('teacher_id', row.teacher_id)
+
+      setAudios(prev => ({
+        ...prev,
+        [key]: { ...prev[key], wordTimestamps },
+      }))
+
+      return true
+    } catch (err) {
+      console.error('generateSync error:', err)
+      return false
+    }
+  }, [audios])
 
   return (
-    <AudioCtx.Provider value={{ upload, remove, get, hasAny, audios, generateSync }}>
+    <AudioCtx.Provider value={{ upload, uploadStudentRecording, remove, get, hasAny, audios, generateSync }}>
       {children}
     </AudioCtx.Provider>
   )

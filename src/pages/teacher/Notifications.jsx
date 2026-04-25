@@ -142,6 +142,17 @@ export default function TeacherNotifications() {
                   <span className="ml-auto text-xs" style={{ color: '#8b5cf6' }}>Clic para marcar leída</span>
                 )}
               </div>
+              {n.type === 'audio' && n.recording_url && (
+                <div className="mt-2">
+                  <audio
+                    controls
+                    src={n.recording_url}
+                    preload="none"
+                    style={{ width: '100%', height: '32px', borderRadius: '6px' }}
+                    onClick={e => e.stopPropagation()}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Unread dot */}

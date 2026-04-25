@@ -38,7 +38,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
   const [audioPlaying, setAudioPlaying] = useState(false)
   const [pendingHomework, setPendingHomework] = useState(null)
   const pendingHomeworkRef = useRef(null)
-  const { get, upload, remove } = useAudio()
+  const { get, upload, uploadStudentRecording, remove, generateSync } = useAudio()
   const { profile } = useAuth()
   const notifiedRef = useRef(new Set())    // aliyot ya notificadas en esta sesión
   const aliyahStartRef = useRef(Date.now()) // para medir tiempo por aliyá
@@ -86,6 +86,8 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
   const chunksRef = useRef([])
   const timerRef = useRef(null)
   const uploadInputRef = useRef(null)
+  const [uploadedMsg, setUploadedMsg] = useState(false)
+  const [syncing, setSyncing] = useState(false)
 
   const currentAliyah = parasha.aliyot[aliyahIdx]
   const bookColor = BOOK_COLORS[parasha.book] || '#6c33e6'
@@ -109,10 +111,12 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
       })
   }, [profile?.id, profile?.role, parasha.id, aliyahIdx])
 
-  const autoSubmitHomework = async () => {
+  const autoSubmitHomework = async (recordingUrl = null) => {
     const hw = pendingHomeworkRef.current
     if (!hw) return
-    await supabase.from('homework').update({ status: 'submitted' }).eq('id', hw.id)
+    const update = { status: 'submitted' }
+    if (recordingUrl) update.recording_url = recordingUrl
+    await supabase.from('homework').update(update).eq('id', hw.id)
     setPendingHomework(null)
     pendingHomeworkRef.current = null
   }
@@ -158,10 +162,24 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
         const blob = new Blob(chunksRef.current, { type: mimeType })
         const ext = mimeType.split('/')[1]?.split(';')[0] || 'webm'
         const file = new File([blob], `grabacion-aliyá${aliyahIdx + 1}.${ext}`, { type: mimeType })
-        await upload(parasha.id, aliyahIdx, file, buildNotifData())
+        const notifData = buildNotifData()
+        if (notifData) {
+          const url = await uploadStudentRecording(parasha.id, aliyahIdx, file, notifData)
+          if (url) {
+            setUploadedMsg(true)
+            setTimeout(() => setUploadedMsg(false), 3000)
+          }
+          await autoSubmitHomework(url)
+        } else {
+          await upload(parasha.id, aliyahIdx, file)
+          await autoSubmitHomework()
+          if (import.meta.env.VITE_OPENAI_API_KEY) {
+            setSyncing(true)
+            generateSync(parasha.id, aliyahIdx).finally(() => setSyncing(false))
+          }
+        }
         stream.getTracks().forEach(t => t.stop())
         setRecState('idle')
-        autoSubmitHomework()
       }
       mr.start()
       setRecState('recording')
@@ -184,8 +202,22 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
       alert('Solo se aceptan archivos de audio (mp3, wav, m4a, mp4…)')
       return
     }
-    await upload(parasha.id, aliyahIdx, file, buildNotifData())
-    autoSubmitHomework()
+    const notifData = buildNotifData()
+    if (notifData) {
+      const url = await uploadStudentRecording(parasha.id, aliyahIdx, file, notifData)
+      if (url) {
+        setUploadedMsg(true)
+        setTimeout(() => setUploadedMsg(false), 3000)
+      }
+      await autoSubmitHomework(url)
+    } else {
+      await upload(parasha.id, aliyahIdx, file)
+      await autoSubmitHomework()
+      if (import.meta.env.VITE_OPENAI_API_KEY) {
+        setSyncing(true)
+        generateSync(parasha.id, aliyahIdx).finally(() => setSyncing(false))
+      }
+    }
     e.target.value = ''
   }
 
@@ -357,6 +389,28 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
         </div>
       )}
 
+      {/* Teacher sync indicator */}
+      {syncing && (
+        <div className="flex-shrink-0 flex items-center gap-2 px-5 py-2"
+          style={{ background: 'rgba(108,51,230,0.07)', borderBottom: '1px solid rgba(108,51,230,0.15)' }}>
+          <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin flex-shrink-0"
+            style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#6c33e6' }} />
+          <span className="text-xs" style={{ color: '#6c33e6' }}>Generando sync de palabras…</span>
+        </div>
+      )}
+
+      {/* Student upload success message */}
+      {uploadedMsg && (
+        <div className="flex-shrink-0 flex items-center gap-2 px-5 py-2"
+          style={{ background: 'rgba(34,197,94,0.08)', borderBottom: '1px solid rgba(34,197,94,0.2)' }}>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0 }}>
+            <circle cx="6" cy="6" r="5" stroke="#16a34a" strokeWidth="1.2"/>
+            <path d="M3.5 6l2 2L8.5 4" stroke="#16a34a" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span className="text-xs font-medium" style={{ color: '#16a34a' }}>Audio enviado al profesor</span>
+        </div>
+      )}
+
       {/* No-audio notice */}
       {!audio && recState === 'idle' && !guestMode && (
         <div className="flex-shrink-0 flex items-center gap-2 px-6 py-1.5"
@@ -366,7 +420,9 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
             <path d="M1.5 5.5c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke={bookColor} strokeWidth="1.2" strokeLinecap="round" opacity="0.5"/>
           </svg>
           <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            Sin audio para esta aliyá · graba o sube uno abajo
+            {profile?.role === 'student'
+              ? 'Sin audio del profesor · graba y envíaselo'
+              : 'Sin audio para esta aliyá · graba o sube uno abajo'}
           </span>
         </div>
       )}
@@ -437,15 +493,29 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
                 onPlayingChange={setAudioPlaying}
               />
             </div>
-            <button onClick={startRec} title="Grabar nuevo audio (reemplazará el actual)"
-              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
-              style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <rect x="4" y="1" width="4" height="7" rx="2" stroke="currentColor" strokeWidth="1.2"/>
-                <path d="M2 6c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                <path d="M6 10v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-              </svg>
-            </button>
+            {profile?.role === 'student' && (
+              <button onClick={startRec} title="Grabar y enviar al profesor"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium flex-shrink-0 transition-all"
+                style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+                <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                  <rect x="3.5" y="0.5" width="4" height="6" rx="2" stroke="currentColor" strokeWidth="1.2"/>
+                  <path d="M1.5 5.5c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                  <path d="M5.5 9.5v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+                Grabar
+              </button>
+            )}
+            {profile?.role !== 'student' && (
+              <button onClick={startRec} title="Grabar nuevo audio (reemplazará el actual)"
+                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
+                style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <rect x="4" y="1" width="4" height="7" rx="2" stroke="currentColor" strokeWidth="1.2"/>
+                  <path d="M2 6c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                  <path d="M6 10v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+              </button>
+            )}
             {profile?.role !== 'student' && (
               <button onClick={() => remove(parasha.id, aliyahIdx)} title="Eliminar audio"
                 className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
@@ -733,7 +803,7 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
 function SeferView({ ref_ }) {
   const { isDark } = useTheme()
   const theme = isDark ? '?theme=dark' : '?theme=light'
-  const src = `/tikkun/index.html${theme}${tikkunHash(ref_)}`
+  const src = `${import.meta.env.BASE_URL}tikkun/index.html${theme}${tikkunHash(ref_)}`
   return (
     <div className="flex-1 min-h-0">
       <iframe

@@ -1,4 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif+Hebrew:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;700&display=swap');
+
+@font-face {
+  font-family: 'Taamey Frank CLM';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url('/kol-kore/fonts/TaameyFrankCLM-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Taamey Frank CLM';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('/kol-kore/fonts/TaameyFrankCLM-Bold.ttf') format('truetype');
+}
 
 @tailwind base;
 @tailwind components;
@@ -187,6 +202,6 @@ body {
 
 /* Hebrew text */
 .hebrew {
-  font-family: 'Noto Serif Hebrew', serif;
+  font-family: 'Taamey Frank CLM', 'Times New Roman', serif;
   direction: rtl;
 }
