@@ -173,7 +173,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
         } else {
           await upload(parasha.id, aliyahIdx, file)
           await autoSubmitHomework()
-          if (import.meta.env.VITE_OPENAI_API_KEY) {
+          if (import.meta.env.VITE_SYNC_ENABLED === 'true') {
             setSyncing(true)
             generateSync(parasha.id, aliyahIdx).finally(() => setSyncing(false))
           }
@@ -213,7 +213,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
     } else {
       await upload(parasha.id, aliyahIdx, file)
       await autoSubmitHomework()
-      if (import.meta.env.VITE_OPENAI_API_KEY) {
+      if (import.meta.env.VITE_SYNC_ENABLED === 'true') {
         setSyncing(true)
         generateSync(parasha.id, aliyahIdx).finally(() => setSyncing(false))
       }
