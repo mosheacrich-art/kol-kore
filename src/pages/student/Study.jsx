@@ -1,13 +1,13 @@
 import { useState, useMemo } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { PARASHOT, SEFARIM_LIST, BOOK_COLORS } from '../../data/parashot'
+import { PARASHOT, ALL_PARASHOT, COMBINED_PARASHOT, SEFARIM_LIST, BOOK_COLORS } from '../../data/parashot'
 import { useAudio } from '../../context/AudioContext'
 import { useTheme } from '../../context/ThemeContext'
 import ParashaReader from '../../components/ParashaReader'
 
 export default function StudentStudy({ basePath = '/student/study' }) {
   const { parashaId } = useParams()
-  const parasha = parashaId ? PARASHOT.find(p => p.id === parashaId) : null
+  const parasha = parashaId ? ALL_PARASHOT.find(p => p.id === parashaId) : null
 
   const guestMode = basePath.startsWith('/guest')
   if (parasha) return <ReaderView parasha={parasha} basePath={basePath} guestMode={guestMode} />
@@ -22,9 +22,9 @@ function ListView({ basePath, guestMode }) {
   const { hasAny } = useAudio()
 
   const filtered = useMemo(() => {
-    if (!search) return PARASHOT
+    if (!search) return ALL_PARASHOT
     const q = search.toLowerCase()
-    return PARASHOT.filter(p =>
+    return ALL_PARASHOT.filter(p =>
       p.name.toLowerCase().includes(q) ||
       p.heb.includes(search) ||
       p.book.includes(q)
@@ -133,7 +133,11 @@ function ListView({ basePath, guestMode }) {
                                   </svg>
                                 </span>
                               )}
-                              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{p.num}</span>
+                              {p.combined
+                                ? <span className="text-xs px-1.5 py-0.5 rounded-full font-medium"
+                                    style={{ background: `${color}20`, color, fontSize: '9px' }}>Doble</span>
+                                : <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{p.num}</span>
+                              }
                             </div>
                           </div>
                           <div className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{p.name}</div>
@@ -180,11 +184,11 @@ function ReaderView({ parasha, basePath, guestMode }) {
         </button>
         <div className="h-4 w-px" style={{ background: 'var(--border)' }} />
         <span className="text-xs" style={{ color: 'var(--text-3)' }}>
-          Perashá {parasha.num} de 54
+          {parasha.combined ? 'Perashá doble' : `Perashá ${parasha.num} de 54`}
         </span>
 
         <div className="ml-auto flex gap-2">
-          {parasha.num > 1 && (
+          {!parasha.combined && parasha.num > 1 && (
             <button
               onClick={() => navigate(`${basePath}/${PARASHOT[parasha.num - 2].id}`)}
               className="text-xs px-3 py-1.5 rounded-lg transition-all"
@@ -192,7 +196,7 @@ function ReaderView({ parasha, basePath, guestMode }) {
               ← {PARASHOT[parasha.num - 2].name}
             </button>
           )}
-          {parasha.num < 54 && (
+          {!parasha.combined && parasha.num < 54 && (
             <button
               onClick={() => navigate(`${basePath}/${PARASHOT[parasha.num].id}`)}
               className="text-xs px-3 py-1.5 rounded-lg transition-all"

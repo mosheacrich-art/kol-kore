@@ -1,12 +1,12 @@
 import { useState, useRef } from 'react'
-import { PARASHOT, BOOK_COLORS, SEFARIM_LIST } from '../../data/parashot'
+import { ALL_PARASHOT, BOOK_COLORS, SEFARIM_LIST } from '../../data/parashot'
 import { useAudio } from '../../context/AudioContext'
 import AudioPlayer from '../../components/AudioPlayer'
 
 const HAS_OPENAI = !!import.meta.env.VITE_OPENAI_API_KEY
 
 export default function TeacherAudioPanel() {
-  const [selectedParasha, setSelectedParasha] = useState(PARASHOT[0])
+  const [selectedParasha, setSelectedParasha] = useState(ALL_PARASHOT[0])
   const [selectedAliyah, setSelectedAliyah] = useState(0)
   const [dragging, setDragging] = useState(false)
   const [bookFilter, setBookFilter] = useState('all')
@@ -34,8 +34,8 @@ export default function TeacherAudioPanel() {
   }
 
   const filteredParashot = bookFilter === 'all'
-    ? PARASHOT
-    : PARASHOT.filter(p => p.book === bookFilter)
+    ? ALL_PARASHOT
+    : ALL_PARASHOT.filter(p => p.book === bookFilter)
 
   const totalAudios = Object.keys(audios).length
   const parashaAudios = Object.keys(audios).filter(k => k.startsWith(`${selectedParasha.id}-`))
@@ -112,10 +112,14 @@ export default function TeacherAudioPanel() {
                       borderLeft: `2px solid ${isSelected ? c : 'transparent'}`,
                     }}>
                     <div className="flex items-center gap-2.5">
-                      <span className="text-xs w-6 text-right flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{p.num}</span>
+                      {p.combined
+                        ? <span className="text-xs w-6 text-right flex-shrink-0 font-medium" style={{ color: c, fontSize: '8px' }}>✦✦</span>
+                        : <span className="text-xs w-6 text-right flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{p.num}</span>
+                      }
                       <div>
                         <span className="text-sm" style={{ color: isSelected ? 'var(--text)' : 'var(--text-2)' }}>{p.name}</span>
                         <span className="hebrew text-xs ml-1.5" style={{ color: c + '80' }}>{p.heb}</span>
+                        {p.combined && <span className="text-xs ml-1" style={{ color: c, fontSize: '9px', opacity: 0.7 }}>· doble</span>}
                       </div>
                     </div>
                     {pAudios > 0 && (
@@ -139,8 +143,8 @@ export default function TeacherAudioPanel() {
             {/* Selected parasha */}
             <div className="flex items-center gap-3 mb-5 pb-5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
               <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold"
-                style={{ background: `${color}20`, color, border: `1px solid ${color}30` }}>
-                {selectedParasha.num}
+                style={{ background: `${color}20`, color, border: `1px solid ${color}30`, fontSize: selectedParasha.combined ? '10px' : undefined }}>
+                {selectedParasha.combined ? '✦✦' : selectedParasha.num}
               </div>
               <div>
                 <div className="flex items-center gap-2">

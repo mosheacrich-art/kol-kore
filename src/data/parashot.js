@@ -774,6 +774,115 @@ export const PARASHOT = [
   },
 ]
 
+// Parashot that are sometimes read as a combined double parasha
+export const COMBINED_PARASHOT = [
+  {
+    id: 'vayakhel-pekudei', combined: true, parts: ['vayakhel', 'pekudei'],
+    num: 22.5, name: 'Vayakhel-Pekudei', heb: 'וַיַּקְהֵל-פְקוּדֵי', book: 'shemot',
+    ref: 'Exodus 35:1-40:38',
+    aliyot: [
+      { n: 1, label: '1ª Aliyá', ref: 'Exodus 35:1-35:20' },
+      { n: 2, label: '2ª Aliyá', ref: 'Exodus 35:21-36:7' },
+      { n: 3, label: '3ª Aliyá', ref: 'Exodus 36:8-37:16' },
+      { n: 4, label: '4ª Aliyá', ref: 'Exodus 37:17-38:20' },
+      { n: 5, label: '5ª Aliyá', ref: 'Exodus 38:21-39:32' },
+      { n: 6, label: '6ª Aliyá', ref: 'Exodus 39:33-40:16' },
+      { n: 7, label: '7ª Aliyá', ref: 'Exodus 40:17-40:38' },
+      { n: 8, label: 'Maftir', ref: 'Exodus 40:36-40:38' },
+    ],
+  },
+  {
+    id: 'tazria-metzora', combined: true, parts: ['tazria', 'metzora'],
+    num: 27.5, name: 'Tazria-Metzorá', heb: 'תַּזְרִיעַ-מְּצֹרָע', book: 'vayikra',
+    ref: 'Leviticus 12:1-15:33',
+    aliyot: [
+      { n: 1, label: '1ª Aliyá', ref: 'Leviticus 12:1-13:5' },
+      { n: 2, label: '2ª Aliyá', ref: 'Leviticus 13:6-13:17' },
+      { n: 3, label: '3ª Aliyá', ref: 'Leviticus 13:18-13:39' },
+      { n: 4, label: '4ª Aliyá', ref: 'Leviticus 13:40-14:20' },
+      { n: 5, label: '5ª Aliyá', ref: 'Leviticus 14:21-15:15' },
+      { n: 6, label: '6ª Aliyá', ref: 'Leviticus 15:16-15:28' },
+      { n: 7, label: '7ª Aliyá', ref: 'Leviticus 15:29-15:33' },
+      { n: 8, label: 'Maftir', ref: 'Leviticus 15:31-15:33' },
+    ],
+  },
+  {
+    id: 'achrei-mot-kedoshim', combined: true, parts: ['achrei-mot', 'kedoshim'],
+    num: 29.5, name: 'Ajarei Mot-Kedoshim', heb: 'אַחֲרֵי מוֹת-קְדֹשִׁים', book: 'vayikra',
+    ref: 'Leviticus 16:1-20:27',
+    aliyot: [
+      { n: 1, label: '1ª Aliyá', ref: 'Leviticus 16:1-16:17' },
+      { n: 2, label: '2ª Aliyá', ref: 'Leviticus 16:18-17:7' },
+      { n: 3, label: '3ª Aliyá', ref: 'Leviticus 17:8-18:5' },
+      { n: 4, label: '4ª Aliyá', ref: 'Leviticus 18:6-18:30' },
+      { n: 5, label: '5ª Aliyá', ref: 'Leviticus 19:1-19:22' },
+      { n: 6, label: '6ª Aliyá', ref: 'Leviticus 19:23-20:9' },
+      { n: 7, label: '7ª Aliyá', ref: 'Leviticus 20:10-20:27' },
+      { n: 8, label: 'Maftir', ref: 'Leviticus 20:25-20:27' },
+    ],
+  },
+  {
+    id: 'behar-bechukotai', combined: true, parts: ['behar', 'bechukotai'],
+    num: 32.5, name: 'Behar-Bejukotai', heb: 'בְּהַר-בְּחֻקֹּתַי', book: 'vayikra',
+    ref: 'Leviticus 25:1-27:34',
+    aliyot: [
+      { n: 1, label: '1ª Aliyá', ref: 'Leviticus 25:1-25:18' },
+      { n: 2, label: '2ª Aliyá', ref: 'Leviticus 25:19-25:38' },
+      { n: 3, label: '3ª Aliyá', ref: 'Leviticus 25:39-26:9' },
+      { n: 4, label: '4ª Aliyá', ref: 'Leviticus 26:10-26:46' },
+      { n: 5, label: '5ª Aliyá', ref: 'Leviticus 27:1-27:15' },
+      { n: 6, label: '6ª Aliyá', ref: 'Leviticus 27:16-27:28' },
+      { n: 7, label: '7ª Aliyá', ref: 'Leviticus 27:29-27:34' },
+      { n: 8, label: 'Maftir', ref: 'Leviticus 27:32-27:34' },
+    ],
+  },
+  {
+    id: 'chukat-balak', combined: true, parts: ['chukat', 'balak'],
+    num: 39.5, name: 'Jukat-Balak', heb: 'חֻקַּת-בָּלָק', book: 'bamidbar',
+    ref: 'Numbers 19:1-25:9',
+    aliyot: [
+      { n: 1, label: '1ª Aliyá', ref: 'Numbers 19:1-19:17' },
+      { n: 2, label: '2ª Aliyá', ref: 'Numbers 19:18-20:13' },
+      { n: 3, label: '3ª Aliyá', ref: 'Numbers 20:14-21:9' },
+      { n: 4, label: '4ª Aliyá', ref: 'Numbers 21:10-22:1' },
+      { n: 5, label: '5ª Aliyá', ref: 'Numbers 22:2-22:20' },
+      { n: 6, label: '6ª Aliyá', ref: 'Numbers 22:21-23:26' },
+      { n: 7, label: '7ª Aliyá', ref: 'Numbers 23:27-25:9' },
+      { n: 8, label: 'Maftir', ref: 'Numbers 25:7-25:9' },
+    ],
+  },
+  {
+    id: 'matot-masei', combined: true, parts: ['matot', 'masei'],
+    num: 42.5, name: 'Matot-Masei', heb: 'מַּטּוֹת-מַסְעֵי', book: 'bamidbar',
+    ref: 'Numbers 30:2-36:13',
+    aliyot: [
+      { n: 1, label: '1ª Aliyá', ref: 'Numbers 30:2-31:12' },
+      { n: 2, label: '2ª Aliyá', ref: 'Numbers 31:13-31:54' },
+      { n: 3, label: '3ª Aliyá', ref: 'Numbers 32:1-32:42' },
+      { n: 4, label: '4ª Aliyá', ref: 'Numbers 33:1-33:49' },
+      { n: 5, label: '5ª Aliyá', ref: 'Numbers 33:50-34:29' },
+      { n: 6, label: '6ª Aliyá', ref: 'Numbers 35:1-35:34' },
+      { n: 7, label: '7ª Aliyá', ref: 'Numbers 36:1-36:13' },
+      { n: 8, label: 'Maftir', ref: 'Numbers 36:11-36:13' },
+    ],
+  },
+  {
+    id: 'nitzavim-vayeilech', combined: true, parts: ['nitzavim', 'vayeilech'],
+    num: 51.5, name: 'Nitzavim-Vayelej', heb: 'נִצָּבִים-וַיֵּלֶךְ', book: 'devarim',
+    ref: 'Deuteronomy 29:9-31:30',
+    aliyot: [
+      { n: 1, label: '1ª Aliyá', ref: 'Deuteronomy 29:9-29:11' },
+      { n: 2, label: '2ª Aliyá', ref: 'Deuteronomy 29:12-29:28' },
+      { n: 3, label: '3ª Aliyá', ref: 'Deuteronomy 30:1-30:6' },
+      { n: 4, label: '4ª Aliyá', ref: 'Deuteronomy 30:7-30:20' },
+      { n: 5, label: '5ª Aliyá', ref: 'Deuteronomy 31:1-31:6' },
+      { n: 6, label: '6ª Aliyá', ref: 'Deuteronomy 31:7-31:19' },
+      { n: 7, label: '7ª Aliyá', ref: 'Deuteronomy 31:20-31:30' },
+      { n: 8, label: 'Maftir', ref: 'Deuteronomy 31:28-31:30' },
+    ],
+  },
+]
+
 export const BOOK_COLORS = {
   bereshit: '#6c33e6',
   shemot: '#f9b800',
@@ -782,10 +891,15 @@ export const BOOK_COLORS = {
   devarim: '#a78bfa',
 }
 
+export const ALL_PARASHOT = [
+  ...PARASHOT,
+  ...COMBINED_PARASHOT,
+].sort((a, b) => a.num - b.num)
+
 export function getParasha(id) {
-  return PARASHOT.find(p => p.id === id)
+  return ALL_PARASHOT.find(p => p.id === id)
 }
 
 export function getParashotByBook(bookId) {
-  return PARASHOT.filter(p => p.book === bookId)
+  return ALL_PARASHOT.filter(p => p.book === bookId)
 }
