@@ -146,7 +146,7 @@ function StudentModal({ onClose, isDark, t }) {
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
 
-  const [isLogin, setIsLogin] = useState(false)
+  const [isLogin, setIsLogin] = useState(true)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -218,7 +218,7 @@ function StudentModal({ onClose, isDark, t }) {
           <div>
             <p className="text-xs hebrew" style={{ color: 'var(--text-gold)' }}>תַּלְמִיד</p>
             <h2 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>
-              {isLogin ? 'Entrar como alumno' : 'Crear cuenta de alumno'}
+              {isLogin ? 'Iniciar sesión' : 'Crear cuenta de alumno'}
             </h2>
           </div>
           <button onClick={onClose}
@@ -388,7 +388,7 @@ function StudentModal({ onClose, isDark, t }) {
             onClick={() => { setIsLogin(!isLogin); setError('') }}
             className="text-xs text-center py-1"
             style={{ color: t.switchText }}>
-            {isLogin ? '¿Sin cuenta? Registrarse' : '¿Ya tienes cuenta? Entrar'}
+            {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
           </button>
 
         </form>
