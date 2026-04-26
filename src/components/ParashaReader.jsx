@@ -6,6 +6,7 @@ import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import AudioPlayer from './AudioPlayer'
+import TikkunView from './TikkunView'
 import { BOOK_COLORS } from '../data/parashot'
 
 function fmtSec(s) {
@@ -17,7 +18,8 @@ const MODES = [
   { id: 'nikkud', label: 'Nikkud', heb: 'נִקּוּד', desc: 'Solo nikkud' },
   { id: 'plain',  label: 'Llano',  heb: 'כְּתָב',   desc: 'Sin marcas' },
   { id: 'split',  label: 'Partida',heb: 'מְפוּצָּל', desc: 'Pantalla partida' },
-  { id: 'sefer',  label: 'Sefer',  heb: 'סֵפֶר',    desc: 'Modo tikkun (tikkun.io)' },
+  { id: 'tikkun', label: 'Tikún',  heb: 'תִּקּוּן',  desc: 'Tikún korim · texto con taamim palabra a palabra' },
+  { id: 'sefer',  label: 'Sefer',  heb: 'סֵפֶר',    desc: 'Modo sefer (tikkun.io)' },
 ]
 
 const BOOK_TO_NUM = { Genesis: 1, Exodus: 2, Leviticus: 3, Numbers: 4, Deuteronomy: 5 }
@@ -432,9 +434,20 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
         {mode === 'sefer' && (
           <SeferView ref_={currentAliyah.ref} />
         )}
-        {mode !== 'sefer' && loading && <LoadingState bookColor={bookColor} />}
-        {mode !== 'sefer' && error && <ErrorState error={error} ref_={currentAliyah.ref} />}
-        {mode !== 'sefer' && !loading && !error && verses.length > 0 && (
+        {mode === 'tikkun' && (
+          <TikkunView
+            parasha={parasha}
+            aliyahRef={currentAliyah.ref}
+            bookColor={bookColor}
+            fontSize={fontSize}
+            wordTimestamps={audio?.wordTimestamps ?? null}
+            audioCurrentTime={audioCurrentTime}
+            audioPlaying={audioPlaying}
+          />
+        )}
+        {mode !== 'sefer' && mode !== 'tikkun' && loading && <LoadingState bookColor={bookColor} />}
+        {mode !== 'sefer' && mode !== 'tikkun' && error && <ErrorState error={error} ref_={currentAliyah.ref} />}
+        {mode !== 'sefer' && mode !== 'tikkun' && !loading && !error && verses.length > 0 && (
           mode === 'split'
             ? <SplitView
                 verses={verses}
@@ -454,7 +467,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
                 audioPlaying={audioPlaying}
               />
         )}
-        {mode !== 'sefer' && !loading && !error && verses.length === 0 && (
+        {mode !== 'sefer' && mode !== 'tikkun' && !loading && !error && verses.length === 0 && (
           <div className="flex-1 flex items-center justify-center">
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin texto disponible</p>
           </div>
