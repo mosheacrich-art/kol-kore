@@ -131,6 +131,18 @@ const priorityColors = {
   low:    { bg: 'rgba(45,212,191,0.1)', border: 'rgba(45,212,191,0.2)', text: '#0d9488', dot: '#2dd4bf' },
 }
 
+const ACHIEVEMENTS = [
+  { id: 'first_listen',  icon: '🎧', label: 'Primera escucha',    desc: 'Escucha tu primera aliyá',      check: (s) => s.totalListens >= 1 },
+  { id: 'listen_10',    icon: '📻', label: '10 escuchas',         desc: 'Escucha 10 veces',              check: (s) => s.totalListens >= 10 },
+  { id: 'listen_50',    icon: '🎶', label: '50 escuchas',         desc: 'Escucha 50 veces',              check: (s) => s.totalListens >= 50 },
+  { id: 'first_hw',     icon: '✅', label: 'Primer deber',        desc: 'Completa tu primer deber',      check: (s) => s.homeworkDone >= 1 },
+  { id: 'hw_5',         icon: '📚', label: '5 deberes',           desc: 'Completa 5 deberes',            check: (s) => s.homeworkDone >= 5 },
+  { id: 'hw_20',        icon: '🏆', label: '20 deberes',          desc: 'Completa 20 deberes',           check: (s) => s.homeworkDone >= 20 },
+  { id: 'streak_3',     icon: '🔥', label: 'Racha de 3 días',     desc: 'Estudia 3 días seguidos',       check: (s) => s.streak >= 3 },
+  { id: 'streak_7',     icon: '⚡', label: 'Racha de 7 días',     desc: 'Estudia 7 días seguidos',       check: (s) => s.streak >= 7 },
+  { id: 'streak_30',    icon: '🌟', label: 'Racha de 30 días',    desc: 'Estudia 30 días seguidos',      check: (s) => s.streak >= 30 },
+]
+
 export default function StudentProfile() {
   const navigate = useNavigate()
   const { profile, setProfile, user } = useAuth()
@@ -138,6 +150,7 @@ export default function StudentProfile() {
   const [teacherCode, setTeacherCode] = useState('')
   const [teacherName, setTeacherName] = useState(null)
   const [linkStatus, setLinkStatus] = useState(null)
+  const [totalListens, setTotalListens] = useState(0)
 
   useEffect(() => {
     if (!profile?.id) return
@@ -152,6 +165,17 @@ export default function StudentProfile() {
       .eq('student_id', profile.id)
       .order('created_at', { ascending: false })
       .then(({ data }) => { if (mounted) setDeberes(data || []) })
+
+    supabase
+      .from('audio_listens')
+      .select('count')
+      .eq('student_id', profile.id)
+      .then(({ data }) => {
+        if (mounted && data) {
+          const total = data.reduce((sum, row) => sum + (row.count || 0), 0)
+          setTotalListens(total)
+        }
+      })
 
     if (profile.teacher_id) {
       supabase.from('profiles').select('name').eq('id', profile.teacher_id).single()
@@ -400,8 +424,47 @@ export default function StudentProfile() {
           </div>
 
           <AccountSection user={user} />
+
+          {/* Achievements */}
+          <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>Logros</p>
+            <div className="flex items-center gap-4 mb-4 mt-3">
+              <StatPill icon="🎧" value={totalListens} label="escuchas" />
+              <StatPill icon="✅" value={done} label="deberes" />
+              <StatPill icon="🔥" value={profile.streak || 0} label="días racha" />
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {ACHIEVEMENTS.map(a => {
+                const unlocked = a.check({ totalListens, homeworkDone: done, streak: profile.streak || 0 })
+                return (
+                  <div key={a.id} title={a.desc}
+                    className="flex flex-col items-center gap-1 p-2.5 rounded-xl transition-all"
+                    style={{
+                      background: unlocked ? 'rgba(108,51,230,0.1)' : 'var(--bg)',
+                      border: `1px solid ${unlocked ? 'rgba(108,51,230,0.25)' : 'var(--border-subtle)'}`,
+                      opacity: unlocked ? 1 : 0.4,
+                    }}>
+                    <span style={{ fontSize: '20px', filter: unlocked ? 'none' : 'grayscale(1)' }}>{a.icon}</span>
+                    <span className="text-center leading-tight" style={{ fontSize: '9px', color: unlocked ? 'var(--text-2)' : 'var(--text-muted)' }}>
+                      {a.label}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function StatPill({ icon, value, label }) {
+  return (
+    <div className="flex flex-col items-center gap-0.5">
+      <span style={{ fontSize: '16px' }}>{icon}</span>
+      <span className="text-lg font-light" style={{ color: 'var(--text)' }}>{value}</span>
+      <span className="text-xs" style={{ color: 'var(--text-muted)', fontSize: '9px' }}>{label}</span>
     </div>
   )
 }

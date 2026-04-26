@@ -1,11 +1,14 @@
 import { useState, useRef, useEffect } from 'react'
 
+const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5]
+
 export default function AudioPlayer({ audio, label, onPlay, onTimeUpdate, onPlayingChange }) {
   const audioRef = useRef(null)
   const [playing, setPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
   const [duration, setDuration] = useState(0)
   const [current, setCurrent] = useState(0)
+  const [speedIdx, setSpeedIdx] = useState(2)
 
   useEffect(() => {
     setPlaying(false)
@@ -40,6 +43,13 @@ export default function AudioPlayer({ audio, label, onPlay, onTimeUpdate, onPlay
   const handleLoaded = () => {
     if (!audioRef.current) return
     setDuration(audioRef.current.duration)
+    audioRef.current.playbackRate = SPEEDS[speedIdx]
+  }
+
+  const cycleSpeed = () => {
+    const next = (speedIdx + 1) % SPEEDS.length
+    setSpeedIdx(next)
+    if (audioRef.current) audioRef.current.playbackRate = SPEEDS[next]
   }
 
   const handleEnded = () => {
@@ -111,9 +121,11 @@ export default function AudioPlayer({ audio, label, onPlay, onTimeUpdate, onPlay
         </div>
       </div>
 
-      <div className="text-xs flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
-        {audio.name.length > 16 ? audio.name.slice(0, 14) + '…' : audio.name}
-      </div>
+      <button onClick={cycleSpeed}
+        className="text-xs flex-shrink-0 px-2 py-1 rounded-lg font-mono font-medium transition-all"
+        style={{ background: 'rgba(108,51,230,0.15)', color: '#a78bfa', border: '1px solid rgba(108,51,230,0.25)', minWidth: '38px' }}>
+        {SPEEDS[speedIdx]}×
+      </button>
     </div>
   )
 }
