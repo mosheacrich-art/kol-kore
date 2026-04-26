@@ -14,50 +14,12 @@ export default function Login() {
   const { profile, signIn, signUp } = useAuth()
   const { isDark } = useTheme()
   const [expanded, setExpanded] = useState(null)
-  const [isRegister, setIsRegister] = useState(false)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [showSubModal, setShowSubModal] = useState(false)
+  // modal state: null | 'student-register' | 'teacher' | 'student-login'
+  const [modal, setModal] = useState(null)
 
   useEffect(() => {
-    if (profile && !showSubModal) {
-      navigate(profile.role === 'teacher' ? '/teacher/dashboard' : '/student/profile')
-    }
-  }, [profile, showSubModal, navigate])
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-    let err
-    if (isRegister) {
-      if (!name.trim()) { setError('Escribe tu nombre'); setLoading(false); return }
-      err = await signUp(email, password, name.trim(), expanded)
-      if (!err && expanded === 'student') {
-        setShowSubModal(true)
-        setLoading(false)
-        return
-      }
-    } else {
-      err = await signIn(email, password)
-    }
-    if (err) {
-      setError(isRegister ? 'Error al registrarse: ' + err.message : 'Email o contraseña incorrectos')
-      setLoading(false)
-    }
-  }
-
-  const expand = (role) => {
-    setExpanded(role)
-    setIsRegister(false)
-    setError('')
-    setEmail('')
-    setPassword('')
-    setName('')
-  }
+    if (profile) navigate(profile.role === 'teacher' ? '/teacher/dashboard' : '/student/profile')
+  }, [profile, navigate])
 
   const t = isDark ? {
     bg: 'radial-gradient(ellipse at 50% 0%, #1a0f3e 0%, #0d0b1e 50%, #050812 100%)',
@@ -109,13 +71,6 @@ export default function Login() {
     iconDefault: 'rgba(140,95,0,0.45)',
   }
 
-  if (showSubModal) return (
-    <SubscriptionModal
-      onStartTrial={() => navigate('/student/profile')}
-      isDark={isDark}
-    />
-  )
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16 relative"
       style={{ background: t.bg, transition: 'background 0.4s' }}>
@@ -133,9 +88,7 @@ export default function Login() {
 
       <div className="relative z-10 w-full max-w-4xl">
         <div className="text-center mb-14 fade-up-1">
-          <div className="hebrew text-2xl mb-3" style={{ color: t.subtitle }}>
-            בְּחַר אֶת תַּפְקִידְךָ
-          </div>
+          <div className="hebrew text-2xl mb-3" style={{ color: t.subtitle }}>בְּחַר אֶת תַּפְקִידְךָ</div>
           <h1 className="text-4xl md:text-5xl font-light" style={{ letterSpacing: '-1.5px', color: t.title }}>
             ¿Cómo entras hoy?
           </h1>
@@ -145,30 +98,29 @@ export default function Login() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 fade-up-2">
+          {/* Teacher card — inline expand as before */}
           <RoleCard id="teacher" label="Profesor" hebrew="מּוֹרֶה"
             description="Gestiona alumnos, clases, deberes y estadísticas"
             color="#f9b800" glow="rgba(249,184,0,0.25)" icon={TeacherIcon}
-            expanded={expanded === 'teacher'} onExpand={() => expand('teacher')} t={t} isDark={isDark}>
+            expanded={expanded === 'teacher'} onExpand={() => setExpanded(expanded === 'teacher' ? null : 'teacher')}
+            t={t} isDark={isDark}>
             {expanded === 'teacher' && (
-              <AuthForm email={email} setEmail={setEmail} password={password} setPassword={setPassword}
-                name={name} setName={setName} isRegister={isRegister} setIsRegister={setIsRegister}
-                error={error} loading={loading} color="#f9b800" onSubmit={handleSubmit}
-                onCancel={() => setExpanded(null)} t={t} />
+              <SimpleAuthForm
+                role="teacher" color="#f9b800"
+                onCancel={() => setExpanded(null)}
+                onDone={() => {}} t={t}
+              />
             )}
           </RoleCard>
 
+          {/* Student card — opens modal */}
           <RoleCard id="student" label="Alumno" hebrew="תַּלְמִיד"
             description="Accede a tu perfil, deberes y estudio de la Perashá"
             color="#6c33e6" glow="rgba(108,51,230,0.25)" icon={StudentIcon}
-            expanded={expanded === 'student'} onExpand={() => expand('student')} t={t} isDark={isDark}>
-            {expanded === 'student' && (
-              <AuthForm email={email} setEmail={setEmail} password={password} setPassword={setPassword}
-                name={name} setName={setName} isRegister={isRegister} setIsRegister={setIsRegister}
-                error={error} loading={loading} color="#6c33e6" onSubmit={handleSubmit}
-                onCancel={() => setExpanded(null)} t={t} />
-            )}
-          </RoleCard>
+            expanded={false} onExpand={() => setModal('student')}
+            t={t} isDark={isDark} />
 
+          {/* Guest */}
           <RoleCard id="guest" label="Invitado" hebrew="אוֹרֵחַ"
             description="Explora la plataforma sin necesidad de cuenta"
             color="#2dd4bf" glow="rgba(45,212,191,0.2)" icon={GuestIcon}
@@ -179,9 +131,346 @@ export default function Login() {
           Sistema de estudio de Torá · Kehilá
         </p>
       </div>
+
+      {/* Student modal */}
+      {modal === 'student' && (
+        <StudentModal onClose={() => setModal(null)} isDark={isDark} t={t} />
+      )}
     </div>
   )
 }
+
+// ── Student modal: registro + plan en un solo popup ──────────────────────────
+
+function StudentModal({ onClose, isDark, t }) {
+  const { signIn, signUp } = useAuth()
+  const navigate = useNavigate()
+
+  const [isLogin, setIsLogin] = useState(false)
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [plan, setPlan] = useState('trial')   // 'trial' | 'monthly' | 'annual'
+  const [months, setMonths] = useState(1)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const price = plan === 'annual' ? ANNUAL : plan === 'monthly' ? MONTHLY * months : 0
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    if (isLogin) {
+      const err = await signIn(email, password)
+      if (err) { setError('Email o contraseña incorrectos'); setLoading(false) }
+      return
+    }
+
+    if (!name.trim()) { setError('Escribe tu nombre'); setLoading(false); return }
+
+    const err = await signUp(email, password, name.trim(), 'student')
+    if (err) { setError('Error al registrarse: ' + err.message); setLoading(false); return }
+
+    // Registered — now handle plan
+    if (plan === 'trial') {
+      navigate('/student/profile')
+      return
+    }
+
+    // Paid plan — call Stripe checkout
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('create-checkout', {
+        body: { plan, months: plan === 'annual' ? 12 : months },
+      })
+      if (fnErr || !data?.url) throw new Error(fnErr?.message ?? 'Error al iniciar el pago')
+      window.location.href = data.url
+    } catch (ex) {
+      setError(ex.message)
+      setLoading(false)
+    }
+  }
+
+  const inputStyle = {
+    background: t.inputBg,
+    border: `1px solid ${t.inputBorder}`,
+    color: t.inputText,
+  }
+
+  return (
+    // Backdrop
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+
+      <div className="w-full max-w-md rounded-3xl overflow-hidden shadow-2xl"
+        style={{
+          background: isDark ? '#0d0b1e' : '#f5f0e4',
+          border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+          maxHeight: '90vh',
+          overflowY: 'auto',
+        }}>
+
+        {/* Modal header */}
+        <div className="flex items-center justify-between px-6 pt-6 pb-4"
+          style={{ borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}` }}>
+          <div>
+            <p className="text-xs hebrew" style={{ color: 'var(--text-gold)' }}>תַּלְמִיד</p>
+            <h2 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>
+              {isLogin ? 'Entrar como alumno' : 'Crear cuenta de alumno'}
+            </h2>
+          </div>
+          <button onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
+            style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-3">
+
+          {/* Register fields */}
+          {!isLogin && (
+            <input type="text" value={name} onChange={e => setName(e.target.value)}
+              placeholder="Tu nombre completo" required autoFocus
+              className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none"
+              style={inputStyle} />
+          )}
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+            placeholder="Email" required autoFocus={isLogin}
+            className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none"
+            style={inputStyle} />
+          <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+            placeholder="Contraseña" required
+            className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none"
+            style={inputStyle} />
+
+          {error && <p className="text-xs px-1" style={{ color: '#f87171' }}>{error}</p>}
+
+          {/* Plan selector — only on register */}
+          {!isLogin && (
+            <div className="mt-1">
+              <p className="text-xs uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
+                Elige tu plan
+              </p>
+
+              {/* Trial */}
+              <button type="button" onClick={() => setPlan('trial')}
+                className="w-full rounded-xl p-3.5 text-left mb-2 transition-all flex items-center justify-between"
+                style={{
+                  background: plan === 'trial' ? 'rgba(249,184,0,0.1)' : 'var(--bg-card)',
+                  border: `1.5px solid ${plan === 'trial' ? '#f9b800' : 'var(--border)'}`,
+                }}>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+                    style={{ borderColor: plan === 'trial' ? '#f9b800' : 'var(--border)' }}>
+                    {plan === 'trial' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#f9b800' }} />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: plan === 'trial' ? 'var(--text-gold)' : 'var(--text)' }}>
+                      {TRIAL_DAYS} días gratis
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Sin tarjeta · Decides al terminar</p>
+                  </div>
+                </div>
+                <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                  style={{ background: 'rgba(249,184,0,0.15)', color: 'var(--text-gold)' }}>
+                  Gratis
+                </span>
+              </button>
+
+              {/* Monthly */}
+              <button type="button" onClick={() => setPlan('monthly')}
+                className="w-full rounded-xl p-3.5 text-left mb-2 transition-all"
+                style={{
+                  background: plan === 'monthly' ? 'rgba(108,51,230,0.1)' : 'var(--bg-card)',
+                  border: `1.5px solid ${plan === 'monthly' ? '#8b5cf6' : 'var(--border)'}`,
+                }}>
+                <div className="flex items-center gap-2.5 mb-2">
+                  <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+                    style={{ borderColor: plan === 'monthly' ? '#8b5cf6' : 'var(--border)' }}>
+                    {plan === 'monthly' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#8b5cf6' }} />}
+                  </div>
+                  <div className="flex items-baseline gap-2 flex-1">
+                    <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Mensual</span>
+                    <span className="text-sm font-light" style={{ color: 'var(--text-3)' }}>5 €/mes</span>
+                  </div>
+                </div>
+                {plan === 'monthly' && (
+                  <div className="pl-6">
+                    <p className="text-xs mb-1.5" style={{ color: 'var(--text-muted)' }}>¿Cuántos meses quieres pagar?</p>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {[1, 2, 3, 4, 5, 6, 9, 12].map(m => (
+                        <button key={m} type="button"
+                          onClick={e => { e.stopPropagation(); setMonths(m) }}
+                          className="py-1 rounded-lg text-xs font-medium transition-all"
+                          style={{
+                            background: months === m ? '#8b5cf6' : 'var(--bg-card)',
+                            color: months === m ? '#fff' : 'var(--text-3)',
+                            border: `1px solid ${months === m ? '#8b5cf6' : 'var(--border)'}`,
+                          }}>
+                          {m === 12 ? '1 año' : `${m}m`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </button>
+
+              {/* Annual */}
+              <button type="button" onClick={() => setPlan('annual')}
+                className="w-full rounded-xl p-3.5 text-left mb-3 transition-all relative"
+                style={{
+                  background: plan === 'annual' ? 'rgba(249,184,0,0.07)' : 'var(--bg-card)',
+                  border: `1.5px solid ${plan === 'annual' ? '#f9b800' : 'var(--border)'}`,
+                }}>
+                <div className="absolute -top-2.5 right-3">
+                  <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                    style={{ background: 'linear-gradient(135deg,#f9b800,#ffd54f)', color: '#0d0b1e' }}>
+                    −{SAVING_PCT}%
+                  </span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+                    style={{ borderColor: plan === 'annual' ? '#f9b800' : 'var(--border)' }}>
+                    {plan === 'annual' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#f9b800' }} />}
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Anual</span>
+                    <span className="text-sm font-light" style={{ color: 'var(--text-3)' }}>50 €/año</span>
+                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>= 4,17 €/mes</span>
+                  </div>
+                </div>
+              </button>
+
+              {/* No auto-renewal notice */}
+              <div className="flex items-start gap-2 px-0.5 mb-1">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+                  <circle cx="6.5" cy="6.5" r="5.5" stroke="#16a34a" strokeWidth="1.2"/>
+                  <path d="M4 6.5l2 2L9 4.5" stroke="#16a34a" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                  <strong style={{ color: 'var(--text-3)' }}>Sin renovación automática.</strong>{' '}
+                  Pagas una vez, decides tú si quieres renovar.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Submit */}
+          <button type="submit" disabled={loading}
+            className="w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 mt-1"
+            style={{
+              background: loading ? 'var(--bg-card)' : 'linear-gradient(135deg, #6c33e6, #8b5cf6)',
+              color: loading ? 'var(--text-3)' : '#fff',
+              border: loading ? '1px solid var(--border)' : 'none',
+              boxShadow: loading ? 'none' : '0 4px 20px rgba(108,51,230,0.35)',
+            }}>
+            {loading ? (
+              <>
+                <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
+                  style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#8b5cf6' }} />
+                {plan !== 'trial' ? 'Redirigiendo al pago…' : 'Creando cuenta…'}
+              </>
+            ) : isLogin
+              ? 'Entrar'
+              : plan === 'trial'
+                ? `Empezar ${TRIAL_DAYS} días gratis →`
+                : `Registrarme y pagar ${price} € →`
+            }
+          </button>
+
+          {/* Switch login/register */}
+          <button type="button"
+            onClick={() => { setIsLogin(!isLogin); setError('') }}
+            className="text-xs text-center py-1"
+            style={{ color: t.switchText }}>
+            {isLogin ? '¿Sin cuenta? Registrarse' : '¿Ya tienes cuenta? Entrar'}
+          </button>
+
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// ── Teacher inline auth form (unchanged) ────────────────────────────────────
+
+function SimpleAuthForm({ role, color, onCancel, onDone, t }) {
+  const { signIn, signUp } = useAuth()
+  const [isRegister, setIsRegister] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [name, setName] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const inputStyle = {
+    background: t.inputBg,
+    border: `1px solid ${t.inputBorder}`,
+    color: t.inputText,
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    let err
+    if (isRegister) {
+      if (!name.trim()) { setError('Escribe tu nombre'); setLoading(false); return }
+      err = await signUp(email, password, name.trim(), role)
+    } else {
+      err = await signIn(email, password)
+    }
+    if (err) {
+      setError(isRegister ? 'Error al registrarse: ' + err.message : 'Email o contraseña incorrectos')
+      setLoading(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="px-7 pb-7 flex flex-col gap-3">
+      {isRegister && (
+        <input type="text" value={name} onChange={e => setName(e.target.value)}
+          placeholder="Tu nombre completo" required autoFocus
+          className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+          style={inputStyle} />
+      )}
+      <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+        placeholder="Email" required autoFocus={!isRegister}
+        className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+        style={inputStyle} />
+      <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+        placeholder="Contraseña" required
+        className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+        style={inputStyle} />
+      {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
+      <div className="flex gap-2">
+        <button type="button" onClick={onCancel}
+          className="flex-1 py-2 rounded-xl text-xs transition-all"
+          style={{ background: t.cancelBg, color: t.cancelText }}>
+          Cancelar
+        </button>
+        <button type="submit" disabled={loading}
+          className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
+          style={{ background: color, color: '#fff', opacity: loading ? 0.7 : 1 }}>
+          {loading ? '…' : isRegister ? 'Registrarse' : 'Entrar'}
+        </button>
+      </div>
+      <button type="button"
+        onClick={() => { setIsRegister(!isRegister); setEmail(''); setPassword(''); setName('') }}
+        className="text-xs text-center"
+        style={{ color: t.switchText }}>
+        {isRegister ? '¿Ya tienes cuenta? Entrar' : '¿Sin cuenta? Registrarse'}
+      </button>
+    </form>
+  )
+}
+
+// ── Role card ────────────────────────────────────────────────────────────────
 
 function RoleCard({ label, hebrew, description, color, glow, icon: Icon, expanded, onExpand, children, t, isDark }) {
   return (
@@ -229,50 +518,7 @@ function RoleCard({ label, hebrew, description, color, glow, icon: Icon, expande
   )
 }
 
-function AuthForm({ email, setEmail, password, setPassword, name, setName, isRegister, setIsRegister, error, loading, color, onSubmit, onCancel, t }) {
-  const inputStyle = {
-    background: t.inputBg,
-    border: `1px solid ${t.inputBorder}`,
-    color: t.inputText,
-  }
-  return (
-    <form onSubmit={onSubmit} className="px-7 pb-7 flex flex-col gap-3">
-      {isRegister && (
-        <input type="text" value={name} onChange={e => setName(e.target.value)}
-          placeholder="Tu nombre completo" required autoFocus
-          className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-          style={inputStyle} />
-      )}
-      <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-        placeholder="Email" required autoFocus={!isRegister}
-        className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-        style={inputStyle} />
-      <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-        placeholder="Contraseña" required
-        className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-        style={inputStyle} />
-      {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
-      <div className="flex gap-2">
-        <button type="button" onClick={onCancel}
-          className="flex-1 py-2 rounded-xl text-xs transition-all"
-          style={{ background: t.cancelBg, color: t.cancelText }}>
-          Cancelar
-        </button>
-        <button type="submit" disabled={loading}
-          className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
-          style={{ background: color, color: '#fff', opacity: loading ? 0.7 : 1 }}>
-          {loading ? '…' : isRegister ? 'Registrarse' : 'Entrar'}
-        </button>
-      </div>
-      <button type="button"
-        onClick={() => { setIsRegister(!isRegister); setEmail(''); setPassword(''); setName('') }}
-        className="text-xs text-center"
-        style={{ color: t.switchText }}>
-        {isRegister ? '¿Ya tienes cuenta? Entrar' : '¿Sin cuenta? Registrarse'}
-      </button>
-    </form>
-  )
-}
+// ── Misc ─────────────────────────────────────────────────────────────────────
 
 function StarField({ color }) {
   const stars = Array.from({ length: 60 }, (_, i) => ({
@@ -320,176 +566,5 @@ function GuestIcon({ color }) {
       <circle cx="13" cy="9" r="4" stroke={color} strokeWidth="1.5"/>
       <path d="M5 22c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
-  )
-}
-
-function SubscriptionModal({ onStartTrial, isDark }) {
-  const [plan, setPlan] = useState('monthly')
-  const [months, setMonths] = useState(1)
-  const [paying, setPaying] = useState(false)
-
-  const price = plan === 'annual' ? ANNUAL : MONTHLY * months
-
-  const handlePay = async () => {
-    setPaying(true)
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { plan, months: plan === 'annual' ? 12 : months },
-      })
-      if (error || !data?.url) throw new Error(error?.message ?? 'Error al iniciar el pago')
-      window.location.href = data.url
-    } catch (err) {
-      alert(err.message)
-      setPaying(false)
-    }
-  }
-
-  const bg = isDark
-    ? 'radial-gradient(ellipse at 50% 0%, #1a0f3e 0%, #0d0b1e 100%)'
-    : 'radial-gradient(ellipse at 50% 0%, #e0d5be 0%, #f5f0e4 100%)'
-
-  return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8 overflow-y-auto"
-      style={{ background: bg }}>
-      <div className="w-full max-w-lg">
-
-        {/* Header */}
-        <div className="text-center mb-8 fade-up-1">
-          <div className="hebrew text-2xl mb-2" style={{ color: 'var(--text-gold)' }}>בְּרוּכִים הַבָּאִים</div>
-          <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-            ¡Bienvenido a Perashá!
-          </h1>
-          <p className="text-sm" style={{ color: 'var(--text-3)' }}>Elige cómo quieres empezar</p>
-        </div>
-
-        {/* Free trial CTA */}
-        <button onClick={onStartTrial}
-          className="w-full py-4 rounded-2xl mb-4 flex items-center justify-between px-5 transition-all fade-up-2"
-          style={{
-            background: 'linear-gradient(135deg, rgba(249,184,0,0.15), rgba(249,184,0,0.08))',
-            border: '1.5px solid rgba(249,184,0,0.35)',
-          }}>
-          <div className="text-left">
-            <p className="text-base font-semibold" style={{ color: 'var(--text-gold)' }}>
-              Empezar {TRIAL_DAYS} días gratis
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
-              Sin tarjeta · Sin compromiso · Decides al terminar
-            </p>
-          </div>
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0 }}>
-            <path d="M5 10h10M11 6l4 4-4 4" stroke="rgba(249,184,0,0.8)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
-
-        {/* Divider */}
-        <div className="flex items-center gap-3 mb-4 fade-up-2">
-          <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>o suscríbete ahora</span>
-          <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-        </div>
-
-        {/* Plans */}
-        <div className="grid grid-cols-2 gap-3 mb-4 fade-up-3">
-
-          {/* Monthly */}
-          <button onClick={() => setPlan('monthly')}
-            className="rounded-2xl p-4 text-left transition-all"
-            style={{
-              background: plan === 'monthly' ? 'rgba(108,51,230,0.1)' : 'var(--bg-card)',
-              border: `1.5px solid ${plan === 'monthly' ? '#8b5cf6' : 'var(--border)'}`,
-            }}>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
-                style={{ borderColor: plan === 'monthly' ? '#8b5cf6' : 'var(--border)' }}>
-                {plan === 'monthly' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#8b5cf6' }} />}
-              </div>
-              <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>Mensual</span>
-            </div>
-            <div className="mb-3">
-              <span className="text-2xl font-light" style={{ color: 'var(--text)' }}>5€</span>
-              <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>/mes</span>
-            </div>
-            <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>¿Cuántos meses?</p>
-            <div className="grid grid-cols-4 gap-1">
-              {[1, 2, 3, 6].map(m => (
-                <button key={m}
-                  onClick={e => { e.stopPropagation(); setPlan('monthly'); setMonths(m) }}
-                  className="py-1 rounded-lg text-xs font-medium transition-all"
-                  style={{
-                    background: plan === 'monthly' && months === m ? '#8b5cf6' : 'var(--bg-card)',
-                    color: plan === 'monthly' && months === m ? '#fff' : 'var(--text-3)',
-                    border: `1px solid ${plan === 'monthly' && months === m ? '#8b5cf6' : 'var(--border)'}`,
-                  }}>
-                  {m}m
-                </button>
-              ))}
-            </div>
-          </button>
-
-          {/* Annual */}
-          <button onClick={() => setPlan('annual')}
-            className="rounded-2xl p-4 text-left transition-all relative"
-            style={{
-              background: plan === 'annual' ? 'rgba(249,184,0,0.07)' : 'var(--bg-card)',
-              border: `1.5px solid ${plan === 'annual' ? '#f9b800' : 'var(--border)'}`,
-            }}>
-            <div className="absolute -top-2.5 right-3">
-              <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                style={{ background: 'linear-gradient(135deg, #f9b800, #ffd54f)', color: '#0d0b1e' }}>
-                −{SAVING_PCT}%
-              </span>
-            </div>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
-                style={{ borderColor: plan === 'annual' ? '#f9b800' : 'var(--border)' }}>
-                {plan === 'annual' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#f9b800' }} />}
-              </div>
-              <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>Anual</span>
-            </div>
-            <div className="mb-1">
-              <span className="text-2xl font-light" style={{ color: 'var(--text)' }}>50€</span>
-              <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>/año</span>
-            </div>
-            <p className="text-xs" style={{ color: 'var(--text-3)' }}>= 4,17 €/mes</p>
-            <p className="text-xs mt-3" style={{ color: 'var(--text-gold)' }}>La más económica</p>
-          </button>
-        </div>
-
-        {/* No auto-renewal */}
-        <div className="flex items-start gap-2.5 px-1 mb-4 fade-up-3">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
-            <circle cx="7" cy="7" r="6" stroke="#16a34a" strokeWidth="1.2"/>
-            <path d="M4.5 7l2 2L9.5 5" stroke="#16a34a" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <p className="text-xs leading-relaxed" style={{ color: 'var(--text-3)' }}>
-            <strong style={{ color: 'var(--text-2)' }}>Sin renovación automática.</strong>{' '}
-            Pagas una vez, decides tú si quieres renovar. No te cobraremos nada sin tu permiso.
-          </p>
-        </div>
-
-        {/* Pay button */}
-        <button onClick={handlePay} disabled={paying}
-          className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 fade-up-4"
-          style={{
-            background: paying ? 'var(--bg-card)' : 'linear-gradient(135deg, #6c33e6, #8b5cf6)',
-            color: paying ? 'var(--text-3)' : '#fff',
-            border: paying ? '1px solid var(--border)' : 'none',
-            boxShadow: paying ? 'none' : '0 4px 20px rgba(108,51,230,0.35)',
-          }}>
-          {paying ? (
-            <>
-              <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
-                style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#8b5cf6' }} />
-              Redirigiendo…
-            </>
-          ) : `Suscribirme · ${price} €`}
-        </button>
-
-        <p className="text-xs text-center mt-3 fade-up-4" style={{ color: 'var(--text-muted)' }}>
-          Pago seguro · Tarjeta, SEPA o Bizum
-        </p>
-      </div>
-    </div>
   )
 }
