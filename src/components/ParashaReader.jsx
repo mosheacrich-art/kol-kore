@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useAliyahText } from '../hooks/useSefaria'
 import { processVerse, splitWords } from '../utils/hebrew'
 import { useAudio } from '../context/AudioContext'
@@ -36,6 +36,11 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
   const [fontSize, setFontSize] = useState(22)
   const [audioCurrentTime, setAudioCurrentTime] = useState(null)
   const [audioPlaying, setAudioPlaying] = useState(false)
+  const audioPlayerRef = useRef(null)
+
+  const handleSeek = useCallback((time) => {
+    audioPlayerRef.current?.seekTo(time)
+  }, [])
   const [pendingHomework, setPendingHomework] = useState(null)
   const pendingHomeworkRef = useRef(null)
   const { get, upload, uploadStudentRecording, remove, generateSync } = useAudio()
@@ -443,6 +448,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
                 wordTimestamps={audio?.wordTimestamps ?? null}
                 audioCurrentTime={audioCurrentTime}
                 audioPlaying={audioPlaying}
+                onWordClick={audio?.wordTimestamps?.length ? handleSeek : null}
               />
             : <SingleView
                 verses={verses}
@@ -452,6 +458,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
                 wordTimestamps={audio?.wordTimestamps ?? null}
                 audioCurrentTime={audioCurrentTime}
                 audioPlaying={audioPlaying}
+                onWordClick={audio?.wordTimestamps?.length ? handleSeek : null}
               />
         )}
         {mode !== 'sefer' && !loading && !error && verses.length === 0 && (
@@ -486,6 +493,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
           <>
             <div className="flex-1 min-w-0">
               <AudioPlayer
+                ref={audioPlayerRef}
                 audio={audio}
                 label={currentAliyah.label}
                 onPlay={handlePlay}
@@ -559,10 +567,34 @@ function lineHeightForSize(fs) {
   return fs <= 20 ? 3.4 : fs <= 28 ? 3.2 : 3.0
 }
 
-function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCurrentTime, audioPlaying }) {
-  const wordRefs = useRef([])
+// Returns JSX with taamim (red) and nikud (green) colored individually
+function colorWord(text, mode) {
+  if (mode !== 'taamim') return text
+  return [...text].map((ch, i) => {
+    const cp = ch.codePointAt(0)
+    // Taamim / cantillation marks U+0591–U+05AF → red
+    if (cp >= 0x0591 && cp <= 0x05AF) return <span key={i} style={{ color: '#e53535' }}>{ch}</span>
+    // Nikud / vowel points → green
+    if ((cp >= 0x05B0 && cp <= 0x05BD) || cp === 0x05BF ||
+        cp === 0x05C1 || cp === 0x05C2 || cp === 0x05C4 || cp === 0x05C5 || cp === 0x05C7)
+      return <span key={i} style={{ color: '#22a846' }}>{ch}</span>
+    return ch
+  })
+}
 
-  // Flat array of all words across all verses
+// Map a Sefaria word index back to the nearest Whisper timestamp
+function wordIdxToTime(wordIdx, wordTimestamps, totalWords) {
+  if (!wordTimestamps?.length) return null
+  const wLen = wordTimestamps.length
+  const sLen = totalWords
+  const wi = wLen === 1 ? 0 : Math.min(Math.round(wordIdx * (wLen - 1) / (sLen - 1)), wLen - 1)
+  return wordTimestamps[wi].start
+}
+
+function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCurrentTime, audioPlaying, onWordClick }) {
+  const wordRefs = useRef([])
+  const [hoverIdx, setHoverIdx] = useState(-1)
+
   const allWords = useMemo(() => {
     const result = []
     verses.forEach((verse, vi) => {
@@ -572,12 +604,8 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
     return result
   }, [verses, mode])
 
-  // Find the active word index using binary search on Whisper timestamps,
-  // then map proportionally to the Sefaria word list (counts may differ slightly)
   const activeWordIdx = useMemo(() => {
     if (!wordTimestamps?.length || audioCurrentTime == null || !allWords.length) return -1
-
-    // Binary search: largest index where ts.start <= audioCurrentTime
     let lo = 0, hi = wordTimestamps.length - 1, best = -1
     while (lo <= hi) {
       const mid = (lo + hi) >> 1
@@ -585,20 +613,25 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
       else hi = mid - 1
     }
     if (best < 0) return -1
-
-    // Proportional mapping from Whisper word index to Sefaria word index
     const wLen = wordTimestamps.length
     const sLen = allWords.length
     if (wLen === 1) return 0
     return Math.min(Math.round(best * (sLen - 1) / (wLen - 1)), sLen - 1)
   }, [wordTimestamps, audioCurrentTime, allWords])
 
-  // Auto-scroll active word into view while audio is playing
   useEffect(() => {
     if (!audioPlaying || activeWordIdx < 0) return
     const el = wordRefs.current[activeWordIdx]
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [activeWordIdx, audioPlaying])
+
+  const handleClick = (i) => {
+    if (!onWordClick) return
+    const t = wordIdxToTime(i, wordTimestamps, allWords.length)
+    if (t != null) onWordClick(t)
+  }
+
+  const canSeek = !!onWordClick
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6">
@@ -611,31 +644,40 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
           color: 'var(--text)',
           wordSpacing: '0.04em',
         }}>
-          {allWords.map((w, i) => (
-            <span
-              key={i}
-              ref={el => { wordRefs.current[i] = el }}
-              style={{
-                borderRadius: '4px',
-                padding: activeWordIdx === i ? '1px 3px' : '1px 0',
-                backgroundColor: activeWordIdx === i ? `${bookColor}35` : 'transparent',
-                color: activeWordIdx === i ? bookColor : 'inherit',
-                boxShadow: activeWordIdx === i ? `0 0 0 1.5px ${bookColor}50` : 'none',
-                transition: 'background-color 0.12s, color 0.12s, box-shadow 0.12s',
-              }}
-            >
-              {w.text}{' '}
-            </span>
-          ))}
+          {allWords.map((w, i) => {
+            const isActive = activeWordIdx === i
+            const isHover = hoverIdx === i && !isActive
+            return (
+              <span
+                key={i}
+                ref={el => { wordRefs.current[i] = el }}
+                onClick={() => handleClick(i)}
+                onMouseEnter={() => canSeek && setHoverIdx(i)}
+                onMouseLeave={() => setHoverIdx(-1)}
+                style={{
+                  borderRadius: '4px',
+                  padding: isActive || isHover ? '1px 3px' : '1px 0',
+                  backgroundColor: isActive ? `${bookColor}35` : isHover ? 'rgba(150,150,150,0.15)' : 'transparent',
+                  color: isActive ? bookColor : 'inherit',
+                  boxShadow: isActive ? `0 0 0 1.5px ${bookColor}50` : isHover ? '0 0 0 1px rgba(150,150,150,0.3)' : 'none',
+                  cursor: canSeek ? 'pointer' : 'default',
+                  transition: 'background-color 0.08s, box-shadow 0.08s',
+                }}
+              >
+                {colorWord(w.text, mode)}{' '}
+              </span>
+            )
+          })}
         </div>
       </div>
     </div>
   )
 }
 
-function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTime, audioPlaying }) {
+function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTime, audioPlaying, onWordClick }) {
   const flexRef = useRef(null)
   const [leftPct, setLeftPct] = useState(50)
+  const [hoverIdx, setHoverIdx] = useState(-1)
   const dragging = useRef(false)
   const wordRefsLeft = useRef([])
 
@@ -706,14 +748,27 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
     document.body.style.userSelect = 'none'
   }
 
-  const wordStyle = (i) => ({
-    borderRadius: '4px',
-    padding: activeWordIdx === i ? '1px 3px' : '1px 0',
-    backgroundColor: activeWordIdx === i ? `${bookColor}35` : 'transparent',
-    color: activeWordIdx === i ? bookColor : 'inherit',
-    boxShadow: activeWordIdx === i ? `0 0 0 1.5px ${bookColor}50` : 'none',
-    transition: 'background-color 0.12s, color 0.12s, box-shadow 0.12s',
-  })
+  const canSeek = !!onWordClick
+
+  const handleClickLeft = (i) => {
+    if (!onWordClick) return
+    const t = wordIdxToTime(i, wordTimestamps, allWordsTaamim.length)
+    if (t != null) onWordClick(t)
+  }
+
+  const wordStyle = (i, forLeft = false) => {
+    const isActive = activeWordIdx === i
+    const isHover = forLeft && hoverIdx === i && !isActive
+    return {
+      borderRadius: '4px',
+      padding: isActive || isHover ? '1px 3px' : '1px 0',
+      backgroundColor: isActive ? `${bookColor}35` : isHover ? 'rgba(150,150,150,0.15)' : 'transparent',
+      color: isActive ? bookColor : 'inherit',
+      boxShadow: isActive ? `0 0 0 1.5px ${bookColor}50` : isHover ? '0 0 0 1px rgba(150,150,150,0.3)' : 'none',
+      cursor: forLeft && canSeek ? 'pointer' : 'default',
+      transition: 'background-color 0.08s, box-shadow 0.08s',
+    }
+  }
 
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
@@ -745,8 +800,12 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
           }}>
             <div className="hebrew" style={{ ...textBase, color: 'var(--text)' }}>
               {allWordsTaamim.map((w, i) => (
-                <span key={i} ref={el => { wordRefsLeft.current[i] = el }} style={wordStyle(i)}>
-                  {w}{' '}
+                <span key={i} ref={el => { wordRefsLeft.current[i] = el }}
+                  style={wordStyle(i, true)}
+                  onClick={() => handleClickLeft(i)}
+                  onMouseEnter={() => canSeek && setHoverIdx(i)}
+                  onMouseLeave={() => setHoverIdx(-1)}>
+                  {colorWord(w, 'taamim')}{' '}
                 </span>
               ))}
             </div>
@@ -791,6 +850,7 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
                   {w}{' '}
                 </span>
               ))}
+
             </div>
           </div>
 

@@ -1,9 +1,22 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5]
 
-export default function AudioPlayer({ audio, label, onPlay, onTimeUpdate, onPlayingChange }) {
+const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTimeUpdate, onPlayingChange }, ref) {
   const audioRef = useRef(null)
+
+  useImperativeHandle(ref, () => ({
+    seekTo(t) {
+      if (!audioRef.current) return
+      audioRef.current.currentTime = t
+      if (audioRef.current.paused) {
+        audioRef.current.play()
+        setPlaying(true)
+        onPlay?.()
+        onPlayingChange?.(true)
+      }
+    }
+  }))
   const [playing, setPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -128,4 +141,6 @@ export default function AudioPlayer({ audio, label, onPlay, onTimeUpdate, onPlay
       </button>
     </div>
   )
-}
+})
+
+export default AudioPlayer
