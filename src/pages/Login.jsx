@@ -2,6 +2,12 @@ import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
+import { supabase } from '../lib/supabase'
+
+const MONTHLY = 5
+const ANNUAL = 50
+const TRIAL_DAYS = 7
+const SAVING_PCT = Math.round(100 - (ANNUAL / (MONTHLY * 12)) * 100)
 
 export default function Login() {
   const navigate = useNavigate()
@@ -14,10 +20,13 @@ export default function Login() {
   const [name, setName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showSubModal, setShowSubModal] = useState(false)
 
   useEffect(() => {
-    if (profile) navigate(profile.role === 'teacher' ? '/teacher/dashboard' : '/student/profile')
-  }, [profile, navigate])
+    if (profile && !showSubModal) {
+      navigate(profile.role === 'teacher' ? '/teacher/dashboard' : '/student/profile')
+    }
+  }, [profile, showSubModal, navigate])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -27,6 +36,11 @@ export default function Login() {
     if (isRegister) {
       if (!name.trim()) { setError('Escribe tu nombre'); setLoading(false); return }
       err = await signUp(email, password, name.trim(), expanded)
+      if (!err && expanded === 'student') {
+        setShowSubModal(true)
+        setLoading(false)
+        return
+      }
     } else {
       err = await signIn(email, password)
     }
@@ -94,6 +108,13 @@ export default function Login() {
     starColor: 'rgba(140,95,0,0.2)',
     iconDefault: 'rgba(140,95,0,0.45)',
   }
+
+  if (showSubModal) return (
+    <SubscriptionModal
+      onStartTrial={() => navigate('/student/profile')}
+      isDark={isDark}
+    />
+  )
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16 relative"
@@ -299,5 +320,176 @@ function GuestIcon({ color }) {
       <circle cx="13" cy="9" r="4" stroke={color} strokeWidth="1.5"/>
       <path d="M5 22c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
+  )
+}
+
+function SubscriptionModal({ onStartTrial, isDark }) {
+  const [plan, setPlan] = useState('monthly')
+  const [months, setMonths] = useState(1)
+  const [paying, setPaying] = useState(false)
+
+  const price = plan === 'annual' ? ANNUAL : MONTHLY * months
+
+  const handlePay = async () => {
+    setPaying(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { plan, months: plan === 'annual' ? 12 : months },
+      })
+      if (error || !data?.url) throw new Error(error?.message ?? 'Error al iniciar el pago')
+      window.location.href = data.url
+    } catch (err) {
+      alert(err.message)
+      setPaying(false)
+    }
+  }
+
+  const bg = isDark
+    ? 'radial-gradient(ellipse at 50% 0%, #1a0f3e 0%, #0d0b1e 100%)'
+    : 'radial-gradient(ellipse at 50% 0%, #e0d5be 0%, #f5f0e4 100%)'
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 overflow-y-auto"
+      style={{ background: bg }}>
+      <div className="w-full max-w-lg">
+
+        {/* Header */}
+        <div className="text-center mb-8 fade-up-1">
+          <div className="hebrew text-2xl mb-2" style={{ color: 'var(--text-gold)' }}>בְּרוּכִים הַבָּאִים</div>
+          <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
+            ¡Bienvenido a Perashá!
+          </h1>
+          <p className="text-sm" style={{ color: 'var(--text-3)' }}>Elige cómo quieres empezar</p>
+        </div>
+
+        {/* Free trial CTA */}
+        <button onClick={onStartTrial}
+          className="w-full py-4 rounded-2xl mb-4 flex items-center justify-between px-5 transition-all fade-up-2"
+          style={{
+            background: 'linear-gradient(135deg, rgba(249,184,0,0.15), rgba(249,184,0,0.08))',
+            border: '1.5px solid rgba(249,184,0,0.35)',
+          }}>
+          <div className="text-left">
+            <p className="text-base font-semibold" style={{ color: 'var(--text-gold)' }}>
+              Empezar {TRIAL_DAYS} días gratis
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+              Sin tarjeta · Sin compromiso · Decides al terminar
+            </p>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0 }}>
+            <path d="M5 10h10M11 6l4 4-4 4" stroke="rgba(249,184,0,0.8)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+
+        {/* Divider */}
+        <div className="flex items-center gap-3 mb-4 fade-up-2">
+          <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>o suscríbete ahora</span>
+          <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+        </div>
+
+        {/* Plans */}
+        <div className="grid grid-cols-2 gap-3 mb-4 fade-up-3">
+
+          {/* Monthly */}
+          <button onClick={() => setPlan('monthly')}
+            className="rounded-2xl p-4 text-left transition-all"
+            style={{
+              background: plan === 'monthly' ? 'rgba(108,51,230,0.1)' : 'var(--bg-card)',
+              border: `1.5px solid ${plan === 'monthly' ? '#8b5cf6' : 'var(--border)'}`,
+            }}>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+                style={{ borderColor: plan === 'monthly' ? '#8b5cf6' : 'var(--border)' }}>
+                {plan === 'monthly' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#8b5cf6' }} />}
+              </div>
+              <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>Mensual</span>
+            </div>
+            <div className="mb-3">
+              <span className="text-2xl font-light" style={{ color: 'var(--text)' }}>5€</span>
+              <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>/mes</span>
+            </div>
+            <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>¿Cuántos meses?</p>
+            <div className="grid grid-cols-4 gap-1">
+              {[1, 2, 3, 6].map(m => (
+                <button key={m}
+                  onClick={e => { e.stopPropagation(); setPlan('monthly'); setMonths(m) }}
+                  className="py-1 rounded-lg text-xs font-medium transition-all"
+                  style={{
+                    background: plan === 'monthly' && months === m ? '#8b5cf6' : 'var(--bg-card)',
+                    color: plan === 'monthly' && months === m ? '#fff' : 'var(--text-3)',
+                    border: `1px solid ${plan === 'monthly' && months === m ? '#8b5cf6' : 'var(--border)'}`,
+                  }}>
+                  {m}m
+                </button>
+              ))}
+            </div>
+          </button>
+
+          {/* Annual */}
+          <button onClick={() => setPlan('annual')}
+            className="rounded-2xl p-4 text-left transition-all relative"
+            style={{
+              background: plan === 'annual' ? 'rgba(249,184,0,0.07)' : 'var(--bg-card)',
+              border: `1.5px solid ${plan === 'annual' ? '#f9b800' : 'var(--border)'}`,
+            }}>
+            <div className="absolute -top-2.5 right-3">
+              <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                style={{ background: 'linear-gradient(135deg, #f9b800, #ffd54f)', color: '#0d0b1e' }}>
+                −{SAVING_PCT}%
+              </span>
+            </div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+                style={{ borderColor: plan === 'annual' ? '#f9b800' : 'var(--border)' }}>
+                {plan === 'annual' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#f9b800' }} />}
+              </div>
+              <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>Anual</span>
+            </div>
+            <div className="mb-1">
+              <span className="text-2xl font-light" style={{ color: 'var(--text)' }}>50€</span>
+              <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>/año</span>
+            </div>
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>= 4,17 €/mes</p>
+            <p className="text-xs mt-3" style={{ color: 'var(--text-gold)' }}>La más económica</p>
+          </button>
+        </div>
+
+        {/* No auto-renewal */}
+        <div className="flex items-start gap-2.5 px-1 mb-4 fade-up-3">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+            <circle cx="7" cy="7" r="6" stroke="#16a34a" strokeWidth="1.2"/>
+            <path d="M4.5 7l2 2L9.5 5" stroke="#16a34a" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <p className="text-xs leading-relaxed" style={{ color: 'var(--text-3)' }}>
+            <strong style={{ color: 'var(--text-2)' }}>Sin renovación automática.</strong>{' '}
+            Pagas una vez, decides tú si quieres renovar. No te cobraremos nada sin tu permiso.
+          </p>
+        </div>
+
+        {/* Pay button */}
+        <button onClick={handlePay} disabled={paying}
+          className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 fade-up-4"
+          style={{
+            background: paying ? 'var(--bg-card)' : 'linear-gradient(135deg, #6c33e6, #8b5cf6)',
+            color: paying ? 'var(--text-3)' : '#fff',
+            border: paying ? '1px solid var(--border)' : 'none',
+            boxShadow: paying ? 'none' : '0 4px 20px rgba(108,51,230,0.35)',
+          }}>
+          {paying ? (
+            <>
+              <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
+                style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#8b5cf6' }} />
+              Redirigiendo…
+            </>
+          ) : `Suscribirme · ${price} €`}
+        </button>
+
+        <p className="text-xs text-center mt-3 fade-up-4" style={{ color: 'var(--text-muted)' }}>
+          Pago seguro · Tarjeta, SEPA o Bizum
+        </p>
+      </div>
+    </div>
   )
 }
