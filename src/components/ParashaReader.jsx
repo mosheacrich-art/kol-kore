@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback, Fragment } from 'react'
 import { useAliyahText } from '../hooks/useSefaria'
 import { processVerse, splitWords } from '../utils/hebrew'
 import { useAudio } from '../context/AudioContext'
@@ -571,30 +571,106 @@ function lineHeightForSize(fs) {
   return fs <= 20 ? 3.4 : fs <= 28 ? 3.2 : 3.0
 }
 
-// Color taamim (red) and nikud (green) per character.
-// Each combining mark gets its own inline span with explicit color.
-function colorWord(text, mode) {
-  if (mode !== 'taamim') return text
-  const chars = [...text]
-  const result = []
-  let hasMark = false
-  for (let i = 0; i < chars.length; i++) {
-    const ch = chars[i]
+// ── Canvas-based taamim coloring ─────────────────────────────────────────────
+// CSS color on <span> wrapping combining marks is ignored by browsers — the
+// shaping engine assigns marks the color of their base letter's element.
+// Solution: render each word on a <canvas> in 3 passes:
+//   pass 1 – draw (base + taamim marks) in red   ← GPOS positions marks correctly
+//   pass 2 – draw (base + nikud marks)  in green
+//   pass 3 – draw base letter in letter-color    ← painted on top; hides any overlap
+
+const CANVAS_FONT = "'Taamey Frank CLM', 'Times New Roman', serif"
+const ABOVE_R = 1.35   // canvas-top → baseline, as multiple of fontSize
+const BELOW_R = 0.55   // baseline → canvas-bottom
+const H_PAD   = 3      // horizontal padding px
+
+function cpIsTaamim(cp) { return cp >= 0x0591 && cp <= 0x05AF }
+function cpIsNikud(cp) {
+  return (cp >= 0x05B0 && cp <= 0x05BD) || cp === 0x05BF ||
+         cp === 0x05C1 || cp === 0x05C2 || cp === 0x05C4 || cp === 0x05C5 || cp === 0x05C7
+}
+function cpIsMark(cp) { return cpIsTaamim(cp) || cpIsNikud(cp) }
+
+function drawTaaminWord(canvas, text, fontSize, lColor, tColor, nColor) {
+  const dpr  = window.devicePixelRatio || 1
+  const font = `${fontSize}px ${CANVAS_FONT}`
+  const ctx  = canvas.getContext('2d')
+
+  // Reset stale transform from previous render, then measure in CSS pixels
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.font = font; ctx.direction = 'rtl'; ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic'
+
+  // Cluster: [base, ...combiningMarks]
+  const clusters = []
+  for (const ch of [...text]) {
     const cp = ch.codePointAt(0)
-    if (cp >= 0x0591 && cp <= 0x05AF) {
-      hasMark = true
-      result.push(<span key={i} style={{ color: '#e53535' }}>{ch}</span>)
-    } else if (
-      (cp >= 0x05B0 && cp <= 0x05BD) || cp === 0x05BF ||
-      cp === 0x05C1 || cp === 0x05C2 || cp === 0x05C4 || cp === 0x05C5 || cp === 0x05C7
-    ) {
-      hasMark = true
-      result.push(<span key={i} style={{ color: '#22a846' }}>{ch}</span>)
-    } else {
-      result.push(ch)
-    }
+    if (!cpIsMark(cp) || !clusters.length) clusters.push([ch])
+    else clusters[clusters.length - 1].push(ch)
   }
-  return hasMark ? result : text
+
+  const textW   = Math.max(ctx.measureText(text).width, 2)
+  // Width of everything AFTER each cluster (used to compute its right-edge x)
+  const suffixW = clusters.map((_, i) =>
+    ctx.measureText(clusters.slice(i + 1).flat().join('')).width
+  )
+
+  const W     = Math.ceil(textW + fontSize * 0.4 + H_PAD * 2)
+  const ABOVE = Math.ceil(fontSize * ABOVE_R)
+  const BELOW = Math.ceil(fontSize * BELOW_R)
+
+  canvas.width        = W * dpr
+  canvas.height       = (ABOVE + BELOW) * dpr
+  canvas.style.width  = `${W}px`
+  canvas.style.height = `${ABOVE + BELOW}px`
+  // Shift canvas down so its y=ABOVE line aligns with the parent text baseline
+  canvas.style.verticalAlign = `-${BELOW}px`
+
+  // canvas.width reset cleared all context state — re-init
+  ctx.scale(dpr, dpr)
+  ctx.font = font; ctx.direction = 'rtl'; ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic'
+
+  const X0 = W - H_PAD  // right edge for RTL
+  const Y  = ABOVE       // baseline y
+  const cx = suffixW.map(sw => X0 - sw)
+
+  // Pass 1: taamim in tColor
+  clusters.forEach(([base, ...marks], i) => {
+    const t = marks.filter(m => cpIsTaamim(m.codePointAt(0)))
+    if (t.length) { ctx.fillStyle = tColor; ctx.fillText(base + t.join(''), cx[i], Y) }
+  })
+  // Pass 2: nikud in nColor
+  clusters.forEach(([base, ...marks], i) => {
+    const n = marks.filter(m => cpIsNikud(m.codePointAt(0)))
+    if (n.length) { ctx.fillStyle = nColor; ctx.fillText(base + n.join(''), cx[i], Y) }
+  })
+  // Pass 3: letters in lColor (on top — corrects letter color, hides mark overlap with letter body)
+  clusters.forEach(([base], i) => {
+    ctx.fillStyle = lColor
+    ctx.fillText(base, cx[i], Y)
+  })
+}
+
+function CanvasWord({ text, fontSize, lColor, isActive, isHover, bookColor, onClick, onMouseEnter, onMouseLeave, wordRef }) {
+  const canRef = useRef(null)
+  const lC = isActive ? bookColor : isHover ? '#3b82f6' : lColor
+  const tC = isActive ? bookColor : isHover ? '#3b82f6' : '#e53535'
+  const nC = isActive ? bookColor : isHover ? '#3b82f6' : '#22a846'
+  useEffect(() => {
+    const canvas = canRef.current
+    if (!canvas) return
+    drawTaaminWord(canvas, text, fontSize, lC, tC, nC)
+    // Redraw once font is confirmed loaded (in case first draw used fallback)
+    document.fonts.load(`${fontSize}px 'Taamey Frank CLM'`).then(() => {
+      drawTaaminWord(canvas, text, fontSize, lC, tC, nC)
+    })
+  }, [text, fontSize, lC, tC, nC])
+  return (
+    <canvas
+      ref={el => { canRef.current = el; wordRef?.(el) }}
+      style={{ display: 'inline-block', cursor: onClick ? 'pointer' : 'default' }}
+      onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}
+    />
+  )
 }
 
 // Map a Sefaria word index to a playback time.
@@ -614,6 +690,8 @@ function wordIdxToTime(wordIdx, wordTimestamps, totalWords, duration) {
 function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCurrentTime, audioPlaying, audioDuration, onWordClick }) {
   const wordRefs = useRef([])
   const [hoverIdx, setHoverIdx] = useState(-1)
+  const { isDark } = useTheme()
+  const textColor = isDark ? 'rgba(240,239,255,0.92)' : '#1a1200'
 
   const allWords = useMemo(() => {
     const result = []
@@ -667,6 +745,25 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
           {allWords.map((w, i) => {
             const isActive = activeWordIdx === i
             const isHover = hoverIdx === i && !isActive
+            if (mode === 'taamim') {
+              return (
+                <Fragment key={i}>
+                  <CanvasWord
+                    text={w.text}
+                    fontSize={fontSize}
+                    lColor={textColor}
+                    isActive={isActive}
+                    isHover={isHover}
+                    bookColor={bookColor}
+                    onClick={() => handleClick(i)}
+                    onMouseEnter={() => setHoverIdx(i)}
+                    onMouseLeave={() => setHoverIdx(-1)}
+                    wordRef={el => { wordRefs.current[i] = el }}
+                  />
+                  {' '}
+                </Fragment>
+              )
+            }
             return (
               <span
                 key={i}
@@ -684,7 +781,7 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
                   transition: 'color 0.08s',
                 }}
               >
-                {colorWord(w.text, mode)}{' '}
+                {w.text}{' '}
               </span>
             )
           })}
@@ -700,6 +797,8 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
   const [hoverIdx, setHoverIdx] = useState(-1)
   const dragging = useRef(false)
   const wordRefsLeft = useRef([])
+  const { isDark } = useTheme()
+  const textColor = isDark ? 'rgba(240,239,255,0.92)' : '#1a1200'
 
   useEffect(() => {
     const onMove = e => {
@@ -819,15 +918,27 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
             background: `${bookColor}05`,
           }}>
             <div className="hebrew-reader" style={{ ...textBase, color: 'var(--text)' }}>
-              {allWordsTaamim.map((w, i) => (
-                <span key={i} ref={el => { wordRefsLeft.current[i] = el }}
-                  style={wordStyle(i, true)}
-                  onClick={() => handleClickLeft(i)}
-                  onMouseEnter={() => setHoverIdx(i)}
-                  onMouseLeave={() => setHoverIdx(-1)}>
-                  {colorWord(w, 'taamim')}{' '}
-                </span>
-              ))}
+              {allWordsTaamim.map((w, i) => {
+                const isActive = activeWordIdx === i
+                const isHover = hoverIdx === i && !isActive
+                return (
+                  <Fragment key={i}>
+                    <CanvasWord
+                      text={w}
+                      fontSize={fontSize}
+                      lColor={textColor}
+                      isActive={isActive}
+                      isHover={isHover}
+                      bookColor={bookColor}
+                      onClick={() => handleClickLeft(i)}
+                      onMouseEnter={() => setHoverIdx(i)}
+                      onMouseLeave={() => setHoverIdx(-1)}
+                      wordRef={el => { wordRefsLeft.current[i] = el }}
+                    />
+                    {' '}
+                  </Fragment>
+                )
+              })}
             </div>
           </div>
 
