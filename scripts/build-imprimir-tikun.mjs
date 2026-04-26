@@ -17,7 +17,7 @@ mkdirSync(join(OUT, 'data'), { recursive: true })
 const layout = readFileSync(`${SRC}/data/column-layout.js`, 'utf8')
 writeFileSync(
   join(OUT, 'data/column-layout.js'),
-  layout.replace(/"data\/columns\//g, '"http://www.ahavativrit.com/images/')
+  layout.replace(/"data\/columns\//g, '"https://images.weserv.nl/?url=www.ahavativrit.com/images/')
 )
 console.log('✓ column-layout.js  (remote image URLs)')
 
