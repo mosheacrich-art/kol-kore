@@ -7,6 +7,7 @@ import { useStudyTimer } from '../../hooks/useStudyTimer'
 const navItems = [
   { path: '/student/profile', label: 'Mi Perfil', heb: 'פְּרוֹפִיל', icon: ProfileIcon },
   { path: '/student/study', label: 'Estudiar Perashá', heb: 'לִמּוּד', icon: StudyIcon },
+  { path: '/student/subscription', label: 'Suscripción', heb: 'הַרְשָׁמָה', icon: SubscriptionIcon },
 ]
 
 export default function StudentLayout() {
@@ -165,6 +166,17 @@ function StudyIcon({ active }) {
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <path d="M3 3h5l3 3h4v9H3V3z" stroke={c} strokeWidth="1.3" strokeLinejoin="round"/>
       <path d="M6 9h6M6 12h4" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+function SubscriptionIcon({ active }) {
+  const c = active ? '#8b5cf6' : 'var(--text-3)'
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <rect x="2" y="4" width="14" height="10" rx="2" stroke={c} strokeWidth="1.3"/>
+      <path d="M2 8h14" stroke={c} strokeWidth="1.3"/>
+      <path d="M5 12h3M12 12h1" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
     </svg>
   )
 }

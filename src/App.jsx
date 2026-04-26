@@ -7,6 +7,7 @@ import Landing from './pages/Landing'
 import Login from './pages/Login'
 import StudentProfile from './pages/student/Profile'
 import StudentStudy from './pages/student/Study'
+import StudentSubscription from './pages/student/Subscription'
 import StudentLayout from './pages/student/Layout'
 import TeacherDashboard from './pages/teacher/Dashboard'
 import TeacherStudents from './pages/teacher/Students'
@@ -47,6 +48,7 @@ export default function App() {
                 <Route path="profile" element={<StudentProfile />} />
                 <Route path="study" element={<StudentStudy />} />
                 <Route path="study/:parashaId" element={<StudentStudy />} />
+                <Route path="subscription" element={<StudentSubscription />} />
               </Route>
               <Route path="/guest" element={<GuestLayout />}>
                 <Route index element={<Navigate to="study" replace />} />
