@@ -636,7 +636,7 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
   return (
     <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6">
       <div className="max-w-2xl mx-auto">
-        <div className="hebrew" style={{
+        <div className="hebrew-reader" style={{
           fontSize: fontSize + 'px',
           lineHeight: lineHeightForSize(fontSize),
           textAlign: 'justify',
@@ -798,7 +798,7 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
             borderRight: '1px solid var(--border-subtle)',
             background: `${bookColor}05`,
           }}>
-            <div className="hebrew" style={{ ...textBase, color: 'var(--text)' }}>
+            <div className="hebrew-reader" style={{ ...textBase, color: 'var(--text)' }}>
               {allWordsTaamim.map((w, i) => (
                 <span key={i} ref={el => { wordRefsLeft.current[i] = el }}
                   style={wordStyle(i, true)}
@@ -844,7 +844,7 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
             padding: '20px 24px 40px',
             background: 'var(--bg-card)',
           }}>
-            <div className="hebrew" style={{ ...textBase, color: 'var(--text-3)' }}>
+            <div className="hebrew-reader" style={{ ...textBase, color: 'var(--text-3)' }}>
               {allWordsPlain.map((w, i) => (
                 <span key={i} style={wordStyle(i)}>
                   {w}{' '}
