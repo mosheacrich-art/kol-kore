@@ -12,6 +12,7 @@ const navItems = [
   { path: '/teacher/audio', label: 'Audios', heb: 'הֶקְלָטוֹת' },
   { path: '/teacher/study', label: 'Perashiot', heb: 'פָּרָשִׁיּוֹת' },
   { path: '/teacher/notifications', label: 'Notificaciones', heb: 'הוֹדָעוֹת', badge: true },
+  { path: '/teacher/imprimir', label: 'Imprimir Tikún', heb: 'תִּקּוּן' },
 ]
 
 export default function TeacherLayout() {

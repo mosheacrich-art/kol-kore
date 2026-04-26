@@ -18,6 +18,7 @@ import TeacherAudioPanel from './pages/teacher/AudioPanel'
 import TeacherStudy from './pages/teacher/Study'
 import TeacherNotifications from './pages/teacher/Notifications'
 import TeacherLayout from './pages/teacher/Layout'
+import ImprimirTikun from './pages/ImprimirTikun'
 import GuestLayout from './pages/guest/Layout'
 import Privacy from './pages/legal/Privacy'
 import Terms from './pages/legal/Terms'
@@ -52,6 +53,7 @@ function AppRoutes() {
         <Route path="study" element={<StudentStudy />} />
         <Route path="study/:parashaId" element={<StudentStudy />} />
         <Route path="subscription" element={<StudentSubscription />} />
+        <Route path="imprimir" element={<ImprimirTikun />} />
       </Route>
       <Route path="/guest" element={<GuestLayout />}>
         <Route index element={<Navigate to="study" replace />} />
@@ -70,6 +72,7 @@ function AppRoutes() {
         <Route path="study" element={<TeacherStudy />} />
         <Route path="study/:parashaId" element={<TeacherStudy />} />
         <Route path="notifications" element={<TeacherNotifications />} />
+        <Route path="imprimir" element={<ImprimirTikun />} />
       </Route>
     </Routes>
   )

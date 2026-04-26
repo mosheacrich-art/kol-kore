@@ -1,0 +1,548 @@
+:root {
+  --ink: #151515;
+  --muted: #555;
+  --line: #c9c4ba;
+  --paper: #fffdf8;
+  --surface: #e9e4da;
+  --accent: #7b1e1e;
+  --gold: #b9924b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--surface);
+  font-family: "Times New Roman", "Noto Serif Hebrew", serif;
+}
+
+.book-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid #cfc8bb;
+  background: #fffaf0;
+  box-shadow: 0 2px 14px rgb(0 0 0 / 8%);
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.toolbar-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 16px;
+  border: 1px solid #5a1616;
+  border-radius: 6px;
+  color: #fff;
+  background: var(--accent);
+  font: 700 14px Arial, sans-serif;
+  cursor: pointer;
+}
+
+.book {
+  display: grid;
+  justify-content: center;
+  gap: 22px;
+  padding: 24px;
+}
+
+.book-page {
+  position: relative;
+  width: 210mm;
+  min-height: 297mm;
+  padding: 18mm 16mm 14mm;
+  background: var(--paper);
+  border: 1px solid #c8bdad;
+  box-shadow: 0 12px 34px rgb(0 0 0 / 16%);
+  page-break-after: always;
+}
+
+.cover-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18mm;
+}
+
+.cover-frame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: 3px double var(--gold);
+  text-align: center;
+}
+
+.cover-kicker,
+.cover-subtitle {
+  color: #4f3d28;
+  font-size: 24px;
+}
+
+.cover-page h1 {
+  margin: 26px 0;
+  color: #24150e;
+  font-size: 76px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.toc-page h2 {
+  margin: 0 0 16mm;
+  text-align: center;
+  font-size: 34px;
+}
+
+.toc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 18mm;
+  row-gap: 5px;
+}
+
+.toc-row {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dotted #a9a092;
+  font-size: 20px;
+  line-height: 1.45;
+}
+
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 7mm;
+  padding-bottom: 3mm;
+  border-bottom: 1px solid var(--line);
+  color: #4d463b;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.amud {
+  display: grid;
+  grid-template-rows: auto repeat(42, 1fr);
+  min-height: 247mm;
+  gap: 0;
+}
+
+.column-labels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8mm;
+  margin-bottom: 2mm;
+  color: #6a5d4b;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.amud-line {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8mm;
+  align-items: center;
+  min-height: 5.55mm;
+  border-bottom: 1px solid #eadfce;
+}
+
+.line-tikkun,
+.line-torah {
+  direction: rtl;
+  unicode-bidi: plaintext;
+  font-family: "Taamey Frank CLM", "SBL Hebrew", "Ezra SIL", "Times New Roman", serif;
+  letter-spacing: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.line-tikkun {
+  font-size: 19px;
+  line-height: 1.1;
+}
+
+.line-torah {
+  font-size: 21px;
+  line-height: 1.1;
+  text-align: justify;
+  text-align-last: justify;
+}
+
+.blank-line .line-tikkun,
+.blank-line .line-torah {
+  color: transparent;
+}
+
+.big-letter {
+  font-size: 1.2em;
+}
+
+.small-letter {
+  font-size: 0.8em;
+}
+
+.mam-spi-pe,
+.mam-spi-samekh {
+  color: #7a1e1e;
+  font-size: 0.8em;
+  white-space: nowrap;
+}
+
+.page-foot {
+  position: absolute;
+  bottom: 7mm;
+  left: 0;
+  right: 0;
+  color: #6f6556;
+  font-size: 12px;
+  text-align: center;
+}
+
+.exact-column-page {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.column-image-frame {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  min-height: 246mm;
+  margin: 0;
+}
+
+.column-image-frame img {
+  display: block;
+  max-width: 100%;
+  max-height: 246mm;
+  object-fit: contain;
+}
+
+.loading {
+  width: 210mm;
+  padding: 40px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TRACKING MODE
+   ═══════════════════════════════════════════════════════════════ */
+
+.tr-panel {
+  max-width: 860px;
+  margin: 28px auto;
+  padding: 0 16px 60px;
+}
+
+.tr-panel.hidden { display: none; }
+
+/* Controls bar */
+.tr-controls {
+  position: sticky;
+  top: 58px;
+  z-index: 1;
+  background: #fffaf0;
+  border: 1px solid #c8bdad;
+  border-radius: 10px;
+  padding: 12px 18px;
+  margin-bottom: 22px;
+  box-shadow: 0 4px 18px rgb(0 0 0 / 9%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tr-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tr-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  font-family: "Taamey Frank CLM", "SBL Hebrew", serif;
+}
+
+.tr-select {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #c8bdad;
+  border-radius: 6px;
+  background: var(--paper);
+  font-family: "Taamey Frank CLM", "SBL Hebrew", serif;
+  font-size: 18px;
+  color: var(--ink);
+  direction: rtl;
+  min-width: 180px;
+}
+
+.tr-ref {
+  font-size: 13px;
+  color: var(--muted);
+  margin-right: auto;
+  font-family: "Times New Roman", serif;
+}
+
+.tr-playbar {
+  gap: 10px;
+}
+
+/* File button — label styled as button */
+.tr-file-lbl {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 14px;
+  background: var(--surface);
+  border: 1px solid #c8bdad;
+  border-radius: 6px;
+  font: 700 13px Arial, sans-serif;
+  cursor: pointer;
+  color: var(--ink);
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.tr-file-lbl:hover { background: #ddd8cc; }
+
+/* Audio player bar */
+.tr-audio-bar {
+  flex: 1 1 100%;
+}
+
+.tr-audio-bar.hidden { display: none; }
+
+.tr-audio-player {
+  width: 100%;
+  height: 32px;
+}
+
+/* Play / reset buttons */
+.tr-btn-play {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 18px;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.tr-btn-play.playing {
+  background: #3a0f0f;
+  border-color: #200808;
+}
+
+.tr-btn-sec {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 16px;
+  flex-shrink: 0;
+  background: var(--surface) !important;
+  border: 1px solid #c8bdad !important;
+  color: var(--ink) !important;
+  border-radius: 6px;
+}
+
+/* Speed control */
+.tr-speed-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 160px;
+}
+
+.tr-speed-lbl-fixed {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.tr-slider {
+  flex: 1;
+  height: 4px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.tr-speed-val {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+  min-width: 56px;
+}
+
+.tr-counter {
+  font-size: 13px;
+  color: var(--muted);
+  min-width: 76px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Active mode toggle */
+.tr-btn-active {
+  background: #3a0f0f !important;
+  border-color: #1a0808 !important;
+}
+
+/* ── Text display ───────────────────────────────────────── */
+.tr-text {
+  background: var(--paper);
+  border: 1px solid #c8bdad;
+  border-radius: 10px;
+  box-shadow: 0 4px 22px rgb(0 0 0 / 9%);
+  padding: 32px 28px 40px;
+  font-family: "Taamey Frank CLM", "SBL Hebrew", "Ezra SIL", "Times New Roman", serif;
+  font-size: 26px;
+  line-height: 2.5;
+  direction: rtl;
+  text-align: justify;
+  color: var(--ink);
+}
+
+/* Individual word */
+.tword {
+  display: inline;
+  padding: 1px 3px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.tword:hover {
+  background: rgba(185, 146, 75, 0.18);
+}
+
+.tword.word-active {
+  background: rgba(185, 146, 75, 0.38);
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* Between verses */
+.tr-pasuk-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c9c4ba;
+  vertical-align: middle;
+  margin: 0 2px 2px;
+}
+
+/* Chapter separator */
+.tr-chapter-sep {
+  display: inline-block;
+  font-size: 15px;
+  color: var(--accent);
+  font-weight: 700;
+  margin: 0 6px;
+  opacity: 0.7;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 8mm;
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .book-toolbar {
+    display: none;
+  }
+
+  .book {
+    display: block;
+    padding: 0;
+  }
+
+  .book-page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0;
+    padding: 16mm 13mm 13mm;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .amud {
+    min-height: 250mm;
+  }
+
+  .column-image-frame {
+    min-height: 250mm;
+  }
+
+  .column-image-frame img {
+    max-height: 250mm;
+  }
+}
+
+@media (max-width: 720px) {
+  .book {
+    padding: 10px;
+  }
+
+  .book-page {
+    width: 100%;
+    min-height: auto;
+    padding: 18px 14px;
+  }
+
+  .amud-line {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 6px 0;
+    white-space: normal;
+  }
+
+  .line-tikkun,
+  .line-torah {
+    white-space: normal;
+  }
+
+  .column-labels {
+    display: none;
+  }
+
+  .toc-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cover-page h1 {
+    font-size: 48px;
+  }
+}

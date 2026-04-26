@@ -7,6 +7,7 @@ import { useStudyTimer } from '../../hooks/useStudyTimer'
 const navItems = [
   { path: '/student/profile', label: 'Mi Perfil', heb: 'פְּרוֹפִיל', icon: ProfileIcon },
   { path: '/student/study', label: 'Estudiar Perashá', heb: 'לִמּוּד', icon: StudyIcon },
+  { path: '/student/imprimir', label: 'Imprimir Tikún', heb: 'תִּקּוּן', icon: PrintIcon },
   { path: '/student/subscription', label: 'Suscripción', heb: 'הַרְשָׁמָה', icon: SubscriptionIcon },
 ]
 
@@ -166,6 +167,17 @@ function StudyIcon({ active }) {
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <path d="M3 3h5l3 3h4v9H3V3z" stroke={c} strokeWidth="1.3" strokeLinejoin="round"/>
       <path d="M6 9h6M6 12h4" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+function PrintIcon({ active }) {
+  const c = active ? '#8b5cf6' : 'var(--text-3)'
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <rect x="3" y="6" width="12" height="8" rx="1" stroke={c} strokeWidth="1.3"/>
+      <path d="M5 6V3h8v3" stroke={c} strokeWidth="1.3" strokeLinejoin="round"/>
+      <path d="M5 11h8M5 13h5" stroke={c} strokeWidth="1.2" strokeLinecap="round"/>
     </svg>
   )
 }
