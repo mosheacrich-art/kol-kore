@@ -4,6 +4,121 @@ import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { PARASHOT } from '../../data/parashot'
 
+function AccountSection({ user }) {
+  const [section, setSection] = useState(null) // null | 'email' | 'password'
+  const [newEmail, setNewEmail] = useState('')
+  const [newPass, setNewPass] = useState('')
+  const [confirmPass, setConfirmPass] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [msg, setMsg] = useState(null) // { type: 'ok'|'err', text }
+
+  const show = (s) => { setSection(s); setMsg(null); setNewEmail(''); setNewPass(''); setConfirmPass('') }
+
+  const handleEmail = async (e) => {
+    e.preventDefault()
+    if (!newEmail.includes('@')) { setMsg({ type: 'err', text: 'Email no válido' }); return }
+    setLoading(true)
+    const { error } = await supabase.auth.updateUser({ email: newEmail })
+    setLoading(false)
+    if (error) { setMsg({ type: 'err', text: error.message }); return }
+    setMsg({ type: 'ok', text: 'Te hemos enviado un enlace de confirmación al nuevo email.' })
+    setSection(null)
+  }
+
+  const handlePassword = async (e) => {
+    e.preventDefault()
+    if (newPass.length < 6) { setMsg({ type: 'err', text: 'Mínimo 6 caracteres' }); return }
+    if (newPass !== confirmPass) { setMsg({ type: 'err', text: 'Las contraseñas no coinciden' }); return }
+    setLoading(true)
+    const { error } = await supabase.auth.updateUser({ password: newPass })
+    setLoading(false)
+    if (error) { setMsg({ type: 'err', text: error.message }); return }
+    setMsg({ type: 'ok', text: 'Contraseña actualizada correctamente.' })
+    setSection(null)
+  }
+
+  const inputStyle = {
+    background: 'var(--bg-card)',
+    border: '1px solid var(--border)',
+    color: 'var(--text)',
+  }
+
+  return (
+    <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+      <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>Cuenta</p>
+
+      {msg && (
+        <div className="mb-3 p-2.5 rounded-xl text-xs"
+          style={{
+            background: msg.type === 'ok' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+            color: msg.type === 'ok' ? '#16a34a' : '#ef4444',
+            border: `1px solid ${msg.type === 'ok' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`,
+          }}>
+          {msg.text}
+        </div>
+      )}
+
+      {/* Email display */}
+      <div className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+        <div>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Email</p>
+          <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--text-2)' }}>{user?.email}</p>
+        </div>
+        <button onClick={() => show(section === 'email' ? null : 'email')}
+          className="text-xs px-2.5 py-1 rounded-lg transition-all"
+          style={{ background: 'rgba(108,51,230,0.1)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)' }}>
+          Cambiar
+        </button>
+      </div>
+
+      {section === 'email' && (
+        <form onSubmit={handleEmail} className="flex flex-col gap-2 pt-3">
+          <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)}
+            placeholder="Nuevo email" required autoFocus
+            className="w-full px-3 py-2 rounded-xl text-xs outline-none"
+            style={inputStyle} />
+          <button type="submit" disabled={loading}
+            className="w-full py-2 rounded-xl text-xs font-semibold transition-all"
+            style={{ background: loading ? 'var(--bg-card)' : '#6c33e6', color: loading ? 'var(--text-3)' : '#fff', border: loading ? '1px solid var(--border)' : 'none' }}>
+            {loading ? '…' : 'Enviar confirmación'}
+          </button>
+        </form>
+      )}
+
+      {/* Password */}
+      <div className="flex items-center justify-between py-2 mt-1">
+        <div>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Contraseña</p>
+          <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--text-2)' }}>••••••••</p>
+        </div>
+        <button onClick={() => show(section === 'password' ? null : 'password')}
+          className="text-xs px-2.5 py-1 rounded-lg transition-all"
+          style={{ background: 'rgba(108,51,230,0.1)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)' }}>
+          Cambiar
+        </button>
+      </div>
+
+      {section === 'password' && (
+        <form onSubmit={handlePassword} className="flex flex-col gap-2 pt-1">
+          <input type="password" value={newPass} onChange={e => setNewPass(e.target.value)}
+            placeholder="Nueva contraseña (mín. 6)" required autoFocus
+            className="w-full px-3 py-2 rounded-xl text-xs outline-none"
+            style={inputStyle} />
+          <input type="password" value={confirmPass} onChange={e => setConfirmPass(e.target.value)}
+            placeholder="Repetir contraseña" required
+            className="w-full px-3 py-2 rounded-xl text-xs outline-none"
+            style={inputStyle} />
+          <button type="submit" disabled={loading}
+            className="w-full py-2 rounded-xl text-xs font-semibold transition-all"
+            style={{ background: loading ? 'var(--bg-card)' : '#6c33e6', color: loading ? 'var(--text-3)' : '#fff', border: loading ? '1px solid var(--border)' : 'none' }}>
+            {loading ? '…' : 'Guardar nueva contraseña'}
+          </button>
+        </form>
+      )}
+    </div>
+  )
+}
+
 function daysUntil(dateStr) {
   if (!dateStr) return null
   const diff = new Date(dateStr) - new Date()
@@ -18,7 +133,7 @@ const priorityColors = {
 
 export default function StudentProfile() {
   const navigate = useNavigate()
-  const { profile, setProfile } = useAuth()
+  const { profile, setProfile, user } = useAuth()
   const [deberes, setDeberes] = useState([])
   const [teacherCode, setTeacherCode] = useState('')
   const [teacherName, setTeacherName] = useState(null)
@@ -283,6 +398,8 @@ export default function StudentProfile() {
               </div>
             </div>
           </div>
+
+          <AccountSection user={user} />
         </div>
       </div>
     </div>

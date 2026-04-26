@@ -147,6 +147,7 @@ function StudentModal({ onClose, isDark, t }) {
   const navigate = useNavigate()
 
   const [isLogin, setIsLogin] = useState(true)
+  const [isForgot, setIsForgot] = useState(false)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -154,8 +155,21 @@ function StudentModal({ onClose, isDark, t }) {
   const [months, setMonths] = useState(1)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [forgotSent, setForgotSent] = useState(false)
 
   const price = plan === 'annual' ? ANNUAL : plan === 'monthly' ? MONTHLY * months : 0
+
+  const handleForgot = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + window.location.pathname,
+    })
+    setLoading(false)
+    if (err) { setError(err.message); return }
+    setForgotSent(true)
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -229,6 +243,52 @@ function StudentModal({ onClose, isDark, t }) {
             </svg>
           </button>
         </div>
+
+        {/* Forgot password form */}
+        {isForgot ? (
+          <form onSubmit={handleForgot} className="px-6 py-5 flex flex-col gap-3">
+            {forgotSent ? (
+              <div className="flex flex-col items-center gap-3 py-4 text-center">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ background: 'rgba(34,197,94,0.15)' }}>
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <circle cx="9" cy="9" r="7.5" stroke="#16a34a" strokeWidth="1.3"/>
+                    <path d="M5.5 9l2.5 2.5L12.5 7" stroke="#16a34a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <p className="text-sm font-semibold" style={{ color: '#16a34a' }}>Correo enviado</p>
+                <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+                  Revisa tu bandeja de entrada y sigue el enlace para restablecer tu contraseña.
+                </p>
+                <button type="button" onClick={() => { setIsForgot(false); setForgotSent(false) }}
+                  className="text-xs mt-1" style={{ color: '#6c33e6' }}>
+                  Volver al inicio de sesión
+                </button>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>Recuperar contraseña</p>
+                <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+                  Escribe tu email y te enviaremos un enlace para crear una nueva contraseña.
+                </p>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                  placeholder="Tu email" required autoFocus
+                  className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none"
+                  style={inputStyle} />
+                {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
+                <button type="submit" disabled={loading}
+                  className="w-full py-3 rounded-xl font-semibold text-sm transition-all"
+                  style={{ background: loading ? 'var(--bg-card)' : 'linear-gradient(135deg,#6c33e6,#8b5cf6)', color: loading ? 'var(--text-3)' : '#fff', border: loading ? '1px solid var(--border)' : 'none' }}>
+                  {loading ? '…' : 'Enviar enlace'}
+                </button>
+                <button type="button" onClick={() => { setIsForgot(false); setError('') }}
+                  className="text-xs text-center" style={{ color: t.switchText }}>
+                  Volver
+                </button>
+              </>
+            )}
+          </form>
+        ) : (
 
         <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-3">
 
@@ -383,6 +443,16 @@ function StudentModal({ onClose, isDark, t }) {
             }
           </button>
 
+          {/* Forgot password link — only on login */}
+          {isLogin && (
+            <button type="button"
+              onClick={() => { setIsForgot(true); setError('') }}
+              className="text-xs text-center"
+              style={{ color: '#6c33e6' }}>
+              ¿Olvidaste tu contraseña?
+            </button>
+          )}
+
           {/* Switch login/register */}
           <button type="button"
             onClick={() => { setIsLogin(!isLogin); setError('') }}
@@ -392,6 +462,7 @@ function StudentModal({ onClose, isDark, t }) {
           </button>
 
         </form>
+        )} {/* end isForgot conditional */}
       </div>
     </div>
   )

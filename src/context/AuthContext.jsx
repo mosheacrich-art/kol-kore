@@ -7,6 +7,9 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [recoveryMode, setRecoveryMode] = useState(
+    () => window.location.hash.includes('type=recovery')
+  )
 
   const fetchProfile = async (userId) => {
     const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
@@ -16,7 +19,8 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // onAuthStateChange fires INITIAL_SESSION immediately — no need for a separate getSession() call
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') { setRecoveryMode(true); return }
       setUser(session?.user ?? null)
       if (session?.user) fetchProfile(session.user.id)
       else { setProfile(null); setLoading(false) }
@@ -53,8 +57,10 @@ export function AuthProvider({ children }) {
     setProfile(null)
   }
 
+  const clearRecovery = () => setRecoveryMode(false)
+
   return (
-    <AuthCtx.Provider value={{ user, profile, setProfile, loading, signIn, signUp, signOut }}>
+    <AuthCtx.Provider value={{ user, profile, setProfile, loading, signIn, signUp, signOut, recoveryMode, clearRecovery }}>
       {children}
     </AuthCtx.Provider>
   )

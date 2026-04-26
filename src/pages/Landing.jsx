@@ -437,11 +437,28 @@ export default function Landing() {
           <span className="text-sm font-semibold" style={{ color: t.text }}>Perashá</span>
           <span className="hebrew text-sm" style={{ color: t.goldSubtle }}>פָּרָשָׁה</span>
         </div>
-        <p className="text-xs" style={{ color: t.text2 }}>
-          Texto de <a href="https://sefaria.org" target="_blank" rel="noreferrer"
-            style={{ color: '#6c33e6', textDecoration: 'none' }}>Sefaria</a> ·
-          Audio por OpenAI Whisper · Tikkun por tikkun.io
-        </p>
+        <div className="flex items-center gap-4 flex-wrap">
+          <p className="text-xs" style={{ color: t.text2 }}>
+            Texto de <a href="https://sefaria.org" target="_blank" rel="noreferrer"
+              style={{ color: '#6c33e6', textDecoration: 'none' }}>Sefaria</a> ·
+            Audio por OpenAI Whisper · Tikkun por tikkun.io
+          </p>
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate('/privacy')}
+              className="text-xs transition-all" style={{ color: t.text2 }}
+              onMouseEnter={e => e.target.style.color = '#6c33e6'}
+              onMouseLeave={e => e.target.style.color = t.text2}>
+              Privacidad
+            </button>
+            <span style={{ color: t.border }}>·</span>
+            <button onClick={() => navigate('/terms')}
+              className="text-xs transition-all" style={{ color: t.text2 }}
+              onMouseEnter={e => e.target.style.color = '#6c33e6'}
+              onMouseLeave={e => e.target.style.color = t.text2}>
+              Términos
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )
