@@ -8,7 +8,26 @@ export function AudioProvider({ children }) {
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase.from('audio_files').select('*')
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) { setAudios({}); return }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, teacher_id')
+        .eq('id', session.user.id)
+        .single()
+
+      let teacherIdFilter = null
+      if (profile?.role === 'teacher') teacherIdFilter = session.user.id
+      else if (profile?.role === 'student') teacherIdFilter = profile.teacher_id
+
+      if (!teacherIdFilter) { setAudios({}); return }
+
+      const { data } = await supabase
+        .from('audio_files')
+        .select('*')
+        .eq('teacher_id', teacherIdFilter)
+
       if (!data) return
       const map = {}
       data.forEach(row => {
@@ -28,11 +47,7 @@ export function AudioProvider({ children }) {
       setAudios(map)
     }
 
-    // Reload when auth state changes (covers refresh + login/logout)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      load()
-    })
-
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => load())
     load()
     return () => subscription.unsubscribe()
   }, [])

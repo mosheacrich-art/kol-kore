@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 're
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5]
 
-const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTimeUpdate, onPlayingChange }, ref) {
+const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTimeUpdate, onPlayingChange, onDurationChange }, ref) {
   const audioRef = useRef(null)
 
   useImperativeHandle(ref, () => ({
@@ -57,6 +57,7 @@ const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTi
     if (!audioRef.current) return
     setDuration(audioRef.current.duration)
     audioRef.current.playbackRate = SPEEDS[speedIdx]
+    onDurationChange?.(audioRef.current.duration)
   }
 
   const cycleSpeed = () => {

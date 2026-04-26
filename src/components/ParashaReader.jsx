@@ -36,6 +36,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
   const [fontSize, setFontSize] = useState(22)
   const [audioCurrentTime, setAudioCurrentTime] = useState(null)
   const [audioPlaying, setAudioPlaying] = useState(false)
+  const [audioDuration, setAudioDuration] = useState(0)
   const audioPlayerRef = useRef(null)
 
   const handleSeek = useCallback((time) => {
@@ -448,7 +449,8 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
                 wordTimestamps={audio?.wordTimestamps ?? null}
                 audioCurrentTime={audioCurrentTime}
                 audioPlaying={audioPlaying}
-                onWordClick={audio?.wordTimestamps?.length ? handleSeek : null}
+                audioDuration={audioDuration}
+                onWordClick={audio ? handleSeek : null}
               />
             : <SingleView
                 verses={verses}
@@ -458,7 +460,8 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
                 wordTimestamps={audio?.wordTimestamps ?? null}
                 audioCurrentTime={audioCurrentTime}
                 audioPlaying={audioPlaying}
-                onWordClick={audio?.wordTimestamps?.length ? handleSeek : null}
+                audioDuration={audioDuration}
+                onWordClick={audio ? handleSeek : null}
               />
         )}
         {mode !== 'sefer' && !loading && !error && verses.length === 0 && (
@@ -499,6 +502,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
                 onPlay={handlePlay}
                 onTimeUpdate={setAudioCurrentTime}
                 onPlayingChange={setAudioPlaying}
+                onDurationChange={setAudioDuration}
               />
             </div>
             {profile?.role === 'student' && (
@@ -567,31 +571,47 @@ function lineHeightForSize(fs) {
   return fs <= 20 ? 3.4 : fs <= 28 ? 3.2 : 3.0
 }
 
-// Returns JSX with taamim (red) and nikud (green) colored individually
+// Color taamim (red) and nikud (green) per character.
+// Each combining mark gets its own inline span with explicit color.
 function colorWord(text, mode) {
   if (mode !== 'taamim') return text
-  return [...text].map((ch, i) => {
+  const chars = [...text]
+  const result = []
+  let hasMark = false
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i]
     const cp = ch.codePointAt(0)
-    // Taamim / cantillation marks U+0591–U+05AF → red
-    if (cp >= 0x0591 && cp <= 0x05AF) return <span key={i} style={{ color: '#e53535' }}>{ch}</span>
-    // Nikud / vowel points → green
-    if ((cp >= 0x05B0 && cp <= 0x05BD) || cp === 0x05BF ||
-        cp === 0x05C1 || cp === 0x05C2 || cp === 0x05C4 || cp === 0x05C5 || cp === 0x05C7)
-      return <span key={i} style={{ color: '#22a846' }}>{ch}</span>
-    return ch
-  })
+    if (cp >= 0x0591 && cp <= 0x05AF) {
+      hasMark = true
+      result.push(<span key={i} style={{ color: '#e53535' }}>{ch}</span>)
+    } else if (
+      (cp >= 0x05B0 && cp <= 0x05BD) || cp === 0x05BF ||
+      cp === 0x05C1 || cp === 0x05C2 || cp === 0x05C4 || cp === 0x05C5 || cp === 0x05C7
+    ) {
+      hasMark = true
+      result.push(<span key={i} style={{ color: '#22a846' }}>{ch}</span>)
+    } else {
+      result.push(ch)
+    }
+  }
+  return hasMark ? result : text
 }
 
-// Map a Sefaria word index back to the nearest Whisper timestamp
-function wordIdxToTime(wordIdx, wordTimestamps, totalWords) {
-  if (!wordTimestamps?.length) return null
-  const wLen = wordTimestamps.length
-  const sLen = totalWords
-  const wi = wLen === 1 ? 0 : Math.min(Math.round(wordIdx * (wLen - 1) / (sLen - 1)), wLen - 1)
-  return wordTimestamps[wi].start
+// Map a Sefaria word index to a playback time.
+// Uses exact Whisper timestamps if available, otherwise proportional seek.
+function wordIdxToTime(wordIdx, wordTimestamps, totalWords, duration) {
+  if (wordTimestamps?.length) {
+    const wLen = wordTimestamps.length
+    const wi = wLen === 1 ? 0 : Math.min(Math.round(wordIdx * (wLen - 1) / (Math.max(1, totalWords - 1))), wLen - 1)
+    return wordTimestamps[wi].start
+  }
+  if (duration > 0 && totalWords > 0) {
+    return (wordIdx / Math.max(1, totalWords - 1)) * duration
+  }
+  return null
 }
 
-function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCurrentTime, audioPlaying, onWordClick }) {
+function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCurrentTime, audioPlaying, audioDuration, onWordClick }) {
   const wordRefs = useRef([])
   const [hoverIdx, setHoverIdx] = useState(-1)
 
@@ -627,7 +647,7 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
 
   const handleClick = (i) => {
     if (!onWordClick) return
-    const t = wordIdxToTime(i, wordTimestamps, allWords.length)
+    const t = wordIdxToTime(i, wordTimestamps, allWords.length, audioDuration)
     if (t != null) onWordClick(t)
   }
 
@@ -652,16 +672,16 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
                 key={i}
                 ref={el => { wordRefs.current[i] = el }}
                 onClick={() => handleClick(i)}
-                onMouseEnter={() => canSeek && setHoverIdx(i)}
+                onMouseEnter={() => setHoverIdx(i)}
                 onMouseLeave={() => setHoverIdx(-1)}
                 style={{
                   borderRadius: '4px',
-                  padding: isActive || isHover ? '1px 3px' : '1px 0',
-                  backgroundColor: isActive ? `${bookColor}35` : isHover ? 'rgba(150,150,150,0.15)' : 'transparent',
-                  color: isActive ? bookColor : 'inherit',
-                  boxShadow: isActive ? `0 0 0 1.5px ${bookColor}50` : isHover ? '0 0 0 1px rgba(150,150,150,0.3)' : 'none',
+                  padding: isActive ? '1px 3px' : '1px 0',
+                  backgroundColor: isActive ? `${bookColor}25` : 'transparent',
+                  color: isActive ? bookColor : isHover ? '#3b82f6' : 'inherit',
+                  boxShadow: isActive ? `0 0 0 1.5px ${bookColor}50` : 'none',
                   cursor: canSeek ? 'pointer' : 'default',
-                  transition: 'background-color 0.08s, box-shadow 0.08s',
+                  transition: 'color 0.08s',
                 }}
               >
                 {colorWord(w.text, mode)}{' '}
@@ -674,7 +694,7 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
   )
 }
 
-function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTime, audioPlaying, onWordClick }) {
+function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTime, audioPlaying, audioDuration, onWordClick }) {
   const flexRef = useRef(null)
   const [leftPct, setLeftPct] = useState(50)
   const [hoverIdx, setHoverIdx] = useState(-1)
@@ -752,7 +772,7 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
 
   const handleClickLeft = (i) => {
     if (!onWordClick) return
-    const t = wordIdxToTime(i, wordTimestamps, allWordsTaamim.length)
+    const t = wordIdxToTime(i, wordTimestamps, allWordsTaamim.length, audioDuration)
     if (t != null) onWordClick(t)
   }
 
@@ -761,12 +781,12 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
     const isHover = forLeft && hoverIdx === i && !isActive
     return {
       borderRadius: '4px',
-      padding: isActive || isHover ? '1px 3px' : '1px 0',
-      backgroundColor: isActive ? `${bookColor}35` : isHover ? 'rgba(150,150,150,0.15)' : 'transparent',
-      color: isActive ? bookColor : 'inherit',
-      boxShadow: isActive ? `0 0 0 1.5px ${bookColor}50` : isHover ? '0 0 0 1px rgba(150,150,150,0.3)' : 'none',
+      padding: isActive ? '1px 3px' : '1px 0',
+      backgroundColor: isActive ? `${bookColor}25` : 'transparent',
+      color: isActive ? bookColor : isHover ? '#3b82f6' : 'inherit',
+      boxShadow: isActive ? `0 0 0 1.5px ${bookColor}50` : 'none',
       cursor: forLeft && canSeek ? 'pointer' : 'default',
-      transition: 'background-color 0.08s, box-shadow 0.08s',
+      transition: 'color 0.08s',
     }
   }
 
@@ -803,7 +823,7 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
                 <span key={i} ref={el => { wordRefsLeft.current[i] = el }}
                   style={wordStyle(i, true)}
                   onClick={() => handleClickLeft(i)}
-                  onMouseEnter={() => canSeek && setHoverIdx(i)}
+                  onMouseEnter={() => setHoverIdx(i)}
                   onMouseLeave={() => setHoverIdx(-1)}>
                   {colorWord(w, 'taamim')}{' '}
                 </span>
