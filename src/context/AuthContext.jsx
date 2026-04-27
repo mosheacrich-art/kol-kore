@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 const AuthCtx = createContext(null)
@@ -10,9 +10,9 @@ export function AuthProvider({ children }) {
   const [recoveryMode, setRecoveryMode] = useState(
     () => window.location.hash.includes('type=recovery')
   )
-  const initializedRef = useRef(false)
 
-  const fetchProfile = async (userId) => {
+  // Used by signUp (no active guard needed — not tied to effect lifecycle)
+  const loadProfile = async (userId) => {
     try {
       const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
       setProfile(data ?? null)
@@ -24,26 +24,33 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
-    // getSession() garantiza que loading se resuelve incluso si INITIAL_SESSION
-    // no llega (e.g. StrictMode monta el efecto dos veces en desarrollo)
-    if (!initializedRef.current) {
-      initializedRef.current = true
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        setUser(session?.user ?? null)
-        if (session?.user) fetchProfile(session.user.id)
-        else setLoading(false)
-      })
+    let active = true
+
+    const fetchProfile = async (userId) => {
+      try {
+        const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+        if (!active) return
+        setProfile(data ?? null)
+      } catch {
+        if (!active) return
+        setProfile(null)
+      } finally {
+        if (active) setLoading(false)
+      }
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!active) return
       if (event === 'PASSWORD_RECOVERY') { setRecoveryMode(true); return }
-      if (event === 'INITIAL_SESSION') return // ya lo maneja getSession()
       setUser(session?.user ?? null)
       if (session?.user) fetchProfile(session.user.id)
       else { setProfile(null); setLoading(false) }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      active = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   const signIn = async (email, password) => {
@@ -64,7 +71,7 @@ export function AuthProvider({ children }) {
         name,
         ...extra,
       }, { onConflict: 'id' })
-      await fetchProfile(data.user.id)
+      await loadProfile(data.user.id)
     }
     return null
   }
