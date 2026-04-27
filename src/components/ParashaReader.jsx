@@ -22,7 +22,7 @@ const MODES = [
 
 const BOOK_TO_NUM = { Genesis: 1, Exodus: 2, Leviticus: 3, Numbers: 4, Deuteronomy: 5 }
 const MIN_FONT = 14
-const MAX_FONT = 44
+const MAX_FONT = 56
 
 function tikkunHash(ref) {
   const m = String(ref || '').match(/^(\w+)\s+(\d+):(\d+)/)
@@ -33,7 +33,7 @@ function tikkunHash(ref) {
 export default function ParashaReader({ parasha, guestMode = false, initialAliyah = 0 }) {
   const [aliyahIdx, setAliyahIdx] = useState(initialAliyah)
   const [mode, setMode] = useState('taamim')
-  const [fontSize, setFontSize] = useState(22)
+  const [fontSize, setFontSize] = useState(30)
   const [audioCurrentTime, setAudioCurrentTime] = useState(null)
   const [audioPlaying, setAudioPlaying] = useState(false)
   const [audioDuration, setAudioDuration] = useState(0)
@@ -654,8 +654,8 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
   const canSeek = !!onWordClick
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6">
-      <div className="max-w-2xl mx-auto">
+    <div className="flex-1 min-h-0 overflow-y-auto px-4 py-6">
+      <div className="max-w-5xl mx-auto">
         <div className="hebrew-reader" style={{
           fontSize: fontSize + 'px',
           lineHeight: lineHeightForSize(fontSize),
