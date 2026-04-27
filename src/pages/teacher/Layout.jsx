@@ -44,9 +44,9 @@ export default function TeacherLayout() {
       )}
 
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-50 w-64 flex-shrink-0 flex flex-col py-8 px-4
+        className={`fixed inset-y-0 left-0 z-50 w-64 flex-shrink-0 flex flex-col py-8 px-4
           transition-transform duration-300 ease-in-out
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
         style={{ background: 'var(--bg-deep)', borderRight: '1px solid var(--border-subtle)' }}>
         <div className="px-3 mb-10 flex items-center justify-between">
           <button onClick={() => go('/teacher/dashboard')} className="flex items-center gap-3">
@@ -124,7 +124,7 @@ export default function TeacherLayout() {
       </aside>
 
       <main className="flex-1 flex flex-col overflow-auto">
-        <div className="md:hidden sticky top-0 z-30 flex items-center gap-3 px-4 h-14 flex-shrink-0"
+        <div className="sticky top-0 z-30 flex items-center gap-3 px-4 h-14 flex-shrink-0"
           style={{ background: 'var(--bg-deep)', borderBottom: '1px solid var(--border-subtle)' }}>
           <button onClick={() => setSidebarOpen(true)}
             className="p-2 rounded-xl relative"

@@ -571,30 +571,46 @@ function lineHeightForSize(fs) {
   return fs <= 20 ? 3.4 : fs <= 28 ? 3.2 : 3.0
 }
 
-// Color taamim (red) and nikud (green) per character.
-// Each combining mark gets its own inline span with explicit color.
+// Color taamim (red) and nikkud (green) by grapheme cluster.
+// Groups each base consonant with all its following combining marks into one span
+// so HarfBuzz shapes them correctly. Works in both 'taamim' and 'nikkud' modes.
 function colorWord(text, mode) {
-  if (mode !== 'taamim') return text
+  if (mode !== 'taamim' && mode !== 'nikkud') return text
   const chars = [...text]
   const result = []
-  let hasMark = false
-  for (let i = 0; i < chars.length; i++) {
-    const ch = chars[i]
-    const cp = ch.codePointAt(0)
-    if (cp >= 0x0591 && cp <= 0x05AF) {
-      hasMark = true
-      result.push(<span key={i} style={{ color: '#ff0000' }}>{ch}</span>)
-    } else if (
-      (cp >= 0x05B0 && cp <= 0x05BD) || cp === 0x05BF ||
-      cp === 0x05C1 || cp === 0x05C2 || cp === 0x05C4 || cp === 0x05C5 || cp === 0x05C7
-    ) {
-      hasMark = true
-      result.push(<span key={i} style={{ color: '#32cd32' }}>{ch}</span>)
+  let cur = ''
+  let key = 0
+
+  const flush = () => {
+    if (!cur) return
+    let hasTaamim = false, hasNikkud = false
+    for (const ch of cur) {
+      const cp = ch.codePointAt(0)
+      if (cp >= 0x0591 && cp <= 0x05AF) hasTaamim = true
+      else if (cp >= 0x05B0 && cp <= 0x05C7) hasNikkud = true
+    }
+    if (hasTaamim && mode === 'taamim') {
+      result.push(<span key={key++} style={{ color: 'var(--color-taamim)' }}>{cur}</span>)
+    } else if (hasNikkud) {
+      result.push(<span key={key++} style={{ color: 'var(--color-nikkud)' }}>{cur}</span>)
     } else {
-      result.push(ch)
+      result.push(cur)
+    }
+    cur = ''
+  }
+
+  for (const ch of chars) {
+    const cp = ch.codePointAt(0)
+    if (cp >= 0x0591 && cp <= 0x05C7) {
+      cur += ch
+    } else {
+      flush()
+      cur = ch
     }
   }
-  return hasMark ? result : text
+  flush()
+
+  return result.some(r => typeof r !== 'string') ? result : text
 }
 
 // Map a Sefaria word index to a playback time.

@@ -2,7 +2,7 @@
 // U+05B0–U+05C7: nikkud + vowel points + related marks
 // U+05BE: maqqef (hyphen connector) — → space to avoid merging words when removed
 
-const TAAMIM_RE = /[֑-ׅ֯ׄ]/g
+const TAAMIM_RE = /[֑-֯]/g
 const ALL_DIACRITICS_RE = /[֑-ׇ]/g
 
 export function withTaamim(text) {
