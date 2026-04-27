@@ -178,7 +178,8 @@ function StudentModal({ onClose, isDark, t }) {
 
     if (isLogin) {
       const err = await signIn(email, password)
-      if (err) { setError('Email o contraseña incorrectos'); setLoading(false) }
+      setLoading(false)
+      if (err) setError('Email o contraseña incorrectos')
       return
     }
 
@@ -496,9 +497,9 @@ function SimpleAuthForm({ role, color, onCancel, onDone, t }) {
     } else {
       err = await signIn(email, password)
     }
+    setLoading(false)
     if (err) {
       setError(isRegister ? 'Error al registrarse: ' + err.message : 'Email o contraseña incorrectos')
-      setLoading(false)
     }
   }
 

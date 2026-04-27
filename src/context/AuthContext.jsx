@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 const AuthCtx = createContext(null)
@@ -10,6 +10,7 @@ export function AuthProvider({ children }) {
   const [recoveryMode, setRecoveryMode] = useState(
     () => window.location.hash.includes('type=recovery')
   )
+  const initializedRef = useRef(false)
 
   const fetchProfile = async (userId) => {
     try {
@@ -23,9 +24,20 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
-    // onAuthStateChange fires INITIAL_SESSION immediately — no need for a separate getSession() call
+    // getSession() garantiza que loading se resuelve incluso si INITIAL_SESSION
+    // no llega (e.g. StrictMode monta el efecto dos veces en desarrollo)
+    if (!initializedRef.current) {
+      initializedRef.current = true
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setUser(session?.user ?? null)
+        if (session?.user) fetchProfile(session.user.id)
+        else setLoading(false)
+      })
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') { setRecoveryMode(true); return }
+      if (event === 'INITIAL_SESSION') return // ya lo maneja getSession()
       setUser(session?.user ?? null)
       if (session?.user) fetchProfile(session.user.id)
       else { setProfile(null); setLoading(false) }
