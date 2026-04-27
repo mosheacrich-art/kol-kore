@@ -571,47 +571,98 @@ function lineHeightForSize(fs) {
   return fs <= 20 ? 3.4 : fs <= 28 ? 3.2 : 3.0
 }
 
-// Color only the diacritical marks: taamim (red) and nikkud (green).
-// The base consonant stays in the inherited text color.
-// Each cluster (base letter + its marks) is wrapped in a parent <span> so the
-// font shaper (HarfBuzz) keeps them in one shaping context and positions the
-// marks correctly, while child <span>s apply per-mark color.
+// Color only the diacritical marks (taamim red, nikkud green) while keeping
+// base consonants in the inherited text color.
+//
+// Technique: two absolutely-positioned layers share the same parent inline-block.
+//   Layer 1 — full text in normal color (letter + marks), marks hidden via color:transparent
+//   Layer 2 — full text again but consonants transparent, marks in their color
+// The font shaper always sees the complete cluster so marks are positioned correctly.
+// An invisible copy reserves the exact width so layout is unaffected.
 function colorWord(text, mode) {
   if (mode !== 'taamim' && mode !== 'nikkud') return text
 
-  const chars = [...text]
-  const clusters = []
-  let cur = null
-
-  for (const ch of chars) {
+  // Check if there are any diacritics worth coloring
+  let hasTaamim = false, hasNikkud = false
+  for (const ch of text) {
     const cp = ch.codePointAt(0)
-    const isTaamim = cp >= 0x0591 && cp <= 0x05AF
-    const isNikkud = cp >= 0x05B0 && cp <= 0x05C7
-    if (isTaamim || isNikkud) {
-      if (!cur) cur = { base: '', marks: [] }
-      cur.marks.push({ ch, isTaamim })
-    } else {
-      if (cur) clusters.push(cur)
-      cur = { base: ch, marks: [] }
-    }
+    if (cp >= 0x0591 && cp <= 0x05AF) hasTaamim = true
+    else if (cp >= 0x05B0 && cp <= 0x05C7) hasNikkud = true
   }
-  if (cur) clusters.push(cur)
+  if (!hasTaamim && !hasNikkud) return text
 
-  if (!clusters.some(c => c.marks.length > 0)) return text
+  // Build "consonants-transparent" version: consonants → U+200B (zero-width)
+  // so marks stay in the text flow and attach correctly, but the consonant glyphs
+  // are hidden and not rendered visibly.
+  const withConsonantsHidden = [...text].map(ch => {
+    const cp = ch.codePointAt(0)
+    if (cp >= 0x0591 && cp <= 0x05C7) return ch  // keep diacritics
+    return '​'                                // hide consonant
+  }).join('')
 
-  return clusters.map((c, ci) => {
-    if (!c.marks.length) return c.base
-    return (
-      <span key={ci}>
-        {c.base}
-        {c.marks.map((m, mi) => (
-          <span key={mi} style={{ color: m.isTaamim ? 'var(--color-taamim)' : 'var(--color-nikkud)' }}>
-            {m.ch}
-          </span>
-        ))}
+  // Split hidden version into taamim vs nikkud layers
+  const taamimLayer = [...withConsonantsHidden].map(ch => {
+    const cp = ch.codePointAt(0)
+    if (cp >= 0x0591 && cp <= 0x05AF) return ch
+    return '​'
+  }).join('')
+
+  const nikkudLayer = [...withConsonantsHidden].map(ch => {
+    const cp = ch.codePointAt(0)
+    if (cp >= 0x05B0 && cp <= 0x05C7) return ch
+    return '​'
+  }).join('')
+
+  return (
+    <span style={{ position: 'relative', display: 'inline' }}>
+      {/* Invisible spacer — reserves correct width */}
+      <span style={{ visibility: 'hidden' }}>{text}</span>
+      {/* Layer 1: consonants in text color, diacritics transparent */}
+      <span aria-hidden style={{
+        position: 'absolute', top: 0, right: 0,
+        color: 'inherit', pointerEvents: 'none',
+        whiteSpace: 'nowrap',
+      }}>
+        {[...text].map((ch, i) => {
+          const cp = ch.codePointAt(0)
+          const isMark = cp >= 0x0591 && cp <= 0x05C7
+          return isMark
+            ? <span key={i} style={{ color: 'transparent' }}>{ch}</span>
+            : ch
+        })}
       </span>
-    )
-  })
+      {/* Layer 2: taamim in red */}
+      {hasTaamim && mode === 'taamim' && (
+        <span aria-hidden style={{
+          position: 'absolute', top: 0, right: 0,
+          color: 'transparent', pointerEvents: 'none',
+          whiteSpace: 'nowrap',
+        }}>
+          {[...text].map((ch, i) => {
+            const cp = ch.codePointAt(0)
+            return (cp >= 0x0591 && cp <= 0x05AF)
+              ? <span key={i} style={{ color: 'var(--color-taamim)' }}>{ch}</span>
+              : ch
+          })}
+        </span>
+      )}
+      {/* Layer 3: nikkud in green */}
+      {hasNikkud && (
+        <span aria-hidden style={{
+          position: 'absolute', top: 0, right: 0,
+          color: 'transparent', pointerEvents: 'none',
+          whiteSpace: 'nowrap',
+        }}>
+          {[...text].map((ch, i) => {
+            const cp = ch.codePointAt(0)
+            return (cp >= 0x05B0 && cp <= 0x05C7)
+              ? <span key={i} style={{ color: 'var(--color-nikkud)' }}>{ch}</span>
+              : ch
+          })}
+        </span>
+      )}
+    </span>
+  )
 }
 
 // Map a Sefaria word index to a playback time.
