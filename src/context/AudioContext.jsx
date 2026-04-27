@@ -7,18 +7,17 @@ export function AudioProvider({ children }) {
   const [audios, setAudios] = useState({})
 
   useEffect(() => {
-    const load = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.user) { setAudios({}); return }
+    const load = async (userId) => {
+      if (!userId) { setAudios({}); return }
 
       const { data: profile } = await supabase
         .from('profiles')
         .select('role, teacher_id')
-        .eq('id', session.user.id)
-        .single()
+        .eq('id', userId)
+        .maybeSingle()
 
       let teacherIdFilter = null
-      if (profile?.role === 'teacher') teacherIdFilter = session.user.id
+      if (profile?.role === 'teacher') teacherIdFilter = userId
       else if (profile?.role === 'student') teacherIdFilter = profile.teacher_id
 
       if (!teacherIdFilter) { setAudios({}); return }
@@ -47,8 +46,14 @@ export function AudioProvider({ children }) {
       setAudios(map)
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => load())
-    load()
+    // Initial load: safe to call getSession() here (outside any auth callback)
+    supabase.auth.getSession().then(({ data: { session } }) => load(session?.user?.id ?? null))
+
+    // Auth state changes: use the session passed directly — never call getSession()
+    // inside onAuthStateChange (Supabase holds the auth lock while notifying, causing deadlock)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      load(session?.user?.id ?? null)
+    })
     return () => subscription.unsubscribe()
   }, [])
 

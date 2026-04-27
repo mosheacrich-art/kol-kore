@@ -54,12 +54,21 @@ export function AuthProvider({ children }) {
   }, [])
 
   const signIn = async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return error
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      return error
+    } catch (err) {
+      return err
+    }
   }
 
   const signUp = async (email, password, name, role) => {
-    const { data, error } = await supabase.auth.signUp({ email, password })
+    let data, error
+    try {
+      ;({ data, error } = await supabase.auth.signUp({ email, password }))
+    } catch (err) {
+      return err
+    }
     if (error) return error
     if (data.user) {
       const extra = role === 'teacher'

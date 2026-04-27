@@ -434,7 +434,7 @@ function StudentModal({ onClose, isDark, t }) {
               <>
                 <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
                   style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#8b5cf6' }} />
-                {plan !== 'trial' ? 'Redirigiendo al pago…' : 'Creando cuenta…'}
+                {isLogin ? 'Iniciando sesión…' : plan !== 'trial' ? 'Redirigiendo al pago…' : 'Creando cuenta…'}
               </>
             ) : isLogin
               ? 'Entrar'
