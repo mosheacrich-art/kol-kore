@@ -571,46 +571,47 @@ function lineHeightForSize(fs) {
   return fs <= 20 ? 3.4 : fs <= 28 ? 3.2 : 3.0
 }
 
-// Color taamim (red) and nikkud (green) by grapheme cluster.
-// Groups each base consonant with all its following combining marks into one span
-// so HarfBuzz shapes them correctly. Works in both 'taamim' and 'nikkud' modes.
+// Color only the diacritical marks: taamim (red) and nikkud (green).
+// The base consonant stays in the inherited text color.
+// Each cluster (base letter + its marks) is wrapped in a parent <span> so the
+// font shaper (HarfBuzz) keeps them in one shaping context and positions the
+// marks correctly, while child <span>s apply per-mark color.
 function colorWord(text, mode) {
   if (mode !== 'taamim' && mode !== 'nikkud') return text
-  const chars = [...text]
-  const result = []
-  let cur = ''
-  let key = 0
 
-  const flush = () => {
-    if (!cur) return
-    let hasTaamim = false, hasNikkud = false
-    for (const ch of cur) {
-      const cp = ch.codePointAt(0)
-      if (cp >= 0x0591 && cp <= 0x05AF) hasTaamim = true
-      else if (cp >= 0x05B0 && cp <= 0x05C7) hasNikkud = true
-    }
-    if (hasTaamim && mode === 'taamim') {
-      result.push(<span key={key++} style={{ color: 'var(--color-taamim)' }}>{cur}</span>)
-    } else if (hasNikkud) {
-      result.push(<span key={key++} style={{ color: 'var(--color-nikkud)' }}>{cur}</span>)
-    } else {
-      result.push(cur)
-    }
-    cur = ''
-  }
+  const chars = [...text]
+  const clusters = []
+  let cur = null
 
   for (const ch of chars) {
     const cp = ch.codePointAt(0)
-    if (cp >= 0x0591 && cp <= 0x05C7) {
-      cur += ch
+    const isTaamim = cp >= 0x0591 && cp <= 0x05AF
+    const isNikkud = cp >= 0x05B0 && cp <= 0x05C7
+    if (isTaamim || isNikkud) {
+      if (!cur) cur = { base: '', marks: [] }
+      cur.marks.push({ ch, isTaamim })
     } else {
-      flush()
-      cur = ch
+      if (cur) clusters.push(cur)
+      cur = { base: ch, marks: [] }
     }
   }
-  flush()
+  if (cur) clusters.push(cur)
 
-  return result.some(r => typeof r !== 'string') ? result : text
+  if (!clusters.some(c => c.marks.length > 0)) return text
+
+  return clusters.map((c, ci) => {
+    if (!c.marks.length) return c.base
+    return (
+      <span key={ci}>
+        {c.base}
+        {c.marks.map((m, mi) => (
+          <span key={mi} style={{ color: m.isTaamim ? 'var(--color-taamim)' : 'var(--color-nikkud)' }}>
+            {m.ch}
+          </span>
+        ))}
+      </span>
+    )
+  })
 }
 
 // Map a Sefaria word index to a playback time.
