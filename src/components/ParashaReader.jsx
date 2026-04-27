@@ -583,13 +583,13 @@ function colorWord(text, mode) {
     const cp = ch.codePointAt(0)
     if (cp >= 0x0591 && cp <= 0x05AF) {
       hasMark = true
-      result.push(<span key={i} style={{ color: '#e53535' }}>{ch}</span>)
+      result.push(<span key={i} style={{ color: '#ff0000' }}>{ch}</span>)
     } else if (
       (cp >= 0x05B0 && cp <= 0x05BD) || cp === 0x05BF ||
       cp === 0x05C1 || cp === 0x05C2 || cp === 0x05C4 || cp === 0x05C5 || cp === 0x05C7
     ) {
       hasMark = true
-      result.push(<span key={i} style={{ color: '#22a846' }}>{ch}</span>)
+      result.push(<span key={i} style={{ color: '#32cd32' }}>{ch}</span>)
     } else {
       result.push(ch)
     }

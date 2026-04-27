@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;700&family=Noto+Serif+Hebrew:wght@400;700;900&display=swap');
 
 @font-face {
   font-family: 'Taamey Frank CLM';
@@ -13,6 +13,29 @@
   font-style: normal;
   font-display: swap;
   src: url('/kol-kore/fonts/TaameyFrankCLM-Bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Keter YG';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url('/kol-kore/fonts/KeterYG-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Keter YG';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('/kol-kore/fonts/KeterYG-Bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Hadasim CLM';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('/kol-kore/fonts/HadasimCLM-Bold.ttf') format('truetype');
 }
 
 @tailwind base;
@@ -201,12 +224,15 @@ body {
 }
 
 /* Hebrew text */
+/* Font options to test: 'Noto Serif Hebrew' | 'Hadasim CLM' | 'Keter YG' | 'Taamey Frank CLM' */
 .hebrew {
-  font-family: 'Taamey Frank CLM', 'Times New Roman', serif;
+  font-family: 'Noto Serif Hebrew', 'Taamey Frank CLM', 'Times New Roman', serif;
+  font-weight: 900;
   direction: rtl;
 }
 
 .hebrew-reader {
-  font-family: 'Taamey Frank CLM', 'Times New Roman', serif;
+  font-family: 'Noto Serif Hebrew', 'Taamey Frank CLM', 'Times New Roman', serif;
+  font-weight: 900;
   direction: rtl;
 }
