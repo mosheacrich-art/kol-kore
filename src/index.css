@@ -59,8 +59,6 @@
   --sc-track:       #ede8da;
   --sc-thumb:       #b8a890;
   --sc-thumb-hover: #9a8a70;
-  --color-taamim:   #cc0000;
-  --color-nikkud:   #007700;
 }
 
 .dark {
@@ -79,8 +77,6 @@
   --sc-track:       #0d0b1e;
   --sc-thumb:       #3a2d6e;
   --sc-thumb-hover: #5a4a9e;
-  --color-taamim:   #ff6666;
-  --color-nikkud:   #66dd66;
 }
 
 * {
