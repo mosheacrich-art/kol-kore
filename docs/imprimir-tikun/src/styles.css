@@ -140,15 +140,12 @@ body {
 .tl {
   display: grid;
   grid-template-columns: var(--col-tikkun) var(--col-sefer);
-  border-bottom: 1px solid rgba(0,0,0,0.04);
-  min-height: calc(var(--lh) * var(--fs-sefer));
 }
-.tl:last-child { border-bottom: none; }
 
 /* Tikkun column (right/leading in RTL) */
 .tc {
   display: block;
-  padding: 2px 14px 2px 6px;
+  padding: 1px 14px 1px 8px;
   font-family: 'Noto Serif Hebrew', serif;
   font-size: var(--fs-tikkun);
   font-weight: 700;
@@ -157,14 +154,13 @@ body {
   text-align: justify;
   text-align-last: right;
   color: #1a1200;
-  border-left: 1px solid rgba(140,95,0,0.2);
   word-break: break-word;
 }
 
 /* Sefer Torah column (left/trailing, plain consonants) */
 .ts {
   display: block;
-  padding: 2px 6px 2px 14px;
+  padding: 1px 8px 1px 14px;
   font-family: 'ShlomosemiStam', 'Noto Serif Hebrew', serif;
   font-size: var(--fs-sefer);
   line-height: var(--lh);
@@ -173,6 +169,7 @@ body {
   text-align-last: right;
   color: #0d0d0d;
   word-break: break-word;
+  border-right: 1px solid rgba(140,95,0,0.15);
 }
 
 /* Petucha: no separator line, just the פ marker inline */
@@ -195,10 +192,6 @@ body {
   font-family: 'Noto Serif Hebrew', serif;
 }
 
-/* Alternating row tint */
-.tl:nth-child(even) {
-  background: rgba(140,95,0,0.03);
-}
 
 /* ── Error ──────────────────────────────────────────────────────────── */
 .err {
