@@ -209,7 +209,7 @@ html, body {
   }
 
   #book-canvas {
-    transform: none !important;
+    /* transform reset by beforeprint JS event */
     width: 100%;
     padding: 0;
   }

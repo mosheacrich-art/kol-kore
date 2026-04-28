@@ -208,6 +208,18 @@ parashaSelect.addEventListener('change', function() {
   if (v) scrollToPage(v);
 });
 
+/* Reset transform for print, restore after */
+window.addEventListener('beforeprint', function() {
+  canvas.style.transform = 'none';
+  canvas.style.width = '100%';
+  canvas.style.padding = '0';
+});
+window.addEventListener('afterprint', function() {
+  canvas.style.width = '';
+  canvas.style.padding = '';
+  applyZoom();
+});
+
 printBtn.addEventListener('click', function() { window.print(); });
 
 /* ── Hash navigation ────────────────────────────────────────────────── */
