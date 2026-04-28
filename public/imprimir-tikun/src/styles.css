@@ -1,548 +1,269 @@
+/* ── Fonts ──────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'ShlomosemiStam';
+  src: url('https://tikkun.io/assets/ShlomosemiStam-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Hebrew:wght@400;700;900&display=swap');
+
+/* ── Reset ──────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Tokens ─────────────────────────────────────────────────────────── */
 :root {
-  --ink: #151515;
-  --muted: #555;
-  --line: #c9c4ba;
-  --paper: #fffdf8;
-  --surface: #e9e4da;
-  --accent: #7b1e1e;
-  --gold: #b9924b;
+  --bg:        #f9f5ec;
+  --surface:   #fff8ee;
+  --border:    #c8b97a;
+  --text:      #1a1200;
+  --muted:     #8a7a50;
+  --gold:      #8c5f00;
+  --toolbar-h: 52px;
+
+  --col-tikkun: 1fr;
+  --col-sefer:  1fr;
+
+  --fs-tikkun: 13.5px;
+  --fs-sefer:  15px;
+  --lh: 1.72;
 }
 
-* {
-  box-sizing: border-box;
-}
-
+/* ── Body ───────────────────────────────────────────────────────────── */
+html { font-size: 16px; }
 body {
-  margin: 0;
-  color: var(--ink);
-  background: var(--surface);
-  font-family: "Times New Roman", "Noto Serif Hebrew", serif;
+  font-family: 'Noto Serif Hebrew', serif;
+  background: var(--bg);
+  color: var(--text);
+  direction: rtl;
+  -webkit-font-smoothing: antialiased;
 }
 
-.book-toolbar {
+/* ── Toolbar ────────────────────────────────────────────────────────── */
+.toolbar {
   position: sticky;
   top: 0;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px;
-  border-bottom: 1px solid #cfc8bb;
-  background: #fffaf0;
-  box-shadow: 0 2px 14px rgb(0 0 0 / 8%);
-}
-
-.toolbar-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.toolbar-title {
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 0;
-}
-
-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 36px;
-  padding: 0 16px;
-  border: 1px solid #5a1616;
-  border-radius: 6px;
-  color: #fff;
-  background: var(--accent);
-  font: 700 14px Arial, sans-serif;
-  cursor: pointer;
-}
-
-.book {
-  display: grid;
-  justify-content: center;
-  gap: 22px;
-  padding: 24px;
-}
-
-.book-page {
-  position: relative;
-  width: 210mm;
-  min-height: 297mm;
-  padding: 18mm 16mm 14mm;
-  background: var(--paper);
-  border: 1px solid #c8bdad;
-  box-shadow: 0 12px 34px rgb(0 0 0 / 16%);
-  page-break-after: always;
-}
-
-.cover-page {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 18mm;
-}
-
-.cover-frame {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  border: 3px double var(--gold);
-  text-align: center;
-}
-
-.cover-kicker,
-.cover-subtitle {
-  color: #4f3d28;
-  font-size: 24px;
-}
-
-.cover-page h1 {
-  margin: 26px 0;
-  color: #24150e;
-  font-size: 76px;
-  font-weight: 700;
-  letter-spacing: 0;
-}
-
-.toc-page h2 {
-  margin: 0 0 16mm;
-  text-align: center;
-  font-size: 34px;
-}
-
-.toc-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap: 18mm;
-  row-gap: 5px;
-}
-
-.toc-row {
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px dotted #a9a092;
-  font-size: 20px;
-  line-height: 1.45;
-}
-
-.page-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 7mm;
-  padding-bottom: 3mm;
-  border-bottom: 1px solid var(--line);
-  color: #4d463b;
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.amud {
-  display: grid;
-  grid-template-rows: auto repeat(42, 1fr);
-  min-height: 247mm;
-  gap: 0;
-}
-
-.column-labels {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8mm;
-  margin-bottom: 2mm;
-  color: #6a5d4b;
-  font-size: 15px;
-  font-weight: 700;
-  text-align: center;
-}
-
-.amud-line {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8mm;
-  align-items: center;
-  min-height: 5.55mm;
-  border-bottom: 1px solid #eadfce;
-}
-
-.line-tikkun,
-.line-torah {
-  direction: rtl;
-  unicode-bidi: plaintext;
-  font-family: "Taamey Frank CLM", "SBL Hebrew", "Ezra SIL", "Times New Roman", serif;
-  letter-spacing: 0;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.line-tikkun {
-  font-size: 19px;
-  line-height: 1.1;
-}
-
-.line-torah {
-  font-size: 21px;
-  line-height: 1.1;
-  text-align: justify;
-  text-align-last: justify;
-}
-
-.blank-line .line-tikkun,
-.blank-line .line-torah {
-  color: transparent;
-}
-
-.big-letter {
-  font-size: 1.2em;
-}
-
-.small-letter {
-  font-size: 0.8em;
-}
-
-.mam-spi-pe,
-.mam-spi-samekh {
-  color: #7a1e1e;
-  font-size: 0.8em;
-  white-space: nowrap;
-}
-
-.page-foot {
-  position: absolute;
-  bottom: 7mm;
-  left: 0;
-  right: 0;
-  color: #6f6556;
-  font-size: 12px;
-  text-align: center;
-}
-
-.exact-column-page {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-}
-
-.column-image-frame {
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-  min-height: 246mm;
-  margin: 0;
-}
-
-.column-image-frame img {
-  display: block;
-  max-width: 100%;
-  max-height: 246mm;
-  object-fit: contain;
-}
-
-.loading {
-  width: 210mm;
-  padding: 40px;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  text-align: center;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   TRACKING MODE
-   ═══════════════════════════════════════════════════════════════ */
-
-.tr-panel {
-  max-width: 860px;
-  margin: 28px auto;
-  padding: 0 16px 60px;
-}
-
-.tr-panel.hidden { display: none; }
-
-/* Controls bar */
-.tr-controls {
-  position: sticky;
-  top: 58px;
-  z-index: 1;
-  background: #fffaf0;
-  border: 1px solid #c8bdad;
-  border-radius: 10px;
-  padding: 12px 18px;
-  margin-bottom: 22px;
-  box-shadow: 0 4px 18px rgb(0 0 0 / 9%);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.tr-row {
+  z-index: 100;
+  height: var(--toolbar-h);
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
+  padding: 0 16px;
+  background: #2a1f00;
+  color: #f5e9c4;
+  border-bottom: 2px solid var(--border);
 }
-
-.tr-label {
-  font-size: 15px;
+.toolbar-title {
+  font-family: 'Noto Serif Hebrew', serif;
   font-weight: 700;
-  color: var(--ink);
-  font-family: "Taamey Frank CLM", "SBL Hebrew", serif;
-}
-
-.tr-select {
-  height: 36px;
-  padding: 0 10px;
-  border: 1px solid #c8bdad;
-  border-radius: 6px;
-  background: var(--paper);
-  font-family: "Taamey Frank CLM", "SBL Hebrew", serif;
-  font-size: 18px;
-  color: var(--ink);
-  direction: rtl;
-  min-width: 180px;
-}
-
-.tr-ref {
-  font-size: 13px;
-  color: var(--muted);
-  margin-right: auto;
-  font-family: "Times New Roman", serif;
-}
-
-.tr-playbar {
-  gap: 10px;
-}
-
-/* File button — label styled as button */
-.tr-file-lbl {
-  display: inline-flex;
-  align-items: center;
-  height: 36px;
-  padding: 0 14px;
-  background: var(--surface);
-  border: 1px solid #c8bdad;
-  border-radius: 6px;
-  font: 700 13px Arial, sans-serif;
-  cursor: pointer;
-  color: var(--ink);
-  white-space: nowrap;
-  transition: background 0.15s;
-}
-
-.tr-file-lbl:hover { background: #ddd8cc; }
-
-/* Audio player bar */
-.tr-audio-bar {
-  flex: 1 1 100%;
-}
-
-.tr-audio-bar.hidden { display: none; }
-
-.tr-audio-player {
-  width: 100%;
-  height: 32px;
-}
-
-/* Play / reset buttons */
-.tr-btn-play {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  font-size: 18px;
-  padding: 0;
-  flex-shrink: 0;
-  transition: background 0.15s, transform 0.1s;
-}
-
-.tr-btn-play.playing {
-  background: #3a0f0f;
-  border-color: #200808;
-}
-
-.tr-btn-sec {
-  width: 36px;
-  height: 36px;
-  padding: 0;
   font-size: 16px;
+  color: #f9d96a;
   flex-shrink: 0;
-  background: var(--surface) !important;
-  border: 1px solid #c8bdad !important;
-  color: var(--ink) !important;
-  border-radius: 6px;
 }
-
-/* Speed control */
-.tr-speed-wrap {
+.toolbar-actions {
   display: flex;
-  align-items: center;
   gap: 8px;
-  flex: 1;
-  min-width: 160px;
+  margin-right: auto;
+  align-items: center;
 }
-
-.tr-speed-lbl-fixed {
-  font-size: 12px;
-  color: var(--muted);
-  white-space: nowrap;
-}
-
-.tr-slider {
-  flex: 1;
-  height: 4px;
-  accent-color: var(--accent);
-  cursor: pointer;
-}
-
-.tr-speed-val {
+#parashaSelect {
+  font-family: 'Noto Serif Hebrew', serif;
   font-size: 13px;
-  color: var(--muted);
-  white-space: nowrap;
-  min-width: 56px;
-}
-
-.tr-counter {
-  font-size: 13px;
-  color: var(--muted);
-  min-width: 76px;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Active mode toggle */
-.tr-btn-active {
-  background: #3a0f0f !important;
-  border-color: #1a0808 !important;
-}
-
-/* ── Text display ───────────────────────────────────────── */
-.tr-text {
-  background: var(--paper);
-  border: 1px solid #c8bdad;
-  border-radius: 10px;
-  box-shadow: 0 4px 22px rgb(0 0 0 / 9%);
-  padding: 32px 28px 40px;
-  font-family: "Taamey Frank CLM", "SBL Hebrew", "Ezra SIL", "Times New Roman", serif;
-  font-size: 26px;
-  line-height: 2.5;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #8c7a40;
+  background: #3a2d00;
+  color: #f5e9c4;
   direction: rtl;
-  text-align: justify;
-  color: var(--ink);
 }
-
-/* Individual word */
-.tword {
-  display: inline;
-  padding: 1px 3px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.12s;
-}
-
-.tword:hover {
-  background: rgba(185, 146, 75, 0.18);
-}
-
-.tword.word-active {
-  background: rgba(185, 146, 75, 0.38);
-  outline: 2px solid var(--gold);
-  outline-offset: 2px;
-  border-radius: 3px;
-}
-
-/* Between verses */
-.tr-pasuk-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #c9c4ba;
-  vertical-align: middle;
-  margin: 0 2px 2px;
-}
-
-/* Chapter separator */
-.tr-chapter-sep {
-  display: inline-block;
-  font-size: 15px;
-  color: var(--accent);
+#printBtn {
+  font-family: 'Noto Serif Hebrew', serif;
+  font-size: 13px;
+  padding: 5px 14px;
+  border-radius: 6px;
+  border: 1px solid #b8903a;
+  background: linear-gradient(135deg, #b8762a, #e0a83a);
+  color: #1a1000;
   font-weight: 700;
-  margin: 0 6px;
-  opacity: 0.7;
+  cursor: pointer;
+}
+#printBtn:hover { filter: brightness(1.1); }
+
+/* ── Book container ──────────────────────────────────────────────────── */
+#book {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  padding: 32px 16px 64px;
 }
 
-@page {
-  size: A4 portrait;
-  margin: 8mm;
+/* ── Amud (column / page) ────────────────────────────────────────────── */
+.amud {
+  width: 100%;
+  max-width: 900px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+  overflow: hidden;
 }
 
+.amud-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 16px;
+  background: #2a1f00;
+  color: #f9d96a;
+  font-family: 'Noto Serif Hebrew', serif;
+  font-size: 12px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border);
+}
+.amud-num {
+  font-size: 11px;
+  color: #c8a84e;
+  font-family: monospace;
+}
+.col-label {
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: #d4b560;
+}
+
+.amud-body {
+  padding: 8px 0 4px;
+}
+
+/* ── Lines ──────────────────────────────────────────────────────────── */
+.tl {
+  display: grid;
+  grid-template-columns: var(--col-tikkun) var(--col-sefer);
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  min-height: calc(var(--lh) * var(--fs-sefer));
+}
+.tl:last-child { border-bottom: none; }
+
+/* Tikkun column (right/leading in RTL) */
+.tc {
+  display: block;
+  padding: 2px 14px 2px 6px;
+  font-family: 'Noto Serif Hebrew', serif;
+  font-size: var(--fs-tikkun);
+  font-weight: 700;
+  line-height: var(--lh);
+  direction: rtl;
+  text-align: right;
+  color: #1a1200;
+  border-left: 1px solid rgba(140,95,0,0.2);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Sefer Torah column (left/trailing, plain consonants) */
+.ts {
+  display: block;
+  padding: 2px 6px 2px 14px;
+  font-family: 'ShlomosemiStam', 'Noto Serif Hebrew', serif;
+  font-size: var(--fs-sefer);
+  line-height: var(--lh);
+  direction: rtl;
+  text-align: right;
+  color: #0d0d0d;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Petucha: open paragraph break */
+.tl.petucha {
+  border-bottom: 2px solid rgba(140,95,0,0.3);
+}
+.tl.petucha .tc::after,
+.tl.petucha .ts::after {
+  content: '\a0\a0\a0\a0 פ';
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 0.85em;
+}
+
+/* Setuma: closed paragraph */
+.tl.setuma .tc::after,
+.tl.setuma .ts::after {
+  content: '\a0\a0\a0\a0 ס';
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 0.85em;
+}
+
+/* Alternating row tint */
+.tl:nth-child(even) {
+  background: rgba(140,95,0,0.03);
+}
+
+/* ── Error ──────────────────────────────────────────────────────────── */
+.err {
+  padding: 40px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 18px;
+}
+
+/* ── Print ──────────────────────────────────────────────────────────── */
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 10mm;
+  }
+
+  .no-print { display: none !important; }
+
   body {
-    background: #fff;
+    background: white;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
-  .book-toolbar {
-    display: none;
-  }
-
-  .book {
+  #book {
     display: block;
     padding: 0;
   }
 
-  .book-page {
-    width: 210mm;
-    min-height: 297mm;
-    margin: 0;
-    padding: 16mm 13mm 13mm;
-    border: 0;
-    box-shadow: none;
-  }
-
   .amud {
-    min-height: 250mm;
-  }
-
-  .column-image-frame {
-    min-height: 250mm;
-  }
-
-  .column-image-frame img {
-    max-height: 250mm;
-  }
-}
-
-@media (max-width: 720px) {
-  .book {
-    padding: 10px;
-  }
-
-  .book-page {
+    max-width: 100%;
     width: 100%;
-    min-height: auto;
-    padding: 18px 14px;
+    box-shadow: none;
+    border: none;
+    border-radius: 0;
+    page-break-after: always;
+    break-after: page;
+    background: white;
   }
 
-  .amud-line {
-    grid-template-columns: 1fr;
-    gap: 6px;
-    padding: 6px 0;
-    white-space: normal;
+  .amud:last-child {
+    page-break-after: avoid;
+    break-after: avoid;
   }
 
-  .line-tikkun,
-  .line-torah {
-    white-space: normal;
+  .amud-header {
+    background: #1a1200 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    padding: 4px 10px;
   }
 
-  .column-labels {
-    display: none;
+  .tc {
+    font-size: 11px;
+    padding: 1px 10px 1px 4px;
+  }
+  .ts {
+    font-size: 12.5px;
+    padding: 1px 4px 1px 10px;
   }
 
-  .toc-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .cover-page h1 {
-    font-size: 48px;
+  .tl:nth-child(even) {
+    background: rgba(140,95,0,0.04) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
