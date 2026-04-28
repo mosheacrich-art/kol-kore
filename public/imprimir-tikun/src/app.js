@@ -55,22 +55,24 @@ function renderAnnotatedHtml(text) {
   }).join('');
 }
 
-/* --- Render one cell (annotated or plain) --- */
-function renderCell(rawText, annotated, isPetucha) {
+/* --- Render one cell (all fragments, annotated or plain) --- */
+function renderCell(frags, annotated, isPetucha) {
   var petucha = isPetucha ? ' mod-petucha' : '';
-  var isSetuma = rawText.indexOf('#(ס)') !== -1;
-  var setuma = isSetuma ? ' mod-setuma' : '';
-  var inner;
-  if (annotated) {
-    inner = renderAnnotatedHtml(ketiv(rawText));
-  } else {
-    inner = escapeHtml(kri(rawText));
-  }
+  var fragHtml = frags.map(function(rawFrag) {
+    var isSetuma = rawFrag.indexOf('#(ס)') !== -1;
+    var setuma = isSetuma ? ' mod-setuma' : '';
+    var inner;
+    if (annotated) {
+      inner = renderAnnotatedHtml(ketiv(rawFrag));
+    } else {
+      inner = escapeHtml(kri(rawFrag));
+    }
+    return '<span class="fragment' + setuma + '">' + inner + '</span>';
+  }).join('');
+
   return '<td>' +
     '<div class="line' + petucha + '">' +
-      '<div class="column">' +
-        '<span class="fragment' + setuma + '">' + inner + '</span>' +
-      '</div>' +
+      '<div class="column">' + fragHtml + '</div>' +
     '</div>' +
     '</td>';
 }
@@ -78,7 +80,8 @@ function renderCell(rawText, annotated, isPetucha) {
 /* --- Render one amud (42 lines) as a two-column table --- */
 function renderAmud(lines, pageNum) {
   var rows = lines.map(function(line) {
-    return '<tr>' + renderCell(line.t, true, line.p) + renderCell(line.t, false, line.p) + '</tr>';
+    var frags = line.f || [line.t || ''];
+    return '<tr>' + renderCell(frags, true, line.p) + renderCell(frags, false, line.p) + '</tr>';
   }).join('');
 
   return '<section class="amud" data-page="' + pageNum + '">' +
