@@ -154,10 +154,10 @@ body {
   font-weight: 700;
   line-height: var(--lh);
   direction: rtl;
-  text-align: right;
+  text-align: justify;
+  text-align-last: right;
   color: #1a1200;
   border-left: 1px solid rgba(140,95,0,0.2);
-  white-space: pre-wrap;
   word-break: break-word;
 }
 
@@ -169,31 +169,30 @@ body {
   font-size: var(--fs-sefer);
   line-height: var(--lh);
   direction: rtl;
-  text-align: right;
+  text-align: justify;
+  text-align-last: right;
   color: #0d0d0d;
-  white-space: pre-wrap;
   word-break: break-word;
 }
 
-/* Petucha: open paragraph break */
-.tl.petucha {
-  border-bottom: 2px solid rgba(140,95,0,0.3);
-}
+/* Petucha: no separator line, just the פ marker inline */
 .tl.petucha .tc::after,
 .tl.petucha .ts::after {
-  content: '\a0\a0\a0\a0 פ';
+  content: '\a0\a0\a0 פ';
   color: var(--muted);
   font-weight: 400;
-  font-size: 0.85em;
+  font-size: 0.9em;
+  font-family: 'Noto Serif Hebrew', serif;
 }
 
-/* Setuma: closed paragraph */
+/* Setuma: no separator line, just ס marker inline */
 .tl.setuma .tc::after,
 .tl.setuma .ts::after {
-  content: '\a0\a0\a0\a0 ס';
+  content: '\a0\a0\a0 ס';
   color: var(--muted);
   font-weight: 400;
-  font-size: 0.85em;
+  font-size: 0.9em;
+  font-family: 'Noto Serif Hebrew', serif;
 }
 
 /* Alternating row tint */
