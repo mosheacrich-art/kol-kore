@@ -211,6 +211,13 @@ if (isEmbed) {
 function scrollToPage(pageNum) {
   var el = canvas.querySelector('[data-page="' + pageNum + '"]');
   if (!el) return;
+  if (isEmbed) {
+    /* getBoundingClientRect accounts for CSS zoom, scroll accordingly */
+    var eRect = el.getBoundingClientRect();
+    var bRect = book.getBoundingClientRect();
+    book.scrollTop += eRect.top - bRect.top;
+    return;
+  }
   /* Convert element's screen y to canvas-natural y, then set ty to put it at top */
   var bRect = book.getBoundingClientRect();
   var eRect = el.getBoundingClientRect();
