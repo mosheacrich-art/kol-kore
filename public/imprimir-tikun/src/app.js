@@ -58,8 +58,13 @@ function annotate(text) {
 /* Render one cell (tikkun or sefer) using tikkun.io's .line / .column / .fragment */
 function renderCell(frags, annotated, isPetucha) {
   var petucha = isPetucha ? ' mod-petucha' : '';
-  var setuma  = frags.length > 1 ? ' mod-setuma' : '';
 
+  /* Empty line (book boundary blank line): render a visible empty row */
+  if (!frags.length) {
+    return '<td class="tikkun-cell"><div class="line empty-line"></div></td>';
+  }
+
+  var setuma   = frags.length > 1 ? ' mod-setuma' : '';
   var fragHtml = frags.map(function(rawFrag) {
     var inner = annotated ? annotate(ketiv(rawFrag)) : escapeHtml(kri(rawFrag));
     return '<span class="fragment' + setuma + '">' + inner + '</span>';
