@@ -1,4 +1,4 @@
-/* ── Font — igual que tikkun.io ─────────────────────────────────────── */
+/* ── Font ───────────────────────────────────────────────────────────── */
 @font-face {
   font-family: 'ShlomosemiStam';
   src: url('https://tikkun.io/assets/fonts/ShlomosemiStam.ttf') format('truetype');
@@ -13,13 +13,15 @@
 :root {
   --paper:       hsl(45, 30%, 96%);
   --ink:         hsla(0, 0%, 0%, 0.82);
-  --col-border:  hsla(0, 0%, 0%, 0.18);
+  --col-border:  hsla(0, 0%, 0%, 0.20);
   --toolbar-bg:  #1e1600;
   --toolbar-h:   48px;
 }
 
 /* ── Body ───────────────────────────────────────────────────────────── */
 html, body {
+  height: 100%;
+  overflow: hidden;
   background: var(--paper);
   color: var(--ink);
   font-family: 'ShlomosemiStam', serif;
@@ -29,8 +31,10 @@ html, body {
 
 /* ── Toolbar ────────────────────────────────────────────────────────── */
 .toolbar {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
   height: var(--toolbar-h);
   display: flex;
@@ -75,19 +79,36 @@ html, body {
 }
 #printBtn:hover { filter: brightness(1.1); }
 
-/* ── Book container ──────────────────────────────────────────────────── */
+/* ── Viewport (zoom/pan container) ─────────────────────────────────── */
 #book {
-  padding: 24px 12px 60px;
+  position: fixed;
+  top: var(--toolbar-h);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  background: var(--paper);
+}
+#book.dragging { cursor: grabbing; }
+
+/* ── Canvas (the transformable layer) ──────────────────────────────── */
+#book-canvas {
+  transform-origin: 0 0;
+  will-change: transform;
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 32px 24px 80px;
+  width: 1280px;
 }
 
 /* ── Amud ────────────────────────────────────────────────────────────── */
 .amud {
   width: 100%;
-  max-width: 1200px;
-  margin-bottom: 3em;
+  margin-bottom: 4em;
 }
 
 .amud-header {
@@ -108,7 +129,7 @@ html, body {
 /* ── Single table, two fixed columns ────────────────────────────────── */
 .tikkun-table {
   width: 100%;
-  table-layout: fixed;      /* each column exactly 50% — no wrapping */
+  table-layout: fixed;
   border-collapse: collapse;
   font-family: 'ShlomosemiStam', serif;
   font-size: 1.3em;
@@ -118,15 +139,15 @@ html, body {
 .tikkun-cell {
   width: 50%;
   vertical-align: top;
-  padding: 0 8px;
+  padding: 0 20px;        /* generous horizontal gap */
 }
 
 /* Divider between tikkun (right) and sefer (left) */
 .tikkun-cell:last-child {
-  border-right: 1px solid var(--col-border);
+  border-right: 2px solid var(--col-border);
 }
 
-/* ── Line rendering — exact copy of tikkun.io page.css ─────────────── */
+/* ── Line — tikkun.io page.css exact copy ───────────────────────────── */
 .line {
   position: relative;
   text-align: justify;
@@ -135,15 +156,8 @@ html, body {
   display: flex;
   justify-content: space-between;
 }
-
-/* Book-boundary blank lines keep full line height */
-.empty-line {
-  min-height: 1em;
-}
-
-.line.mod-petucha {
-  text-align: start;
-}
+.line.mod-petucha { text-align: start; }
+.empty-line { min-height: 1em; }
 
 .column {
   flex: 1;
@@ -151,25 +165,18 @@ html, body {
   justify-content: space-between;
 }
 
-.fragment {
-  width: 100%;
-}
-
-.fragment.mod-setuma {
-  width: auto;
-}
-
+.fragment { width: 100%; }
+.fragment.mod-setuma { width: auto; }
 .fragment:after {
   content: '';
   width: 100%;
   display: inline-block;
 }
 
-/* ktiv-kri — copiado de tikkun.io */
 .ktiv-kri {
-  background-color: rgba(0, 0, 0, 0.08);
+  background-color: rgba(0,0,0,0.08);
   padding: 0.1rem 0.1rem;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0,0,0,0.08);
   border-radius: 8px;
   position: relative;
 }
@@ -184,24 +191,34 @@ html, body {
 
 /* ── Print ──────────────────────────────────────────────────────────── */
 @media print {
-  @page {
-    size: A4 portrait;
-    margin: 10mm 8mm;
-  }
+  @page { size: A4 portrait; margin: 10mm 8mm; }
+
+  html, body { height: auto; overflow: visible; }
 
   .no-print { display: none !important; }
 
   body { background: white; }
 
-  #book { padding: 0; }
+  #book {
+    position: static;
+    overflow: visible;
+    cursor: default;
+    user-select: auto;
+    touch-action: auto;
+    background: white;
+  }
+
+  #book-canvas {
+    transform: none !important;
+    width: 100%;
+    padding: 0;
+  }
 
   .amud {
-    max-width: 100%;
     margin-bottom: 0;
     page-break-after: always;
     break-after: page;
   }
-
   .amud:last-child {
     page-break-after: avoid;
     break-after: avoid;
@@ -212,7 +229,6 @@ html, body {
     print-color-adjust: exact;
   }
 
-  .tikkun-table {
-    font-size: 1.05em;
-  }
+  .tikkun-table { font-size: 1.05em; }
+  .tikkun-cell { padding: 0 10px; }
 }

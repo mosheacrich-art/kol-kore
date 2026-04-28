@@ -1,4 +1,4 @@
-/* Tikkun Korim — dos columnas alineadas, texto de tikkun.io (MIT license) */
+/* Tikkun Korim — zoom/pan viewer + tikkun.io rendering (MIT license) */
 
 const PAGES = window.TIKKUN_PAGES || [];
 const PARASHA_INDEX = window.PARASHA_INDEX || [];
@@ -6,20 +6,19 @@ const book = document.getElementById('book');
 const printBtn = document.getElementById('printBtn');
 const parashaSelect = document.getElementById('parashaSelect');
 
-const NUN_HAFUCHA = '׆'; // U+05C6
+const NUN_HAFUCHA = '׆';
 
-/* --- textFilter: copia exacta de tikkun.io text-filter.ts --- */
+/* ── Text filters (exact copy of tikkun.io text-filter.ts) ─────────── */
 function ketiv(text) {
   return text
     .replace('#(פ)', '')
     .replace('(' + NUN_HAFUCHA + ')#', NUN_HAFUCHA + ' ')
     .replace('#(' + NUN_HAFUCHA + ')', ' ' + NUN_HAFUCHA)
     .split(' ')
-    .map(function(maqafWord) {
-      return maqafWord.split('־').map(function(word) {
-        var parts = word.split('#');
-        if (parts.length <= 1) return parts[0];
-        return parts.slice(1).join('');
+    .map(function(w) {
+      return w.split('־').map(function(word) {
+        var p = word.split('#');
+        return p.length <= 1 ? p[0] : p.slice(1).join('');
       }).join('־');
     })
     .join(' ')
@@ -39,58 +38,35 @@ function kri(text) {
 }
 
 function escapeHtml(s) {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-/* ktivKriAnnotation: convierte {texto} en <span class="ktiv-kri"> */
 function annotate(text) {
   return text.split(/(\{[^}]*\})/).map(function(part) {
-    if (part.charAt(0) === '{' && part.charAt(part.length - 1) === '}') {
-      return '<span class="ktiv-kri">' + escapeHtml(part.slice(1, -1)) + '</span>';
-    }
+    if (part[0] === '{' && part[part.length-1] === '}')
+      return '<span class="ktiv-kri">' + escapeHtml(part.slice(1,-1)) + '</span>';
     return escapeHtml(part);
   }).join('');
 }
 
-/* Render one cell (tikkun or sefer) using tikkun.io's .line / .column / .fragment */
+/* ── Render helpers ─────────────────────────────────────────────────── */
 function renderCell(frags, annotated, isPetucha) {
   var petucha = isPetucha ? ' mod-petucha' : '';
-
-  /* Empty line (book boundary blank line): render a visible empty row */
-  if (!frags.length) {
+  if (!frags.length)
     return '<td class="tikkun-cell"><div class="line empty-line"></div></td>';
-  }
-
-  var setuma   = frags.length > 1 ? ' mod-setuma' : '';
-  var fragHtml = frags.map(function(rawFrag) {
-    var inner = annotated ? annotate(ketiv(rawFrag)) : escapeHtml(kri(rawFrag));
+  var setuma = frags.length > 1 ? ' mod-setuma' : '';
+  var html = frags.map(function(f) {
+    var inner = annotated ? annotate(ketiv(f)) : escapeHtml(kri(f));
     return '<span class="fragment' + setuma + '">' + inner + '</span>';
   }).join('');
-
-  return '<td class="tikkun-cell">' +
-    '<div class="line' + petucha + '">' +
-      '<div class="column">' + fragHtml + '</div>' +
-    '</div>' +
-  '</td>';
+  return '<td class="tikkun-cell"><div class="line' + petucha + '"><div class="column">' + html + '</div></div></td>';
 }
 
-/* One row = one Torah line; LEFT=sefer (plain), RIGHT=tikkun (with nikkud) */
-function renderRow(frags, isPetucha) {
-  return '<tr>' +
-    renderCell(frags, true,  isPetucha) +  /* RIGHT — תיקון */
-    renderCell(frags, false, isPetucha) +  /* LEFT  — ספר תורה */
-  '</tr>';
-}
-
-/* Render one amud (42 lines) as a single table with two fixed columns */
 function renderAmud(lines, pageNum) {
   var rows = lines.map(function(line) {
-    return renderRow(line.f || [line.t || ''], line.p);
+    var f = line.f || (line.t ? [line.t] : []);
+    return '<tr>' + renderCell(f, true, line.p) + renderCell(f, false, line.p) + '</tr>';
   }).join('');
-
   return '<section class="amud" data-page="' + pageNum + '">' +
     '<div class="amud-header no-print">' +
       '<span class="col-label">תִּקּוּן</span>' +
@@ -101,28 +77,130 @@ function renderAmud(lines, pageNum) {
   '</section>';
 }
 
-function render() {
-  if (!PAGES.length) {
-    book.innerHTML = '<div class="err">לא נמצא קובץ הנתונים.</div>';
-    return;
+/* ── Render into canvas ─────────────────────────────────────────────── */
+var canvas = document.createElement('div');
+canvas.id = 'book-canvas';
+book.appendChild(canvas);
+
+if (!PAGES.length) {
+  canvas.innerHTML = '<div class="err">לא נמצא קובץ הנתונים.</div>';
+} else {
+  canvas.innerHTML = PAGES.map(function(lines, i) { return renderAmud(lines, i+1); }).join('');
+}
+
+/* ── Parasha select ─────────────────────────────────────────────────── */
+PARASHA_INDEX.forEach(function(p) {
+  var opt = document.createElement('option');
+  opt.value = p.page; opt.textContent = p.name;
+  parashaSelect.appendChild(opt);
+});
+
+/* ── Zoom / Pan state ───────────────────────────────────────────────── */
+var z = { scale: 1, tx: 0, ty: 0 };
+
+function applyZoom() {
+  canvas.style.transform =
+    'translate(' + z.tx + 'px,' + z.ty + 'px) scale(' + z.scale + ')';
+}
+
+/* Fit the first amud fully in the viewport on load */
+function fitToScreen() {
+  var bw = book.clientWidth;
+  var bh = book.clientHeight;
+  var cw = canvas.offsetWidth;   /* natural canvas width (1280px) */
+  var firstAmud = canvas.querySelector('.amud');
+  var ch = firstAmud ? firstAmud.offsetHeight : canvas.offsetHeight;
+  var pad = 48;
+  var s = Math.min(bw / (cw + pad), bh / (ch + pad));
+  z.scale = s;
+  z.tx = (bw - cw * s) / 2;
+  z.ty = 24;
+  applyZoom();
+}
+
+/* Run after two frames (fonts + layout settled) */
+requestAnimationFrame(function() { requestAnimationFrame(fitToScreen); });
+
+/* ── Wheel zoom (toward cursor) ─────────────────────────────────────── */
+book.addEventListener('wheel', function(e) {
+  e.preventDefault();
+  var factor = e.deltaY < 0 ? 1.12 : 1/1.12;
+  var rect = book.getBoundingClientRect();
+  var mx = e.clientX - rect.left;
+  var my = e.clientY - rect.top;
+  z.tx = mx - (mx - z.tx) * factor;
+  z.ty = my - (my - z.ty) * factor;
+  z.scale = Math.max(0.08, Math.min(6, z.scale * factor));
+  applyZoom();
+}, { passive: false });
+
+/* ── Drag to pan ────────────────────────────────────────────────────── */
+var drag = { on: false, sx: 0, sy: 0 };
+
+book.addEventListener('mousedown', function(e) {
+  drag.on = true; drag.sx = e.clientX - z.tx; drag.sy = e.clientY - z.ty;
+  book.classList.add('dragging');
+});
+window.addEventListener('mousemove', function(e) {
+  if (!drag.on) return;
+  z.tx = e.clientX - drag.sx; z.ty = e.clientY - drag.sy;
+  applyZoom();
+});
+window.addEventListener('mouseup', function() {
+  drag.on = false; book.classList.remove('dragging');
+});
+
+/* ── Touch: pinch-zoom + single-finger pan ──────────────────────────── */
+var pinch = { active: false, lastDist: 0, mx: 0, my: 0 };
+
+book.addEventListener('touchstart', function(e) {
+  if (e.touches.length === 2) {
+    pinch.active = true;
+    pinch.lastDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY);
+    pinch.mx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - book.getBoundingClientRect().left;
+    pinch.my = (e.touches[0].clientY + e.touches[1].clientY) / 2 - book.getBoundingClientRect().top;
+  } else if (e.touches.length === 1) {
+    drag.on = true;
+    drag.sx = e.touches[0].clientX - z.tx;
+    drag.sy = e.touches[0].clientY - z.ty;
   }
-  book.innerHTML = PAGES.map(function(lines, i) {
-    return renderAmud(lines, i + 1);
-  }).join('');
-}
+}, { passive: true });
 
-function populateSelect() {
-  PARASHA_INDEX.forEach(function(p) {
-    var opt = document.createElement('option');
-    opt.value = p.page;
-    opt.textContent = p.name;
-    parashaSelect.appendChild(opt);
-  });
-}
+book.addEventListener('touchmove', function(e) {
+  e.preventDefault();
+  if (e.touches.length === 2 && pinch.active) {
+    var dist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY);
+    var factor = dist / pinch.lastDist;
+    z.tx = pinch.mx - (pinch.mx - z.tx) * factor;
+    z.ty = pinch.my - (pinch.my - z.ty) * factor;
+    z.scale = Math.max(0.08, Math.min(6, z.scale * factor));
+    pinch.lastDist = dist;
+    applyZoom();
+  } else if (e.touches.length === 1 && drag.on) {
+    z.tx = e.touches[0].clientX - drag.sx;
+    z.ty = e.touches[0].clientY - drag.sy;
+    applyZoom();
+  }
+}, { passive: false });
 
+book.addEventListener('touchend', function() {
+  drag.on = false; pinch.active = false;
+});
+
+/* ── Navigate to page ───────────────────────────────────────────────── */
 function scrollToPage(pageNum) {
-  var el = book.querySelector('[data-page="' + pageNum + '"]');
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  var el = canvas.querySelector('[data-page="' + pageNum + '"]');
+  if (!el) return;
+  /* Convert element's screen y to canvas-natural y, then set ty to put it at top */
+  var bRect = book.getBoundingClientRect();
+  var eRect = el.getBoundingClientRect();
+  var naturalY = (eRect.top - bRect.top - z.ty) / z.scale;
+  z.ty = -naturalY * z.scale + 24;
+  applyZoom();
 }
 
 parashaSelect.addEventListener('change', function() {
@@ -132,22 +210,19 @@ parashaSelect.addEventListener('change', function() {
 
 printBtn.addEventListener('click', function() { window.print(); });
 
-render();
-populateSelect();
-
+/* ── Hash navigation ────────────────────────────────────────────────── */
 function stripDiacritics(s) { return String(s).replace(/[֑-ׇ]/g, ''); }
 function findParasha(name) {
-  var needle = stripDiacritics(name);
-  return PARASHA_INDEX.find(function(p) { return stripDiacritics(p.name) === needle; });
+  var n = stripDiacritics(name);
+  return PARASHA_INDEX.find(function(p) { return stripDiacritics(p.name) === n; });
 }
-
 function handleHash() {
   var hash = decodeURIComponent(location.hash.replace(/^#/, ''));
   if (!hash) return;
   if (hash.indexOf('page=') === 0) scrollToPage(parseInt(hash.slice(5)));
   else if (hash.indexOf('parasha=') === 0) {
-    var entry = findParasha(hash.slice(8));
-    if (entry) scrollToPage(entry.page);
+    var e = findParasha(hash.slice(8));
+    if (e) scrollToPage(e.page);
   }
 }
 requestAnimationFrame(function() { requestAnimationFrame(handleHash); });
