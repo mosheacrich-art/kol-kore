@@ -11,12 +11,11 @@
 
 /* ── Variables ──────────────────────────────────────────────────────── */
 :root {
-  --paper:           hsl(45, 30%, 96%);
-  --ink:             hsla(0, 0%, 0%, 0.82);
-  --col-border:      hsla(0, 0%, 0%, 0.15);
-  --toolbar-bg:      #1e1600;
-  --toolbar-h:       48px;
-  --page-ink-color:  var(--ink);
+  --paper:       hsl(45, 30%, 96%);
+  --ink:         hsla(0, 0%, 0%, 0.82);
+  --col-border:  hsla(0, 0%, 0%, 0.18);
+  --toolbar-bg:  #1e1600;
+  --toolbar-h:   48px;
 }
 
 /* ── Body ───────────────────────────────────────────────────────────── */
@@ -82,7 +81,6 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0;
 }
 
 /* ── Amud ────────────────────────────────────────────────────────────── */
@@ -104,43 +102,31 @@ html, body {
   border-radius: 3px 3px 0 0;
   margin-bottom: 4px;
 }
-.amud-num { color: #c8a84e; }
+.amud-num  { color: #c8a84e; }
 .col-label { color: #d4b560; letter-spacing: 0.05em; }
 
-/* ── Two-column layout: tikkun (right) | sefer (left) ───────────────── */
-.amud-body {
-  display: flex;
+/* ── Single table, two fixed columns ────────────────────────────────── */
+.tikkun-table {
+  width: 100%;
+  table-layout: fixed;      /* each column exactly 50% — no wrapping */
+  border-collapse: collapse;
+  font-family: 'ShlomosemiStam', serif;
+  font-size: 1.3em;
   direction: rtl;
 }
 
-.tikkun-book {
-  flex: 1;
-  min-width: 0;
+.tikkun-cell {
+  width: 50%;
+  vertical-align: top;
+  padding: 0 8px;
 }
 
-/* Divider between the two columns */
-.tikkun-book.mod-annotations-off {
+/* Divider between tikkun (right) and sefer (left) */
+.tikkun-cell:last-child {
   border-right: 1px solid var(--col-border);
 }
 
-/* tikkun.io visibility rules — exact copy */
-.tikkun-book.mod-annotations-off .fragment.mod-annotations-on  { display: none; }
-.tikkun-book.mod-annotations-on  .fragment.mod-annotations-off { display: none; }
-
-/* ── tikkun.io page.css — copiado exacto ────────────────────────────── */
-.tikkun-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: 'ShlomosemiStam', serif;
-  font-size: 1.5em;
-  color: var(--page-ink-color);
-}
-
-.tikkun-table td {
-  padding: 0 6px;
-  vertical-align: top;
-}
-
+/* ── Line rendering — exact copy of tikkun.io page.css ─────────────── */
 .line {
   position: relative;
   text-align: justify;
@@ -157,7 +143,6 @@ html, body {
   flex: 1;
   display: flex;
   justify-content: space-between;
-  min-width: 18ch;
 }
 
 .fragment {
@@ -222,6 +207,6 @@ html, body {
   }
 
   .tikkun-table {
-    font-size: 1.1em;
+    font-size: 1.05em;
   }
 }

@@ -1,4 +1,4 @@
-/* Tikkun Korim — estructura idéntica a tikkun.io (MIT license) */
+/* Tikkun Korim — dos columnas alineadas, texto de tikkun.io (MIT license) */
 
 const PAGES = window.TIKKUN_PAGES || [];
 const PARASHA_INDEX = window.PARASHA_INDEX || [];
@@ -45,7 +45,7 @@ function escapeHtml(s) {
     .replace(/>/g, '&gt;');
 }
 
-/* ktivKriAnnotation: convierte {texto} en <span class="ktiv-kri"> — igual que tikkun.io */
+/* ktivKriAnnotation: convierte {texto} en <span class="ktiv-kri"> */
 function annotate(text) {
   return text.split(/(\{[^}]*\})/).map(function(part) {
     if (part.charAt(0) === '{' && part.charAt(part.length - 1) === '}') {
@@ -55,31 +55,36 @@ function annotate(text) {
   }).join('');
 }
 
-/* --- Render one line row — estructura exacta de tikkun.io Line.ts --- */
-function renderLine(frags, isPetucha, lineIndex) {
+/* Render one cell (tikkun or sefer) using tikkun.io's .line / .column / .fragment */
+function renderCell(frags, annotated, isPetucha) {
   var petucha = isPetucha ? ' mod-petucha' : '';
-  var setuma = frags.length > 1 ? ' mod-setuma' : '';
+  var setuma  = frags.length > 1 ? ' mod-setuma' : '';
 
   var fragHtml = frags.map(function(rawFrag) {
-    return '<span class="fragment' + setuma + ' mod-annotations-on">'  + annotate(ketiv(rawFrag)) + '</span>' +
-           '<span class="fragment' + setuma + ' mod-annotations-off">' + escapeHtml(kri(rawFrag))  + '</span>';
+    var inner = annotated ? annotate(ketiv(rawFrag)) : escapeHtml(kri(rawFrag));
+    return '<span class="fragment' + setuma + '">' + inner + '</span>';
   }).join('');
 
-  return '<tr data-line-index="' + lineIndex + '">' +
-    '<td class="line' + petucha + '">' +
+  return '<td class="tikkun-cell">' +
+    '<div class="line' + petucha + '">' +
       '<div class="column">' + fragHtml + '</div>' +
-    '</td>' +
+    '</div>' +
+  '</td>';
+}
+
+/* One row = one Torah line; LEFT=sefer (plain), RIGHT=tikkun (with nikkud) */
+function renderRow(frags, isPetucha) {
+  return '<tr>' +
+    renderCell(frags, true,  isPetucha) +  /* RIGHT — תיקון */
+    renderCell(frags, false, isPetucha) +  /* LEFT  — ספר תורה */
   '</tr>';
 }
 
-/* --- Render one amud as two tikkun.io columns side by side --- */
+/* Render one amud (42 lines) as a single table with two fixed columns */
 function renderAmud(lines, pageNum) {
-  var rows = lines.map(function(line, i) {
-    return renderLine(line.f || [line.t || ''], line.p, i);
+  var rows = lines.map(function(line) {
+    return renderRow(line.f || [line.t || ''], line.p);
   }).join('');
-
-  /* Same HTML rendered into two containers; CSS shows/hides the right span in each */
-  var tableHtml = '<table class="tikkun-table" dir="rtl"><tbody>' + rows + '</tbody></table>';
 
   return '<section class="amud" data-page="' + pageNum + '">' +
     '<div class="amud-header no-print">' +
@@ -87,10 +92,7 @@ function renderAmud(lines, pageNum) {
       '<span class="amud-num">' + pageNum + '</span>' +
       '<span class="col-label">סֵפֶר תּוֹרָה</span>' +
     '</div>' +
-    '<div class="amud-body">' +
-      '<div class="tikkun-book mod-annotations-on">'  + tableHtml + '</div>' +
-      '<div class="tikkun-book mod-annotations-off">' + tableHtml + '</div>' +
-    '</div>' +
+    '<table class="tikkun-table" dir="rtl"><tbody>' + rows + '</tbody></table>' +
   '</section>';
 }
 
