@@ -7,14 +7,18 @@
     <link rel="stylesheet" href="src/styles.css" />
   </head>
   <body>
-    <header class="book-toolbar">
+    <header class="toolbar no-print">
       <div class="toolbar-title">תיקון קוראים</div>
-      <button id="printButton" type="button">PDF / הדפסה</button>
+      <div class="toolbar-actions">
+        <select id="parashaSelect">
+          <option value="">— בחר פרשה —</option>
+        </select>
+        <button id="printBtn">הדפסה / PDF</button>
+      </div>
     </header>
-    <main id="book" class="book" aria-label="תיקון קוראים מלא">
-      <section class="loading">טוען את הספר...</section>
-    </main>
-    <script src="data/torah-data.js"></script>
+    <main id="book"></main>
+    <script src="data/tikkun-pages.js"></script>
+    <script src="data/parasha-index.js"></script>
     <script src="src/app.js"></script>
   </body>
 </html>
