@@ -113,7 +113,7 @@ html, body {
   width: 100%;
   border-collapse: collapse;
   font-family: 'ShlomosemiStam', serif;
-  font-size: 1.4em;          /* igual que tikkun.io: 1.5em, reducido un poco para caber en A4 */
+  font-size: 1.5em;
   direction: rtl;
   table-layout: fixed;
 }
@@ -121,7 +121,7 @@ html, body {
 .tikkun-table tbody tr td {
   width: 50%;
   vertical-align: top;
-  padding: 0 6px;
+  padding: 0 8px;
 }
 
 /* Línea divisoria entre tikkun y sefer */
@@ -129,26 +129,29 @@ html, body {
   border-right: 1px solid var(--col-border);
 }
 
-/* ── Line — copiado de tikkun.io page.css ───────────────────────────── */
+/* ── Line — estructura fiel a tikkun.io page.css ────────────────────── */
 .line {
-  position: relative;
-  text-align: justify;
-  line-height: 100%;
   display: flex;
   justify-content: space-between;
+  line-height: 1.8;
+  text-align: justify;
 }
 
 .line.mod-petucha {
-  text-align: start;
+  justify-content: flex-end;
 }
 
 .column {
   flex: 1;
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
+  text-align: justify;
 }
 
 .fragment {
+  display: inline;
+  text-align: justify;
   width: 100%;
 }
 
@@ -161,6 +164,7 @@ html, body {
 
 .fragment.mod-setuma {
   width: auto;
+  flex: 0 0 auto;
 }
 
 /* Ktiv-kri highlight (copiado de tikkun.io) */
@@ -211,6 +215,11 @@ html, body {
   }
 
   .tikkun-table {
-    font-size: 1.1em;
+    font-size: 1.15em;
+    line-height: 1.75;
+  }
+
+  .line {
+    line-height: 1.75;
   }
 }
