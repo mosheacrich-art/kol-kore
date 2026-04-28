@@ -1,4 +1,4 @@
-/* ── Font — misma que tikkun.io ────────────────────────────────────── */
+/* ── Font — igual que tikkun.io ─────────────────────────────────────── */
 @font-face {
   font-family: 'ShlomosemiStam';
   src: url('https://tikkun.io/assets/ShlomosemiStam-Regular.ttf') format('truetype');
@@ -11,13 +11,12 @@
 
 /* ── Variables ──────────────────────────────────────────────────────── */
 :root {
-  --paper:       hsl(45, 30%, 96%);
-  --ink:         hsla(0, 0%, 0%, 0.82);
-  --divider:     hsla(0, 0%, 0%, 0.15);
-  --col-border:  hsla(0, 0%, 0%, 0.12);
-  --gold:        #8c6800;
-  --toolbar-bg:  #1e1600;
-  --toolbar-h:   48px;
+  --paper:           hsl(45, 30%, 96%);
+  --ink:             hsla(0, 0%, 0%, 0.82);
+  --col-border:      hsla(0, 0%, 0%, 0.15);
+  --toolbar-bg:      #1e1600;
+  --toolbar-h:       48px;
+  --page-ink-color:  var(--ink);
 }
 
 /* ── Body ───────────────────────────────────────────────────────────── */
@@ -108,71 +107,79 @@ html, body {
 .amud-num { color: #c8a84e; }
 .col-label { color: #d4b560; letter-spacing: 0.05em; }
 
-/* ── Table — estructura exacta de tikkun.io ─────────────────────────── */
+/* ── Two-column layout: tikkun (right) | sefer (left) ───────────────── */
+.amud-body {
+  display: flex;
+  direction: rtl;
+}
+
+.tikkun-book {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Divider between the two columns */
+.tikkun-book.mod-annotations-off {
+  border-right: 1px solid var(--col-border);
+}
+
+/* tikkun.io visibility rules — exact copy */
+.tikkun-book.mod-annotations-off .fragment.mod-annotations-on  { display: none; }
+.tikkun-book.mod-annotations-on  .fragment.mod-annotations-off { display: none; }
+
+/* ── tikkun.io page.css — copiado exacto ────────────────────────────── */
 .tikkun-table {
   width: 100%;
   border-collapse: collapse;
   font-family: 'ShlomosemiStam', serif;
   font-size: 1.5em;
-  direction: rtl;
-  table-layout: fixed;
+  color: var(--page-ink-color);
 }
 
-.tikkun-table tbody tr td {
-  width: 50%;
+.tikkun-table td {
+  padding: 0 6px;
   vertical-align: top;
-  padding: 0 8px;
 }
 
-/* Línea divisoria entre tikkun y sefer */
-.tikkun-table tbody tr td:last-child {
-  border-right: 1px solid var(--col-border);
-}
-
-/* ── Line — estructura fiel a tikkun.io page.css ────────────────────── */
 .line {
+  position: relative;
+  text-align: justify;
+  line-height: 100%;
   display: flex;
   justify-content: space-between;
-  line-height: 1.8;
-  text-align: justify;
 }
 
 .line.mod-petucha {
-  justify-content: flex-end;
+  text-align: start;
 }
 
 .column {
   flex: 1;
   display: flex;
-  flex-wrap: wrap;
   justify-content: space-between;
-  text-align: justify;
+  min-width: 18ch;
 }
 
 .fragment {
-  display: inline;
-  text-align: justify;
   width: 100%;
 }
 
-/* El after vacío fuerza que justify funcione en líneas cortas */
-.fragment::after {
+.fragment.mod-setuma {
+  width: auto;
+}
+
+.fragment:after {
   content: '';
   width: 100%;
   display: inline-block;
 }
 
-.fragment.mod-setuma {
-  width: auto;
-  flex: 0 0 auto;
-}
-
-/* Ktiv-kri highlight (copiado de tikkun.io) */
+/* ktiv-kri — copiado de tikkun.io */
 .ktiv-kri {
-  background-color: rgba(0,0,0,0.08);
-  padding: 0.05em 0.15em;
-  border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 6px;
+  background-color: rgba(0, 0, 0, 0.08);
+  padding: 0.1rem 0.1rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
   position: relative;
 }
 
@@ -215,11 +222,6 @@ html, body {
   }
 
   .tikkun-table {
-    font-size: 1.15em;
-    line-height: 1.75;
-  }
-
-  .line {
-    line-height: 1.75;
+    font-size: 1.1em;
   }
 }
