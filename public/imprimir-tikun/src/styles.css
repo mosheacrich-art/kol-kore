@@ -1,4 +1,4 @@
-/* ── Fonts ──────────────────────────────────────────────────────────── */
+/* ── Font — misma que tikkun.io ────────────────────────────────────── */
 @font-face {
   font-family: 'ShlomosemiStam';
   src: url('https://tikkun.io/assets/ShlomosemiStam-Regular.ttf') format('truetype');
@@ -6,35 +6,25 @@
   font-display: swap;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Hebrew:wght@400;700;900&display=swap');
-
 /* ── Reset ──────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── Tokens ─────────────────────────────────────────────────────────── */
+/* ── Variables ──────────────────────────────────────────────────────── */
 :root {
-  --bg:        #f9f5ec;
-  --surface:   #fff8ee;
-  --border:    #c8b97a;
-  --text:      #1a1200;
-  --muted:     #8a7a50;
-  --gold:      #8c5f00;
-  --toolbar-h: 52px;
-
-  --col-tikkun: 1fr;
-  --col-sefer:  1fr;
-
-  --fs-tikkun: 13.5px;
-  --fs-sefer:  15px;
-  --lh: 1.72;
+  --paper:       hsl(45, 30%, 96%);
+  --ink:         hsla(0, 0%, 0%, 0.82);
+  --divider:     hsla(0, 0%, 0%, 0.15);
+  --col-border:  hsla(0, 0%, 0%, 0.12);
+  --gold:        #8c6800;
+  --toolbar-bg:  #1e1600;
+  --toolbar-h:   48px;
 }
 
 /* ── Body ───────────────────────────────────────────────────────────── */
-html { font-size: 16px; }
-body {
-  font-family: 'Noto Serif Hebrew', serif;
-  background: var(--bg);
-  color: var(--text);
+html, body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'ShlomosemiStam', serif;
   direction: rtl;
   -webkit-font-smoothing: antialiased;
 }
@@ -47,16 +37,14 @@ body {
   height: var(--toolbar-h);
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 0 16px;
-  background: #2a1f00;
-  color: #f5e9c4;
-  border-bottom: 2px solid var(--border);
+  gap: 10px;
+  padding: 0 14px;
+  background: var(--toolbar-bg);
+  border-bottom: 2px solid #6c4e00;
 }
 .toolbar-title {
-  font-family: 'Noto Serif Hebrew', serif;
+  font-size: 15px;
   font-weight: 700;
-  font-size: 16px;
   color: #f9d96a;
   flex-shrink: 0;
 }
@@ -67,23 +55,23 @@ body {
   align-items: center;
 }
 #parashaSelect {
-  font-family: 'Noto Serif Hebrew', serif;
+  font-family: 'ShlomosemiStam', serif;
   font-size: 13px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  border: 1px solid #8c7a40;
-  background: #3a2d00;
+  padding: 3px 7px;
+  border-radius: 5px;
+  border: 1px solid #7a6030;
+  background: #2e2300;
   color: #f5e9c4;
   direction: rtl;
 }
 #printBtn {
-  font-family: 'Noto Serif Hebrew', serif;
-  font-size: 13px;
-  padding: 5px 14px;
-  border-radius: 6px;
-  border: 1px solid #b8903a;
-  background: linear-gradient(135deg, #b8762a, #e0a83a);
-  color: #1a1000;
+  font-family: sans-serif;
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 5px;
+  border: 1px solid #a07828;
+  background: linear-gradient(135deg, #a06820, #d09830);
+  color: #100a00;
   font-weight: 700;
   cursor: pointer;
 }
@@ -91,113 +79,95 @@ body {
 
 /* ── Book container ──────────────────────────────────────────────────── */
 #book {
+  padding: 24px 12px 60px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 40px;
-  padding: 32px 16px 64px;
+  gap: 0;
 }
 
-/* ── Amud (column / page) ────────────────────────────────────────────── */
+/* ── Amud ────────────────────────────────────────────────────────────── */
 .amud {
   width: 100%;
-  max-width: 900px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.10);
-  overflow: hidden;
+  max-width: 960px;
+  margin-bottom: 3em;
 }
 
 .amud-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 5px 16px;
-  background: #2a1f00;
+  padding: 3px 12px;
+  background: var(--toolbar-bg);
   color: #f9d96a;
-  font-family: 'Noto Serif Hebrew', serif;
-  font-size: 12px;
-  font-weight: 700;
-  border-bottom: 1px solid var(--border);
-}
-.amud-num {
   font-size: 11px;
-  color: #c8a84e;
-  font-family: monospace;
+  font-family: sans-serif;
+  border-radius: 3px 3px 0 0;
+  margin-bottom: 4px;
 }
-.col-label {
-  font-size: 11px;
-  letter-spacing: 0.05em;
-  color: #d4b560;
-}
+.amud-num { color: #c8a84e; }
+.col-label { color: #d4b560; letter-spacing: 0.05em; }
 
-.amud-body {
-  padding: 8px 0 4px;
-}
-
-/* ── Lines ──────────────────────────────────────────────────────────── */
-.tl {
-  display: grid;
-  grid-template-columns: var(--col-tikkun) var(--col-sefer);
-}
-
-/* Tikkun column (right/leading in RTL) */
-.tc {
-  display: block;
-  padding: 1px 14px 1px 8px;
-  font-family: 'Noto Serif Hebrew', serif;
-  font-size: var(--fs-tikkun);
-  font-weight: 700;
-  line-height: var(--lh);
+/* ── Table — estructura exacta de tikkun.io ─────────────────────────── */
+.tikkun-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'ShlomosemiStam', serif;
+  font-size: 1.4em;          /* igual que tikkun.io: 1.5em, reducido un poco para caber en A4 */
   direction: rtl;
+  table-layout: fixed;
+}
+
+.tikkun-table tbody tr td {
+  width: 50%;
+  vertical-align: top;
+  padding: 0 6px;
+}
+
+/* Línea divisoria entre tikkun y sefer */
+.tikkun-table tbody tr td:last-child {
+  border-right: 1px solid var(--col-border);
+}
+
+/* ── Line — copiado de tikkun.io page.css ───────────────────────────── */
+.line {
+  position: relative;
   text-align: justify;
-  text-align-last: right;
-  color: #1a1200;
-  word-break: break-word;
+  line-height: 100%;
+  display: flex;
+  justify-content: space-between;
 }
 
-/* Sefer Torah column (left/trailing, plain consonants) */
-.ts {
-  display: block;
-  padding: 1px 8px 1px 14px;
-  font-family: 'ShlomosemiStam', 'Noto Serif Hebrew', serif;
-  font-size: var(--fs-sefer);
-  line-height: var(--lh);
-  direction: rtl;
-  text-align: justify;
-  text-align-last: right;
-  color: #0d0d0d;
-  word-break: break-word;
-  border-right: 1px solid rgba(140,95,0,0.15);
+.line.mod-petucha {
+  text-align: start;
 }
 
-/* Petucha: no separator line, just the פ marker inline */
-.tl.petucha .tc::after,
-.tl.petucha .ts::after {
-  content: '\a0\a0\a0 פ';
-  color: var(--muted);
-  font-weight: 400;
-  font-size: 0.9em;
-  font-family: 'Noto Serif Hebrew', serif;
+.column {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
 }
 
-/* Setuma: no separator line, just ס marker inline */
-.tl.setuma .tc::after,
-.tl.setuma .ts::after {
-  content: '\a0\a0\a0 ס';
-  color: var(--muted);
-  font-weight: 400;
-  font-size: 0.9em;
-  font-family: 'Noto Serif Hebrew', serif;
+.fragment {
+  width: 100%;
 }
 
+/* El after vacío fuerza que justify funcione en líneas cortas */
+.fragment::after {
+  content: '';
+  width: 100%;
+  display: inline-block;
+}
+
+.fragment.mod-setuma {
+  width: auto;
+}
 
 /* ── Error ──────────────────────────────────────────────────────────── */
 .err {
   padding: 40px;
   text-align: center;
-  color: var(--muted);
+  color: #888;
   font-size: 18px;
 }
 
@@ -205,31 +175,20 @@ body {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 12mm 10mm;
+    margin: 10mm 8mm;
   }
 
   .no-print { display: none !important; }
 
-  body {
-    background: white;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
+  body { background: white; }
 
-  #book {
-    display: block;
-    padding: 0;
-  }
+  #book { padding: 0; }
 
   .amud {
     max-width: 100%;
-    width: 100%;
-    box-shadow: none;
-    border: none;
-    border-radius: 0;
+    margin-bottom: 0;
     page-break-after: always;
     break-after: page;
-    background: white;
   }
 
   .amud:last-child {
@@ -238,24 +197,11 @@ body {
   }
 
   .amud-header {
-    background: #1a1200 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-    padding: 4px 10px;
   }
 
-  .tc {
-    font-size: 11px;
-    padding: 1px 10px 1px 4px;
-  }
-  .ts {
-    font-size: 12.5px;
-    padding: 1px 4px 1px 10px;
-  }
-
-  .tl:nth-child(even) {
-    background: rgba(140,95,0,0.04) !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+  .tikkun-table {
+    font-size: 1.1em;
   }
 }

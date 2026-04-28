@@ -1,4 +1,4 @@
-/* Tikkun Korim — two-column renderer using tikkun.io page data */
+/* Tikkun Korim — rendering exacto basado en tikkun.io (MIT license) */
 
 const PAGES = window.TIKKUN_PAGES || [];
 const PARASHA_INDEX = window.PARASHA_INDEX || [];
@@ -6,42 +6,68 @@ const book = document.getElementById('book');
 const printBtn = document.getElementById('printBtn');
 const parashaSelect = document.getElementById('parashaSelect');
 
-// Strip nikkud + taamim (U+0591–U+05C7) for plain Torah scroll text
-function stripDiacritics(s) {
-  return s.replace(/[֑-ׇ]/g, '');
+const NUN_HAFUCHA = '׶'; // ׆
+
+/* --- textFilter equivalente al de tikkun.io --- */
+function ketiv(text) {
+  return text
+    .replace('#(פ)', '')
+    .replace(`(${NUN_HAFUCHA})#`, `${NUN_HAFUCHA} `)
+    .replace(`#(${NUN_HAFUCHA})`, ` ${NUN_HAFUCHA}`)
+    .split(' ')
+    .map(maqafWord =>
+      maqafWord.split('־').map(word => {
+        const parts = word.split('#');
+        if (parts.length <= 1) return parts[0];
+        return parts.slice(1).join('');
+      }).join('־')
+    )
+    .join(' ')
+    .replace(/\[/g, '{').replace(/\]/g, '}');
 }
 
-// Strip the #(פ) paragraph marker from display text
-function cleanText(s) {
-  return s.replace(/#\(פ\)/g, '').replace(/#\(ס\)/g, '').trim();
+function kri(text) {
+  return text
+    .replace('#(פ)', '')
+    .replace(`(${NUN_HAFUCHA})#`, `${NUN_HAFUCHA} `)
+    .replace(`#(${NUN_HAFUCHA})`, ` ${NUN_HAFUCHA}`)
+    .replace(/־/g, ' ')
+    .replace(/#\[.+?\]/g, ' ')
+    .replace(new RegExp(`[^א-ת\\s${NUN_HAFUCHA}]`, 'g'), '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 }
 
 function escape(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
-function buildLine(line) {
-  const annotated = cleanText(line.t);
-  const plain = stripDiacritics(annotated);
-  const isPetucha = line.p;
-  const isSetuma = line.s;
-  const cls = isPetucha ? 'tl petucha' : isSetuma ? 'tl setuma' : 'tl';
-  // Each row: right=tikkun (nikkud), left=sefer (plain)
-  return `<div class="${cls}">` +
-    `<span class="tc">${escape(annotated)}</span>` +
-    `<span class="ts">${escape(plain)}</span>` +
-    `</div>`;
+/* --- Render a single line cell (annotated or plain) --- */
+function renderCell(rawText, annotated, isPetucha) {
+  const text = annotated ? ketiv(rawText) : kri(rawText);
+  const petucha = isPetucha ? ' mod-petucha' : '';
+  const isSetuma = rawText.includes('#(ס)') || false;
+  const setuma = isSetuma ? ' mod-setuma' : '';
+  return `<td class="line${petucha}">` +
+    `<div class="column"><span class="fragment${setuma}">${escape(text)}</span></div>` +
+    `</td>`;
 }
 
-function buildPage(lines, pageNum) {
-  const linesHtml = lines.map(buildLine).join('');
-  return `<section class="amud" data-page="${pageNum}">` +
-    `<div class="amud-header">` +
+/* --- Render one amud (42 lines) as a two-column table --- */
+function renderAmud(lines, pageNum) {
+  const rows = lines.map(line =>
+    `<tr>${renderCell(line.t, true, line.p)}${renderCell(line.t, false, line.p)}</tr>`
+  ).join('');
+
+  return `<section class="amud no-break" data-page="${pageNum}">` +
+    `<div class="amud-header no-print-hide">` +
       `<span class="col-label">תִּקּוּן</span>` +
       `<span class="amud-num">${pageNum}</span>` +
-      `<span class="col-label">סֵפֶר</span>` +
+      `<span class="col-label">סֵפֶר תּוֹרָה</span>` +
     `</div>` +
-    `<div class="amud-body">${linesHtml}</div>` +
+    `<table class="tikkun-table" dir="rtl"><tbody>${rows}</tbody></table>` +
     `</section>`;
 }
 
@@ -50,8 +76,7 @@ function render() {
     book.innerHTML = '<div class="err">לא נמצא קובץ הנתונים.</div>';
     return;
   }
-  const html = PAGES.map((lines, i) => buildPage(lines, i + 1)).join('');
-  book.innerHTML = html;
+  book.innerHTML = PAGES.map((lines, i) => renderAmud(lines, i + 1)).join('');
 }
 
 function populateSelect() {
@@ -78,22 +103,17 @@ printBtn.addEventListener('click', () => window.print());
 render();
 populateSelect();
 
-function plain(s) {
-  return String(s).replace(/[֑-ׇ]/g, '');
-}
-
+function plain(s) { return String(s).replace(/[֑-ׇ]/g, ''); }
 function findParasha(name) {
   const needle = plain(name);
   return PARASHA_INDEX.find(p => plain(p.name) === needle);
 }
 
-// Handle URL hash navigation: #parasha=בראשית or #page=5
 function handleHash() {
   const hash = decodeURIComponent(location.hash.replace(/^#/, ''));
   if (!hash) return;
-  if (hash.startsWith('page=')) {
-    scrollToPage(parseInt(hash.slice(5)));
-  } else if (hash.startsWith('parasha=')) {
+  if (hash.startsWith('page=')) scrollToPage(parseInt(hash.slice(5)));
+  else if (hash.startsWith('parasha=')) {
     const entry = findParasha(hash.slice(8));
     if (entry) scrollToPage(entry.page);
   }
