@@ -436,7 +436,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
       {/* Text area */}
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         {mode === 'sefer' && (
-          <SeferView ref_={currentAliyah.ref} />
+          <SeferView parasha={parasha} />
         )}
         {mode !== 'sefer' && loading && <LoadingState bookColor={bookColor} />}
         {mode !== 'sefer' && error && <ErrorState error={error} ref_={currentAliyah.ref} />}
@@ -858,16 +858,27 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
   )
 }
 
-function SeferView({ ref_ }) {
-  const { isDark } = useTheme()
-  const theme = isDark ? '?theme=dark' : '?theme=light'
-  const src = `${import.meta.env.BASE_URL}tikkun/index.html${theme}${tikkunHash(ref_)}`
+function SeferView({ parasha }) {
+  const iframeRef = useRef(null)
+  const BASE = import.meta.env.BASE_URL
+  const hash = parasha?.heb ? '#parasha=' + encodeURIComponent(parasha.heb) : ''
+  const src = `${BASE}imprimir-tikun/index.html?embed=1${hash}`
+
+  const prevHeb = useRef(parasha?.heb)
+  useEffect(() => {
+    if (prevHeb.current === parasha?.heb) return
+    prevHeb.current = parasha?.heb
+    if (parasha?.heb && iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({ scrollToParasha: parasha.heb }, '*')
+    }
+  }, [parasha?.heb])
+
   return (
     <div className="flex-1 min-h-0">
       <iframe
-        key={src}
+        ref={iframeRef}
         src={src}
-        title="Modo Sefer · tikkun.io"
+        title="Modo Sefer"
         style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
         loading="lazy"
       />

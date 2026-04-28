@@ -181,6 +181,18 @@ html, body {
   position: relative;
 }
 
+/* ── Embed mode (no toolbar, vertical scroll only) ─────────────────── */
+body.embed .toolbar { display: none !important; }
+body.embed #book {
+  top: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  cursor: default;
+  user-select: text;
+  touch-action: pan-y;
+}
+body.embed #book.dragging { cursor: default; }
+
 /* ── Error ──────────────────────────────────────────────────────────── */
 .err {
   padding: 40px;

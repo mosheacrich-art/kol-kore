@@ -95,6 +95,10 @@ PARASHA_INDEX.forEach(function(p) {
   parashaSelect.appendChild(opt);
 });
 
+/* ── Embed mode detection ───────────────────────────────────────────── */
+var isEmbed = new URLSearchParams(location.search).get('embed') === '1';
+if (isEmbed) document.body.classList.add('embed');
+
 /* ── Zoom / Pan state ───────────────────────────────────────────────── */
 var z = { scale: 1, tx: 0, ty: 0 };
 
@@ -118,78 +122,90 @@ function fitToScreen() {
   applyZoom();
 }
 
-/* Run after two frames (fonts + layout settled) */
-requestAnimationFrame(function() { requestAnimationFrame(fitToScreen); });
+/* Embed: fit canvas width to viewport using zoom (preserves scroll layout) */
+function fitWidth() {
+  var s = book.clientWidth / canvas.offsetWidth;
+  canvas.style.zoom = s;
+  canvas.style.transform = 'none';
+}
 
-/* ── Wheel zoom (toward cursor) ─────────────────────────────────────── */
-book.addEventListener('wheel', function(e) {
-  e.preventDefault();
-  var factor = e.deltaY < 0 ? 1.12 : 1/1.12;
-  var rect = book.getBoundingClientRect();
-  var mx = e.clientX - rect.left;
-  var my = e.clientY - rect.top;
-  z.tx = mx - (mx - z.tx) * factor;
-  z.ty = my - (my - z.ty) * factor;
-  z.scale = Math.max(0.08, Math.min(6, z.scale * factor));
-  applyZoom();
-}, { passive: false });
+if (isEmbed) {
+  requestAnimationFrame(function() { requestAnimationFrame(fitWidth); });
+  window.addEventListener('resize', fitWidth);
+} else {
+  /* Run after two frames (fonts + layout settled) */
+  requestAnimationFrame(function() { requestAnimationFrame(fitToScreen); });
 
-/* ── Drag to pan ────────────────────────────────────────────────────── */
-var drag = { on: false, sx: 0, sy: 0 };
-
-book.addEventListener('mousedown', function(e) {
-  drag.on = true; drag.sx = e.clientX - z.tx; drag.sy = e.clientY - z.ty;
-  book.classList.add('dragging');
-});
-window.addEventListener('mousemove', function(e) {
-  if (!drag.on) return;
-  z.tx = e.clientX - drag.sx; z.ty = e.clientY - drag.sy;
-  applyZoom();
-});
-window.addEventListener('mouseup', function() {
-  drag.on = false; book.classList.remove('dragging');
-});
-
-/* ── Touch: pinch-zoom + single-finger pan ──────────────────────────── */
-var pinch = { active: false, lastDist: 0, mx: 0, my: 0 };
-
-book.addEventListener('touchstart', function(e) {
-  if (e.touches.length === 2) {
-    pinch.active = true;
-    pinch.lastDist = Math.hypot(
-      e.touches[0].clientX - e.touches[1].clientX,
-      e.touches[0].clientY - e.touches[1].clientY);
-    pinch.mx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - book.getBoundingClientRect().left;
-    pinch.my = (e.touches[0].clientY + e.touches[1].clientY) / 2 - book.getBoundingClientRect().top;
-  } else if (e.touches.length === 1) {
-    drag.on = true;
-    drag.sx = e.touches[0].clientX - z.tx;
-    drag.sy = e.touches[0].clientY - z.ty;
-  }
-}, { passive: true });
-
-book.addEventListener('touchmove', function(e) {
-  e.preventDefault();
-  if (e.touches.length === 2 && pinch.active) {
-    var dist = Math.hypot(
-      e.touches[0].clientX - e.touches[1].clientX,
-      e.touches[0].clientY - e.touches[1].clientY);
-    var factor = dist / pinch.lastDist;
-    z.tx = pinch.mx - (pinch.mx - z.tx) * factor;
-    z.ty = pinch.my - (pinch.my - z.ty) * factor;
+  /* ── Wheel zoom (toward cursor) ─────────────────────────────────────── */
+  book.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    var factor = e.deltaY < 0 ? 1.12 : 1/1.12;
+    var rect = book.getBoundingClientRect();
+    var mx = e.clientX - rect.left;
+    var my = e.clientY - rect.top;
+    z.tx = mx - (mx - z.tx) * factor;
+    z.ty = my - (my - z.ty) * factor;
     z.scale = Math.max(0.08, Math.min(6, z.scale * factor));
-    pinch.lastDist = dist;
     applyZoom();
-  } else if (e.touches.length === 1 && drag.on) {
-    z.tx = e.touches[0].clientX - drag.sx;
-    z.ty = e.touches[0].clientY - drag.sy;
-    applyZoom();
-  }
-}, { passive: false });
+  }, { passive: false });
 
-book.addEventListener('touchend', function() {
-  drag.on = false; pinch.active = false;
-});
+  /* ── Drag to pan ────────────────────────────────────────────────────── */
+  var drag = { on: false, sx: 0, sy: 0 };
+
+  book.addEventListener('mousedown', function(e) {
+    drag.on = true; drag.sx = e.clientX - z.tx; drag.sy = e.clientY - z.ty;
+    book.classList.add('dragging');
+  });
+  window.addEventListener('mousemove', function(e) {
+    if (!drag.on) return;
+    z.tx = e.clientX - drag.sx; z.ty = e.clientY - drag.sy;
+    applyZoom();
+  });
+  window.addEventListener('mouseup', function() {
+    drag.on = false; book.classList.remove('dragging');
+  });
+
+  /* ── Touch: pinch-zoom + single-finger pan ──────────────────────────── */
+  var pinch = { active: false, lastDist: 0, mx: 0, my: 0 };
+
+  book.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 2) {
+      pinch.active = true;
+      pinch.lastDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY);
+      pinch.mx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - book.getBoundingClientRect().left;
+      pinch.my = (e.touches[0].clientY + e.touches[1].clientY) / 2 - book.getBoundingClientRect().top;
+    } else if (e.touches.length === 1) {
+      drag.on = true;
+      drag.sx = e.touches[0].clientX - z.tx;
+      drag.sy = e.touches[0].clientY - z.ty;
+    }
+  }, { passive: true });
+
+  book.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    if (e.touches.length === 2 && pinch.active) {
+      var dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY);
+      var factor = dist / pinch.lastDist;
+      z.tx = pinch.mx - (pinch.mx - z.tx) * factor;
+      z.ty = pinch.my - (pinch.my - z.ty) * factor;
+      z.scale = Math.max(0.08, Math.min(6, z.scale * factor));
+      pinch.lastDist = dist;
+      applyZoom();
+    } else if (e.touches.length === 1 && drag.on) {
+      z.tx = e.touches[0].clientX - drag.sx;
+      z.ty = e.touches[0].clientY - drag.sy;
+      applyZoom();
+    }
+  }, { passive: false });
+
+  book.addEventListener('touchend', function() {
+    drag.on = false; pinch.active = false;
+  });
+}
 
 /* ── Navigate to page ───────────────────────────────────────────────── */
 function scrollToPage(pageNum) {
@@ -209,18 +225,19 @@ parashaSelect.addEventListener('change', function() {
 });
 
 /* Reset transform for print, restore after */
-window.addEventListener('beforeprint', function() {
-  canvas.style.transform = 'none';
-  canvas.style.width = '100%';
-  canvas.style.padding = '0';
-});
-window.addEventListener('afterprint', function() {
-  canvas.style.width = '';
-  canvas.style.padding = '';
-  applyZoom();
-});
-
-printBtn.addEventListener('click', function() { window.print(); });
+if (!isEmbed) {
+  window.addEventListener('beforeprint', function() {
+    canvas.style.transform = 'none';
+    canvas.style.width = '100%';
+    canvas.style.padding = '0';
+  });
+  window.addEventListener('afterprint', function() {
+    canvas.style.width = '';
+    canvas.style.padding = '';
+    applyZoom();
+  });
+  printBtn.addEventListener('click', function() { window.print(); });
+}
 
 /* ── Hash navigation ────────────────────────────────────────────────── */
 function stripDiacritics(s) { return String(s).replace(/[֑-ׇ]/g, ''); }

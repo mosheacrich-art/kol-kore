@@ -33,20 +33,23 @@ export default function TeacherLayout() {
       .then(({ count }) => setUnreadCount(count || 0))
   }, [profile?.id, location.pathname])
 
-  const go = (path) => { navigate(path); setSidebarOpen(false) }
+  const isStudy = location.pathname.startsWith('/teacher/study')
+  const go = (path) => { navigate(path); if (isStudy) setSidebarOpen(false) }
 
   return (
     <div className="flex min-h-screen" style={{ background: 'var(--bg)' }}>
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-40 md:hidden"
+      {isStudy && sidebarOpen && (
+        <div className="fixed inset-0 z-40"
           style={{ background: 'rgba(0,0,0,0.55)' }}
           onClick={() => setSidebarOpen(false)} />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 flex-shrink-0 flex flex-col py-8 px-4
-          transition-transform duration-300 ease-in-out
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`flex-shrink-0 flex flex-col py-8 px-4
+          ${isStudy
+            ? `fixed inset-y-0 left-0 z-50 w-64 transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`
+            : 'w-64'
+          }`}
         style={{ background: 'var(--bg-deep)', borderRight: '1px solid var(--border-subtle)' }}>
         <div className="px-3 mb-10 flex items-center justify-between">
           <button onClick={() => go('/teacher/dashboard')} className="flex items-center gap-3">
@@ -56,10 +59,12 @@ export default function TeacherLayout() {
               <div className="text-xs hebrew" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</div>
             </div>
           </button>
-          <button onClick={() => setSidebarOpen(false)} className="md:hidden p-1.5 rounded-lg"
-            style={{ color: 'var(--text-3)' }}>
-            <XIcon />
-          </button>
+          {isStudy && (
+            <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg"
+              style={{ color: 'var(--text-3)' }}>
+              <XIcon />
+            </button>
+          )}
         </div>
 
         <div className="mx-3 mb-8 p-3 rounded-xl"
@@ -126,17 +131,19 @@ export default function TeacherLayout() {
       <main className="flex-1 flex flex-col overflow-auto">
         <div className="sticky top-0 z-30 flex items-center gap-3 px-4 h-14 flex-shrink-0"
           style={{ background: 'var(--bg-deep)', borderBottom: '1px solid var(--border-subtle)' }}>
-          <button onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-xl relative"
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-2)' }}>
-            <HamburgerIcon />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-white flex items-center justify-center"
-                style={{ background: '#6c33e6', fontSize: '8px' }}>
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </button>
+          {isStudy && (
+            <button onClick={() => setSidebarOpen(true)}
+              className="p-2 rounded-xl relative"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-2)' }}>
+              <HamburgerIcon />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-white flex items-center justify-center"
+                  style={{ background: '#6c33e6', fontSize: '8px' }}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+          )}
           <StarSvg />
           <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Perashá</span>
           <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
