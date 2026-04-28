@@ -1,7 +1,7 @@
 /* ── Font — igual que tikkun.io ─────────────────────────────────────── */
 @font-face {
   font-family: 'ShlomosemiStam';
-  src: url('https://tikkun.io/assets/ShlomosemiStam-Regular.ttf') format('truetype');
+  src: url('https://tikkun.io/assets/fonts/ShlomosemiStam.ttf') format('truetype');
   font-weight: 400;
   font-display: swap;
 }
