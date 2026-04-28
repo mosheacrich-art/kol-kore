@@ -50,8 +50,8 @@ function renderCell(rawText, annotated, isPetucha) {
   const petucha = isPetucha ? ' mod-petucha' : '';
   const isSetuma = rawText.includes('#(ס)') || false;
   const setuma = isSetuma ? ' mod-setuma' : '';
-  return `<td class="line${petucha}">` +
-    `<div class="column"><span class="fragment${setuma}">${escape(text)}</span></div>` +
+  return `<td>` +
+    `<div class="line${petucha}"><div class="column"><span class="fragment${setuma}">${escape(text)}</span></div></div>` +
     `</td>`;
 }
 
