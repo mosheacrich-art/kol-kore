@@ -163,6 +163,15 @@ html, body {
   width: auto;
 }
 
+/* Ktiv-kri highlight (copiado de tikkun.io) */
+.ktiv-kri {
+  background-color: rgba(0,0,0,0.08);
+  padding: 0.05em 0.15em;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 6px;
+  position: relative;
+}
+
 /* ── Error ──────────────────────────────────────────────────────────── */
 .err {
   padding: 40px;
