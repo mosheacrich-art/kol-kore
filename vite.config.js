@@ -4,9 +4,9 @@ import react from '@vitejs/plugin-react'
 const isMobile = process.env.BUILD_TARGET === 'mobile'
 
 export default defineConfig({
-  base: isMobile ? './' : '/kol-kore/',
+  base: isMobile ? './' : '/',
   build: {
-    outDir: isMobile ? 'dist' : 'docs',
+    outDir: 'dist',
   },
   plugins: [react()],
 })
