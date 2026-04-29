@@ -1,8 +1,10 @@
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { AudioProvider } from './context/AudioContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider } from './context/AuthContext'
 import { useAuth } from './context/AuthContext'
+import { Capacitor } from '@capacitor/core'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import ResetPassword from './pages/ResetPassword'
@@ -36,11 +38,30 @@ function ProtectedRoute({ role, children }) {
   return children
 }
 
+function AndroidBackHandler() {
+  const navigate = useNavigate()
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return
+    let appPlugin
+    import('@capacitor/app').then(({ App }) => {
+      appPlugin = App
+      App.addListener('backButton', ({ canGoBack }) => {
+        if (canGoBack) navigate(-1)
+        else App.exitApp()
+      })
+    })
+    return () => { appPlugin?.removeAllListeners() }
+  }, [navigate])
+  return null
+}
+
 function AppRoutes() {
   const { recoveryMode } = useAuth()
   if (recoveryMode) return <ResetPassword />
   return (
-    <Routes>
+    <>
+      <AndroidBackHandler />
+      <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/privacy" element={<Privacy />} />
@@ -75,6 +96,7 @@ function AppRoutes() {
         <Route path="imprimir" element={<ImprimirTikun />} />
       </Route>
     </Routes>
+    </>
   )
 }
 

@@ -8,15 +8,17 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "mobile:build": "vite build && npx cap sync",
-    "mobile:ios": "vite build && npx cap sync ios && npx cap open ios",
-    "mobile:android": "vite build && npx cap sync android && npx cap open android"
+    "mobile:build": "cross-env BUILD_TARGET=mobile vite build && npx cap sync",
+    "mobile:ios": "cross-env BUILD_TARGET=mobile vite build && npx cap sync ios && npx cap open ios",
+    "mobile:android": "cross-env BUILD_TARGET=mobile vite build && npx cap sync android && npx cap open android"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.1",
     "@capacitor/cli": "^8.3.1",
     "@capacitor/core": "^8.3.1",
     "@capacitor/ios": "^8.3.1",
+    "@capacitor/app": "^8.0.1",
+    "@capacitor/browser": "^8.0.1",
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2",
     "@supabase/supabase-js": "^2.104.1",
@@ -32,6 +34,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.5.0",
+    "cross-env": "^7.0.3",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",

@@ -1,11 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
+const isMobile = process.env.BUILD_TARGET === 'mobile'
+
 export default defineConfig({
-  base: '/kol-kore/',
+  base: isMobile ? './' : '/kol-kore/',
   build: {
-    outDir: 'docs',
+    outDir: isMobile ? 'dist' : 'docs',
   },
   plugins: [react()],
 })

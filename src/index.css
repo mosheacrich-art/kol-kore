@@ -5,14 +5,14 @@
   font-weight: 400;
   font-style: normal;
   font-display: swap;
-  src: url('/kol-kore/fonts/TaameyFrankCLM-Medium.ttf') format('truetype');
+  src: url('/fonts/TaameyFrankCLM-Medium.ttf') format('truetype');
 }
 @font-face {
   font-family: 'Taamey Frank CLM';
   font-weight: 700;
   font-style: normal;
   font-display: swap;
-  src: url('/kol-kore/fonts/TaameyFrankCLM-Bold.ttf') format('truetype');
+  src: url('/fonts/TaameyFrankCLM-Bold.ttf') format('truetype');
 }
 
 @font-face {
@@ -20,14 +20,14 @@
   font-weight: 400;
   font-style: normal;
   font-display: swap;
-  src: url('/kol-kore/fonts/KeterYG-Medium.ttf') format('truetype');
+  src: url('/fonts/KeterYG-Medium.ttf') format('truetype');
 }
 @font-face {
   font-family: 'Keter YG';
   font-weight: 700;
   font-style: normal;
   font-display: swap;
-  src: url('/kol-kore/fonts/KeterYG-Bold.ttf') format('truetype');
+  src: url('/fonts/KeterYG-Bold.ttf') format('truetype');
 }
 
 @font-face {
@@ -35,7 +35,7 @@
   font-weight: 700;
   font-style: normal;
   font-display: swap;
-  src: url('/kol-kore/fonts/HadasimCLM-Bold.ttf') format('truetype');
+  src: url('/fonts/HadasimCLM-Bold.ttf') format('truetype');
 }
 
 @tailwind base;
@@ -235,4 +235,49 @@ body {
   font-family: 'Noto Serif Hebrew', 'Taamey Frank CLM', 'Times New Roman', serif;
   font-weight: 900;
   direction: rtl;
+}
+
+/* ── Safe area insets (Capacitor / notch / Dynamic Island) ─────────────────── */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+}
+
+/* Mobile bottom nav */
+.mobile-bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Header with status bar offset */
+.app-header {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Sidebar drawer with safe areas */
+.sidebar-drawer {
+  padding-top: max(env(safe-area-inset-top, 0px), 1.5rem);
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 1rem);
+}
+
+/* Main content clears bottom nav on mobile */
+@media (max-width: 767px) {
+  .main-with-bottom-nav {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Touch feedback */
+@media (hover: none) {
+  .card-hover:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* Smooth momentum scrolling on iOS */
+.scroll-smooth-ios {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
