@@ -1,10 +1,12 @@
 import { BrowserRouter, HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useEffect, lazy, Suspense } from 'react'
+
 import { AudioProvider } from './context/AudioContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { Capacitor } from '@capacitor/core'
 
+const AuthCallback        = lazy(() => import('./pages/AuthCallback'))
 const Landing             = lazy(() => import('./pages/Landing'))
 const Login               = lazy(() => import('./pages/Login'))
 const ResetPassword       = lazy(() => import('./pages/ResetPassword'))
@@ -63,34 +65,14 @@ function AndroidBackHandler() {
 }
 
 function AppRoutes() {
-  const { recoveryMode, profile, loading } = useAuth()
-  const navigate = useNavigate()
-
-  // After OAuth, Supabase puts tokens in the URL hash fragment.
-  // With BrowserRouter the hash is NOT the route, so no conflict.
-  // We just detect it to show a spinner while the session loads.
-  const isOAuthCallback = window.location.hash.includes('access_token=')
-
-  useEffect(() => {
-    if (!isOAuthCallback || loading || !profile) return
-    const isNew = sessionStorage.getItem('new_student')
-    if (isNew && profile.role === 'student') {
-      sessionStorage.removeItem('new_student')
-      navigate('/student/subscription', { replace: true })
-    } else {
-      navigate(profile.role === 'teacher' ? '/teacher/dashboard' : '/student/profile', { replace: true })
-    }
-  }, [isOAuthCallback, profile, loading, navigate])
-
+  const { recoveryMode } = useAuth()
   if (recoveryMode) return <ResetPassword />
-
-  if (isOAuthCallback && !profile) return <Spinner />
-
   return (
     <>
       <AndroidBackHandler />
       <Suspense fallback={<Spinner />}>
         <Routes>
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/privacy" element={<Privacy />} />
