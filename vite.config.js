@@ -7,6 +7,9 @@ export default defineConfig({
   base: isMobile ? './' : '/',
   build: {
     outDir: 'dist',
+    rollupOptions: isMobile ? {} : {
+      external: ['@capacitor/app'],
+    },
   },
   plugins: [react()],
 })
