@@ -5,10 +5,16 @@ import { useAuth } from '../context/AuthContext'
 export default function AuthCallback() {
   const { profile, loading } = useAuth()
   const navigate = useNavigate()
+  const hasCode = window.location.search.includes('code=')
 
   useEffect(() => {
     if (loading) return
-    if (!profile) { navigate('/login', { replace: true }); return }
+    if (!profile) {
+      // If there's still a code in the URL, the exchange may still be in flight
+      if (hasCode) return
+      navigate('/login', { replace: true })
+      return
+    }
     const isNew = sessionStorage.getItem('new_student')
     if (isNew && profile.role === 'student') {
       sessionStorage.removeItem('new_student')
@@ -16,7 +22,7 @@ export default function AuthCallback() {
     } else {
       navigate(profile.role === 'teacher' ? '/teacher/dashboard' : '/student/profile', { replace: true })
     }
-  }, [profile, loading, navigate])
+  }, [profile, loading, navigate, hasCode])
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>

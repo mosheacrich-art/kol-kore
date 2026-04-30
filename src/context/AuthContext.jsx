@@ -71,6 +71,10 @@ export function AuthProvider({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return
       if (event === 'PASSWORD_RECOVERY') { setRecoveryMode(true); return }
+      // PKCE: on callback page the code exchange is async — INITIAL_SESSION fires with
+      // null session before SIGNED_IN arrives. Don't resolve loading yet or AuthCallback
+      // will redirect to /login before the session is established.
+      if (event === 'INITIAL_SESSION' && !session && window.location.search.includes('code=')) return
       setUser(session?.user ?? null)
       if (session?.user) {
         fetchProfile(session.user.id, session.user.user_metadata, session.user.created_at)
