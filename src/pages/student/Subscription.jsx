@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 
@@ -15,6 +15,7 @@ function fmtDate(d) {
 export default function StudentSubscription() {
   const { profile } = useAuth()
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [plan, setPlan] = useState('monthly')
   const [months, setMonths] = useState(1)
   const [paying, setPaying] = useState(false)
@@ -283,6 +284,15 @@ export default function StudentSubscription() {
           <p className="text-xs text-center mt-3" style={{ color: 'var(--text-muted)' }}>
             Pago seguro vía Stripe · Tarjeta, SEPA o Bizum
           </p>
+        </div>
+
+        {/* Skip button */}
+        <div className="mt-5 text-center">
+          <button onClick={() => navigate('/student/profile')}
+            className="text-xs py-2 px-4 rounded-xl transition-all"
+            style={{ color: 'var(--text-muted)', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            Saltar por ahora →
+          </button>
         </div>
       </div>
     </div>

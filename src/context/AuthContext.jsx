@@ -11,7 +11,6 @@ export function AuthProvider({ children }) {
     () => window.location.hash.includes('type=recovery')
   )
 
-  // Used by signUp (no active guard needed — not tied to effect lifecycle)
   const loadProfile = async (userId) => {
     try {
       const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
@@ -26,10 +25,32 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let active = true
 
-    const fetchProfile = async (userId) => {
+    const fetchProfile = async (userId, userMetadata = null) => {
       try {
         const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
         if (!active) return
+
+        if (!data) {
+          // New OAuth user — create profile if we have a pending role
+          const pendingRole = sessionStorage.getItem('oauth_intended_role')
+          if (pendingRole && userMetadata) {
+            const name = userMetadata.full_name || userMetadata.name ||
+              userMetadata.email?.split('@')[0] || 'Usuario'
+            const extra = pendingRole === 'teacher'
+              ? { teacher_code: Math.random().toString(36).substring(2, 8).toUpperCase() }
+              : {}
+            const { data: created } = await supabase.from('profiles')
+              .upsert({ id: userId, role: pendingRole, name, ...extra }, { onConflict: 'id' })
+              .select().single()
+            sessionStorage.removeItem('oauth_intended_role')
+            if (pendingRole === 'student') sessionStorage.setItem('new_student', '1')
+            if (!active) return
+            setProfile(created ?? null)
+            setLoading(false)
+            return
+          }
+        }
+
         setProfile(data ?? null)
       } catch {
         if (!active) return
@@ -43,7 +64,7 @@ export function AuthProvider({ children }) {
       if (!active) return
       if (event === 'PASSWORD_RECOVERY') { setRecoveryMode(true); return }
       setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
+      if (session?.user) fetchProfile(session.user.id, session.user.user_metadata)
       else { setProfile(null); setLoading(false) }
     })
 
@@ -85,6 +106,14 @@ export function AuthProvider({ children }) {
     return null
   }
 
+  const signInWithGoogle = (role) => {
+    sessionStorage.setItem('oauth_intended_role', role)
+    return supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    })
+  }
+
   const signOut = async () => {
     await supabase.auth.signOut()
     setProfile(null)
@@ -93,7 +122,11 @@ export function AuthProvider({ children }) {
   const clearRecovery = () => setRecoveryMode(false)
 
   return (
-    <AuthCtx.Provider value={{ user, profile, setProfile, loading, signIn, signUp, signOut, recoveryMode, clearRecovery }}>
+    <AuthCtx.Provider value={{
+      user, profile, setProfile, loading,
+      signIn, signUp, signInWithGoogle, signOut,
+      recoveryMode, clearRecovery,
+    }}>
       {children}
     </AuthCtx.Provider>
   )

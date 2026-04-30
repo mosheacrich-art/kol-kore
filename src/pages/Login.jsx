@@ -11,14 +11,21 @@ const SAVING_PCT = Math.round(100 - (ANNUAL / (MONTHLY * 12)) * 100)
 
 export default function Login() {
   const navigate = useNavigate()
-  const { profile, signIn, signUp } = useAuth()
+  const { profile, signIn, signUp, signInWithGoogle } = useAuth()
   const { isDark } = useTheme()
   const [expanded, setExpanded] = useState(null)
   // modal state: null | 'student-register' | 'teacher' | 'student-login'
   const [modal, setModal] = useState(null)
 
   useEffect(() => {
-    if (profile) navigate(profile.role === 'teacher' ? '/teacher/dashboard' : '/student/profile')
+    if (!profile) return
+    const isNew = sessionStorage.getItem('new_student')
+    if (isNew && profile.role === 'student') {
+      sessionStorage.removeItem('new_student')
+      navigate('/student/subscription')
+      return
+    }
+    navigate(profile.role === 'teacher' ? '/teacher/dashboard' : '/student/profile')
   }, [profile, navigate])
 
   const t = isDark ? {
@@ -143,7 +150,7 @@ export default function Login() {
 // ── Student modal: registro + plan en un solo popup ──────────────────────────
 
 function StudentModal({ onClose, isDark, t }) {
-  const { signIn, signUp } = useAuth()
+  const { signIn, signUp, signInWithGoogle } = useAuth()
   const navigate = useNavigate()
 
   const [isLogin, setIsLogin] = useState(true)
@@ -190,7 +197,7 @@ function StudentModal({ onClose, isDark, t }) {
 
     // Registered — now handle plan
     if (plan === 'trial') {
-      navigate('/student/profile')
+      sessionStorage.setItem('new_student', '1')
       return
     }
 
@@ -444,6 +451,19 @@ function StudentModal({ onClose, isDark, t }) {
             }
           </button>
 
+          {/* Google sign-in */}
+          <div className="flex items-center gap-3 my-0.5">
+            <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+            <span className="text-xs" style={{ color: t.switchText }}>o</span>
+            <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+          </div>
+          <button type="button" onClick={() => signInWithGoogle('student')}
+            className="w-full py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-all"
+            style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText }}>
+            <GoogleIcon />
+            Continuar con Google
+          </button>
+
           {/* Forgot password link — only on login */}
           {isLogin && (
             <button type="button"
@@ -472,7 +492,7 @@ function StudentModal({ onClose, isDark, t }) {
 // ── Teacher inline auth form (unchanged) ────────────────────────────────────
 
 function SimpleAuthForm({ role, color, onCancel, onDone, t }) {
-  const { signIn, signUp } = useAuth()
+  const { signIn, signUp, signInWithGoogle } = useAuth()
   const [isRegister, setIsRegister] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -537,6 +557,18 @@ function SimpleAuthForm({ role, color, onCancel, onDone, t }) {
         className="text-xs text-center"
         style={{ color: t.switchText }}>
         {isRegister ? '¿Ya tienes cuenta? Entrar' : '¿Sin cuenta? Registrarse'}
+      </button>
+
+      <div className="flex items-center gap-3">
+        <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+        <span className="text-xs" style={{ color: t.switchText }}>o</span>
+        <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+      </div>
+      <button type="button" onClick={() => signInWithGoogle(role)}
+        className="w-full py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-all"
+        style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText }}>
+        <GoogleIcon />
+        Continuar con Google
       </button>
     </form>
   )
@@ -637,6 +669,17 @@ function GuestIcon({ color }) {
     <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
       <circle cx="13" cy="9" r="4" stroke={color} strokeWidth="1.5"/>
       <path d="M5 22c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+      <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+      <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+      <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
     </svg>
   )
 }
