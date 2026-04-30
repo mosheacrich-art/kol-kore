@@ -47,7 +47,7 @@ export default function TeacherLayout() {
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
 
   return (
-    <div className="flex min-h-screen" style={{ background: 'var(--bg)' }}>
+    <div className="flex h-screen" style={{ background: 'var(--bg)' }}>
 
       {/* Overlay for mobile drawer */}
       {(sidebarOpen || moreOpen) && (
