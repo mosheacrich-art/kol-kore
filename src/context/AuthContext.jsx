@@ -27,8 +27,16 @@ export function AuthProvider({ children }) {
 
     const fetchProfile = async (userId, userMetadata = null, createdAt = null) => {
       try {
-        const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+        let { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
         if (!active) return
+
+        // Retry once if no profile yet — trigger may still be committing
+        if (!data) {
+          await new Promise(r => setTimeout(r, 1200))
+          if (!active) return
+          ;({ data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle())
+          if (!active) return
+        }
 
         const pendingRole = sessionStorage.getItem('oauth_intended_role')
 
@@ -87,7 +95,9 @@ export function AuthProvider({ children }) {
       if (event === 'PASSWORD_RECOVERY') { setRecoveryMode(true); return }
       setUser(session?.user ?? null)
       if (session?.user) {
-        fetchProfile(session.user.id, session.user.user_metadata, session.user.created_at)
+        setTimeout(() => {
+          fetchProfile(session.user.id, session.user.user_metadata, session.user.created_at)
+        }, 0)
       } else {
         setProfile(null)
         setLoading(false)

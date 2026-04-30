@@ -71,25 +71,31 @@ function AppRoutes() {
   const isOAuthCallback = window.location.hash.includes('access_token=')
 
   useEffect(() => {
-    if (!isOAuthCallback || loading) return
-    if (profile) {
-      const isNew = sessionStorage.getItem('new_student')
-      if (isNew && profile.role === 'student') {
-        sessionStorage.removeItem('new_student')
-        navigate('/student/subscription', { replace: true })
-      } else {
-        navigate(profile.role === 'teacher' ? '/teacher/dashboard' : '/student/profile', { replace: true })
-      }
+    if (!isOAuthCallback || loading || !profile) return
+    const isNew = sessionStorage.getItem('new_student')
+    if (isNew && profile.role === 'student') {
+      sessionStorage.removeItem('new_student')
+      navigate('/student/subscription', { replace: true })
     } else {
-      // Auth succeeded but no profile found — send to login to retry
-      navigate('/login', { replace: true })
+      navigate(profile.role === 'teacher' ? '/teacher/dashboard' : '/student/profile', { replace: true })
     }
   }, [isOAuthCallback, profile, loading, navigate])
 
   if (recoveryMode) return <ResetPassword />
 
-  // While Supabase processes the OAuth token, show spinner instead of blank page
-  if (isOAuthCallback && loading) return <Spinner />
+  // During OAuth callback: show spinner until profile loads
+  if (isOAuthCallback && !profile) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: 'var(--bg)' }}>
+      <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
+        style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#6c33e6' }} />
+      {!loading && (
+        <button onClick={() => navigate('/login', { replace: true })}
+          className="text-xs" style={{ color: 'var(--text-3)' }}>
+          Volver al inicio de sesión
+        </button>
+      )}
+    </div>
+  )
   return (
     <>
       <AndroidBackHandler />
