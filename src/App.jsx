@@ -63,7 +63,23 @@ function AndroidBackHandler() {
 }
 
 function AppRoutes() {
-  const { recoveryMode } = useAuth()
+  const { recoveryMode, profile, loading } = useAuth()
+  const navigate = useNavigate()
+
+  // Supabase OAuth puts tokens in the URL hash, conflicting with HashRouter.
+  // Once the profile loads, redirect to the correct page.
+  useEffect(() => {
+    if (loading || !profile) return
+    if (!window.location.hash.includes('access_token=')) return
+    const isNew = sessionStorage.getItem('new_student')
+    if (isNew && profile.role === 'student') {
+      sessionStorage.removeItem('new_student')
+      navigate('/student/subscription', { replace: true })
+    } else {
+      navigate(profile.role === 'teacher' ? '/teacher/dashboard' : '/student/profile', { replace: true })
+    }
+  }, [profile, loading, navigate])
+
   if (recoveryMode) return <ResetPassword />
   return (
     <>
