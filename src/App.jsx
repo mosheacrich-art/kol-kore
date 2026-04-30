@@ -67,25 +67,29 @@ function AppRoutes() {
   const navigate = useNavigate()
 
   // Supabase OAuth puts tokens in the URL hash, conflicting with HashRouter.
-  // Detect the callback synchronously so we can show a spinner immediately.
+  // Detect synchronously so we show a spinner immediately instead of blank.
   const isOAuthCallback = window.location.hash.includes('access_token=')
 
   useEffect(() => {
-    if (!isOAuthCallback || loading || !profile) return
-    const isNew = sessionStorage.getItem('new_student')
-    if (isNew && profile.role === 'student') {
-      sessionStorage.removeItem('new_student')
-      navigate('/student/subscription', { replace: true })
+    if (!isOAuthCallback || loading) return
+    if (profile) {
+      const isNew = sessionStorage.getItem('new_student')
+      if (isNew && profile.role === 'student') {
+        sessionStorage.removeItem('new_student')
+        navigate('/student/subscription', { replace: true })
+      } else {
+        navigate(profile.role === 'teacher' ? '/teacher/dashboard' : '/student/profile', { replace: true })
+      }
     } else {
-      navigate(profile.role === 'teacher' ? '/teacher/dashboard' : '/student/profile', { replace: true })
+      // Auth succeeded but no profile found — send to login to retry
+      navigate('/login', { replace: true })
     }
   }, [isOAuthCallback, profile, loading, navigate])
 
   if (recoveryMode) return <ResetPassword />
 
-  // Show spinner immediately during OAuth callback — don't let HashRouter
-  // try to parse the token as a route and render a blank page.
-  if (isOAuthCallback && !profile) return <Spinner />
+  // While Supabase processes the OAuth token, show spinner instead of blank page
+  if (isOAuthCallback && loading) return <Spinner />
   return (
     <>
       <AndroidBackHandler />
