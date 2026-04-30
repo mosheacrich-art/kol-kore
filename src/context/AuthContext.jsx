@@ -25,39 +25,59 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let active = true
 
+    const queryProfile = async (userId) => {
+      const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+      return data ?? null
+    }
+
     const fetchProfile = async (userId, userMetadata = null, createdAt = null) => {
       try {
-        // Wait for session to be fully active before RLS-protected queries
-        await supabase.auth.getSession()
+        // Ensure the Supabase client has a valid session before querying.
+        // If getSession() returns null (OAuth token not yet processed),
+        // parse it directly from the URL hash and set it explicitly.
+        let { data: { session } } = await supabase.auth.getSession()
+
+        if (!session && window.location.hash.includes('access_token=')) {
+          const params = new URLSearchParams(window.location.hash.slice(1))
+          const access_token = params.get('access_token')
+          const refresh_token = params.get('refresh_token') || ''
+          if (access_token) {
+            const { data: sd } = await supabase.auth.setSession({ access_token, refresh_token })
+            session = sd.session
+          }
+        }
+
+        if (!session || !active) {
+          setProfile(null)
+          setLoading(false)
+          return
+        }
+
+        let data = await queryProfile(userId)
         if (!active) return
 
-        let { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
-        if (!active) return
-
-        // Retry once if still no profile (trigger may still be committing)
+        // Retry once after 1s — trigger might still be committing
         if (!data) {
           await new Promise(r => setTimeout(r, 1000))
           if (!active) return
-          ;({ data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle())
+          data = await queryProfile(userId)
           if (!active) return
         }
 
         const pendingRole = sessionStorage.getItem('oauth_intended_role')
 
         if (data) {
-          // Profile exists — check if role needs updating (e.g. teacher OAuth)
           if (pendingRole && pendingRole !== data.role) {
             const extra = pendingRole === 'teacher'
               ? { teacher_code: Math.random().toString(36).substring(2, 8).toUpperCase() }
               : {}
             await supabase.from('profiles').update({ role: pendingRole, ...extra }).eq('id', userId)
             sessionStorage.removeItem('oauth_intended_role')
-            const { data: updated } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+            const updated = await queryProfile(userId)
             if (!active) return
             if (pendingRole === 'student') sessionStorage.setItem('new_student', '1')
             setProfile(updated ?? data)
           } else {
-            // Detect new user by auth created_at (within 30s = just registered)
             const isNew = createdAt && (Date.now() - new Date(createdAt).getTime()) < 30000
             if (isNew && data.role === 'student') sessionStorage.setItem('new_student', '1')
             sessionStorage.removeItem('oauth_intended_role')
@@ -66,7 +86,7 @@ export function AuthProvider({ children }) {
           return
         }
 
-        // No profile yet — trigger may not have run yet, create as fallback
+        // Still no profile — create as fallback (trigger may have failed)
         if (userMetadata) {
           const role = pendingRole || 'student'
           const name = userMetadata.full_name || userMetadata.name ||
@@ -99,9 +119,7 @@ export function AuthProvider({ children }) {
       if (event === 'PASSWORD_RECOVERY') { setRecoveryMode(true); return }
       setUser(session?.user ?? null)
       if (session?.user) {
-        setTimeout(() => {
-          fetchProfile(session.user.id, session.user.user_metadata, session.user.created_at)
-        }, 0)
+        fetchProfile(session.user.id, session.user.user_metadata, session.user.created_at)
       } else {
         setProfile(null)
         setLoading(false)
@@ -150,7 +168,7 @@ export function AuthProvider({ children }) {
     sessionStorage.setItem('oauth_intended_role', role)
     return supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: 'https://www.perashapp.com' },
     })
   }
 
