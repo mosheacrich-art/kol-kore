@@ -14,7 +14,7 @@ serve(async (req) => {
 
     if (!audioUrl) return new Response(JSON.stringify({ error: 'audioUrl required' }), { status: 400, headers: corsHeaders })
 
-    const apiKey = Deno.env.get('OPENAI_API_KEY')
+    const apiKey = Deno.env.get('OPENAI_API_KEY')?.trim()
     if (!apiKey) {
       console.error('[generate-sync] OPENAI_API_KEY not set')
       return new Response(JSON.stringify({ error: 'OPENAI_API_KEY not set' }), { status: 500, headers: corsHeaders })
