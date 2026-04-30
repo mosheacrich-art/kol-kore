@@ -30,25 +30,23 @@ export function AuthProvider({ children }) {
         const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
         if (!active) return
 
-        if (!data) {
-          // New OAuth user — create profile if we have a pending role
-          const pendingRole = sessionStorage.getItem('oauth_intended_role')
-          if (pendingRole && userMetadata) {
-            const name = userMetadata.full_name || userMetadata.name ||
-              userMetadata.email?.split('@')[0] || 'Usuario'
-            const extra = pendingRole === 'teacher'
-              ? { teacher_code: Math.random().toString(36).substring(2, 8).toUpperCase() }
-              : {}
-            const { data: created } = await supabase.from('profiles')
-              .upsert({ id: userId, role: pendingRole, name, ...extra }, { onConflict: 'id' })
-              .select().single()
-            sessionStorage.removeItem('oauth_intended_role')
-            if (pendingRole === 'student') sessionStorage.setItem('new_student', '1')
-            if (!active) return
-            setProfile(created ?? null)
-            setLoading(false)
-            return
-          }
+        if (!data && userMetadata) {
+          // New OAuth user — create profile using pending role or default to student
+          const pendingRole = sessionStorage.getItem('oauth_intended_role') || 'student'
+          const name = userMetadata.full_name || userMetadata.name ||
+            userMetadata.email?.split('@')[0] || 'Usuario'
+          const extra = pendingRole === 'teacher'
+            ? { teacher_code: Math.random().toString(36).substring(2, 8).toUpperCase() }
+            : {}
+          const { data: created } = await supabase.from('profiles')
+            .upsert({ id: userId, role: pendingRole, name, ...extra }, { onConflict: 'id' })
+            .select().single()
+          sessionStorage.removeItem('oauth_intended_role')
+          if (pendingRole === 'student') sessionStorage.setItem('new_student', '1')
+          if (!active) return
+          setProfile(created ?? null)
+          setLoading(false)
+          return
         }
 
         setProfile(data ?? null)
