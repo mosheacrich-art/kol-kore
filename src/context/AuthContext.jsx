@@ -25,31 +25,55 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let active = true
 
-    const fetchProfile = async (userId, userMetadata = null) => {
+    const fetchProfile = async (userId, userMetadata = null, createdAt = null) => {
       try {
         const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
         if (!active) return
 
-        if (!data && userMetadata) {
-          // New OAuth user — create profile using pending role or default to student
-          const pendingRole = sessionStorage.getItem('oauth_intended_role') || 'student'
+        const pendingRole = sessionStorage.getItem('oauth_intended_role')
+
+        if (data) {
+          // Profile exists — check if role needs updating (e.g. teacher OAuth)
+          if (pendingRole && pendingRole !== data.role) {
+            const extra = pendingRole === 'teacher'
+              ? { teacher_code: Math.random().toString(36).substring(2, 8).toUpperCase() }
+              : {}
+            await supabase.from('profiles').update({ role: pendingRole, ...extra }).eq('id', userId)
+            sessionStorage.removeItem('oauth_intended_role')
+            const { data: updated } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+            if (!active) return
+            if (pendingRole === 'student') sessionStorage.setItem('new_student', '1')
+            setProfile(updated ?? data)
+          } else {
+            // Detect new user by auth created_at (within 30s = just registered)
+            const isNew = createdAt && (Date.now() - new Date(createdAt).getTime()) < 30000
+            if (isNew && data.role === 'student') sessionStorage.setItem('new_student', '1')
+            sessionStorage.removeItem('oauth_intended_role')
+            setProfile(data)
+          }
+          return
+        }
+
+        // No profile yet — trigger may not have run yet, create as fallback
+        if (userMetadata) {
+          const role = pendingRole || 'student'
           const name = userMetadata.full_name || userMetadata.name ||
             userMetadata.email?.split('@')[0] || 'Usuario'
-          const extra = pendingRole === 'teacher'
+          const extra = role === 'teacher'
             ? { teacher_code: Math.random().toString(36).substring(2, 8).toUpperCase() }
             : {}
-          const { data: created } = await supabase.from('profiles')
-            .upsert({ id: userId, role: pendingRole, name, ...extra }, { onConflict: 'id' })
-            .select().single()
+          const { data: rows } = await supabase.from('profiles')
+            .upsert({ id: userId, role, name, ...extra }, { onConflict: 'id' })
+            .select()
           sessionStorage.removeItem('oauth_intended_role')
-          if (pendingRole === 'student') sessionStorage.setItem('new_student', '1')
+          if (role === 'student') sessionStorage.setItem('new_student', '1')
           if (!active) return
-          setProfile(created ?? null)
+          setProfile(rows?.[0] ?? null)
           setLoading(false)
           return
         }
 
-        setProfile(data ?? null)
+        setProfile(null)
       } catch {
         if (!active) return
         setProfile(null)
@@ -62,8 +86,12 @@ export function AuthProvider({ children }) {
       if (!active) return
       if (event === 'PASSWORD_RECOVERY') { setRecoveryMode(true); return }
       setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id, session.user.user_metadata)
-      else { setProfile(null); setLoading(false) }
+      if (session?.user) {
+        fetchProfile(session.user.id, session.user.user_metadata, session.user.created_at)
+      } else {
+        setProfile(null)
+        setLoading(false)
+      }
     })
 
     return () => {
