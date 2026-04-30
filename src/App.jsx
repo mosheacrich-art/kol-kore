@@ -67,10 +67,11 @@ function AppRoutes() {
   const navigate = useNavigate()
 
   // Supabase OAuth puts tokens in the URL hash, conflicting with HashRouter.
-  // Once the profile loads, redirect to the correct page.
+  // Detect the callback synchronously so we can show a spinner immediately.
+  const isOAuthCallback = window.location.hash.includes('access_token=')
+
   useEffect(() => {
-    if (loading || !profile) return
-    if (!window.location.hash.includes('access_token=')) return
+    if (!isOAuthCallback || loading || !profile) return
     const isNew = sessionStorage.getItem('new_student')
     if (isNew && profile.role === 'student') {
       sessionStorage.removeItem('new_student')
@@ -78,9 +79,13 @@ function AppRoutes() {
     } else {
       navigate(profile.role === 'teacher' ? '/teacher/dashboard' : '/student/profile', { replace: true })
     }
-  }, [profile, loading, navigate])
+  }, [isOAuthCallback, profile, loading, navigate])
 
   if (recoveryMode) return <ResetPassword />
+
+  // Show spinner immediately during OAuth callback — don't let HashRouter
+  // try to parse the token as a route and render a blank page.
+  if (isOAuthCallback && !profile) return <Spinner />
   return (
     <>
       <AndroidBackHandler />
