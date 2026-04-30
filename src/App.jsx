@@ -1,31 +1,31 @@
-import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { BrowserRouter, HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useEffect, lazy, Suspense } from 'react'
 import { AudioProvider } from './context/AudioContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { Capacitor } from '@capacitor/core'
 
-const Landing            = lazy(() => import('./pages/Landing'))
-const Login              = lazy(() => import('./pages/Login'))
-const ResetPassword      = lazy(() => import('./pages/ResetPassword'))
-const Privacy            = lazy(() => import('./pages/legal/Privacy'))
-const Terms              = lazy(() => import('./pages/legal/Terms'))
-const ImprimirTikun      = lazy(() => import('./pages/ImprimirTikun'))
+const Landing             = lazy(() => import('./pages/Landing'))
+const Login               = lazy(() => import('./pages/Login'))
+const ResetPassword       = lazy(() => import('./pages/ResetPassword'))
+const Privacy             = lazy(() => import('./pages/legal/Privacy'))
+const Terms               = lazy(() => import('./pages/legal/Terms'))
+const ImprimirTikun       = lazy(() => import('./pages/ImprimirTikun'))
 
-const StudentLayout      = lazy(() => import('./pages/student/Layout'))
-const StudentProfile     = lazy(() => import('./pages/student/Profile'))
-const StudentStudy       = lazy(() => import('./pages/student/Study'))
+const StudentLayout       = lazy(() => import('./pages/student/Layout'))
+const StudentProfile      = lazy(() => import('./pages/student/Profile'))
+const StudentStudy        = lazy(() => import('./pages/student/Study'))
 const StudentSubscription = lazy(() => import('./pages/student/Subscription'))
 
-const GuestLayout        = lazy(() => import('./pages/guest/Layout'))
+const GuestLayout         = lazy(() => import('./pages/guest/Layout'))
 
-const TeacherLayout      = lazy(() => import('./pages/teacher/Layout'))
-const TeacherDashboard   = lazy(() => import('./pages/teacher/Dashboard'))
-const TeacherStudents    = lazy(() => import('./pages/teacher/Students'))
-const TeacherHomework    = lazy(() => import('./pages/teacher/Homework'))
-const TeacherSchedule    = lazy(() => import('./pages/teacher/Schedule'))
-const TeacherAudioPanel  = lazy(() => import('./pages/teacher/AudioPanel'))
-const TeacherStudy       = lazy(() => import('./pages/teacher/Study'))
+const TeacherLayout       = lazy(() => import('./pages/teacher/Layout'))
+const TeacherDashboard    = lazy(() => import('./pages/teacher/Dashboard'))
+const TeacherStudents     = lazy(() => import('./pages/teacher/Students'))
+const TeacherHomework     = lazy(() => import('./pages/teacher/Homework'))
+const TeacherSchedule     = lazy(() => import('./pages/teacher/Schedule'))
+const TeacherAudioPanel   = lazy(() => import('./pages/teacher/AudioPanel'))
+const TeacherStudy        = lazy(() => import('./pages/teacher/Study'))
 const TeacherNotifications = lazy(() => import('./pages/teacher/Notifications'))
 
 function Spinner() {
@@ -66,8 +66,9 @@ function AppRoutes() {
   const { recoveryMode, profile, loading } = useAuth()
   const navigate = useNavigate()
 
-  // Supabase OAuth puts tokens in the URL hash, conflicting with HashRouter.
-  // Detect synchronously so we show a spinner immediately instead of blank.
+  // After OAuth, Supabase puts tokens in the URL hash fragment.
+  // With BrowserRouter the hash is NOT the route, so no conflict.
+  // We just detect it to show a spinner while the session loads.
   const isOAuthCallback = window.location.hash.includes('access_token=')
 
   useEffect(() => {
@@ -83,19 +84,8 @@ function AppRoutes() {
 
   if (recoveryMode) return <ResetPassword />
 
-  // During OAuth callback: show spinner until profile loads
-  if (isOAuthCallback && !profile) return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: 'var(--bg)' }}>
-      <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
-        style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#6c33e6' }} />
-      {!loading && (
-        <button onClick={() => navigate('/login', { replace: true })}
-          className="text-xs" style={{ color: 'var(--text-3)' }}>
-          Volver al inicio de sesión
-        </button>
-      )}
-    </div>
-  )
+  if (isOAuthCallback && !profile) return <Spinner />
+
   return (
     <>
       <AndroidBackHandler />
@@ -143,14 +133,17 @@ function AppRoutes() {
   )
 }
 
+// Use HashRouter on native (Capacitor), BrowserRouter on web
+const Router = Capacitor.isNativePlatform() ? HashRouter : BrowserRouter
+
 export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <AudioProvider>
-          <HashRouter>
+          <Router>
             <AppRoutes />
-          </HashRouter>
+          </Router>
         </AudioProvider>
       </AuthProvider>
     </ThemeProvider>
