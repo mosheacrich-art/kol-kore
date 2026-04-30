@@ -27,12 +27,16 @@ export function AuthProvider({ children }) {
 
     const fetchProfile = async (userId, userMetadata = null, createdAt = null) => {
       try {
+        // Wait for session to be fully active before RLS-protected queries
+        await supabase.auth.getSession()
+        if (!active) return
+
         let { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
         if (!active) return
 
-        // Retry once if no profile yet — trigger may still be committing
+        // Retry once if still no profile (trigger may still be committing)
         if (!data) {
-          await new Promise(r => setTimeout(r, 1200))
+          await new Promise(r => setTimeout(r, 1000))
           if (!active) return
           ;({ data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle())
           if (!active) return
