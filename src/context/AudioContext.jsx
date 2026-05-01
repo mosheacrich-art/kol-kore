@@ -5,6 +5,7 @@ const AudioCtx = createContext(null)
 
 export function AudioProvider({ children }) {
   const [audios, setAudios] = useState({})
+  const [syncingKeys, setSyncingKeys] = useState(new Set())
 
   useEffect(() => {
     const load = async (userId) => {
@@ -46,18 +47,14 @@ export function AudioProvider({ children }) {
       setAudios(map)
     }
 
-    // Initial load: safe to call getSession() here (outside any auth callback)
     supabase.auth.getSession().then(({ data: { session } }) => load(session?.user?.id ?? null))
 
-    // Auth state changes: use the session passed directly — never call getSession()
-    // inside onAuthStateChange (Supabase holds the auth lock while notifying, causing deadlock)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       load(session?.user?.id ?? null)
     })
     return () => subscription.unsubscribe()
   }, [])
 
-  // Teacher-only: upload reference audio, stored in audio_files and visible in the reader
   const upload = useCallback(async (parashaId, aliyahIdx, file) => {
     const key = `${parashaId}-${aliyahIdx}`
 
@@ -65,7 +62,7 @@ export function AudioProvider({ children }) {
     const teacherId = session?.user?.id ?? null
     if (!teacherId) {
       alert('No se pudo determinar el profesor. Inicia sesión de nuevo.')
-      return
+      return false
     }
 
     const storagePath = `${teacherId}/${parashaId}/${aliyahIdx}/audio`
@@ -78,7 +75,7 @@ export function AudioProvider({ children }) {
     if (uploadError) {
       console.error('Upload error:', uploadError)
       alert(`Error al subir el audio: ${uploadError.message}`)
-      return
+      return false
     }
 
     const { data: { publicUrl } } = supabase.storage.from('Audios').getPublicUrl(storagePath)
@@ -96,7 +93,7 @@ export function AudioProvider({ children }) {
     if (dbError) {
       console.error('DB error:', dbError)
       alert(`Error al guardar el audio: ${dbError.message}`)
-      return
+      return false
     }
 
     setAudios(prev => ({
@@ -113,9 +110,34 @@ export function AudioProvider({ children }) {
         teacherId,
       },
     }))
+
+    // Auto-sync immediately after upload
+    setSyncingKeys(prev => new Set([...prev, key]))
+    supabase.functions.invoke('generate-sync', {
+      body: { audioUrl: publicUrl, fileType: contentType },
+    }).then(async ({ data, error }) => {
+      if (error || !data?.words?.length) {
+        console.error('Auto-sync failed:', error ?? 'no words')
+        return
+      }
+      const wordTimestamps = data.words.map(w => ({ word: w.word, start: w.start, end: w.end }))
+      await supabase
+        .from('audio_files')
+        .update({ word_timestamps: wordTimestamps })
+        .eq('parasha_id', parashaId)
+        .eq('aliyah_idx', aliyahIdx)
+        .eq('teacher_id', teacherId)
+      setAudios(prev => ({
+        ...prev,
+        [key]: { ...prev[key], wordTimestamps },
+      }))
+    }).finally(() => {
+      setSyncingKeys(prev => { const s = new Set([...prev]); s.delete(key); return s })
+    })
+
+    return true
   }, [])
 
-  // Student-only: upload recording and notify teacher — never touches audio_files or the reader
   const uploadStudentRecording = useCallback(async (parashaId, aliyahIdx, file, notifData) => {
     const { studentId, teacherId, studentName, parashaName, aliyahLabel } = notifData
     const storagePath = `students/${studentId}/${parashaId}/${aliyahIdx}/${Date.now()}`
@@ -180,7 +202,6 @@ export function AudioProvider({ children }) {
   const generateSync = useCallback(async (parashaId, aliyahIdx) => {
     const key = `${parashaId}-${aliyahIdx}`
 
-    // Leer desde BD para evitar race condition con setAudios
     const { data: row } = await supabase
       .from('audio_files')
       .select('public_url, file_type, teacher_id')
@@ -189,8 +210,8 @@ export function AudioProvider({ children }) {
       .maybeSingle()
     if (!row?.public_url) return false
 
+    setSyncingKeys(prev => new Set([...prev, key]))
     try {
-      // Llamar a la Edge Function (la API key de OpenAI vive solo en el servidor)
       const { data, error } = await supabase.functions.invoke('generate-sync', {
         body: { audioUrl: row.public_url, fileType: row.file_type || 'audio/webm' },
       })
@@ -218,11 +239,13 @@ export function AudioProvider({ children }) {
     } catch (err) {
       console.error('generateSync error:', err)
       return false
+    } finally {
+      setSyncingKeys(prev => { const s = new Set([...prev]); s.delete(key); return s })
     }
-  }, [audios])
+  }, [])
 
   return (
-    <AudioCtx.Provider value={{ upload, uploadStudentRecording, remove, get, hasAny, audios, generateSync }}>
+    <AudioCtx.Provider value={{ upload, uploadStudentRecording, remove, get, hasAny, audios, generateSync, syncingKeys }}>
       {children}
     </AudioCtx.Provider>
   )
