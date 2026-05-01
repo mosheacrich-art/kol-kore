@@ -71,8 +71,9 @@ export function AudioProvider({ children }) {
       const map = {}
       data.forEach(row => {
         const key = `${row.parasha_id}-${row.aliyah_idx}`
+        const vParam = row.uploaded_at ? new Date(row.uploaded_at).getTime() : Date.now()
         map[key] = {
-          url: row.public_url,
+          url: `${row.public_url}?v=${vParam}`,
           name: row.file_name,
           type: row.file_type || 'audio/webm',
           uploadedAt: new Date(row.uploaded_at).toLocaleString('es-ES', {
@@ -119,6 +120,7 @@ export function AudioProvider({ children }) {
 
     const { data: { publicUrl } } = supabase.storage.from('Audios').getPublicUrl(storagePath)
 
+    const uploadedAt = new Date().toISOString()
     const { error: dbError } = await supabase.from('audio_files').upsert({
       teacher_id: teacherId,
       parasha_id: parashaId,
@@ -127,6 +129,8 @@ export function AudioProvider({ children }) {
       public_url: publicUrl,
       file_name: file.name,
       file_type: contentType,
+      word_timestamps: null,
+      uploaded_at: uploadedAt,
     }, { onConflict: 'teacher_id,parasha_id,aliyah_idx' })
 
     if (dbError) {
@@ -135,13 +139,15 @@ export function AudioProvider({ children }) {
       return false
     }
 
+    // Append cache-buster so AudioPlayer reloads even if the storage path is identical
+    const cacheBustUrl = `${publicUrl}?v=${new Date(uploadedAt).getTime()}`
     setAudios(prev => ({
       ...prev,
       [key]: {
-        url: publicUrl,
+        url: cacheBustUrl,
         name: file.name,
         type: contentType,
-        uploadedAt: new Date().toLocaleString('es-ES', {
+        uploadedAt: new Date(uploadedAt).toLocaleString('es-ES', {
           day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
         }),
         wordTimestamps: null,
@@ -249,7 +255,9 @@ export function AudioProvider({ children }) {
 
     setSyncingKeys(prev => new Set([...prev, key]))
     try {
-      const wordTimestamps = await transcribeFromUrl(row.public_url, row.file_type || 'audio/webm')
+      // Use the clean URL (no cache-buster) for fetching the audio to transcribe
+      const cleanUrl = row.public_url.split('?')[0]
+      const wordTimestamps = await transcribeFromUrl(cleanUrl, row.file_type || 'audio/webm')
 
       if (!wordTimestamps.length) {
         console.error('generateSync: no words returned')
