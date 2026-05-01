@@ -3,27 +3,29 @@ import { ALL_PARASHOT, BOOK_COLORS, SEFARIM_LIST } from '../../data/parashot'
 import { useAudio } from '../../context/AudioContext'
 import AudioPlayer from '../../components/AudioPlayer'
 
-const HAS_OPENAI = !!import.meta.env.VITE_OPENAI_API_KEY
-
 export default function TeacherAudioPanel() {
   const [selectedParasha, setSelectedParasha] = useState(ALL_PARASHOT[0])
   const [selectedAliyah, setSelectedAliyah] = useState(0)
   const [dragging, setDragging] = useState(false)
   const [bookFilter, setBookFilter] = useState('all')
-  const [syncing, setSyncing] = useState(null)
+  const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef(null)
-  const { upload, remove, get, audios, generateSync } = useAudio()
+  const { upload, remove, get, audios, generateSync, syncingKeys } = useAudio()
 
   const currentAudio = get(selectedParasha.id, selectedAliyah)
   const color = BOOK_COLORS[selectedParasha.book] || '#6c33e6'
+  const currentKey = `${selectedParasha.id}-${selectedAliyah}`
+  const isSyncing = syncingKeys.has(currentKey)
 
-  const handleFile = (file) => {
+  const handleFile = async (file) => {
     if (!file) return
     if (!file.type.startsWith('audio/') && !file.type.startsWith('video/')) {
       alert('Solo se aceptan archivos de audio (mp3, wav, m4a, mp4…)')
       return
     }
-    upload(selectedParasha.id, selectedAliyah, file)
+    setUploading(true)
+    await upload(selectedParasha.id, selectedAliyah, file)
+    setUploading(false)
   }
 
   const handleDrop = (e) => {
@@ -124,7 +126,7 @@ export default function TeacherAudioPanel() {
                     </div>
                     {pAudios > 0 && (
                       <span className="text-xs w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ background: `${c}25`, color: c, fontSize: '10px' }}>
+                        style={{ background: `${pAudios > 0 ? BOOK_COLORS[p.book] : color}25`, color: BOOK_COLORS[p.book], fontSize: '10px' }}>
                         {pAudios}
                       </span>
                     )}
@@ -161,6 +163,8 @@ export default function TeacherAudioPanel() {
               <div className="flex gap-2 flex-wrap">
                 {selectedParasha.aliyot.map((a, i) => {
                   const hasAudio = !!get(selectedParasha.id, i)
+                  const key = `${selectedParasha.id}-${i}`
+                  const syncing = syncingKeys.has(key)
                   return (
                     <button key={i} onClick={() => setSelectedAliyah(i)}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
@@ -170,7 +174,11 @@ export default function TeacherAudioPanel() {
                         border: `1px solid ${selectedAliyah === i ? 'transparent' : 'var(--border)'}`,
                       }}>
                       {a.n === 8 ? 'Maftir' : `${a.n}ª`}
-                      {hasAudio && (
+                      {syncing && (
+                        <span className="inline-block w-2 h-2 rounded-full border border-t-transparent animate-spin"
+                          style={{ borderColor: selectedAliyah === i ? 'rgba(255,255,255,0.4)' : `${color}40`, borderTopColor: selectedAliyah === i ? '#fff' : color }} />
+                      )}
+                      {!syncing && hasAudio && (
                         <span className="w-1.5 h-1.5 rounded-full"
                           style={{ background: selectedAliyah === i ? 'rgba(255,255,255,0.7)' : '#2dd4bf' }} />
                       )}
@@ -201,16 +209,28 @@ export default function TeacherAudioPanel() {
               </div>
             )}
 
+            {/* Status banner: uploading or syncing */}
+            {(uploading || isSyncing) && (
+              <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
+                style={{ background: `${color}12`, border: `1px solid ${color}25`, color }}>
+                <span className="inline-block w-3 h-3 rounded-full border border-t-transparent animate-spin flex-shrink-0"
+                  style={{ borderColor: `${color}40`, borderTopColor: color }} />
+                {uploading ? 'Subiendo audio…' : 'Sincronizando con IA…'}
+              </div>
+            )}
+
             {/* Drop zone */}
             <div
               onDragOver={e => { e.preventDefault(); setDragging(true) }}
               onDragLeave={() => setDragging(false)}
               onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => !uploading && fileInputRef.current?.click()}
               className="rounded-xl cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-3 py-8"
               style={{
                 border: `2px dashed ${dragging ? color : 'var(--border)'}`,
                 background: dragging ? `${color}0d` : 'transparent',
+                opacity: uploading ? 0.6 : 1,
+                cursor: uploading ? 'not-allowed' : 'pointer',
               }}>
               <div className="w-12 h-12 rounded-full flex items-center justify-center transition-all"
                 style={{
@@ -249,6 +269,8 @@ export default function TeacherAudioPanel() {
                 {selectedParasha.aliyot.map((a, i) => {
                   const audio = get(selectedParasha.id, i)
                   if (!audio) return null
+                  const key = `${selectedParasha.id}-${i}`
+                  const syncing = syncingKeys.has(key)
                   return (
                     <div key={i} className="flex items-center justify-between px-3 py-2 rounded-xl"
                       style={{ background: `${color}0a`, border: `1px solid ${color}18` }}>
@@ -261,25 +283,23 @@ export default function TeacherAudioPanel() {
                         <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{audio.name.slice(0, 20)}{audio.name.length > 20 ? '…' : ''}</span>
                         {audio.wordTimestamps
                           ? <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(34,197,94,0.15)', color: '#16a34a', border: '1px solid rgba(34,197,94,0.3)' }}>sync ✓</span>
-                          : HAS_OPENAI && (
-                            <button
-                              disabled={syncing === `${selectedParasha.id}-${i}`}
-                              onClick={async () => {
-                                const k = `${selectedParasha.id}-${i}`
-                                setSyncing(k)
-                                await generateSync(selectedParasha.id, i)
-                                setSyncing(null)
-                              }}
-                              className="text-xs px-1.5 py-0.5 rounded-full transition-all flex items-center gap-1"
-                              style={{ background: `${color}15`, color, border: `1px solid ${color}30`, opacity: syncing === `${selectedParasha.id}-${i}` ? 0.6 : 1 }}>
-                              {syncing === `${selectedParasha.id}-${i}` ? (
-                                <>
-                                  <span className="inline-block w-2.5 h-2.5 rounded-full border border-t-transparent animate-spin" style={{ borderColor: `${color}50`, borderTopColor: color }} />
-                                  sincronizando…
-                                </>
-                              ) : '⚡ Generar sync'}
-                            </button>
-                          )
+                          : syncing
+                            ? (
+                              <span className="text-xs px-1.5 py-0.5 rounded-full flex items-center gap-1"
+                                style={{ background: `${color}15`, color, border: `1px solid ${color}30` }}>
+                                <span className="inline-block w-2.5 h-2.5 rounded-full border border-t-transparent animate-spin"
+                                  style={{ borderColor: `${color}50`, borderTopColor: color }} />
+                                sincronizando…
+                              </span>
+                            )
+                            : (
+                              <button
+                                onClick={async () => { await generateSync(selectedParasha.id, i) }}
+                                className="text-xs px-1.5 py-0.5 rounded-full transition-all"
+                                style={{ background: `${color}15`, color, border: `1px solid ${color}30` }}>
+                                ⚡ Reintentar sync
+                              </button>
+                            )
                         }
                       </div>
                       <button onClick={() => remove(selectedParasha.id, i)}
