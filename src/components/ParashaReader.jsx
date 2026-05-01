@@ -44,7 +44,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
   }, [])
   const [pendingHomework, setPendingHomework] = useState(null)
   const pendingHomeworkRef = useRef(null)
-  const { get, upload, uploadStudentRecording, remove, generateSync } = useAudio()
+  const { get, upload, uploadStudentRecording, remove } = useAudio()
   const { profile } = useAuth()
   const notifiedRef = useRef(new Set())    // aliyot ya notificadas en esta sesión
   const aliyahStartRef = useRef(Date.now()) // para medir tiempo por aliyá
@@ -93,7 +93,6 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
   const timerRef = useRef(null)
   const uploadInputRef = useRef(null)
   const [uploadedMsg, setUploadedMsg] = useState(false)
-  const [syncing, setSyncing] = useState(false)
 
   const currentAliyah = parasha.aliyot[aliyahIdx]
   const bookColor = BOOK_COLORS[parasha.book] || '#6c33e6'
@@ -179,10 +178,6 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
         } else {
           await upload(parasha.id, aliyahIdx, file)
           await autoSubmitHomework()
-          if (import.meta.env.VITE_SYNC_ENABLED === 'true') {
-            setSyncing(true)
-            generateSync(parasha.id, aliyahIdx).finally(() => setSyncing(false))
-          }
         }
         stream.getTracks().forEach(t => t.stop())
         setRecState('idle')
@@ -219,10 +214,6 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
     } else {
       await upload(parasha.id, aliyahIdx, file)
       await autoSubmitHomework()
-      if (import.meta.env.VITE_SYNC_ENABLED === 'true') {
-        setSyncing(true)
-        generateSync(parasha.id, aliyahIdx).finally(() => setSyncing(false))
-      }
     }
     e.target.value = ''
   }
@@ -392,16 +383,6 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
               </button>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Teacher sync indicator */}
-      {syncing && (
-        <div className="flex-shrink-0 flex items-center gap-2 px-5 py-2"
-          style={{ background: 'rgba(108,51,230,0.07)', borderBottom: '1px solid rgba(108,51,230,0.15)' }}>
-          <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin flex-shrink-0"
-            style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#6c33e6' }} />
-          <span className="text-xs" style={{ color: '#6c33e6' }}>Generando sync de palabras…</span>
         </div>
       )}
 

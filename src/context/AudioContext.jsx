@@ -3,6 +3,45 @@ import { supabase } from '../lib/supabase'
 
 const AudioCtx = createContext(null)
 
+// Call OpenAI Whisper with word-level timestamps.
+// Accepts a File/Blob directly (no re-download needed when file is in memory).
+async function transcribeWithWhisper(fileOrBlob, fileType) {
+  const apiKey = (import.meta.env.VITE_OPENAI_API_KEY || '').trim()
+  if (!apiKey || !apiKey.startsWith('sk-')) {
+    // Fall back to Supabase Edge Function (requires it to be deployed)
+    throw new Error('VITE_OPENAI_API_KEY not configured — cannot transcribe')
+  }
+
+  const ext = (fileType || 'audio/webm').split('/')[1]?.split(';')[0] || 'webm'
+  const form = new FormData()
+  form.append('file', new File([fileOrBlob], `audio.${ext}`, { type: fileType || 'audio/webm' }))
+  form.append('model', 'whisper-1')
+  form.append('response_format', 'verbose_json')
+  form.append('timestamp_granularities[]', 'word')
+
+  const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}` },
+    body: form,
+  })
+
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`Whisper error ${res.status}: ${err}`)
+  }
+
+  const json = await res.json()
+  return (json.words ?? []).map(w => ({ word: w.word, start: w.start, end: w.end }))
+}
+
+// Download audio from a public URL and transcribe it.
+async function transcribeFromUrl(audioUrl, fileType) {
+  const audioRes = await fetch(audioUrl)
+  if (!audioRes.ok) throw new Error(`Failed to download audio: ${audioRes.status}`)
+  const blob = await audioRes.blob()
+  return transcribeWithWhisper(blob, fileType)
+}
+
 export function AudioProvider({ children }) {
   const [audios, setAudios] = useState({})
   const [syncingKeys, setSyncingKeys] = useState(new Set())
@@ -101,7 +140,7 @@ export function AudioProvider({ children }) {
       [key]: {
         url: publicUrl,
         name: file.name,
-        type: file.type,
+        type: contentType,
         uploadedAt: new Date().toLocaleString('es-ES', {
           day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
         }),
@@ -111,29 +150,26 @@ export function AudioProvider({ children }) {
       },
     }))
 
-    // Auto-sync immediately after upload
+    // Auto-sync: pass the original file directly to avoid re-downloading
     setSyncingKeys(prev => new Set([...prev, key]))
-    supabase.functions.invoke('generate-sync', {
-      body: { audioUrl: publicUrl, fileType: contentType },
-    }).then(async ({ data, error }) => {
-      if (error || !data?.words?.length) {
-        console.error('Auto-sync failed:', error ?? 'no words')
-        return
-      }
-      const wordTimestamps = data.words.map(w => ({ word: w.word, start: w.start, end: w.end }))
-      await supabase
-        .from('audio_files')
-        .update({ word_timestamps: wordTimestamps })
-        .eq('parasha_id', parashaId)
-        .eq('aliyah_idx', aliyahIdx)
-        .eq('teacher_id', teacherId)
-      setAudios(prev => ({
-        ...prev,
-        [key]: { ...prev[key], wordTimestamps },
-      }))
-    }).finally(() => {
-      setSyncingKeys(prev => { const s = new Set([...prev]); s.delete(key); return s })
-    })
+    transcribeWithWhisper(file, contentType)
+      .then(async (wordTimestamps) => {
+        if (!wordTimestamps.length) { console.warn('Auto-sync: no words returned'); return }
+        await supabase
+          .from('audio_files')
+          .update({ word_timestamps: wordTimestamps })
+          .eq('parasha_id', parashaId)
+          .eq('aliyah_idx', aliyahIdx)
+          .eq('teacher_id', teacherId)
+        setAudios(prev => ({
+          ...prev,
+          [key]: { ...prev[key], wordTimestamps },
+        }))
+      })
+      .catch(err => console.error('Auto-sync failed:', err))
+      .finally(() => {
+        setSyncingKeys(prev => { const s = new Set([...prev]); s.delete(key); return s })
+      })
 
     return true
   }, [])
@@ -199,6 +235,7 @@ export function AudioProvider({ children }) {
     return Object.keys(audios).some(k => k.startsWith(`${parashaId}-`))
   }, [audios])
 
+  // Re-generate sync for an already-uploaded audio (e.g. retry button).
   const generateSync = useCallback(async (parashaId, aliyahIdx) => {
     const key = `${parashaId}-${aliyahIdx}`
 
@@ -212,16 +249,12 @@ export function AudioProvider({ children }) {
 
     setSyncingKeys(prev => new Set([...prev, key]))
     try {
-      const { data, error } = await supabase.functions.invoke('generate-sync', {
-        body: { audioUrl: row.public_url, fileType: row.file_type || 'audio/webm' },
-      })
+      const wordTimestamps = await transcribeFromUrl(row.public_url, row.file_type || 'audio/webm')
 
-      if (error || !data?.words?.length) {
-        console.error('generate-sync:', error ?? 'sin palabras')
+      if (!wordTimestamps.length) {
+        console.error('generateSync: no words returned')
         return false
       }
-
-      const wordTimestamps = data.words.map(w => ({ word: w.word, start: w.start, end: w.end }))
 
       await supabase
         .from('audio_files')
