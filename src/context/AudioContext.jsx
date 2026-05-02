@@ -3,48 +3,17 @@ import { supabase } from '../lib/supabase'
 
 const AudioCtx = createContext(null)
 
-// Call OpenAI Whisper with word-level timestamps.
-// Accepts a File/Blob directly (no re-download needed when file is in memory).
-async function transcribeWithWhisper(fileOrBlob, fileType) {
-  const apiKey = (import.meta.env.VITE_OPENAI_API_KEY || '').trim()
-  if (!apiKey || !apiKey.startsWith('sk-')) {
-    // Fall back to Supabase Edge Function (requires it to be deployed)
-    throw new Error('VITE_OPENAI_API_KEY not configured — cannot transcribe')
-  }
-
-  const MAX_BYTES = 24 * 1024 * 1024 // 24 MB (Whisper limit is 25 MB)
-  if (fileOrBlob.size > MAX_BYTES) {
-    throw new Error(`El archivo pesa ${(fileOrBlob.size / 1024 / 1024).toFixed(1)} MB. El límite de Whisper es 25 MB. Convierte el audio a MP3 antes de subirlo.`)
-  }
-
-  const ext = (fileType || 'audio/webm').split('/')[1]?.split(';')[0] || 'webm'
-  const form = new FormData()
-  form.append('file', new File([fileOrBlob], `audio.${ext}`, { type: fileType || 'audio/webm' }))
-  form.append('model', 'whisper-1')
-  form.append('response_format', 'verbose_json')
-  form.append('timestamp_granularities[]', 'word')
-
-  const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+// Call the server-side Vercel API route which proxies to OpenAI Whisper.
+// Avoids CORS — the browser cannot call api.openai.com directly.
+async function callSyncApi(audioUrl, fileType) {
+  const res = await fetch('/api/generate-sync', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}` },
-    body: form,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ audioUrl, fileType }),
   })
-
-  if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`Whisper error ${res.status}: ${err}`)
-  }
-
   const json = await res.json()
+  if (!res.ok) throw new Error(json.error || `Error ${res.status}`)
   return (json.words ?? []).map(w => ({ word: w.word, start: w.start, end: w.end }))
-}
-
-// Download audio from a public URL and transcribe it.
-async function transcribeFromUrl(audioUrl, fileType) {
-  const audioRes = await fetch(audioUrl)
-  if (!audioRes.ok) throw new Error(`Failed to download audio: ${audioRes.status}`)
-  const blob = await audioRes.blob()
-  return transcribeWithWhisper(blob, fileType)
 }
 
 export function AudioProvider({ children }) {
@@ -162,10 +131,10 @@ export function AudioProvider({ children }) {
       },
     }))
 
-    // Auto-sync: pass the original file directly to avoid re-downloading
+    // Auto-sync via server-side Vercel API (avoids CORS with OpenAI)
     setSyncingKeys(prev => new Set([...prev, key]))
     setSyncErrors(prev => { const n = { ...prev }; delete n[key]; return n })
-    transcribeWithWhisper(file, contentType)
+    callSyncApi(publicUrl, contentType)
       .then(async (wordTimestamps) => {
         if (!wordTimestamps.length) { console.warn('Auto-sync: no words returned'); return }
         await supabase
@@ -266,9 +235,8 @@ export function AudioProvider({ children }) {
     setSyncingKeys(prev => new Set([...prev, key]))
     setSyncErrors(prev => { const n = { ...prev }; delete n[key]; return n })
     try {
-      // Use the clean URL (no cache-buster) for fetching the audio to transcribe
       const cleanUrl = row.public_url.split('?')[0]
-      const wordTimestamps = await transcribeFromUrl(cleanUrl, row.file_type || 'audio/webm')
+      const wordTimestamps = await callSyncApi(cleanUrl, row.file_type || 'audio/webm')
 
       if (!wordTimestamps.length) {
         console.error('generateSync: no words returned')
