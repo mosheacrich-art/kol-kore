@@ -12,6 +12,11 @@ async function transcribeWithWhisper(fileOrBlob, fileType) {
     throw new Error('VITE_OPENAI_API_KEY not configured — cannot transcribe')
   }
 
+  const MAX_BYTES = 24 * 1024 * 1024 // 24 MB (Whisper limit is 25 MB)
+  if (fileOrBlob.size > MAX_BYTES) {
+    throw new Error(`El archivo pesa ${(fileOrBlob.size / 1024 / 1024).toFixed(1)} MB. El límite de Whisper es 25 MB. Convierte el audio a MP3 antes de subirlo.`)
+  }
+
   const ext = (fileType || 'audio/webm').split('/')[1]?.split(';')[0] || 'webm'
   const form = new FormData()
   form.append('file', new File([fileOrBlob], `audio.${ext}`, { type: fileType || 'audio/webm' }))
@@ -45,6 +50,7 @@ async function transcribeFromUrl(audioUrl, fileType) {
 export function AudioProvider({ children }) {
   const [audios, setAudios] = useState({})
   const [syncingKeys, setSyncingKeys] = useState(new Set())
+  const [syncErrors, setSyncErrors] = useState({}) // key → error string
 
   useEffect(() => {
     const load = async (userId) => {
@@ -158,6 +164,7 @@ export function AudioProvider({ children }) {
 
     // Auto-sync: pass the original file directly to avoid re-downloading
     setSyncingKeys(prev => new Set([...prev, key]))
+    setSyncErrors(prev => { const n = { ...prev }; delete n[key]; return n })
     transcribeWithWhisper(file, contentType)
       .then(async (wordTimestamps) => {
         if (!wordTimestamps.length) { console.warn('Auto-sync: no words returned'); return }
@@ -172,7 +179,10 @@ export function AudioProvider({ children }) {
           [key]: { ...prev[key], wordTimestamps },
         }))
       })
-      .catch(err => console.error('Auto-sync failed:', err))
+      .catch(err => {
+        console.error('Auto-sync failed:', err)
+        setSyncErrors(prev => ({ ...prev, [key]: err.message }))
+      })
       .finally(() => {
         setSyncingKeys(prev => { const s = new Set([...prev]); s.delete(key); return s })
       })
@@ -254,6 +264,7 @@ export function AudioProvider({ children }) {
     if (!row?.public_url) return false
 
     setSyncingKeys(prev => new Set([...prev, key]))
+    setSyncErrors(prev => { const n = { ...prev }; delete n[key]; return n })
     try {
       // Use the clean URL (no cache-buster) for fetching the audio to transcribe
       const cleanUrl = row.public_url.split('?')[0]
@@ -261,6 +272,7 @@ export function AudioProvider({ children }) {
 
       if (!wordTimestamps.length) {
         console.error('generateSync: no words returned')
+        setSyncErrors(prev => ({ ...prev, [key]: 'Whisper no devolvió palabras. Prueba con otro formato de audio.' }))
         return false
       }
 
@@ -279,6 +291,7 @@ export function AudioProvider({ children }) {
       return true
     } catch (err) {
       console.error('generateSync error:', err)
+      setSyncErrors(prev => ({ ...prev, [key]: err.message }))
       return false
     } finally {
       setSyncingKeys(prev => { const s = new Set([...prev]); s.delete(key); return s })
@@ -286,7 +299,7 @@ export function AudioProvider({ children }) {
   }, [])
 
   return (
-    <AudioCtx.Provider value={{ upload, uploadStudentRecording, remove, get, hasAny, audios, generateSync, syncingKeys }}>
+    <AudioCtx.Provider value={{ upload, uploadStudentRecording, remove, get, hasAny, audios, generateSync, syncingKeys, syncErrors }}>
       {children}
     </AudioCtx.Provider>
   )

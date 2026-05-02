@@ -10,7 +10,7 @@ export default function TeacherAudioPanel() {
   const [bookFilter, setBookFilter] = useState('all')
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef(null)
-  const { upload, remove, get, audios, generateSync, syncingKeys } = useAudio()
+  const { upload, remove, get, audios, generateSync, syncingKeys, syncErrors } = useAudio()
 
   const currentAudio = get(selectedParasha.id, selectedAliyah)
   const color = BOOK_COLORS[selectedParasha.book] || '#6c33e6'
@@ -293,12 +293,19 @@ export default function TeacherAudioPanel() {
                               </span>
                             )
                             : (
-                              <button
-                                onClick={async () => { await generateSync(selectedParasha.id, i) }}
-                                className="text-xs px-1.5 py-0.5 rounded-full transition-all"
-                                style={{ background: `${color}15`, color, border: `1px solid ${color}30` }}>
-                                ⚡ Reintentar sync
-                              </button>
+                              <div className="flex flex-col gap-1 items-start">
+                                <button
+                                  onClick={async () => { await generateSync(selectedParasha.id, i) }}
+                                  className="text-xs px-1.5 py-0.5 rounded-full transition-all"
+                                  style={{ background: `${color}15`, color, border: `1px solid ${color}30` }}>
+                                  ⚡ Reintentar sync
+                                </button>
+                                {syncErrors[key] && (
+                                  <span className="text-xs max-w-xs" style={{ color: '#ef4444' }} title={syncErrors[key]}>
+                                    Error: {syncErrors[key].length > 60 ? syncErrors[key].slice(0, 60) + '…' : syncErrors[key]}
+                                  </span>
+                                )}
+                              </div>
                             )
                         }
                       </div>
