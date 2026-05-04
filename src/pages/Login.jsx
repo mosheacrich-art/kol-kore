@@ -4,10 +4,6 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { supabase } from '../lib/supabase'
 
-const MONTHLY = 5
-const ANNUAL = 50
-const TRIAL_DAYS = 7
-const SAVING_PCT = Math.round(100 - (ANNUAL / (MONTHLY * 12)) * 100)
 
 export default function Login() {
   const navigate = useNavigate()
@@ -19,12 +15,6 @@ export default function Login() {
 
   useEffect(() => {
     if (!profile) return
-    const isNew = sessionStorage.getItem('new_student')
-    if (isNew && profile.role === 'student') {
-      sessionStorage.removeItem('new_student')
-      navigate('/student/subscription')
-      return
-    }
     navigate(profile.role === 'teacher' ? '/teacher/dashboard' : '/student/profile')
   }, [profile, navigate])
 
@@ -158,13 +148,9 @@ function StudentModal({ onClose, isDark, t }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [plan, setPlan] = useState('trial')   // 'trial' | 'monthly' | 'annual'
-  const [months, setMonths] = useState(1)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [forgotSent, setForgotSent] = useState(false)
-
-  const price = plan === 'annual' ? ANNUAL : plan === 'monthly' ? MONTHLY * months : 0
 
   const handleForgot = async (e) => {
     e.preventDefault()
@@ -194,24 +180,7 @@ function StudentModal({ onClose, isDark, t }) {
 
     const err = await signUp(email, password, name.trim(), 'student')
     if (err) { setError('Error al registrarse: ' + err.message); setLoading(false); return }
-
-    // Registered — now handle plan
-    if (plan === 'trial') {
-      sessionStorage.setItem('new_student', '1')
-      return
-    }
-
-    // Paid plan — call Stripe checkout
-    try {
-      const { data, error: fnErr } = await supabase.functions.invoke('create-checkout', {
-        body: { plan, months: plan === 'annual' ? 12 : months },
-      })
-      if (fnErr || !data?.url) throw new Error(fnErr?.message ?? 'Error al iniciar el pago')
-      window.location.href = data.url
-    } catch (ex) {
-      setError(ex.message)
-      setLoading(false)
-    }
+    // Profile useEffect will redirect to /student/profile → paywall handles subscription
   }
 
   const inputStyle = {
@@ -318,116 +287,6 @@ function StudentModal({ onClose, isDark, t }) {
 
           {error && <p className="text-xs px-1" style={{ color: '#f87171' }}>{error}</p>}
 
-          {/* Plan selector — only on register */}
-          {!isLogin && (
-            <div className="mt-1">
-              <p className="text-xs uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
-                Elige tu plan
-              </p>
-
-              {/* Trial */}
-              <button type="button" onClick={() => setPlan('trial')}
-                className="w-full rounded-xl p-3.5 text-left mb-2 transition-all flex items-center justify-between"
-                style={{
-                  background: plan === 'trial' ? 'rgba(249,184,0,0.1)' : 'var(--bg-card)',
-                  border: `1.5px solid ${plan === 'trial' ? '#f9b800' : 'var(--border)'}`,
-                }}>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
-                    style={{ borderColor: plan === 'trial' ? '#f9b800' : 'var(--border)' }}>
-                    {plan === 'trial' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#f9b800' }} />}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold" style={{ color: plan === 'trial' ? 'var(--text-gold)' : 'var(--text)' }}>
-                      {TRIAL_DAYS} días gratis
-                    </p>
-                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Sin tarjeta · Decides al terminar</p>
-                  </div>
-                </div>
-                <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                  style={{ background: 'rgba(249,184,0,0.15)', color: 'var(--text-gold)' }}>
-                  Gratis
-                </span>
-              </button>
-
-              {/* Monthly */}
-              <button type="button" onClick={() => setPlan('monthly')}
-                className="w-full rounded-xl p-3.5 text-left mb-2 transition-all"
-                style={{
-                  background: plan === 'monthly' ? 'rgba(108,51,230,0.1)' : 'var(--bg-card)',
-                  border: `1.5px solid ${plan === 'monthly' ? '#8b5cf6' : 'var(--border)'}`,
-                }}>
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
-                    style={{ borderColor: plan === 'monthly' ? '#8b5cf6' : 'var(--border)' }}>
-                    {plan === 'monthly' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#8b5cf6' }} />}
-                  </div>
-                  <div className="flex items-baseline gap-2 flex-1">
-                    <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Mensual</span>
-                    <span className="text-sm font-light" style={{ color: 'var(--text-3)' }}>5 €/mes</span>
-                  </div>
-                </div>
-                {plan === 'monthly' && (
-                  <div className="pl-6">
-                    <p className="text-xs mb-1.5" style={{ color: 'var(--text-muted)' }}>¿Cuántos meses quieres pagar?</p>
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {[1, 2, 3, 4, 5, 6, 9, 12].map(m => (
-                        <button key={m} type="button"
-                          onClick={e => { e.stopPropagation(); setMonths(m) }}
-                          className="py-1 rounded-lg text-xs font-medium transition-all"
-                          style={{
-                            background: months === m ? '#8b5cf6' : 'var(--bg-card)',
-                            color: months === m ? '#fff' : 'var(--text-3)',
-                            border: `1px solid ${months === m ? '#8b5cf6' : 'var(--border)'}`,
-                          }}>
-                          {m === 12 ? '1 año' : `${m}m`}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </button>
-
-              {/* Annual */}
-              <button type="button" onClick={() => setPlan('annual')}
-                className="w-full rounded-xl p-3.5 text-left mb-3 transition-all relative"
-                style={{
-                  background: plan === 'annual' ? 'rgba(249,184,0,0.07)' : 'var(--bg-card)',
-                  border: `1.5px solid ${plan === 'annual' ? '#f9b800' : 'var(--border)'}`,
-                }}>
-                <div className="absolute -top-2.5 right-3">
-                  <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                    style={{ background: 'linear-gradient(135deg,#f9b800,#ffd54f)', color: '#0d0b1e' }}>
-                    −{SAVING_PCT}%
-                  </span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
-                    style={{ borderColor: plan === 'annual' ? '#f9b800' : 'var(--border)' }}>
-                    {plan === 'annual' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#f9b800' }} />}
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Anual</span>
-                    <span className="text-sm font-light" style={{ color: 'var(--text-3)' }}>50 €/año</span>
-                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>= 4,17 €/mes</span>
-                  </div>
-                </div>
-              </button>
-
-              {/* No auto-renewal notice */}
-              <div className="flex items-start gap-2 px-0.5 mb-1">
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
-                  <circle cx="6.5" cy="6.5" r="5.5" stroke="#16a34a" strokeWidth="1.2"/>
-                  <path d="M4 6.5l2 2L9 4.5" stroke="#16a34a" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                  <strong style={{ color: 'var(--text-3)' }}>Sin renovación automática.</strong>{' '}
-                  Pagas una vez, decides tú si quieres renovar.
-                </p>
-              </div>
-            </div>
-          )}
-
           {/* Submit */}
           <button type="submit" disabled={loading}
             className="w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 mt-1"
@@ -441,13 +300,9 @@ function StudentModal({ onClose, isDark, t }) {
               <>
                 <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
                   style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#8b5cf6' }} />
-                {isLogin ? 'Iniciando sesión…' : plan !== 'trial' ? 'Redirigiendo al pago…' : 'Creando cuenta…'}
+                {isLogin ? 'Iniciando sesión…' : 'Creando cuenta…'}
               </>
-            ) : isLogin
-              ? 'Entrar'
-              : plan === 'trial'
-                ? `Empezar ${TRIAL_DAYS} días gratis →`
-                : `Registrarme y pagar ${price} € →`
+            ) : isLogin ? 'Entrar' : 'Crear cuenta →'
             }
           </button>
 
