@@ -1,8 +1,11 @@
 import { useState } from 'react'
-import { Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import { useStudyTimer } from '../../hooks/useStudyTimer'
+
+const MONTHLY_ID = 'pdt_0Ne7sWfihRRycFHWb1SB2'
+const ANNUAL_ID  = 'pdt_0Ne7sn0u5XBSPuebqTIsh'
 
 const navItems = [
   { path: '/student/profile',       label: 'Mi Perfil',       shortLabel: 'Perfil',   heb: 'פְּרוֹפִיל',  icon: ProfileIcon },
@@ -14,13 +17,22 @@ const navItems = [
 export default function StudentLayout() {
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
   const { isDark, toggle } = useTheme()
-  const { profile, signOut } = useAuth()
+  const { user, profile, signOut } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   useStudyTimer(profile?.id)
 
   const go = (path) => { navigate(path); setSidebarOpen(false) }
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
+
+  // Show paywall if student has no active subscription.
+  // Exception: if coming back from payment (?success=1), let Subscription.jsx handle the polling.
+  const justPaid = searchParams.get('success') === '1'
+  const isSubscribed = profile?.subscription_status === 'active'
+  if (profile && !isSubscribed && !justPaid) {
+    return <Paywall user={user} profile={profile} navigate={navigate} />
+  }
 
   return (
     <div className="flex h-screen" style={{ background: 'var(--bg)' }}>
@@ -160,6 +172,147 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
         </button>
       </div>
     </>
+  )
+}
+
+function Paywall({ user, profile, navigate }) {
+  const [plan, setPlan] = useState('annual')
+  const [paying, setPaying] = useState(false)
+
+  const handlePay = async () => {
+    setPaying(true)
+    try {
+      const res = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: plan === 'annual' ? ANNUAL_ID : MONTHLY_ID,
+          userId: user?.id,
+          email: user?.email,
+          name: profile?.name,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.url) throw new Error(data.error || 'Error al iniciar el pago')
+      window.location.href = data.url
+    } catch (err) {
+      alert(err.message)
+      setPaying(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
+      style={{ background: 'var(--bg)' }}>
+
+      {/* Logo */}
+      <div className="flex items-center gap-3 mb-8">
+        <svg width="36" height="36" viewBox="0 0 28 28" fill="none">
+          <polygon points="14,3 18,10 22,10 18,14 22,18 14,15 6,18 10,14 6,10 10,10"
+            fill="none" stroke="rgba(255,202,40,0.7)" strokeWidth="1.2" strokeLinejoin="round"/>
+          <polygon points="14,25 10,18 6,18 10,14 6,10 14,13 22,10 18,14 22,18 18,18"
+            fill="none" stroke="rgba(255,202,40,0.7)" strokeWidth="1.2" strokeLinejoin="round"/>
+        </svg>
+        <div>
+          <div className="text-base font-semibold" style={{ color: 'var(--text)' }}>Perashapp</div>
+          <div className="text-xs hebrew" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</div>
+        </div>
+      </div>
+
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-light mb-2" style={{ color: 'var(--text)', letterSpacing: '-0.5px' }}>
+            Hola, {profile?.name?.split(' ')[0] ?? 'bienvenido'}
+          </h1>
+          <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+            Activa tu acceso para estudiar con audio sincronizado
+          </p>
+        </div>
+
+        {/* Plan cards */}
+        <div className="grid grid-cols-2 gap-3 mb-5">
+
+          <button onClick={() => setPlan('annual')}
+            className="rounded-2xl p-4 text-left transition-all relative"
+            style={{
+              background: plan === 'annual' ? 'rgba(249,184,0,0.07)' : 'var(--bg-card)',
+              border: `1.5px solid ${plan === 'annual' ? '#f9b800' : 'var(--border)'}`,
+            }}>
+            <div className="absolute -top-2.5 right-3">
+              <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                style={{ background: 'linear-gradient(135deg, #f9b800, #ffd54f)', color: '#0d0b1e', fontSize: '10px' }}>
+                Ahorra 17%
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 mb-3">
+              <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+                style={{ borderColor: plan === 'annual' ? '#f9b800' : 'var(--border)' }}>
+                {plan === 'annual' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#f9b800' }} />}
+              </div>
+              <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>Anual</span>
+            </div>
+            <div>
+              <span className="text-xl font-light" style={{ color: 'var(--text)' }}>$99</span>
+              <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>/año</span>
+            </div>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-gold)' }}>= $8,25/mes</p>
+          </button>
+
+          <button onClick={() => setPlan('monthly')}
+            className="rounded-2xl p-4 text-left transition-all"
+            style={{
+              background: plan === 'monthly' ? 'rgba(108,51,230,0.08)' : 'var(--bg-card)',
+              border: `1.5px solid ${plan === 'monthly' ? '#8b5cf6' : 'var(--border)'}`,
+            }}>
+            <div className="flex items-center gap-1.5 mb-3">
+              <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+                style={{ borderColor: plan === 'monthly' ? '#8b5cf6' : 'var(--border)' }}>
+                {plan === 'monthly' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#8b5cf6' }} />}
+              </div>
+              <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>Mensual</span>
+            </div>
+            <div>
+              <span className="text-xl font-light" style={{ color: 'var(--text)' }}>$9,99</span>
+              <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>/mes</span>
+            </div>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Cancela cuando quieras</p>
+          </button>
+        </div>
+
+        {/* CTA */}
+        <button onClick={handlePay} disabled={paying}
+          className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 mb-3"
+          style={{
+            background: paying ? 'var(--bg-card)' : 'linear-gradient(135deg, #6c33e6, #8b5cf6)',
+            color: paying ? 'var(--text-3)' : '#fff',
+            border: paying ? '1px solid var(--border)' : 'none',
+            boxShadow: paying ? 'none' : '0 4px 20px rgba(108,51,230,0.35)',
+          }}>
+          {paying ? (
+            <>
+              <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
+                style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#8b5cf6' }} />
+              Redirigiendo…
+            </>
+          ) : (
+            '14 días gratis · Empezar ahora →'
+          )}
+        </button>
+
+        <p className="text-xs text-center mb-5" style={{ color: 'var(--text-muted)' }}>
+          Sin cargo durante 14 días · Cancela cuando quieras
+        </p>
+
+        {/* Guest option */}
+        <div className="text-center">
+          <button onClick={() => navigate('/guest/study')}
+            className="text-xs py-2 px-5 rounded-xl transition-all"
+            style={{ color: 'var(--text-muted)', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            Continuar como invitado (sin audio)
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
