@@ -30,7 +30,8 @@ export default function StudentLayout() {
   // Exception: if coming back from payment (?success=1), let Subscription.jsx handle the polling.
   const justPaid = searchParams.get('success') === '1'
   const isSubscribed = profile?.subscription_status === 'active'
-  if (profile && !isSubscribed && !justPaid) {
+  const devBypass = sessionStorage.getItem('dev_bypass') === '1'
+  if (profile && !isSubscribed && !justPaid && !devBypass) {
     return <Paywall user={user} profile={profile} navigate={navigate} />
   }
 
@@ -271,10 +272,10 @@ function Paywall({ user, profile, navigate }) {
               <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>Anual</span>
             </div>
             <div>
-              <span className="text-xl font-light" style={{ color: 'var(--text)' }}>$99</span>
+              <span className="text-xl font-light" style={{ color: 'var(--text)' }}>X$</span>
               <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>/año</span>
             </div>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-gold)' }}>= $8,25/mes · La más económica</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-gold)' }}>La opción más económica</p>
 
           </button>
 
@@ -292,7 +293,7 @@ function Paywall({ user, profile, navigate }) {
               <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>Mensual</span>
             </div>
             <div>
-              <span className="text-xl font-light" style={{ color: 'var(--text)' }}>$9,99</span>
+              <span className="text-xl font-light" style={{ color: 'var(--text)' }}>X$</span>
               <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>/mes</span>
             </div>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Cancela cuando quieras</p>
@@ -332,8 +333,13 @@ function Paywall({ user, profile, navigate }) {
           Pago seguro · Cancela cuando quieras
         </p>
 
-        {/* Guest option */}
-        <div className="text-center">
+        {/* Dev bypass + guest */}
+        <div className="flex flex-col items-center gap-2">
+          <button onClick={() => { sessionStorage.setItem('dev_bypass', '1'); navigate('/student/study') }}
+            className="text-xs py-2 px-5 rounded-xl transition-all font-medium"
+            style={{ color: '#8b5cf6', background: 'rgba(108,51,230,0.08)', border: '1px solid rgba(108,51,230,0.2)' }}>
+            Iniciar sesión sin pagar (solo desarrollo)
+          </button>
           <button onClick={handleGuest}
             className="text-xs py-2 px-5 rounded-xl transition-all"
             style={{ color: 'var(--text-muted)', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
