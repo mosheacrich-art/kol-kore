@@ -1,36 +1,110 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 
-const AUDIO_DATA = [
-  { day: 'L', listens: 12 }, { day: 'M', listens: 8 }, { day: 'X', listens: 19 },
-  { day: 'J', listens: 15 }, { day: 'V', listens: 22 }, { day: 'S', listens: 6 }, { day: 'D', listens: 0 },
-]
-const maxListens = Math.max(...AUDIO_DATA.map(d => d.listens))
-
 const COLORS = ['#6c33e6', '#f9b800', '#2dd4bf', '#f87171', '#a78bfa']
+const DAY_LABELS = ['D', 'L', 'M', 'X', 'J', 'V', 'S']
+
+function getLastSevenDays() {
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date()
+    d.setDate(d.getDate() - (6 - i))
+    return d
+  })
+}
 
 export default function TeacherDashboard() {
   const { profile } = useAuth()
+  const navigate = useNavigate()
   const [students, setStudents] = useState([])
+  const [dailyListens, setDailyListens] = useState(Array(7).fill(0))
+  const [pendingHw, setPendingHw] = useState(0)
+  const [nextClass, setNextClass] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!profile) return
-    supabase
-      .from('profiles')
-      .select('*')
-      .eq('teacher_id', profile.id)
-      .eq('role', 'student')
-      .then(({ data }) => setStudents(data || []))
+
+    const load = async () => {
+      setLoading(true)
+
+      // Students
+      const { data: studs } = await supabase
+        .from('profiles')
+        .select('id, name, listens, progress, parasha_id')
+        .eq('teacher_id', profile.id)
+        .eq('role', 'student')
+      const studentList = studs || []
+      setStudents(studentList)
+
+      // Daily listens from notifications (last 7 days)
+      const since = new Date()
+      since.setDate(since.getDate() - 6)
+      since.setHours(0, 0, 0, 0)
+      const { data: listenEvents } = await supabase
+        .from('notifications')
+        .select('created_at')
+        .eq('teacher_id', profile.id)
+        .eq('type', 'listen')
+        .gte('created_at', since.toISOString())
+
+      const counts = Array(7).fill(0)
+      const days = getLastSevenDays()
+      listenEvents?.forEach(ev => {
+        const evDate = new Date(ev.created_at).toDateString()
+        const idx = days.findIndex(d => d.toDateString() === evDate)
+        if (idx >= 0) counts[idx]++
+      })
+      setDailyListens(counts)
+
+      // Pending homework for teacher's students
+      if (studentList.length > 0) {
+        const { count } = await supabase
+          .from('homework')
+          .select('*', { count: 'exact', head: true })
+          .in('student_id', studentList.map(s => s.id))
+          .eq('status', 'pending')
+        setPendingHw(count || 0)
+      }
+
+      // Next scheduled class
+      const { data: nc } = await supabase
+        .from('classes')
+        .select('*')
+        .eq('teacher_id', profile.id)
+        .gte('scheduled_at', new Date().toISOString())
+        .order('scheduled_at', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+      setNextClass(nc)
+
+      setLoading(false)
+    }
+
+    load()
   }, [profile])
 
   const totalListens = students.reduce((s, a) => s + (a.listens || 0), 0)
   const avgProgress = students.length
     ? Math.round(students.reduce((s, a) => s + (a.progress || 0), 0) / students.length)
     : 0
+  const maxListens = Math.max(...dailyListens, 1)
+  const days = getLastSevenDays()
+
+  const nextClassLabel = nextClass
+    ? (() => {
+        const d = new Date(nextClass.scheduled_at)
+        const today = new Date()
+        const isToday = d.toDateString() === today.toDateString()
+        const h = d.getHours().toString().padStart(2, '0')
+        const m = d.getMinutes().toString().padStart(2, '0')
+        return { time: `${h}:${m}`, sub: isToday ? `Hoy · ${nextClass.student_name}` : `${d.toLocaleDateString('es', { weekday: 'short', day: 'numeric' })} · ${nextClass.student_name}` }
+      })()
+    : { time: '—', sub: 'Sin clases programadas' }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-8">
       <div className="mb-10 fade-up-1">
         <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
           לוּחַ · Dashboard
@@ -47,9 +121,9 @@ export default function TeacherDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 fade-up-2">
         {[
           { label: 'Alumnos activos', value: students.length, sub: 'registrados', color: '#6c33e6', glow: 'rgba(108,51,230,0.15)' },
-          { label: 'Escuchas totales', value: totalListens, sub: 'esta semana', color: '#f9b800', glow: 'rgba(249,184,0,0.12)' },
-          { label: 'Progreso medio', value: `${avgProgress}%`, sub: 'de la perashá', color: '#2dd4bf', glow: 'rgba(45,212,191,0.12)' },
-          { label: 'Próxima clase', value: 'Hoy', sub: '18:00 · Trop', color: '#f87171', glow: 'rgba(248,113,113,0.12)' },
+          { label: 'Escuchas totales', value: totalListens, sub: 'acumuladas', color: '#f9b800', glow: 'rgba(249,184,0,0.12)' },
+          { label: 'Deberes pendientes', value: pendingHw, sub: 'sin enviar', color: '#2dd4bf', glow: 'rgba(45,212,191,0.12)' },
+          { label: 'Próxima clase', value: nextClassLabel.time, sub: nextClassLabel.sub, color: '#f87171', glow: 'rgba(248,113,113,0.12)' },
         ].map(kpi => (
           <div key={kpi.label} className="rounded-2xl p-5 relative overflow-hidden"
             style={{ background: `radial-gradient(ellipse at 20% 20%, ${kpi.glow}, var(--bg-card) 60%)`, border: `1px solid ${kpi.color}20` }}>
@@ -69,27 +143,38 @@ export default function TeacherDashboard() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Escuchas de audios</h2>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Todos los alumnos · esta semana</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Todos los alumnos · últimos 7 días</p>
               </div>
-              <span className="text-xs px-3 py-1.5 rounded-full"
-                style={{ background: 'rgba(249,184,0,0.12)', color: '#b8860b', border: '1px solid rgba(249,184,0,0.25)' }}>
-                ↑ 23% vs semana pasada
+              <span className="text-xs px-3 py-1.5 rounded-full" style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+                Total: {dailyListens.reduce((a, b) => a + b, 0)}
               </span>
             </div>
-            <div className="flex items-end justify-between gap-2" style={{ height: '120px' }}>
-              {AUDIO_DATA.map(d => (
-                <div key={d.day} className="flex-1 flex flex-col items-center gap-2">
-                  <span className="text-xs" style={{ color: 'var(--text-gold)' }}>{d.listens > 0 ? d.listens : ''}</span>
-                  <div className="w-full rounded-t-lg"
-                    style={{
-                      height: d.listens > 0 ? `${(d.listens / maxListens) * 80}px` : '4px',
-                      background: d.listens > 0 ? 'linear-gradient(to top, rgba(108,51,230,0.8), rgba(249,184,0,0.6))' : 'var(--border)',
-                      minHeight: '4px',
-                    }} />
-                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{d.day}</span>
-                </div>
-              ))}
-            </div>
+
+            {loading ? (
+              <div className="flex items-center justify-center" style={{ height: '120px' }}>
+                <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin"
+                  style={{ borderColor: 'rgba(108,51,230,0.2)', borderTopColor: '#6c33e6' }} />
+              </div>
+            ) : (
+              <div className="flex items-end justify-between gap-2" style={{ height: '120px' }}>
+                {days.map((d, i) => {
+                  const count = dailyListens[i]
+                  const label = DAY_LABELS[d.getDay()]
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                      <span className="text-xs" style={{ color: 'var(--text-gold)' }}>{count > 0 ? count : ''}</span>
+                      <div className="w-full rounded-t-lg transition-all"
+                        style={{
+                          height: count > 0 ? `${(count / maxListens) * 80}px` : '4px',
+                          background: count > 0 ? 'linear-gradient(to top, rgba(108,51,230,0.8), rgba(249,184,0,0.6))' : 'var(--border)',
+                          minHeight: '4px',
+                        }} />
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{label}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
 
             {students.length > 0 && (
               <div className="mt-6 pt-5" style={{ borderTop: '1px solid var(--border-subtle)' }}>
@@ -103,10 +188,10 @@ export default function TeacherDashboard() {
                           style={{ background: `${color}20`, color, border: `1px solid ${color}30` }}>
                           {s.name?.charAt(0)}
                         </div>
-                        <span className="text-xs w-28 flex-shrink-0" style={{ color: 'var(--text-2)' }}>{s.name?.split(' ')[0]}</span>
+                        <span className="text-xs w-24 flex-shrink-0 truncate" style={{ color: 'var(--text-2)' }}>{s.name?.split(' ')[0]}</span>
                         <div className="flex-1 h-1.5 rounded-full" style={{ background: 'var(--border)' }}>
                           <div className="h-full rounded-full"
-                            style={{ width: `${Math.min(100, ((s.listens || 0) / 35) * 100)}%`, background: `linear-gradient(90deg, ${color}80, ${color})` }} />
+                            style={{ width: `${Math.min(100, totalListens > 0 ? ((s.listens || 0) / Math.max(...students.map(x => x.listens || 0), 1)) * 100 : 0)}%`, background: `linear-gradient(90deg, ${color}80, ${color})` }} />
                         </div>
                         <span className="text-xs w-8 text-right" style={{ color }}>{s.listens || 0}</span>
                       </div>
@@ -114,6 +199,12 @@ export default function TeacherDashboard() {
                   })}
                 </div>
               </div>
+            )}
+
+            {students.length === 0 && !loading && (
+              <p className="text-xs text-center mt-4" style={{ color: 'var(--text-muted)' }}>
+                Sin alumnos aún. Comparte tu código de profesor para que se unan.
+              </p>
             )}
           </div>
         </div>
@@ -139,7 +230,7 @@ export default function TeacherDashboard() {
                         <div className="text-xs font-medium truncate" style={{ color: 'var(--text)' }}>{s.name}</div>
                         <div className="text-xs" style={{ color: 'var(--text-3)' }}>{s.parasha_id || '—'}</div>
                       </div>
-                      <span className="text-xs" style={{ color }}>{s.progress || 0}%</span>
+                      <span className="text-xs" style={{ color }}>{s.listens || 0} esc.</span>
                     </div>
                   )
                 })}
@@ -155,8 +246,7 @@ export default function TeacherDashboard() {
                 <div className="text-3xl font-mono font-bold tracking-widest" style={{ color: '#d97706', letterSpacing: '6px' }}>
                   {profile.teacher_code}
                 </div>
-                <button
-                  onClick={() => navigator.clipboard.writeText(profile.teacher_code)}
+                <button onClick={() => navigator.clipboard.writeText(profile.teacher_code)}
                   title="Copiar código"
                   className="ml-auto p-2 rounded-lg transition-all"
                   style={{ background: 'rgba(249,184,0,0.15)', color: '#d97706', border: '1px solid rgba(249,184,0,0.25)' }}>
@@ -177,12 +267,13 @@ export default function TeacherDashboard() {
             <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--text)' }}>Acciones rápidas</h2>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { label: 'Perashiot', color: '#6c33e6' },
-                { label: 'Nueva clase', color: '#f9b800' },
-                { label: 'Ver deberes', color: '#2dd4bf' },
-                { label: 'Alumnos', color: '#f87171' },
+                { label: 'Perashiot', color: '#6c33e6', path: '/teacher/study' },
+                { label: 'Nueva clase', color: '#f9b800', path: '/teacher/schedule' },
+                { label: 'Ver deberes', color: '#2dd4bf', path: '/teacher/homework' },
+                { label: 'Alumnos', color: '#f87171', path: '/teacher/students' },
               ].map(a => (
-                <button key={a.label} className="p-3 rounded-xl text-xs font-medium text-left transition-all"
+                <button key={a.label} onClick={() => navigate(a.path)}
+                  className="p-3 rounded-xl text-xs font-medium text-left transition-all"
                   style={{ background: `${a.color}10`, border: `1px solid ${a.color}20`, color: a.color }}
                   onMouseEnter={e => { e.currentTarget.style.background = `${a.color}20` }}
                   onMouseLeave={e => { e.currentTarget.style.background = `${a.color}10` }}>
