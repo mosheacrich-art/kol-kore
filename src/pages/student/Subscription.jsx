@@ -78,7 +78,7 @@ function ActiveView({ profile, justPaid, navigate }) {
           </div>
           <div>
             <p className="text-sm font-semibold" style={{ color: '#16a34a' }}>¡Bienvenido a Perashapp Pro!</p>
-            <p className="text-xs" style={{ color: 'var(--text-3)' }}>Tu suscripción ya está activa. Los primeros 14 días son gratis.</p>
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>Tu suscripción ya está activa.</p>
           </div>
         </div>
       )}
@@ -174,7 +174,7 @@ function CheckoutView({ user, profile }) {
           Elige tu plan
         </h1>
         <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
-          14 días gratis · Cancela cuando quieras
+          Cancela cuando quieras
         </p>
       </div>
 
@@ -265,7 +265,7 @@ function CheckoutView({ user, profile }) {
               {plan === 'annual' ? 'Plan Anual' : 'Plan Mensual'}
             </p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-              14 días gratis · Se renueva automáticamente
+              Se renueva automáticamente · Cancela cuando quieras
             </p>
           </div>
           <p className="text-2xl font-light" style={{ color: 'var(--text)' }}>
@@ -273,31 +273,19 @@ function CheckoutView({ user, profile }) {
           </p>
         </div>
 
-        {/* Primary CTA — trial */}
         <button onClick={handlePay} disabled={paying}
-          className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 mb-2"
+          className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2"
           style={{
             background: paying ? 'var(--bg-card)' : 'linear-gradient(135deg, #6c33e6, #8b5cf6)',
             color: paying ? 'var(--text-3)' : '#fff',
             border: paying ? '1px solid var(--border)' : 'none',
             boxShadow: paying ? 'none' : '0 4px 20px rgba(108,51,230,0.35)',
           }}>
-          {paying ? <><Spinner /> Redirigiendo al pago…</> : 'Probar gratis 14 días →'}
-        </button>
-
-        {/* Secondary CTA — subscribe directly */}
-        <button onClick={handlePay} disabled={paying}
-          className="w-full py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2"
-          style={{
-            background: 'transparent',
-            color: paying ? 'var(--text-muted)' : 'var(--text-2)',
-            border: '1px solid var(--border)',
-          }}>
-          {paying ? <><Spinner /> Redirigiendo al pago…</> : 'Suscribirse ahora'}
+          {paying ? <><Spinner /> Redirigiendo al pago…</> : 'Suscribirse →'}
         </button>
 
         <p className="text-xs text-center mt-3" style={{ color: 'var(--text-muted)' }}>
-          Pago seguro · Los primeros 14 días son gratis · Cancela cuando quieras
+          Pago seguro · Cancela cuando quieras
         </p>
       </div>
     </div>

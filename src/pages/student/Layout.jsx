@@ -186,6 +186,12 @@ const FEATURES = [
 function Paywall({ user, profile, navigate }) {
   const [plan, setPlan] = useState('annual')
   const [paying, setPaying] = useState(false)
+  const { signOut } = useAuth()
+
+  const handleGuest = async () => {
+    await signOut()
+    navigate('/guest/study')
+  }
 
   const handlePay = async () => {
     setPaying(true)
@@ -238,7 +244,7 @@ function Paywall({ user, profile, navigate }) {
             Hola, {profile?.name?.split(' ')[0] ?? 'bienvenido'}
           </h1>
           <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-            Elige tu plan y empieza a estudiar
+            Activa tu suscripción para estudiar con audio sincronizado
           </p>
         </div>
 
@@ -269,6 +275,7 @@ function Paywall({ user, profile, navigate }) {
               <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>/año</span>
             </div>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-gold)' }}>= $8,25/mes · La más económica</p>
+
           </button>
 
           <button onClick={() => setPlan('monthly')}
@@ -288,7 +295,7 @@ function Paywall({ user, profile, navigate }) {
               <span className="text-xl font-light" style={{ color: 'var(--text)' }}>$9,99</span>
               <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>/mes</span>
             </div>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Flexible · Cancela cuando quieras</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Cancela cuando quieras</p>
           </button>
         </div>
 
@@ -309,36 +316,25 @@ function Paywall({ user, profile, navigate }) {
           </ul>
         </div>
 
-        {/* Primary CTA — trial */}
+        {/* Primary CTA */}
         <button onClick={handlePay} disabled={paying}
-          className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 mb-2"
+          className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 mb-3"
           style={{
             background: paying ? 'var(--bg-card)' : 'linear-gradient(135deg, #6c33e6, #8b5cf6)',
             color: paying ? 'var(--text-3)' : '#fff',
             border: paying ? '1px solid var(--border)' : 'none',
             boxShadow: paying ? 'none' : '0 4px 20px rgba(108,51,230,0.35)',
           }}>
-          {paying ? <><Spinner /> Redirigiendo…</> : 'Probar gratis 14 días →'}
-        </button>
-
-        {/* Secondary CTA — subscribe directly */}
-        <button onClick={handlePay} disabled={paying}
-          className="w-full py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 mb-3"
-          style={{
-            background: 'transparent',
-            color: paying ? 'var(--text-muted)' : 'var(--text-2)',
-            border: '1px solid var(--border)',
-          }}>
-          {paying ? <><Spinner /> Redirigiendo…</> : 'Suscribirse ahora'}
+          {paying ? <><Spinner /> Redirigiendo…</> : 'Suscribirse →'}
         </button>
 
         <p className="text-xs text-center mb-5" style={{ color: 'var(--text-muted)' }}>
-          Los primeros 14 días son gratis · Sin compromiso · Cancela cuando quieras
+          Pago seguro · Cancela cuando quieras
         </p>
 
         {/* Guest option */}
         <div className="text-center">
-          <button onClick={() => navigate('/guest/study')}
+          <button onClick={handleGuest}
             className="text-xs py-2 px-5 rounded-xl transition-all"
             style={{ color: 'var(--text-muted)', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             Continuar como invitado (sin audio)
