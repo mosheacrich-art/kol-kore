@@ -175,6 +175,14 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
   )
 }
 
+const FEATURES = [
+  'Audio del profesor sincronizado palabra a palabra',
+  'Todas las parashas del año',
+  'Taamim, nikkud y modo sefer',
+  'Envío de grabaciones al profesor',
+  'Acceso desde cualquier dispositivo',
+]
+
 function Paywall({ user, profile, navigate }) {
   const [plan, setPlan] = useState('annual')
   const [paying, setPaying] = useState(false)
@@ -201,12 +209,17 @@ function Paywall({ user, profile, navigate }) {
     }
   }
 
+  const Spinner = () => (
+    <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
+      style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#8b5cf6' }} />
+  )
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
+    <div className="min-h-screen flex flex-col items-center justify-start px-4 py-10 overflow-y-auto"
       style={{ background: 'var(--bg)' }}>
 
       {/* Logo */}
-      <div className="flex items-center gap-3 mb-8">
+      <div className="flex items-center gap-3 mb-6">
         <svg width="36" height="36" viewBox="0 0 28 28" fill="none">
           <polygon points="14,3 18,10 22,10 18,14 22,18 14,15 6,18 10,14 6,10 10,10"
             fill="none" stroke="rgba(255,202,40,0.7)" strokeWidth="1.2" strokeLinejoin="round"/>
@@ -220,17 +233,17 @@ function Paywall({ user, profile, navigate }) {
       </div>
 
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-light mb-2" style={{ color: 'var(--text)', letterSpacing: '-0.5px' }}>
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-light mb-1" style={{ color: 'var(--text)', letterSpacing: '-0.5px' }}>
             Hola, {profile?.name?.split(' ')[0] ?? 'bienvenido'}
           </h1>
           <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-            Activa tu acceso para estudiar con audio sincronizado
+            Elige tu plan y empieza a estudiar
           </p>
         </div>
 
         {/* Plan cards */}
-        <div className="grid grid-cols-2 gap-3 mb-5">
+        <div className="grid grid-cols-2 gap-3 mb-4">
 
           <button onClick={() => setPlan('annual')}
             className="rounded-2xl p-4 text-left transition-all relative"
@@ -244,7 +257,7 @@ function Paywall({ user, profile, navigate }) {
                 Ahorra 17%
               </span>
             </div>
-            <div className="flex items-center gap-1.5 mb-3">
+            <div className="flex items-center gap-1.5 mb-2">
               <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
                 style={{ borderColor: plan === 'annual' ? '#f9b800' : 'var(--border)' }}>
                 {plan === 'annual' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#f9b800' }} />}
@@ -255,7 +268,7 @@ function Paywall({ user, profile, navigate }) {
               <span className="text-xl font-light" style={{ color: 'var(--text)' }}>$99</span>
               <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>/año</span>
             </div>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-gold)' }}>= $8,25/mes</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-gold)' }}>= $8,25/mes · La más económica</p>
           </button>
 
           <button onClick={() => setPlan('monthly')}
@@ -264,7 +277,7 @@ function Paywall({ user, profile, navigate }) {
               background: plan === 'monthly' ? 'rgba(108,51,230,0.08)' : 'var(--bg-card)',
               border: `1.5px solid ${plan === 'monthly' ? '#8b5cf6' : 'var(--border)'}`,
             }}>
-            <div className="flex items-center gap-1.5 mb-3">
+            <div className="flex items-center gap-1.5 mb-2">
               <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
                 style={{ borderColor: plan === 'monthly' ? '#8b5cf6' : 'var(--border)' }}>
                 {plan === 'monthly' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#8b5cf6' }} />}
@@ -275,32 +288,52 @@ function Paywall({ user, profile, navigate }) {
               <span className="text-xl font-light" style={{ color: 'var(--text)' }}>$9,99</span>
               <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>/mes</span>
             </div>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Cancela cuando quieras</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Flexible · Cancela cuando quieras</p>
           </button>
         </div>
 
-        {/* CTA */}
+        {/* Features included */}
+        <div className="rounded-2xl p-4 mb-4"
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <p className="text-xs font-semibold mb-2.5" style={{ color: 'var(--text-2)' }}>Incluye todo esto:</p>
+          <ul className="flex flex-col gap-1.5">
+            {FEATURES.map(f => (
+              <li key={f} className="flex items-start gap-2">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ flexShrink: 0, marginTop: '1px' }}>
+                  <circle cx="6.5" cy="6.5" r="5.5" stroke="#22c55e" strokeWidth="1.1"/>
+                  <path d="M4 6.5l2 2L9.5 4.5" stroke="#22c55e" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span className="text-xs" style={{ color: 'var(--text-2)' }}>{f}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Primary CTA — trial */}
         <button onClick={handlePay} disabled={paying}
-          className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 mb-3"
+          className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 mb-2"
           style={{
             background: paying ? 'var(--bg-card)' : 'linear-gradient(135deg, #6c33e6, #8b5cf6)',
             color: paying ? 'var(--text-3)' : '#fff',
             border: paying ? '1px solid var(--border)' : 'none',
             boxShadow: paying ? 'none' : '0 4px 20px rgba(108,51,230,0.35)',
           }}>
-          {paying ? (
-            <>
-              <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
-                style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#8b5cf6' }} />
-              Redirigiendo…
-            </>
-          ) : (
-            '14 días gratis · Empezar ahora →'
-          )}
+          {paying ? <><Spinner /> Redirigiendo…</> : 'Probar gratis 14 días →'}
+        </button>
+
+        {/* Secondary CTA — subscribe directly */}
+        <button onClick={handlePay} disabled={paying}
+          className="w-full py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 mb-3"
+          style={{
+            background: 'transparent',
+            color: paying ? 'var(--text-muted)' : 'var(--text-2)',
+            border: '1px solid var(--border)',
+          }}>
+          {paying ? <><Spinner /> Redirigiendo…</> : 'Suscribirse ahora'}
         </button>
 
         <p className="text-xs text-center mb-5" style={{ color: 'var(--text-muted)' }}>
-          Sin cargo durante 14 días · Cancela cuando quieras
+          Los primeros 14 días son gratis · Sin compromiso · Cancela cuando quieras
         </p>
 
         {/* Guest option */}

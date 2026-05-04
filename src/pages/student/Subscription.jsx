@@ -125,6 +125,14 @@ function ActiveView({ profile, justPaid, navigate }) {
   )
 }
 
+const FEATURES = [
+  'Audio del profesor sincronizado palabra a palabra',
+  'Todas las parashas del año',
+  'Taamim, nikkud y modo sefer',
+  'Envío de grabaciones al profesor',
+  'Acceso desde cualquier dispositivo',
+]
+
 function CheckoutView({ user, profile }) {
   const [plan, setPlan] = useState('annual')
   const [paying, setPaying] = useState(false)
@@ -151,6 +159,11 @@ function CheckoutView({ user, profile }) {
     }
   }
 
+  const Spinner = () => (
+    <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
+      style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#8b5cf6' }} />
+  )
+
   return (
     <div className="p-8 max-w-2xl mx-auto">
       <div className="mb-8 fade-up-1">
@@ -165,7 +178,7 @@ function CheckoutView({ user, profile }) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 fade-up-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5 fade-up-2">
 
         {/* Annual */}
         <button onClick={() => setPlan('annual')}
@@ -180,25 +193,29 @@ function CheckoutView({ user, profile }) {
               Ahorra 17%
             </span>
           </div>
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-3">
             <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0"
               style={{ borderColor: plan === 'annual' ? '#f9b800' : 'var(--border)' }}>
               {plan === 'annual' && <div className="w-2 h-2 rounded-full" style={{ background: '#f9b800' }} />}
             </div>
             <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Anual</span>
           </div>
-          <div className="mb-1">
+          <div className="mb-0.5">
             <span className="text-3xl font-light" style={{ color: 'var(--text)' }}>$99</span>
             <span className="text-sm ml-1" style={{ color: 'var(--text-3)' }}>/año</span>
           </div>
-          <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>= $8,25/mes · La opción más económica</p>
-          <div className="flex items-center gap-1.5">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <circle cx="6" cy="6" r="5" stroke="#f9b800" strokeWidth="1.2"/>
-              <path d="M3.5 6l2 2L8.5 4" stroke="#f9b800" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span className="text-xs" style={{ color: 'var(--text-gold)' }}>Recomendado</span>
-          </div>
+          <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>= $8,25/mes · La opción más económica</p>
+          <ul className="flex flex-col gap-1.5">
+            {FEATURES.map(f => (
+              <li key={f} className="flex items-start gap-1.5">
+                <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ flexShrink: 0, marginTop: '2px' }}>
+                  <circle cx="5.5" cy="5.5" r="4.5" stroke="#f9b800" strokeWidth="1"/>
+                  <path d="M3.5 5.5l1.5 1.5L7.5 4" stroke="#f9b800" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span className="text-xs" style={{ color: 'var(--text-2)', lineHeight: '1.3' }}>{f}</span>
+              </li>
+            ))}
+          </ul>
         </button>
 
         {/* Monthly */}
@@ -208,7 +225,7 @@ function CheckoutView({ user, profile }) {
             background: plan === 'monthly' ? 'rgba(108,51,230,0.08)' : 'var(--bg-card)',
             border: `1.5px solid ${plan === 'monthly' ? '#8b5cf6' : 'var(--border)'}`,
           }}>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0"
                 style={{ borderColor: plan === 'monthly' ? '#8b5cf6' : 'var(--border)' }}>
@@ -221,15 +238,26 @@ function CheckoutView({ user, profile }) {
               Flexible
             </span>
           </div>
-          <div className="mb-1">
+          <div className="mb-0.5">
             <span className="text-3xl font-light" style={{ color: 'var(--text)' }}>$9,99</span>
             <span className="text-sm ml-1" style={{ color: 'var(--text-3)' }}>/mes</span>
           </div>
-          <p className="text-xs" style={{ color: 'var(--text-3)' }}>Cancela en cualquier momento</p>
+          <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>Cancela en cualquier momento</p>
+          <ul className="flex flex-col gap-1.5">
+            {FEATURES.map(f => (
+              <li key={f} className="flex items-start gap-1.5">
+                <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ flexShrink: 0, marginTop: '2px' }}>
+                  <circle cx="5.5" cy="5.5" r="4.5" stroke="#8b5cf6" strokeWidth="1"/>
+                  <path d="M3.5 5.5l1.5 1.5L7.5 4" stroke="#8b5cf6" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span className="text-xs" style={{ color: 'var(--text-2)', lineHeight: '1.3' }}>{f}</span>
+              </li>
+            ))}
+          </ul>
         </button>
       </div>
 
-      {/* Pay button */}
+      {/* Summary + CTAs */}
       <div className="rounded-2xl p-5 fade-up-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -245,27 +273,31 @@ function CheckoutView({ user, profile }) {
           </p>
         </div>
 
+        {/* Primary CTA — trial */}
         <button onClick={handlePay} disabled={paying}
-          className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2"
+          className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 mb-2"
           style={{
             background: paying ? 'var(--bg-card)' : 'linear-gradient(135deg, #6c33e6, #8b5cf6)',
             color: paying ? 'var(--text-3)' : '#fff',
             border: paying ? '1px solid var(--border)' : 'none',
             boxShadow: paying ? 'none' : '0 4px 20px rgba(108,51,230,0.35)',
           }}>
-          {paying ? (
-            <>
-              <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
-                style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#8b5cf6' }} />
-              Redirigiendo al pago…
-            </>
-          ) : (
-            'Empezar prueba gratuita →'
-          )}
+          {paying ? <><Spinner /> Redirigiendo al pago…</> : 'Probar gratis 14 días →'}
+        </button>
+
+        {/* Secondary CTA — subscribe directly */}
+        <button onClick={handlePay} disabled={paying}
+          className="w-full py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2"
+          style={{
+            background: 'transparent',
+            color: paying ? 'var(--text-muted)' : 'var(--text-2)',
+            border: '1px solid var(--border)',
+          }}>
+          {paying ? <><Spinner /> Redirigiendo al pago…</> : 'Suscribirse ahora'}
         </button>
 
         <p className="text-xs text-center mt-3" style={{ color: 'var(--text-muted)' }}>
-          Pago seguro · Sin compromiso durante 14 días
+          Pago seguro · Los primeros 14 días son gratis · Cancela cuando quieras
         </p>
       </div>
     </div>
