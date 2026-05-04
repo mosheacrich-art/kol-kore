@@ -76,7 +76,8 @@ const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTi
   const seek = (e) => {
     if (!audioRef.current) return
     const rect = e.currentTarget.getBoundingClientRect()
-    const pct = (e.clientX - rect.left) / rect.width
+    const clientX = e.touches ? e.touches[0]?.clientX ?? e.clientX : e.clientX
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
     audioRef.current.currentTime = pct * audioRef.current.duration
   }
 
@@ -125,13 +126,14 @@ const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTi
             {fmt(current)} / {fmt(duration)}
           </span>
         </div>
-        <div className="w-full h-1.5 rounded-full cursor-pointer relative"
-          style={{ background: 'var(--bg-card)' }}
-          onClick={seek}>
-          <div className="h-full rounded-full transition-none"
-            style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #6c33e6, #a78bfa)' }} />
-          <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full -translate-x-1/2 transition-none"
-            style={{ left: `${progress}%`, background: '#a78bfa', boxShadow: '0 0 6px rgba(167,139,250,0.5)' }} />
+        <div className="w-full py-2 -my-2 cursor-pointer relative"
+          onClick={seek} onTouchStart={seek}>
+          <div className="w-full h-1.5 rounded-full relative" style={{ background: 'var(--bg-card)' }}>
+            <div className="h-full rounded-full transition-none"
+              style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #6c33e6, #a78bfa)' }} />
+            <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full -translate-x-1/2 transition-none"
+              style={{ left: `${progress}%`, background: '#a78bfa', boxShadow: '0 0 6px rgba(167,139,250,0.5)' }} />
+          </div>
         </div>
       </div>
 

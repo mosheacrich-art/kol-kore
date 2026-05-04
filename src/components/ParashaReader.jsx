@@ -226,59 +226,58 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
   return (
     <div className="flex flex-col h-full" style={{ background: 'var(--bg)' }}>
       {/* Top bar */}
-      <div className="flex-shrink-0 px-6 py-4 flex items-center justify-between gap-4 flex-wrap"
-        style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+      <div className="flex-shrink-0" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
 
-        {/* Parasha info */}
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+        {/* Row 1: Parasha info */}
+        <div className="px-4 sm:px-6 pt-3 pb-2 flex items-center gap-3">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
             style={{ background: `${bookColor}20`, color: bookColor, border: `1px solid ${bookColor}30` }}>
             {parasha.num}
           </div>
-          <div>
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="hebrew text-xl" style={{ color: bookColor }}>{parasha.heb}</span>
-              <span className="text-sm font-medium" style={{ color: 'var(--text-2)' }}>{parasha.name}</span>
+              <span className="hebrew text-lg sm:text-xl leading-none" style={{ color: bookColor }}>{parasha.heb}</span>
+              <span className="text-sm font-medium truncate" style={{ color: 'var(--text-2)' }}>{parasha.name}</span>
             </div>
             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{currentAliyah.ref}</p>
           </div>
         </div>
 
-        {/* Font size + mode switcher */}
-        <div className="flex items-center gap-3 flex-wrap">
+        {/* Row 2: Controls — horizontally scrollable on mobile */}
+        <div className="no-scrollbar flex items-center gap-2 px-4 sm:px-6 pb-3 overflow-x-auto">
           {mode !== 'sefer' && (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setFontSize(f => Math.max(MIN_FONT, f - 2))}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <button onClick={() => setFontSize(f => Math.max(MIN_FONT, f - 2))}
                 title="Reducir fuente"
-                className="w-7 h-7 rounded flex items-center justify-center text-xs font-bold transition-all"
+                className="w-8 h-8 rounded flex items-center justify-center text-xs font-bold transition-all"
                 style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}>
                 א−
               </button>
               <span className="text-xs w-6 text-center tabular-nums" style={{ color: 'var(--text-muted)' }}>{fontSize}</span>
-              <button
-                onClick={() => setFontSize(f => Math.min(MAX_FONT, f + 2))}
+              <button onClick={() => setFontSize(f => Math.min(MAX_FONT, f + 2))}
                 title="Aumentar fuente"
-                className="w-7 h-7 rounded flex items-center justify-center text-xs font-bold transition-all"
+                className="w-8 h-8 rounded flex items-center justify-center text-xs font-bold transition-all"
                 style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}>
                 א+
               </button>
             </div>
           )}
-
-          <div className="flex items-center gap-1 p-1 rounded-xl flex-wrap"
+          {mode !== 'sefer' && (
+            <div className="flex-shrink-0 w-px h-5" style={{ background: 'var(--border)' }} />
+          )}
+          <div className="flex items-center gap-1 p-1 rounded-xl flex-shrink-0"
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
             {MODES.map(m => (
               <button key={m.id} onClick={() => setMode(m.id)}
                 title={m.desc}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex-shrink-0"
                 style={{
                   background: mode === m.id ? `${bookColor}20` : 'transparent',
                   color: mode === m.id ? bookColor : 'var(--text-3)',
                   border: mode === m.id ? `1px solid ${bookColor}35` : '1px solid transparent',
                 }}>
                 <span className="hebrew text-xs">{m.heb}</span>
-                <span className="hidden sm:inline">{m.label}</span>
+                <span className="hidden sm:inline ml-1">{m.label}</span>
               </button>
             ))}
           </div>
@@ -657,8 +656,15 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
   const flexRef = useRef(null)
   const [leftPct, setLeftPct] = useState(50)
   const [hoverIdx, setHoverIdx] = useState(-1)
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640)
   const dragging = useRef(false)
   const wordRefsLeft = useRef([])
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
 
   useEffect(() => {
     const onMove = e => {
@@ -747,6 +753,40 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
       cursor: forLeft && canSeek ? 'pointer' : 'default',
       transition: 'color 0.08s',
     }
+  }
+
+  // Mobile: stack panels vertically
+  if (isMobile) {
+    return (
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <div style={{ padding: '16px 16px 20px', background: `${bookColor}05`, borderBottom: '1px solid var(--border-subtle)' }}>
+          <p className="text-xs mb-3" style={{ color: bookColor }}>
+            <span className="hebrew">עִם טְעָמִים</span> · Con taamim
+          </p>
+          <div className="hebrew-reader" style={{ ...textBase, color: 'var(--text)' }}>
+            {allWordsTaamim.map((w, i) => (
+              <span key={i} ref={el => { wordRefsLeft.current[i] = el }}
+                style={wordStyle(i, true)}
+                onClick={() => handleClickLeft(i)}
+                onMouseEnter={() => setHoverIdx(i)}
+                onMouseLeave={() => setHoverIdx(-1)}>
+                {w}{' '}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div style={{ padding: '16px 16px 40px', background: 'var(--bg-card)' }}>
+          <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>
+            <span className="hebrew">כְּתָב בִּלְבָד</span> · Solo consonantes
+          </p>
+          <div className="hebrew-reader" style={{ ...textBase, color: 'var(--text-3)' }}>
+            {allWordsPlain.map((w, i) => (
+              <span key={i} style={wordStyle(i)}>{w}{' '}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

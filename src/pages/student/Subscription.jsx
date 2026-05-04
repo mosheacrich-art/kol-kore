@@ -43,7 +43,7 @@ export default function StudentSubscription() {
 
 function ActivatingView() {
   return (
-    <div className="p-8 max-w-lg mx-auto flex flex-col items-center justify-center min-h-[60vh] gap-6">
+    <div className="p-4 sm:p-8 max-w-lg mx-auto flex flex-col items-center justify-center min-h-[60vh] gap-6">
       <div className="w-14 h-14 rounded-full border-2 border-t-transparent animate-spin"
         style={{ borderColor: 'rgba(108,51,230,0.2)', borderTopColor: '#6c33e6' }} />
       <div className="text-center">
@@ -56,7 +56,7 @@ function ActivatingView() {
 
 function ActiveView({ profile, justPaid, navigate }) {
   return (
-    <div className="p-8 max-w-2xl mx-auto">
+    <div className="p-4 sm:p-8 max-w-2xl mx-auto">
       <div className="mb-8 fade-up-1">
         <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
           הַרְשָׁמָה · Suscripción
@@ -165,7 +165,7 @@ function CheckoutView({ user, profile }) {
   )
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
+    <div className="p-4 sm:p-8 max-w-2xl mx-auto">
       <div className="mb-8 fade-up-1">
         <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
           הַרְשָׁמָה · Suscripción

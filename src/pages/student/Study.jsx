@@ -43,7 +43,7 @@ function ListView({ basePath, guestMode }) {
     : { bg: 'rgba(0,0,0,0.03)', border: 'rgba(0,0,0,0.07)' }
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-4 sm:p-8 max-w-3xl">
       <div className="mb-10 fade-up-1">
         <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
           לִמּוּד תּוֹרָה · Estudio
