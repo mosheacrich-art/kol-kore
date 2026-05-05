@@ -418,7 +418,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
       {/* Text area */}
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         {mode === 'sefer' && (
-          <SeferView parasha={parasha} />
+          <SeferView parasha={parasha} aliyahIdx={aliyahIdx} />
         )}
         {mode !== 'sefer' && loading && <LoadingState bookColor={bookColor} />}
         {mode !== 'sefer' && error && <ErrorState error={error} ref_={currentAliyah.ref} />}
@@ -881,23 +881,25 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
   )
 }
 
-function SeferView({ parasha }) {
+function SeferView({ parasha, aliyahIdx }) {
   const iframeRef = useRef(null)
   const BASE = import.meta.env.BASE_URL
   const src = `${BASE}imprimir-tikun/index.html?embed=1`
 
-  const scrollToParasha = () => {
-    if (parasha?.heb && iframeRef.current?.contentWindow) {
-      iframeRef.current.contentWindow.postMessage({ scrollToParasha: parasha.heb }, '*')
+  const sendScroll = useCallback((heb) => {
+    if (heb && iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({ scrollToParasha: heb }, '*')
     }
-  }
+  }, [])
 
-  const prevHeb = useRef(null)
+  // Re-scroll whenever parasha or aliyah changes
+  const prevKey = useRef(null)
   useEffect(() => {
-    if (prevHeb.current === parasha?.heb) return
-    prevHeb.current = parasha?.heb
-    scrollToParasha()
-  }, [parasha?.heb])
+    const key = `${parasha?.heb}-${aliyahIdx}`
+    if (prevKey.current === key) return
+    prevKey.current = key
+    sendScroll(parasha?.heb)
+  }, [parasha?.heb, aliyahIdx, sendScroll])
 
   return (
     <div className="flex-1 min-h-0">
@@ -907,7 +909,7 @@ function SeferView({ parasha }) {
         title="Modo Sefer"
         style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
         loading="lazy"
-        onLoad={scrollToParasha}
+        onLoad={() => sendScroll(parasha?.heb)}
       />
     </div>
   )
