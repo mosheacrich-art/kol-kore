@@ -233,22 +233,20 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
       <div className="flex-shrink-0" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
 
         {/* Row 1: Parasha info */}
-        <div className="px-4 sm:px-6 pt-3 pb-2 flex items-center gap-3">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+        <div className="px-4 sm:px-6 pt-2 pb-1 flex items-center gap-2">
+          <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
             style={{ background: `${bookColor}20`, color: bookColor, border: `1px solid ${bookColor}30` }}>
             {parasha.num}
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="hebrew text-lg sm:text-xl leading-none" style={{ color: bookColor }}>{parasha.heb}</span>
-              <span className="text-sm font-medium truncate" style={{ color: 'var(--text-2)' }}>{parasha.name}</span>
-            </div>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{currentAliyah.ref}</p>
+          <div className="min-w-0 flex-1 flex items-center gap-2">
+            <span className="hebrew text-base leading-none" style={{ color: bookColor }}>{parasha.heb}</span>
+            <span className="text-sm font-medium truncate" style={{ color: 'var(--text-2)' }}>{parasha.name}</span>
+            <span className="text-xs hidden sm:inline" style={{ color: 'var(--text-muted)' }}>{currentAliyah.ref}</span>
           </div>
         </div>
 
         {/* Row 2: Controls — horizontally scrollable on mobile */}
-        <div className="no-scrollbar flex items-center gap-2 px-4 sm:px-6 pb-3 overflow-x-auto">
+        <div className="no-scrollbar flex items-center gap-2 px-4 sm:px-6 pb-2 overflow-x-auto">
           {mode !== 'sefer' && (
             <div className="flex items-center gap-1 flex-shrink-0">
               <button onClick={() => setFontSize(f => Math.max(MIN_FONT, f - 2))}
@@ -289,13 +287,13 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
       </div>
 
       {/* Aliyah nav */}
-      <div className="flex-shrink-0 px-6 py-3 flex items-center gap-2 overflow-x-auto"
+      <div className="flex-shrink-0 px-4 sm:px-6 py-1.5 flex items-center gap-1.5 overflow-x-auto"
         style={{ borderBottom: '1px solid var(--border-subtle)' }}>
         {parasha.aliyot.map((a, i) => {
           const aliyahAudio = get(parasha.id, i)
           return (
             <button key={i} onClick={() => setAliyahIdx(i)}
-              className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all relative"
+              className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all relative"
               style={{
                 background: aliyahIdx === i ? bookColor : 'var(--bg-card)',
                 color: aliyahIdx === i ? '#fff' : 'var(--text-3)',
