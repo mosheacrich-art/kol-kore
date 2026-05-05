@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
 import { PARASHOT } from '../../data/parashot'
 
 function AccountSection({ user }) {
+  const { t } = useLang()
   const [section, setSection] = useState(null) // null | 'email' | 'password'
   const [newEmail, setNewEmail] = useState('')
   const [newPass, setNewPass] = useState('')
@@ -45,7 +47,7 @@ function AccountSection({ user }) {
 
   return (
     <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-      <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>Cuenta</p>
+      <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{t('account')}</p>
 
       {msg && (
         <div className="mb-3 p-2.5 rounded-xl text-xs"
@@ -61,26 +63,26 @@ function AccountSection({ user }) {
       {/* Email display */}
       <div className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
         <div>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Email</p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('email')}</p>
           <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--text-2)' }}>{user?.email}</p>
         </div>
         <button onClick={() => show(section === 'email' ? null : 'email')}
           className="text-xs px-2.5 py-1 rounded-lg transition-all"
           style={{ background: 'rgba(108,51,230,0.1)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)' }}>
-          Cambiar
+          {t('change')}
         </button>
       </div>
 
       {section === 'email' && (
         <form onSubmit={handleEmail} className="flex flex-col gap-2 pt-3">
           <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)}
-            placeholder="Nuevo email" required autoFocus
+            placeholder={t('new_email')} required autoFocus
             className="w-full px-3 py-2 rounded-xl text-xs outline-none"
             style={inputStyle} />
           <button type="submit" disabled={loading}
             className="w-full py-2 rounded-xl text-xs font-semibold transition-all"
             style={{ background: loading ? 'var(--bg-card)' : '#6c33e6', color: loading ? 'var(--text-3)' : '#fff', border: loading ? '1px solid var(--border)' : 'none' }}>
-            {loading ? '…' : 'Enviar confirmación'}
+            {loading ? '…' : t('send_confirm')}
           </button>
         </form>
       )}
@@ -88,30 +90,30 @@ function AccountSection({ user }) {
       {/* Password */}
       <div className="flex items-center justify-between py-2 mt-1">
         <div>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Contraseña</p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('password')}</p>
           <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--text-2)' }}>••••••••</p>
         </div>
         <button onClick={() => show(section === 'password' ? null : 'password')}
           className="text-xs px-2.5 py-1 rounded-lg transition-all"
           style={{ background: 'rgba(108,51,230,0.1)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)' }}>
-          Cambiar
+          {t('change')}
         </button>
       </div>
 
       {section === 'password' && (
         <form onSubmit={handlePassword} className="flex flex-col gap-2 pt-1">
           <input type="password" value={newPass} onChange={e => setNewPass(e.target.value)}
-            placeholder="Nueva contraseña (mín. 6)" required autoFocus
+            placeholder={t('new_password')} required autoFocus
             className="w-full px-3 py-2 rounded-xl text-xs outline-none"
             style={inputStyle} />
           <input type="password" value={confirmPass} onChange={e => setConfirmPass(e.target.value)}
-            placeholder="Repetir contraseña" required
+            placeholder={t('repeat_password')} required
             className="w-full px-3 py-2 rounded-xl text-xs outline-none"
             style={inputStyle} />
           <button type="submit" disabled={loading}
             className="w-full py-2 rounded-xl text-xs font-semibold transition-all"
             style={{ background: loading ? 'var(--bg-card)' : '#6c33e6', color: loading ? 'var(--text-3)' : '#fff', border: loading ? '1px solid var(--border)' : 'none' }}>
-            {loading ? '…' : 'Guardar nueva contraseña'}
+            {loading ? '…' : t('save_password')}
           </button>
         </form>
       )}
@@ -146,6 +148,7 @@ const ACHIEVEMENTS = [
 export default function StudentProfile() {
   const navigate = useNavigate()
   const { profile, setProfile, user } = useAuth()
+  const { t } = useLang()
   const [deberes, setDeberes] = useState([])
   const [teacherCode, setTeacherCode] = useState('')
   const [teacherName, setTeacherName] = useState(null)
@@ -220,7 +223,7 @@ export default function StudentProfile() {
     <div className="p-4 sm:p-8 max-w-5xl">
       <div className="mb-10 fade-up-1">
         <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          פְּרוֹפִיל · Mi Perfil
+          פְּרוֹפִיל · {t('profile_title')}
         </p>
         <h1 className="text-3xl font-light" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
           Shalom, {profile.name?.split(' ')[0] || 'Alumno'} 👋
@@ -235,11 +238,11 @@ export default function StudentProfile() {
           style={{ background: 'linear-gradient(135deg, rgba(108,51,230,0.2) 0%, rgba(108,51,230,0.06) 100%)', border: '1px solid rgba(108,51,230,0.25)' }}>
           <div className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-20 pointer-events-none"
             style={{ background: 'radial-gradient(circle, #6c33e6, transparent)', filter: 'blur(20px)', transform: 'translate(30%, -30%)' }} />
-          <p className="text-xs mb-2" style={{ color: 'rgba(108,51,230,0.7)' }}>Bar Mitzvá</p>
+          <p className="text-xs mb-2" style={{ color: 'rgba(108,51,230,0.7)' }}>{t('bar_mitzvah')}</p>
           {days !== null ? (
             <>
               <div className="text-5xl font-light mb-1" style={{ color: '#6c33e6' }}>{days}</div>
-              <p className="text-xs" style={{ color: 'rgba(108,51,230,0.5)' }}>días restantes</p>
+              <p className="text-xs" style={{ color: 'rgba(108,51,230,0.5)' }}>{t('days_left')}</p>
             </>
           ) : (
             <div className="text-2xl font-light" style={{ color: '#6c33e6' }}>—</div>
@@ -253,15 +256,15 @@ export default function StudentProfile() {
 
         <div className="rounded-2xl p-6 relative overflow-hidden"
           style={{ background: 'linear-gradient(135deg, rgba(249,184,0,0.12) 0%, rgba(249,184,0,0.04) 100%)', border: '1px solid rgba(249,184,0,0.2)' }}>
-          <p className="text-xs mb-2" style={{ color: 'var(--text-gold)' }}>Tu Perashá</p>
+          <p className="text-xs mb-2" style={{ color: 'var(--text-gold)' }}>{t('my_parasha')}</p>
           <div className="text-3xl font-light mb-1" style={{ color: '#d97706' }}>
             {profile.parasha_id || '—'}
           </div>
-          <p className="text-xs" style={{ color: 'var(--text-3)' }}>Perashá asignada</p>
+          <p className="text-xs" style={{ color: 'var(--text-3)' }}>{t('assigned_parasha')}</p>
         </div>
 
         <div className="rounded-2xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>Deberes completados</p>
+          <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{t('hw_done')}</p>
           <div className="flex items-end gap-2 mb-3">
             <span className="text-4xl font-light" style={{ color: '#0d9488' }}>{progress}%</span>
             <span className="text-xs pb-1.5" style={{ color: 'var(--text-muted)' }}>{done}/{deberes.length}</span>
@@ -299,7 +302,7 @@ export default function StudentProfile() {
                 </svg>
               </div>
               <div className="text-left">
-                <p className="text-xs font-semibold" style={{ color: '#8b5cf6' }}>Ir a mi perashá</p>
+                <p className="text-xs font-semibold" style={{ color: '#8b5cf6' }}>{t('go_my_parasha')}</p>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
                   <span className="hebrew" style={{ color: 'var(--text-gold)' }}>{profile.parasha_id}</span>
                 </p>
@@ -316,14 +319,14 @@ export default function StudentProfile() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <div className="lg:col-span-3 fade-up-3">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Mis deberes</h2>
+            <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{t('my_homework')}</h2>
             <span className="text-xs px-2.5 py-1 rounded-full"
               style={{ background: 'rgba(108,51,230,0.12)', color: '#6c33e6', border: '1px solid rgba(108,51,230,0.2)' }}>
-              {deberes.filter(d => d.status !== 'submitted').length} pendientes
+              {deberes.filter(d => d.status !== 'submitted').length} {t('pending')}
             </span>
           </div>
           {deberes.length === 0 && (
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No hay deberes asignados aún</p>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('no_hw')}</p>
           )}
           <div className="flex flex-col gap-2.5">
             {deberes.map(deber => {
@@ -390,14 +393,14 @@ export default function StudentProfile() {
 
         <div className="lg:col-span-2 flex flex-col gap-5 fade-up-4">
           <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>Mis datos</p>
+            <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>{t('my_data')}</p>
             <div className="flex flex-col gap-0">
               {[
-                { label: 'Nombre', value: profile.name },
-                { label: 'Bar Mitzvá', value: profile.bar_mitzvah ? new Date(profile.bar_mitzvah).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : '—' },
+                { label: t('name'), value: profile.name },
+                { label: t('bar_mitzvah'), value: profile.bar_mitzvah ? new Date(profile.bar_mitzvah).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : '—' },
                 { label: 'Perashá', value: profile.parasha_id || '—' },
-                { label: 'Progreso', value: `${profile.progress || 0}%` },
-                { label: 'Racha', value: `${profile.streak || 0} días 🔥` },
+                { label: t('progress'), value: `${profile.progress || 0}%` },
+                { label: t('streak'), value: `${profile.streak || 0} ${t('days')} 🔥` },
               ].map(item => (
                 <div key={item.label} className="flex justify-between items-center py-2"
                   style={{ borderBottom: '1px solid var(--border-subtle)' }}>
@@ -409,7 +412,7 @@ export default function StudentProfile() {
           </div>
 
           <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>Mi profesor</p>
+            <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{t('my_teacher')}</p>
             {teacherName ? (
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
@@ -418,13 +421,13 @@ export default function StudentProfile() {
                 </div>
                 <div>
                   <div className="text-sm font-medium" style={{ color: 'var(--text)' }}>{teacherName}</div>
-                  <div className="text-xs" style={{ color: 'var(--text-gold)' }}>מוֹרֶה · Vinculado</div>
+                  <div className="text-xs" style={{ color: 'var(--text-gold)' }}>מוֹרֶה · {t('linked')}</div>
                 </div>
               </div>
             ) : (
               <div className="flex flex-col gap-2">
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  Introduce el código de tu profesor para vincularte
+                  {t('link_teacher')}
                 </p>
                 <div className="flex gap-2">
                   <input
@@ -439,11 +442,11 @@ export default function StudentProfile() {
                   <button onClick={linkTeacher} disabled={linkStatus === 'loading' || !teacherCode}
                     className="px-3 py-2 rounded-xl text-xs font-semibold"
                     style={{ background: 'rgba(108,51,230,0.15)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.25)', opacity: !teacherCode ? 0.5 : 1 }}>
-                    {linkStatus === 'loading' ? '…' : 'Unirse'}
+                    {linkStatus === 'loading' ? '…' : t('join')}
                   </button>
                 </div>
                 {linkStatus === 'error' && (
-                  <p className="text-xs" style={{ color: '#ef4444' }}>Código no encontrado. Compruébalo con tu profesor.</p>
+                  <p className="text-xs" style={{ color: '#ef4444' }}>{t('code_not_found')}</p>
                 )}
               </div>
             )}
@@ -451,13 +454,13 @@ export default function StudentProfile() {
 
           <div className="rounded-2xl p-5"
             style={{ background: 'linear-gradient(135deg, rgba(249,184,0,0.1), rgba(249,184,0,0.03))', border: '1px solid rgba(249,184,0,0.15)' }}>
-            <p className="text-xs mb-3" style={{ color: 'var(--text-gold)' }}>Racha de estudio</p>
+            <p className="text-xs mb-3" style={{ color: 'var(--text-gold)' }}>{t('study_streak')}</p>
             <div className="flex items-center gap-2">
               <span className="text-3xl">🔥</span>
               <div>
-                <span className="text-2xl font-light" style={{ color: '#d97706' }}>{profile.streak || 0} días</span>
+                <span className="text-2xl font-light" style={{ color: '#d97706' }}>{profile.streak || 0} {t('days')}</span>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
-                  {(profile.streak || 0) > 5 ? '¡Sigue así!' : 'Empieza tu racha'}
+                  {(profile.streak || 0) > 5 ? t('keep_going') : t('start_streak')}
                 </p>
               </div>
             </div>
@@ -467,7 +470,7 @@ export default function StudentProfile() {
 
           {/* Achievements */}
           <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>Logros</p>
+            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{t('achievements')}</p>
             <div className="flex items-center gap-4 mb-4 mt-3">
               <StatPill icon="🎧" value={totalListens} label="escuchas" />
               <StatPill icon="✅" value={done} label="deberes" />

@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { PARASHOT, ALL_PARASHOT, COMBINED_PARASHOT, SEFARIM_LIST, BOOK_COLORS } from '../../data/parashot'
 import { useAudio } from '../../context/AudioContext'
 import { useTheme } from '../../context/ThemeContext'
+import { useLang } from '../../context/LangContext'
 import ParashaReader from '../../components/ParashaReader'
 
 export default function StudentStudy({ basePath = '/student/study' }) {
@@ -17,6 +18,7 @@ export default function StudentStudy({ basePath = '/student/study' }) {
 function ListView({ basePath, guestMode }) {
   const navigate = useNavigate()
   const { isDark } = useTheme()
+  const { t } = useLang()
   const [search, setSearch] = useState('')
   const [openBook, setOpenBook] = useState('bereshit')
   const { hasAny } = useAudio()
@@ -49,10 +51,10 @@ function ListView({ basePath, guestMode }) {
           לִמּוּד תּוֹרָה · Estudio
         </p>
         <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-          Todas las Perashiot
+          {t('study_title')}
         </h1>
         <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-          54 perashiot · Texto completo con Sefaria · Selecciona para leer
+          {t('study_subtitle')}
         </p>
       </div>
 
@@ -64,7 +66,7 @@ function ListView({ basePath, guestMode }) {
           </svg>
         </div>
         <input value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Buscar perashá"
+          placeholder={t('search_parasha')}
           className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
           style={{
             background: 'var(--bg-card)',

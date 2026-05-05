@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { useTheme } from '../context/ThemeContext'
 import { motion, useInView } from 'framer-motion'
+import LangToggle from '../components/LangToggle'
 
 const STARS = Array.from({ length: 120 }, (_, i) => ({
   id: i,
@@ -199,13 +200,18 @@ export default function Landing() {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full pointer-events-none"
           style={{ background: `radial-gradient(circle, ${isDark ? 'rgba(249,184,0,0.09)' : 'rgba(249,184,0,0.12)'} 0%, transparent 70%)`, filter: 'blur(50px)' }} />
 
-        {/* Theme toggle */}
-        <button onClick={toggle}
-          className="absolute top-5 right-5 z-20 flex items-center gap-2 text-xs px-4 py-2 rounded-full transition-all"
-          style={{ background: t.toggleBg, border: `1px solid ${t.toggleBorder}`, color: t.toggleText, backdropFilter: 'blur(10px)' }}>
-          <span style={{ fontSize: '13px' }}>{isDark ? '☀️' : '🌙'}</span>
-          {isDark ? 'Modo claro' : 'Modo oscuro'}
-        </button>
+        {/* Theme + lang toggles */}
+        <div className="absolute top-5 right-5 z-20 flex items-center gap-2">
+          <div style={{ background: t.toggleBg, border: `1px solid ${t.toggleBorder}`, borderRadius: '999px', backdropFilter: 'blur(10px)', padding: '4px' }}>
+            <LangToggle compact />
+          </div>
+          <button onClick={toggle}
+            className="flex items-center gap-2 text-xs px-4 py-2 rounded-full transition-all"
+            style={{ background: t.toggleBg, border: `1px solid ${t.toggleBorder}`, color: t.toggleText, backdropFilter: 'blur(10px)' }}>
+            <span style={{ fontSize: '13px' }}>{isDark ? '☀️' : '🌙'}</span>
+            {isDark ? 'Modo claro' : 'Modo oscuro'}
+          </button>
+        </div>
 
         <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-4xl">
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}

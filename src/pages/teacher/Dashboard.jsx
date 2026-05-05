@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import { useLang } from '../../context/LangContext'
 
 const COLORS = ['#6c33e6', '#f9b800', '#2dd4bf', '#f87171', '#a78bfa']
 const DAY_LABELS = ['D', 'L', 'M', 'X', 'J', 'V', 'S']
@@ -17,6 +18,7 @@ function getLastSevenDays() {
 export default function TeacherDashboard() {
   const { profile } = useAuth()
   const navigate = useNavigate()
+  const { t } = useLang()
   const [students, setStudents] = useState([])
   const [dailyListens, setDailyListens] = useState(Array(7).fill(0))
   const [pendingHw, setPendingHw] = useState(0)
@@ -99,9 +101,9 @@ export default function TeacherDashboard() {
         const isToday = d.toDateString() === today.toDateString()
         const h = d.getHours().toString().padStart(2, '0')
         const m = d.getMinutes().toString().padStart(2, '0')
-        return { time: `${h}:${m}`, sub: isToday ? `Hoy · ${nextClass.student_name}` : `${d.toLocaleDateString('es', { weekday: 'short', day: 'numeric' })} · ${nextClass.student_name}` }
+        return { time: `${h}:${m}`, sub: isToday ? `${t('today')} · ${nextClass.student_name}` : `${d.toLocaleDateString('es', { weekday: 'short', day: 'numeric' })} · ${nextClass.student_name}` }
       })()
-    : { time: '—', sub: 'Sin clases programadas' }
+    : { time: '—', sub: t('no_classes') }
 
   return (
     <div className="p-4 sm:p-8">
@@ -120,10 +122,10 @@ export default function TeacherDashboard() {
       {/* KPI row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 fade-up-2">
         {[
-          { label: 'Alumnos activos', value: students.length, sub: 'registrados', color: '#6c33e6', glow: 'rgba(108,51,230,0.15)' },
-          { label: 'Escuchas totales', value: totalListens, sub: 'acumuladas', color: '#f9b800', glow: 'rgba(249,184,0,0.12)' },
-          { label: 'Deberes pendientes', value: pendingHw, sub: 'sin enviar', color: '#2dd4bf', glow: 'rgba(45,212,191,0.12)' },
-          { label: 'Próxima clase', value: nextClassLabel.time, sub: nextClassLabel.sub, color: '#f87171', glow: 'rgba(248,113,113,0.12)' },
+          { label: t('active_students'), value: students.length, sub: t('registered'), color: '#6c33e6', glow: 'rgba(108,51,230,0.15)' },
+          { label: t('total_listens'), value: totalListens, sub: t('accumulated'), color: '#f9b800', glow: 'rgba(249,184,0,0.12)' },
+          { label: t('pending_hw_kpi'), value: pendingHw, sub: t('not_sent'), color: '#2dd4bf', glow: 'rgba(45,212,191,0.12)' },
+          { label: t('next_class'), value: nextClassLabel.time, sub: nextClassLabel.sub, color: '#f87171', glow: 'rgba(248,113,113,0.12)' },
         ].map(kpi => (
           <div key={kpi.label} className="rounded-2xl p-5 relative overflow-hidden"
             style={{ background: `radial-gradient(ellipse at 20% 20%, ${kpi.glow}, var(--bg-card) 60%)`, border: `1px solid ${kpi.color}20` }}>
@@ -142,11 +144,11 @@ export default function TeacherDashboard() {
           <div className="rounded-2xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Escuchas de audios</h2>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Todos los alumnos · últimos 7 días</p>
+                <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{t('audio_chart')}</h2>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{t('all_students')} · {t('last_7_days')}</p>
               </div>
               <span className="text-xs px-3 py-1.5 rounded-full" style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-                Total: {dailyListens.reduce((a, b) => a + b, 0)}
+                {t('total')}: {dailyListens.reduce((a, b) => a + b, 0)}
               </span>
             </div>
 
@@ -178,7 +180,7 @@ export default function TeacherDashboard() {
 
             {students.length > 0 && (
               <div className="mt-6 pt-5" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>Por alumno</p>
+                <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>{t('per_student')}</p>
                 <div className="flex flex-col gap-2.5">
                   {students.map((s, i) => {
                     const color = COLORS[i % COLORS.length]
@@ -203,7 +205,7 @@ export default function TeacherDashboard() {
 
             {students.length === 0 && !loading && (
               <p className="text-xs text-center mt-4" style={{ color: 'var(--text-muted)' }}>
-                Sin alumnos aún. Comparte tu código de profesor para que se unan.
+                {t('no_students_yet')}
               </p>
             )}
           </div>
@@ -212,9 +214,9 @@ export default function TeacherDashboard() {
         {/* Right column */}
         <div className="fade-up-4">
           <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <h2 className="text-sm font-semibold mb-5" style={{ color: 'var(--text)' }}>Mis alumnos</h2>
+            <h2 className="text-sm font-semibold mb-5" style={{ color: 'var(--text)' }}>{t('my_students')}</h2>
             {students.length === 0 ? (
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>No hay alumnos aún</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('no_students_yet')}</p>
             ) : (
               <div className="flex flex-col gap-3">
                 {students.map((s, i) => {
@@ -241,7 +243,7 @@ export default function TeacherDashboard() {
           {profile?.teacher_code && (
             <div className="rounded-2xl p-5 mb-4"
               style={{ background: 'linear-gradient(135deg, rgba(249,184,0,0.12), rgba(249,184,0,0.04))', border: '1px solid rgba(249,184,0,0.25)' }}>
-              <h2 className="text-xs mb-3" style={{ color: 'var(--text-gold)' }}>Tu código de profesor</h2>
+              <h2 className="text-xs mb-3" style={{ color: 'var(--text-gold)' }}>{t('teacher_code')}</h2>
               <div className="flex items-center gap-3">
                 <div className="text-3xl font-mono font-bold tracking-widest" style={{ color: '#d97706', letterSpacing: '6px' }}>
                   {profile.teacher_code}
@@ -258,13 +260,13 @@ export default function TeacherDashboard() {
                 </button>
               </div>
               <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
-                Comparte este código con tus alumnos para vincularse
+                {t('share_code')}
               </p>
             </div>
           )}
 
           <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--text)' }}>Acciones rápidas</h2>
+            <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--text)' }}>{t('quick_actions')}</h2>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { label: 'Perashiot', color: '#6c33e6', path: '/teacher/study' },
