@@ -554,16 +554,84 @@ function colorWord(text) {
   return text
 }
 
-// Map a Sefaria word index to a playback time.
-// Uses exact Whisper timestamps if available, otherwise proportional seek.
-function wordIdxToTime(wordIdx, wordTimestamps, totalWords, duration) {
+// Strip nikud and trope marks, keep only Hebrew consonants for comparison.
+function stripHebrew(s) {
+  return s.replace(/[^א-ת]/g, '')
+}
+
+function levenshtein(a, b) {
+  if (a === b) return 0
+  if (!a.length) return b.length
+  if (!b.length) return a.length
+  const prev = Array.from({ length: b.length + 1 }, (_, i) => i)
+  for (let i = 1; i <= a.length; i++) {
+    const curr = [i]
+    for (let j = 1; j <= b.length; j++)
+      curr[j] = a[i-1] === b[j-1] ? prev[j-1] : 1 + Math.min(prev[j], curr[j-1], prev[j-1])
+    prev.splice(0, prev.length, ...curr)
+  }
+  return prev[b.length]
+}
+
+// Align Whisper word indices to Sefaria word indices.
+// Returns { w2s: whisperIdx→sefariaIdx, s2w: sefariaIdx→whisperIdx }.
+// Uses greedy anchor matching + linear interpolation between anchors.
+function buildAlignMap(whisperWords, sefariaTexts) {
+  const wn = whisperWords.map(w => stripHebrew(w.word))
+  const sn = sefariaTexts.map(stripHebrew)
+  const wLen = wn.length, sLen = sn.length
+  if (!wLen || !sLen) return { w2s: [], s2w: [] }
+  if (wLen === 1) return { w2s: [0], s2w: Array.from({ length: sLen }, () => 0) }
+
+  const WINDOW = 8
+  const anchors = [{ wi: 0, si: 0 }]
+  let sStart = 0
+  for (let wi = 0; wi < wLen; wi++) {
+    if (wn[wi].length < 2) continue
+    let best = -1, bestScore = 0.5
+    const sEnd = Math.min(sStart + WINDOW, sLen)
+    for (let si = sStart; si < sEnd; si++) {
+      if (!sn[si]) continue
+      const maxLen = Math.max(wn[wi].length, sn[si].length)
+      const score = 1 - levenshtein(wn[wi], sn[si]) / maxLen
+      if (score > bestScore) { bestScore = score; best = si }
+    }
+    if (best >= 0) { anchors.push({ wi, si: best }); sStart = best + 1 }
+  }
+  anchors.push({ wi: wLen - 1, si: sLen - 1 })
+
+  const w2s = new Array(wLen)
+  for (let ai = 0; ai < anchors.length - 1; ai++) {
+    const { wi: w0, si: s0 } = anchors[ai]
+    const { wi: w1, si: s1 } = anchors[ai + 1]
+    for (let wi = w0; wi <= w1; wi++) {
+      const t = w1 > w0 ? (wi - w0) / (w1 - w0) : 0
+      w2s[wi] = Math.min(Math.round(s0 + t * (s1 - s0)), sLen - 1)
+    }
+  }
+
+  const s2w = new Array(sLen).fill(-1)
+  for (let wi = 0; wi < wLen; wi++) { const si = w2s[wi]; if (s2w[si] < 0) s2w[si] = wi }
+  let last = 0
+  for (let si = 0; si < sLen; si++) { if (s2w[si] >= 0) last = s2w[si]; else s2w[si] = last }
+
+  return { w2s, s2w }
+}
+
+// Map a Sefaria word index to a playback time using the alignment map when available.
+function wordIdxToTime(wordIdx, wordTimestamps, s2w, duration) {
+  if (wordTimestamps?.length && s2w?.length) {
+    const wi = s2w[wordIdx] ?? -1
+    if (wi >= 0 && wi < wordTimestamps.length) return wordTimestamps[wi].start
+  }
   if (wordTimestamps?.length) {
+    const totalWords = s2w?.length ?? 0
     const wLen = wordTimestamps.length
-    const wi = wLen === 1 ? 0 : Math.min(Math.round(wordIdx * (wLen - 1) / (Math.max(1, totalWords - 1))), wLen - 1)
+    const wi = wLen === 1 ? 0 : Math.min(Math.round(wordIdx * (wLen - 1) / Math.max(1, totalWords - 1)), wLen - 1)
     return wordTimestamps[wi].start
   }
-  if (duration > 0 && totalWords > 0) {
-    return (wordIdx / Math.max(1, totalWords - 1)) * duration
+  if (duration > 0 && (s2w?.length ?? 0) > 0) {
+    return (wordIdx / Math.max(1, (s2w.length - 1))) * duration
   }
   return null
 }
@@ -581,6 +649,11 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
     return result
   }, [verses, mode])
 
+  const alignMap = useMemo(
+    () => buildAlignMap(wordTimestamps ?? [], allWords.map(w => w.text)),
+    [wordTimestamps, allWords]
+  )
+
   const activeWordIdx = useMemo(() => {
     if (!wordTimestamps?.length || audioCurrentTime == null || !allWords.length) return -1
     let lo = 0, hi = wordTimestamps.length - 1, best = -1
@@ -590,11 +663,8 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
       else hi = mid - 1
     }
     if (best < 0) return -1
-    const wLen = wordTimestamps.length
-    const sLen = allWords.length
-    if (wLen === 1) return 0
-    return Math.min(Math.round(best * (sLen - 1) / (wLen - 1)), sLen - 1)
-  }, [wordTimestamps, audioCurrentTime, allWords])
+    return alignMap.w2s[best] ?? 0
+  }, [wordTimestamps, audioCurrentTime, allWords, alignMap])
 
   useEffect(() => {
     if (!audioPlaying || activeWordIdx < 0) return
@@ -604,7 +674,7 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
 
   const handleClick = (i) => {
     if (!onWordClick) return
-    const t = wordIdxToTime(i, wordTimestamps, allWords.length, audioDuration)
+    const t = wordIdxToTime(i, wordTimestamps, alignMap.s2w, audioDuration)
     if (t != null) onWordClick(t)
   }
 
@@ -697,6 +767,11 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
     return result
   }, [verses])
 
+  const alignMap = useMemo(
+    () => buildAlignMap(wordTimestamps ?? [], allWordsTaamim),
+    [wordTimestamps, allWordsTaamim]
+  )
+
   const activeWordIdx = useMemo(() => {
     if (!wordTimestamps?.length || audioCurrentTime == null || !allWordsTaamim.length) return -1
     let lo = 0, hi = wordTimestamps.length - 1, best = -1
@@ -706,11 +781,8 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
       else hi = mid - 1
     }
     if (best < 0) return -1
-    const wLen = wordTimestamps.length
-    const sLen = allWordsTaamim.length
-    if (wLen === 1) return 0
-    return Math.min(Math.round(best * (sLen - 1) / (wLen - 1)), sLen - 1)
-  }, [wordTimestamps, audioCurrentTime, allWordsTaamim])
+    return alignMap.w2s[best] ?? 0
+  }, [wordTimestamps, audioCurrentTime, allWordsTaamim, alignMap])
 
   useEffect(() => {
     if (!audioPlaying || activeWordIdx < 0) return
@@ -736,7 +808,7 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
 
   const handleClickLeft = (i) => {
     if (!onWordClick) return
-    const t = wordIdxToTime(i, wordTimestamps, allWordsTaamim.length, audioDuration)
+    const t = wordIdxToTime(i, wordTimestamps, alignMap.s2w, audioDuration)
     if (t != null) onWordClick(t)
   }
 
