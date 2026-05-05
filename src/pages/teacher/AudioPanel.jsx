@@ -26,7 +26,7 @@ export default function TeacherAudioPanel() {
       return
     }
     setUploading(true)
-    await upload(selectedParasha.id, selectedAliyah, file)
+    await upload(selectedParasha.id, selectedAliyah, file, selectedParasha.aliyot[selectedAliyah].ref)
     setUploading(false)
   }
 
@@ -297,7 +297,7 @@ export default function TeacherAudioPanel() {
                             : (
                               <div className="flex flex-col gap-1 items-start">
                                 <button
-                                  onClick={async () => { await generateSync(selectedParasha.id, i) }}
+                                  onClick={async () => { await generateSync(selectedParasha.id, i, selectedParasha.aliyot[i].ref) }}
                                   className="text-xs px-1.5 py-0.5 rounded-full transition-all"
                                   style={{ background: `${color}15`, color, border: `1px solid ${color}30` }}>
                                   {t('retry_sync')}

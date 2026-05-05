@@ -5,14 +5,18 @@ const AudioCtx = createContext(null)
 
 // Call the server-side Vercel API route which proxies to OpenAI Whisper.
 // Avoids CORS — the browser cannot call api.openai.com directly.
-async function callSyncApi(audioUrl, fileType, prompt) {
+async function callSyncApi(audioUrl, fileType, aliyahRef, prompt) {
   const res = await fetch('/api/generate-sync', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ audioUrl, fileType, ...(prompt ? { prompt } : {}) }),
+    body: JSON.stringify({ audioUrl, fileType, ...(aliyahRef ? { aliyahRef } : {}), ...(prompt ? { prompt } : {}) }),
   })
   const json = await res.json()
   if (!res.ok) throw new Error(json.error || `Error ${res.status}`)
+  if (json.format === 'v2') {
+    if (json.needs_review) console.warn(`Sync needs_review: anchor_pct=${json.anchor_pct}`)
+    return json.words  // [{start, end}, ...] indexed by sefaria word idx
+  }
   return (json.words ?? []).map(w => ({ word: w.word, start: w.start, end: w.end }))
 }
 
@@ -70,7 +74,7 @@ export function AudioProvider({ children }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  const upload = useCallback(async (parashaId, aliyahIdx, file) => {
+  const upload = useCallback(async (parashaId, aliyahIdx, file, aliyahRef) => {
     const key = `${parashaId}-${aliyahIdx}`
 
     const { data: { session } } = await supabase.auth.getSession()
@@ -134,7 +138,7 @@ export function AudioProvider({ children }) {
     // Auto-sync via server-side Vercel API (avoids CORS with OpenAI)
     setSyncingKeys(prev => new Set([...prev, key]))
     setSyncErrors(prev => { const n = { ...prev }; delete n[key]; return n })
-    callSyncApi(publicUrl, contentType)
+    callSyncApi(publicUrl, contentType, aliyahRef)
       .then(async (wordTimestamps) => {
         if (!wordTimestamps.length) { console.warn('Auto-sync: no words returned'); return }
         await supabase
@@ -221,7 +225,7 @@ export function AudioProvider({ children }) {
   }, [audios])
 
   // Re-generate sync for an already-uploaded audio (e.g. retry button).
-  const generateSync = useCallback(async (parashaId, aliyahIdx) => {
+  const generateSync = useCallback(async (parashaId, aliyahIdx, aliyahRef) => {
     const key = `${parashaId}-${aliyahIdx}`
 
     const { data: row } = await supabase
@@ -236,7 +240,7 @@ export function AudioProvider({ children }) {
     setSyncErrors(prev => { const n = { ...prev }; delete n[key]; return n })
     try {
       const cleanUrl = row.public_url.split('?')[0]
-      const wordTimestamps = await callSyncApi(cleanUrl, row.file_type || 'audio/webm')
+      const wordTimestamps = await callSyncApi(cleanUrl, row.file_type || 'audio/webm', aliyahRef)
 
       if (!wordTimestamps.length) {
         console.error('generateSync: no words returned')

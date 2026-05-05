@@ -618,22 +618,30 @@ function buildAlignMap(whisperWords, sefariaTexts) {
   return { w2s, s2w }
 }
 
-// Map a Sefaria word index to a playback time using the alignment map when available.
+// v2 timestamps: [{start,end}, ...] indexed by sefariaWordIdx (no `word` field)
+// v1 timestamps: [{word, start, end}, ...] raw Whisper output
+function isV2(wordTimestamps) {
+  const first = wordTimestamps?.find(x => x != null)
+  return first != null && !('word' in first)
+}
+
+// Map a Sefaria word index to a playback time.
 function wordIdxToTime(wordIdx, wordTimestamps, s2w, duration) {
-  if (wordTimestamps?.length && s2w?.length) {
+  if (!wordTimestamps?.length) {
+    return duration > 0 && s2w?.length > 0 ? (wordIdx / Math.max(1, s2w.length - 1)) * duration : null
+  }
+  if (isV2(wordTimestamps)) {
+    return wordTimestamps[wordIdx]?.start ?? null
+  }
+  // v1: use inverse align map
+  if (s2w?.length) {
     const wi = s2w[wordIdx] ?? -1
     if (wi >= 0 && wi < wordTimestamps.length) return wordTimestamps[wi].start
   }
-  if (wordTimestamps?.length) {
-    const totalWords = s2w?.length ?? 0
-    const wLen = wordTimestamps.length
-    const wi = wLen === 1 ? 0 : Math.min(Math.round(wordIdx * (wLen - 1) / Math.max(1, totalWords - 1)), wLen - 1)
-    return wordTimestamps[wi].start
-  }
-  if (duration > 0 && (s2w?.length ?? 0) > 0) {
-    return (wordIdx / Math.max(1, (s2w.length - 1))) * duration
-  }
-  return null
+  const wLen = wordTimestamps.length
+  const totalWords = s2w?.length ?? 0
+  const wi = wLen === 1 ? 0 : Math.min(Math.round(wordIdx * (wLen - 1) / Math.max(1, totalWords - 1)), wLen - 1)
+  return wordTimestamps[wi].start
 }
 
 function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCurrentTime, audioPlaying, audioDuration, onWordClick }) {
@@ -650,12 +658,23 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
   }, [verses, mode])
 
   const alignMap = useMemo(
-    () => buildAlignMap(wordTimestamps ?? [], allWords.map(w => w.text)),
+    () => isV2(wordTimestamps) ? null : buildAlignMap(wordTimestamps ?? [], allWords.map(w => w.text)),
     [wordTimestamps, allWords]
   )
 
   const activeWordIdx = useMemo(() => {
     if (!wordTimestamps?.length || audioCurrentTime == null || !allWords.length) return -1
+    if (isV2(wordTimestamps)) {
+      // v2: direct lookup — find last word whose start <= currentTime
+      let best = -1
+      for (let i = 0; i < wordTimestamps.length; i++) {
+        const ts = wordTimestamps[i]
+        if (ts && ts.start <= audioCurrentTime) best = i
+        else if (ts && ts.start > audioCurrentTime) break
+      }
+      return best
+    }
+    // v1: binary search on Whisper indices, then map to Sefaria
     let lo = 0, hi = wordTimestamps.length - 1, best = -1
     while (lo <= hi) {
       const mid = (lo + hi) >> 1
@@ -663,7 +682,7 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
       else hi = mid - 1
     }
     if (best < 0) return -1
-    return alignMap.w2s[best] ?? 0
+    return alignMap?.w2s[best] ?? 0
   }, [wordTimestamps, audioCurrentTime, allWords, alignMap])
 
   useEffect(() => {
@@ -674,7 +693,7 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
 
   const handleClick = (i) => {
     if (!onWordClick) return
-    const t = wordIdxToTime(i, wordTimestamps, alignMap.s2w, audioDuration)
+    const t = wordIdxToTime(i, wordTimestamps, alignMap?.s2w, audioDuration)
     if (t != null) onWordClick(t)
   }
 
@@ -768,12 +787,21 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
   }, [verses])
 
   const alignMap = useMemo(
-    () => buildAlignMap(wordTimestamps ?? [], allWordsTaamim),
+    () => isV2(wordTimestamps) ? null : buildAlignMap(wordTimestamps ?? [], allWordsTaamim),
     [wordTimestamps, allWordsTaamim]
   )
 
   const activeWordIdx = useMemo(() => {
     if (!wordTimestamps?.length || audioCurrentTime == null || !allWordsTaamim.length) return -1
+    if (isV2(wordTimestamps)) {
+      let best = -1
+      for (let i = 0; i < wordTimestamps.length; i++) {
+        const ts = wordTimestamps[i]
+        if (ts && ts.start <= audioCurrentTime) best = i
+        else if (ts && ts.start > audioCurrentTime) break
+      }
+      return best
+    }
     let lo = 0, hi = wordTimestamps.length - 1, best = -1
     while (lo <= hi) {
       const mid = (lo + hi) >> 1
@@ -781,7 +809,7 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
       else hi = mid - 1
     }
     if (best < 0) return -1
-    return alignMap.w2s[best] ?? 0
+    return alignMap?.w2s[best] ?? 0
   }, [wordTimestamps, audioCurrentTime, allWordsTaamim, alignMap])
 
   useEffect(() => {
@@ -808,7 +836,7 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
 
   const handleClickLeft = (i) => {
     if (!onWordClick) return
-    const t = wordIdxToTime(i, wordTimestamps, alignMap.s2w, audioDuration)
+    const t = wordIdxToTime(i, wordTimestamps, alignMap?.s2w, audioDuration)
     if (t != null) onWordClick(t)
   }
 
