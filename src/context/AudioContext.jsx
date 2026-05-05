@@ -5,11 +5,11 @@ const AudioCtx = createContext(null)
 
 // Call the server-side Vercel API route which proxies to OpenAI Whisper.
 // Avoids CORS — the browser cannot call api.openai.com directly.
-async function callSyncApi(audioUrl, fileType) {
+async function callSyncApi(audioUrl, fileType, prompt) {
   const res = await fetch('/api/generate-sync', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ audioUrl, fileType }),
+    body: JSON.stringify({ audioUrl, fileType, ...(prompt ? { prompt } : {}) }),
   })
   const json = await res.json()
   if (!res.ok) throw new Error(json.error || `Error ${res.status}`)

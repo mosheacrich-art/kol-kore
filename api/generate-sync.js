@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).end()
 
-  const { audioUrl, fileType } = req.body ?? {}
+  const { audioUrl, fileType, prompt } = req.body ?? {}
   if (!audioUrl) return res.status(400).json({ error: 'audioUrl required' })
 
   const apiKey = (process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY || '').trim()
@@ -22,8 +22,10 @@ export default async function handler(req, res) {
     const form = new FormData()
     form.append('file', new File([blob], `audio.${ext}`, { type: fileType || 'audio/webm' }))
     form.append('model', 'whisper-1')
+    form.append('language', 'he')
     form.append('response_format', 'verbose_json')
     form.append('timestamp_granularities[]', 'word')
+    form.append('prompt', prompt || 'בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ׃')
 
     const whisperRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
