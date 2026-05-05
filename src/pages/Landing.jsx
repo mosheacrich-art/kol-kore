@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTheme } from '../context/ThemeContext'
 import { motion, useInView } from 'framer-motion'
 import LangToggle from '../components/LangToggle'
+import { useLang } from '../context/LangContext'
 
 const STARS = Array.from({ length: 120 }, (_, i) => ({
   id: i,
@@ -157,6 +158,8 @@ export default function Landing() {
     return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', onResize) }
   }, [isDark])
 
+  const { t: tl } = useLang()
+
   const t = {
     heroBg: isDark
       ? 'radial-gradient(ellipse at 25% 15%, #1e0f45 0%, #0d0b1e 45%, #050812 100%)'
@@ -244,8 +247,7 @@ export default function Landing() {
             transition={{ delay: 0.45, duration: 0.6 }}
             className="text-lg md:text-xl font-light max-w-xl leading-relaxed mb-12"
             style={{ color: t.text2 }}>
-            La plataforma para estudiar Torah, preparar tu bar mitzvá y conectar con tu maestro —
-            palabra a palabra.
+            {tl('hero_tagline')}
           </motion.p>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -253,7 +255,7 @@ export default function Landing() {
             className="flex flex-col sm:flex-row gap-3 items-center">
             <button className="btn-gold px-10 py-4 rounded-full text-sm font-semibold"
               onClick={() => navigate('/login')}>
-              Comenzar gratis
+              {tl('start_free')}
             </button>
           </motion.div>
 
@@ -431,7 +433,7 @@ export default function Landing() {
           </p>
           <button className="btn-gold px-12 py-4 rounded-full text-base font-semibold"
             onClick={() => navigate('/login')}>
-            Crear cuenta gratis
+            {tl('create_account_free')}
           </button>
         </FadeIn>
       </section>

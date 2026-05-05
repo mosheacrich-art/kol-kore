@@ -2,13 +2,16 @@ import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
+import { useLang } from '../context/LangContext'
 import { supabase } from '../lib/supabase'
+import LangToggle from '../components/LangToggle'
 
 
 export default function Login() {
   const navigate = useNavigate()
   const { profile, signIn, signUp, signInWithGoogle } = useAuth()
   const { isDark } = useTheme()
+  const { t: tl } = useLang()
   const [expanded, setExpanded] = useState(null)
   // modal state: null | 'student-register' | 'teacher' | 'student-login'
   const [modal, setModal] = useState(null)
@@ -80,48 +83,52 @@ export default function Login() {
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        Volver
+        {tl('back')}
       </button>
+      <div className="absolute top-6 right-6 z-10"
+        style={{ background: t.backBg, border: `1px solid ${t.backBorder}`, borderRadius: '999px', backdropFilter: 'blur(8px)', padding: '4px' }}>
+        <LangToggle compact />
+      </div>
 
       <div className="relative z-10 w-full max-w-4xl">
         <div className="text-center mb-14 fade-up-1">
           <div className="hebrew text-2xl mb-3" style={{ color: t.subtitle }}>בְּחַר אֶת תַּפְקִידְךָ</div>
           <h1 className="text-4xl md:text-5xl font-light" style={{ letterSpacing: '-1.5px', color: t.title }}>
-            ¿Cómo entras hoy?
+            {tl('how_enter')}
           </h1>
           <p className="mt-3 text-sm" style={{ color: t.desc }}>
-            Elige tu rol para acceder a tu espacio personalizado
+            {tl('choose_role')}
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 fade-up-2">
           {/* Teacher card — inline expand as before */}
-          <RoleCard id="teacher" label="Profesor" hebrew="מּוֹרֶה"
-            description="Gestiona alumnos, clases, deberes y estadísticas"
+          <RoleCard id="teacher" label={tl('role_teacher')} hebrew="מּוֹרֶה"
+            description={tl('teacher_desc')}
             color="#f9b800" glow="rgba(249,184,0,0.25)" icon={TeacherIcon}
             expanded={expanded === 'teacher'} onExpand={() => setExpanded(expanded === 'teacher' ? null : 'teacher')}
-            t={t} isDark={isDark}>
+            t={t} tl={tl} isDark={isDark}>
             {expanded === 'teacher' && (
               <SimpleAuthForm
                 role="teacher" color="#f9b800"
                 onCancel={() => setExpanded(null)}
-                onDone={() => {}} t={t}
+                onDone={() => {}} t={t} tl={tl}
               />
             )}
           </RoleCard>
 
           {/* Student card — opens modal */}
-          <RoleCard id="student" label="Alumno" hebrew="תַּלְמִיד"
-            description="Accede a tu perfil, deberes y estudio de la Perashá"
+          <RoleCard id="student" label={tl('role_student')} hebrew="תַּלְמִיד"
+            description={tl('student_desc')}
             color="#6c33e6" glow="rgba(108,51,230,0.25)" icon={StudentIcon}
             expanded={false} onExpand={() => setModal('student')}
-            t={t} isDark={isDark} />
+            t={t} tl={tl} isDark={isDark} />
 
           {/* Guest */}
-          <RoleCard id="guest" label="Invitado" hebrew="אוֹרֵחַ"
-            description="Explora la plataforma sin necesidad de cuenta"
+          <RoleCard id="guest" label={tl('guest')} hebrew="אוֹרֵחַ"
+            description={tl('guest_desc')}
             color="#2dd4bf" glow="rgba(45,212,191,0.2)" icon={GuestIcon}
-            expanded={false} onExpand={() => navigate('/guest/study')} t={t} isDark={isDark} />
+            expanded={false} onExpand={() => navigate('/guest/study')} t={t} tl={tl} isDark={isDark} />
         </div>
 
         <p className="text-center mt-10 text-xs fade-up-3" style={{ color: t.footer }}>
@@ -131,7 +138,7 @@ export default function Login() {
 
       {/* Student modal */}
       {modal === 'student' && (
-        <StudentModal onClose={() => setModal(null)} isDark={isDark} t={t} />
+        <StudentModal onClose={() => setModal(null)} isDark={isDark} t={t} tl={tl} />
       )}
     </div>
   )
@@ -139,7 +146,7 @@ export default function Login() {
 
 // ── Student modal: registro + plan en un solo popup ──────────────────────────
 
-function StudentModal({ onClose, isDark, t }) {
+function StudentModal({ onClose, isDark, t, tl }) {
   const { signIn, signUp, signInWithGoogle } = useAuth()
   const navigate = useNavigate()
 
@@ -172,11 +179,11 @@ function StudentModal({ onClose, isDark, t }) {
     if (isLogin) {
       const err = await signIn(email, password)
       setLoading(false)
-      if (err) setError('Email o contraseña incorrectos')
+      if (err) setError(tl('login_error'))
       return
     }
 
-    if (!name.trim()) { setError('Escribe tu nombre'); setLoading(false); return }
+    if (!name.trim()) { setError(tl('full_name')); setLoading(false); return }
 
     const err = await signUp(email, password, name.trim(), 'student')
     if (err) { setError('Error al registrarse: ' + err.message); setLoading(false); return }
@@ -209,7 +216,7 @@ function StudentModal({ onClose, isDark, t }) {
           <div>
             <p className="text-xs hebrew" style={{ color: 'var(--text-gold)' }}>תַּלְמִיד</p>
             <h2 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>
-              {isLogin ? 'Iniciar sesión' : 'Crear cuenta de alumno'}
+              {isLogin ? tl('login_title') : tl('register_title')}
             </h2>
           </div>
           <button onClick={onClose}
@@ -233,34 +240,34 @@ function StudentModal({ onClose, isDark, t }) {
                     <path d="M5.5 9l2.5 2.5L12.5 7" stroke="#16a34a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <p className="text-sm font-semibold" style={{ color: '#16a34a' }}>Correo enviado</p>
+                <p className="text-sm font-semibold" style={{ color: '#16a34a' }}>{tl('email_sent')}</p>
                 <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-                  Revisa tu bandeja de entrada y sigue el enlace para restablecer tu contraseña.
+                  {tl('email_sent_desc')}
                 </p>
                 <button type="button" onClick={() => { setIsForgot(false); setForgotSent(false) }}
                   className="text-xs mt-1" style={{ color: '#6c33e6' }}>
-                  Volver al inicio de sesión
+                  {tl('forgot_back')}
                 </button>
               </div>
             ) : (
               <>
-                <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>Recuperar contraseña</p>
+                <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>{tl('recover_password')}</p>
                 <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-                  Escribe tu email y te enviaremos un enlace para crear una nueva contraseña.
+                  {tl('recover_desc')}
                 </p>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                  placeholder="Tu email" required autoFocus
+                  placeholder={tl('email')} required autoFocus
                   className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none"
                   style={inputStyle} />
                 {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
                 <button type="submit" disabled={loading}
                   className="w-full py-3 rounded-xl font-semibold text-sm transition-all"
                   style={{ background: loading ? 'var(--bg-card)' : 'linear-gradient(135deg,#6c33e6,#8b5cf6)', color: loading ? 'var(--text-3)' : '#fff', border: loading ? '1px solid var(--border)' : 'none' }}>
-                  {loading ? '…' : 'Enviar enlace'}
+                  {loading ? '…' : tl('send_link')}
                 </button>
                 <button type="button" onClick={() => { setIsForgot(false); setError('') }}
                   className="text-xs text-center" style={{ color: t.switchText }}>
-                  Volver
+                  {tl('back')}
                 </button>
               </>
             )}
@@ -272,16 +279,16 @@ function StudentModal({ onClose, isDark, t }) {
           {/* Register fields */}
           {!isLogin && (
             <input type="text" value={name} onChange={e => setName(e.target.value)}
-              placeholder="Tu nombre completo" required autoFocus
+              placeholder={tl('full_name')} required autoFocus
               className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none"
               style={inputStyle} />
           )}
           <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-            placeholder="Email" required autoFocus={isLogin}
+            placeholder={tl('email')} required autoFocus={isLogin}
             className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none"
             style={inputStyle} />
           <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-            placeholder="Contraseña" required
+            placeholder={tl('password')} required
             className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none"
             style={inputStyle} />
 
@@ -300,9 +307,9 @@ function StudentModal({ onClose, isDark, t }) {
               <>
                 <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
                   style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#8b5cf6' }} />
-                {isLogin ? 'Iniciando sesión…' : 'Creando cuenta…'}
+                {isLogin ? tl('logging_in') : tl('registering')}
               </>
-            ) : isLogin ? 'Entrar' : 'Crear cuenta →'
+            ) : isLogin ? tl('login_tab') : tl('register_btn')
             }
           </button>
 
@@ -316,7 +323,7 @@ function StudentModal({ onClose, isDark, t }) {
             className="w-full py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-all"
             style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText }}>
             <GoogleIcon />
-            Continuar con Google
+            {tl('google_btn')}
           </button>
 
           {/* Forgot password link — only on login */}
@@ -325,7 +332,7 @@ function StudentModal({ onClose, isDark, t }) {
               onClick={() => { setIsForgot(true); setError('') }}
               className="text-xs text-center"
               style={{ color: '#6c33e6' }}>
-              ¿Olvidaste tu contraseña?
+              {tl('forgot_password')}
             </button>
           )}
 
@@ -334,7 +341,7 @@ function StudentModal({ onClose, isDark, t }) {
             onClick={() => { setIsLogin(!isLogin); setError('') }}
             className="text-xs text-center py-1"
             style={{ color: t.switchText }}>
-            {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
+            {isLogin ? tl('no_account') : tl('have_account')}
           </button>
 
         </form>
@@ -346,7 +353,7 @@ function StudentModal({ onClose, isDark, t }) {
 
 // ── Teacher inline auth form (unchanged) ────────────────────────────────────
 
-function SimpleAuthForm({ role, color, onCancel, onDone, t }) {
+function SimpleAuthForm({ role, color, onCancel, onDone, t, tl }) {
   const { signIn, signUp, signInWithGoogle } = useAuth()
   const [isRegister, setIsRegister] = useState(false)
   const [email, setEmail] = useState('')
@@ -367,14 +374,14 @@ function SimpleAuthForm({ role, color, onCancel, onDone, t }) {
     setError('')
     let err
     if (isRegister) {
-      if (!name.trim()) { setError('Escribe tu nombre'); setLoading(false); return }
+      if (!name.trim()) { setError(tl('full_name')); setLoading(false); return }
       err = await signUp(email, password, name.trim(), role)
     } else {
       err = await signIn(email, password)
     }
     setLoading(false)
     if (err) {
-      setError(isRegister ? 'Error al registrarse: ' + err.message : 'Email o contraseña incorrectos')
+      setError(isRegister ? 'Error: ' + err.message : tl('login_error'))
     }
   }
 
@@ -382,16 +389,16 @@ function SimpleAuthForm({ role, color, onCancel, onDone, t }) {
     <form onSubmit={handleSubmit} className="px-7 pb-7 flex flex-col gap-3">
       {isRegister && (
         <input type="text" value={name} onChange={e => setName(e.target.value)}
-          placeholder="Tu nombre completo" required autoFocus
+          placeholder={tl('full_name')} required autoFocus
           className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
           style={inputStyle} />
       )}
       <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-        placeholder="Email" required autoFocus={!isRegister}
+        placeholder={tl('email')} required autoFocus={!isRegister}
         className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
         style={inputStyle} />
       <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-        placeholder="Contraseña" required
+        placeholder={tl('password')} required
         className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
         style={inputStyle} />
       {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
@@ -399,19 +406,19 @@ function SimpleAuthForm({ role, color, onCancel, onDone, t }) {
         <button type="button" onClick={onCancel}
           className="flex-1 py-2 rounded-xl text-xs transition-all"
           style={{ background: t.cancelBg, color: t.cancelText }}>
-          Cancelar
+          {tl('cancel')}
         </button>
         <button type="submit" disabled={loading}
           className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
           style={{ background: color, color: '#fff', opacity: loading ? 0.7 : 1 }}>
-          {loading ? '…' : isRegister ? 'Registrarse' : 'Entrar'}
+          {loading ? '…' : isRegister ? tl('register_short') : tl('enter')}
         </button>
       </div>
       <button type="button"
         onClick={() => { setIsRegister(!isRegister); setEmail(''); setPassword(''); setName('') }}
         className="text-xs text-center"
         style={{ color: t.switchText }}>
-        {isRegister ? '¿Ya tienes cuenta? Entrar' : '¿Sin cuenta? Registrarse'}
+        {isRegister ? tl('have_account_short') : tl('no_account_short')}
       </button>
 
       <div className="flex items-center gap-3">
@@ -423,7 +430,7 @@ function SimpleAuthForm({ role, color, onCancel, onDone, t }) {
         className="w-full py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-all"
         style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText }}>
         <GoogleIcon />
-        Continuar con Google
+        {tl('google_btn')}
       </button>
     </form>
   )
@@ -431,7 +438,7 @@ function SimpleAuthForm({ role, color, onCancel, onDone, t }) {
 
 // ── Role card ────────────────────────────────────────────────────────────────
 
-function RoleCard({ label, hebrew, description, color, glow, icon: Icon, expanded, onExpand, children, t, isDark }) {
+function RoleCard({ label, hebrew, description, color, glow, icon: Icon, expanded, onExpand, children, t, tl, isDark }) {
   return (
     <div className="relative rounded-2xl overflow-hidden transition-all duration-300"
       style={{
@@ -464,7 +471,7 @@ function RoleCard({ label, hebrew, description, color, glow, icon: Icon, expande
         </div>
         {!expanded && (
           <div className="mt-auto flex items-center gap-2 text-xs font-medium" style={{ color: t.cardCta }}>
-            Entrar
+            {tl('enter')}
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
