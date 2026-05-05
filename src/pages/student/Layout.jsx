@@ -65,10 +65,10 @@ export default function StudentLayout() {
       {/* ── Main ─────────────────────────────────────────────────────────── */}
       <main className="flex-1 flex flex-col min-h-0 overflow-auto scroll-smooth-ios main-with-bottom-nav">
 
-        {/* Header */}
-        <div className="sticky top-0 z-30 flex items-center gap-3 px-4 flex-shrink-0 app-header"
+        {/* Header — mobile only (hamburger to open drawer) */}
+        <div className="md:hidden sticky top-0 z-30 flex items-center gap-3 px-4 flex-shrink-0 app-header"
           style={{ background: 'var(--bg-deep)', borderBottom: '1px solid var(--border-subtle)', minHeight: '3.5rem' }}>
-          <button className="md:hidden p-2 rounded-xl" onClick={() => setSidebarOpen(true)}
+          <button className="p-2 rounded-xl" onClick={() => setSidebarOpen(true)}
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-2)' }}>
             <HamburgerIcon />
           </button>
