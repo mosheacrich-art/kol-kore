@@ -2,16 +2,18 @@ import { useState } from 'react'
 import { Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
+import { useLang } from '../../context/LangContext'
 import { useStudyTimer } from '../../hooks/useStudyTimer'
+import LangToggle from '../../components/LangToggle'
 
 const MONTHLY_ID = 'pdt_0Ne7sWfihRRycFHWb1SB2'
 const ANNUAL_ID  = 'pdt_0Ne7sn0u5XBSPuebqTIsh'
 
-const navItems = [
-  { path: '/student/profile',       label: 'Mi Perfil',       shortLabel: 'Perfil',   heb: 'פְּרוֹפִיל',  icon: ProfileIcon },
-  { path: '/student/study',         label: 'Estudiar Perashá', shortLabel: 'Estudiar', heb: 'לִמּוּד',     icon: StudyIcon },
-  { path: '/student/imprimir',      label: 'Imprimir Tikún',   shortLabel: 'Imprimir', heb: 'תִּקּוּן',    icon: PrintIcon },
-  { path: '/student/subscription',  label: 'Suscripción',      shortLabel: 'Cuenta',   heb: 'הַרְשָׁמָה',  icon: SubscriptionIcon },
+const NAV_KEYS = [
+  { path: '/student/profile',      key: 'nav_profile',      shortKey: 'nav_profile',      heb: 'פְּרוֹפִיל', icon: ProfileIcon },
+  { path: '/student/study',        key: 'nav_study',        shortKey: 'nav_study',         heb: 'לִמּוּד',    icon: StudyIcon },
+  { path: '/student/imprimir',     key: 'nav_print',        shortKey: 'nav_print',         heb: 'תִּקּוּן',   icon: PrintIcon },
+  { path: '/student/subscription', key: 'nav_subscription', shortKey: 'nav_subscription',  heb: 'הַרְשָׁמָה', icon: SubscriptionIcon },
 ]
 
 export default function StudentLayout() {
@@ -20,8 +22,11 @@ export default function StudentLayout() {
   const [searchParams] = useSearchParams()
   const { isDark, toggle } = useTheme()
   const { user, profile, signOut } = useAuth()
+  const { t } = useLang()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   useStudyTimer(profile?.id)
+
+  const navItems = NAV_KEYS.map(n => ({ ...n, label: t(n.key), shortLabel: t(n.shortKey) }))
 
   const go = (path) => { navigate(path); setSidebarOpen(false) }
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
@@ -49,7 +54,7 @@ export default function StudentLayout() {
       <aside className="hidden md:flex flex-shrink-0 flex-col py-8 px-4 w-64 sticky top-0 h-screen"
         style={{ background: 'var(--bg-deep)', borderRight: '1px solid var(--border-subtle)' }}>
         <SidebarContent profile={profile} location={location} isDark={isDark}
-          toggle={toggle} go={go} signOut={signOut} navigate={navigate} showClose={false} />
+          toggle={toggle} go={go} signOut={signOut} navigate={navigate} showClose={false} navItems={navItems} />
       </aside>
 
       {/* ── Mobile sidebar drawer ─────────────────────────────────────────── */}
@@ -59,7 +64,7 @@ export default function StudentLayout() {
         style={{ background: 'var(--bg-deep)', borderRight: '1px solid var(--border-subtle)' }}>
         <SidebarContent profile={profile} location={location} isDark={isDark}
           toggle={toggle} go={go} signOut={signOut} navigate={navigate} showClose
-          onClose={() => setSidebarOpen(false)} />
+          onClose={() => setSidebarOpen(false)} navItems={navItems} />
       </aside>
 
       {/* ── Main ─────────────────────────────────────────────────────────── */}
@@ -100,7 +105,8 @@ export default function StudentLayout() {
   )
 }
 
-function SidebarContent({ profile, location, isDark, toggle, go, signOut, navigate, showClose, onClose }) {
+function SidebarContent({ profile, location, isDark, toggle, go, signOut, navigate, showClose, onClose, navItems }) {
+  const { t } = useLang()
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
   return (
     <>
@@ -160,16 +166,17 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
       </nav>
 
       <div className="mt-auto px-3 flex flex-col gap-2">
+        <LangToggle />
         <button onClick={toggle}
           className="w-full flex items-center gap-2 text-xs py-2.5 px-3 rounded-xl transition-all"
           style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
           <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
-          {isDark ? 'Modo claro' : 'Modo oscuro'}
+          {isDark ? t('light_mode') : t('dark_mode')}
         </button>
         <button onClick={async () => { await signOut(); navigate('/login') }}
           className="w-full text-xs py-2.5 px-3 rounded-xl text-left transition-all"
           style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
-          → Cerrar sesión
+          → {t('logout')}
         </button>
       </div>
     </>

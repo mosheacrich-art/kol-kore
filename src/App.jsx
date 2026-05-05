@@ -4,6 +4,7 @@ import { useEffect, lazy, Suspense } from 'react'
 import { AudioProvider } from './context/AudioContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { LangProvider } from './context/LangContext'
 import { Capacitor } from '@capacitor/core'
 
 const AuthCallback        = lazy(() => import('./pages/AuthCallback'))
@@ -120,14 +121,16 @@ const Router = Capacitor.isNativePlatform() ? HashRouter : BrowserRouter
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <AudioProvider>
-          <Router>
-            <AppRoutes />
-          </Router>
-        </AudioProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <LangProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AudioProvider>
+            <Router>
+              <AppRoutes />
+            </Router>
+          </AudioProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </LangProvider>
   )
 }

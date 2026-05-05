@@ -2,36 +2,36 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
+import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
+import LangToggle from '../../components/LangToggle'
 
-const allNavItems = [
-  { path: '/teacher/dashboard',      label: 'Dashboard',        shortLabel: 'Inicio',    heb: 'לוּחַ' },
-  { path: '/teacher/students',       label: 'Alumnos',          shortLabel: 'Alumnos',   heb: 'תַּלְמִידִים' },
-  { path: '/teacher/homework',       label: 'Deberes',          shortLabel: 'Deberes',   heb: 'שִׁעוּרֵי בַּיִת' },
-  { path: '/teacher/schedule',       label: 'Clases',           shortLabel: 'Clases',    heb: 'שִׁעוּרִים' },
-  { path: '/teacher/audio',          label: 'Audios',           shortLabel: 'Audios',    heb: 'הֶקְלָטוֹת' },
-  { path: '/teacher/study',          label: 'Perashiot',        shortLabel: 'Perashá',   heb: 'פָּרָשִׁיּוֹת' },
-  { path: '/teacher/notifications',  label: 'Notificaciones',   shortLabel: 'Alertas',   heb: 'הוֹדָעוֹת', badge: true },
-  { path: '/teacher/imprimir',       label: 'Imprimir Tikún',   shortLabel: 'Imprimir',  heb: 'תִּקּוּן' },
+const NAV_KEYS = [
+  { path: '/teacher/dashboard',      key: 'nav_dashboard',      shortKey: 'nav_dashboard', heb: 'לוּחַ' },
+  { path: '/teacher/students',       key: 'nav_students',       shortKey: 'nav_students',  heb: 'תַּלְמִידִים' },
+  { path: '/teacher/homework',       key: 'nav_homework',       shortKey: 'nav_homework',  heb: 'שִׁעוּרֵי בַּיִת' },
+  { path: '/teacher/schedule',       key: 'nav_schedule',       shortKey: 'nav_schedule',  heb: 'שִׁעוּרִים' },
+  { path: '/teacher/audio',          key: 'nav_audio',          shortKey: 'nav_audio',     heb: 'הֶקְלָטוֹת' },
+  { path: '/teacher/study',          key: 'nav_parashot',       shortKey: 'nav_parashot',  heb: 'פָּרָשִׁיּוֹת' },
+  { path: '/teacher/notifications',  key: 'nav_notifications',  shortKey: 'nav_notifications', heb: 'הוֹדָעוֹת', badge: true },
+  { path: '/teacher/imprimir',       key: 'nav_print_tikun',    shortKey: 'nav_print_tikun', heb: 'תִּקּוּן' },
 ]
 
-// Bottom nav shows 4 main items; rest in "Más" drawer
-const bottomNavItems = [
-  allNavItems[0], // Dashboard
-  allNavItems[1], // Alumnos
-  allNavItems[2], // Deberes
-  allNavItems[6], // Notificaciones (con badge)
-]
-const moreItems = allNavItems.filter(i => !bottomNavItems.includes(i))
+const BOTTOM_NAV_INDICES = [0, 1, 2, 6]
 
 export default function TeacherLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { isDark, toggle } = useTheme()
   const { profile, signOut } = useAuth()
+  const { t } = useLang()
   const [unreadCount, setUnreadCount] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
+
+  const allNavItems = NAV_KEYS.map(n => ({ ...n, label: t(n.key), shortLabel: t(n.shortKey) }))
+  const bottomNavItems = BOTTOM_NAV_INDICES.map(i => allNavItems[i])
+  const moreItems = allNavItems.filter((_, i) => !BOTTOM_NAV_INDICES.includes(i))
 
   useEffect(() => {
     if (!profile?.id) return
@@ -61,7 +61,7 @@ export default function TeacherLayout() {
         style={{ background: 'var(--bg-deep)', borderRight: '1px solid var(--border-subtle)' }}>
         <SidebarContent profile={profile} location={location} isDark={isDark}
           toggle={toggle} go={go} signOut={signOut} navigate={navigate}
-          unreadCount={unreadCount} showClose={false} />
+          unreadCount={unreadCount} showClose={false} allNavItems={allNavItems} />
       </aside>
 
       {/* ── Mobile sidebar drawer ─────────────────────────────────────────── */}
@@ -71,7 +71,7 @@ export default function TeacherLayout() {
         style={{ background: 'var(--bg-deep)', borderRight: '1px solid var(--border-subtle)' }}>
         <SidebarContent profile={profile} location={location} isDark={isDark}
           toggle={toggle} go={go} signOut={signOut} navigate={navigate}
-          unreadCount={unreadCount} showClose onClose={() => setSidebarOpen(false)} />
+          unreadCount={unreadCount} showClose onClose={() => setSidebarOpen(false)} allNavItems={allNavItems} />
       </aside>
 
       {/* ── "Más" bottom sheet ────────────────────────────────────────────── */}
@@ -155,7 +155,8 @@ export default function TeacherLayout() {
   )
 }
 
-function SidebarContent({ profile, location, isDark, toggle, go, signOut, navigate, unreadCount, showClose, onClose }) {
+function SidebarContent({ profile, location, isDark, toggle, go, signOut, navigate, unreadCount, showClose, onClose, allNavItems }) {
+  const { t } = useLang()
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
   return (
     <>
@@ -220,16 +221,17 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
       </nav>
 
       <div className="mt-auto px-3 flex flex-col gap-2">
+        <LangToggle />
         <button onClick={toggle}
           className="w-full flex items-center gap-2 text-xs py-2.5 px-3 rounded-xl transition-all"
           style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
           <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
-          {isDark ? 'Modo claro' : 'Modo oscuro'}
+          {isDark ? t('light_mode') : t('dark_mode')}
         </button>
         <button onClick={async () => { await signOut(); navigate('/login') }}
           className="w-full text-xs py-2.5 px-3 rounded-xl text-left transition-all"
           style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
-          → Cerrar sesión
+          → {t('logout')}
         </button>
       </div>
     </>
