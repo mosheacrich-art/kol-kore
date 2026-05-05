@@ -273,6 +273,46 @@ export default function StudentProfile() {
         </div>
       </div>
 
+      {profile.parasha_id && (() => {
+        const myParasha = PARASHOT.find(p =>
+          p.id === profile.parasha_id?.toLowerCase() ||
+          p.name.toLowerCase() === profile.parasha_id?.toLowerCase() ||
+          p.id.replace(/-/g, '') === profile.parasha_id?.toLowerCase().replace(/[\s-]/g, '')
+        )
+        if (!myParasha) return null
+        return (
+        <div className="mb-6 fade-up-3">
+          <button
+            onClick={() => navigate(`/student/study/${myParasha.id}`)}
+            className="w-full flex items-center justify-between gap-4 p-4 rounded-2xl transition-all"
+            style={{
+              background: 'linear-gradient(135deg, rgba(108,51,230,0.18) 0%, rgba(45,212,191,0.08) 100%)',
+              border: '1px solid rgba(108,51,230,0.3)',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(108,51,230,0.28) 0%, rgba(45,212,191,0.14) 100%)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(108,51,230,0.18) 0%, rgba(45,212,191,0.08) 100%)' }}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(108,51,230,0.2)', border: '1px solid rgba(108,51,230,0.3)' }}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M3 9h12M9 3l6 6-6 6" stroke="#8b5cf6" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div className="text-left">
+                <p className="text-xs font-semibold" style={{ color: '#8b5cf6' }}>Ir a mi perashá</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+                  <span className="hebrew" style={{ color: 'var(--text-gold)' }}>{profile.parasha_id}</span>
+                </p>
+              </div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+              <path d="M6 4l4 4-4 4" stroke="#8b5cf6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        )
+      })()}
+
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <div className="lg:col-span-3 fade-up-3">
           <div className="flex items-center justify-between mb-4">

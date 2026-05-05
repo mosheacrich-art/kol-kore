@@ -253,11 +253,70 @@ function BarMitzvahCalc({ student, onAssign, onClose }) {
   )
 }
 
+function AssignParashaModal({ student, onAssign, onClose }) {
+  const [search, setSearch] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const assign = async (parasha) => {
+    setSaving(true)
+    await supabase.from('profiles').update({ parasha_id: parasha.name }).eq('id', student.id)
+    onAssign({ parasha_id: parasha.name })
+    setSaving(false)
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(10px)' }}>
+      <div className="w-full max-w-md rounded-2xl flex flex-col"
+        style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)', maxHeight: '80vh' }}>
+        <div className="flex items-start justify-between p-5 pb-3">
+          <div>
+            <p className="text-xs mb-0.5" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה · Asignar</p>
+            <h2 className="text-base font-semibold" style={{ color: 'var(--text)' }}>Perashá de {student.name?.split(' ')[0]}</h2>
+          </div>
+          <button onClick={onClose}
+            className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: 'var(--bg-card)', color: 'var(--text-3)' }}>✕</button>
+        </div>
+        <div className="px-5 pb-3">
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Buscar perashá…"
+            autoFocus
+            className="w-full px-3 py-2 rounded-xl text-sm outline-none"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }}
+          />
+        </div>
+        <div className="overflow-y-auto flex-1 px-3 pb-4">
+          {PARASHOT.filter(p =>
+            !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.heb.includes(search)
+          ).map(p => (
+            <button key={p.id} onClick={() => assign(p)} disabled={saving}
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl mb-1 text-left transition-all"
+              style={{ background: student.parasha_id === p.name ? 'rgba(249,184,0,0.12)' : 'transparent', border: student.parasha_id === p.name ? '1px solid rgba(249,184,0,0.3)' : '1px solid transparent' }}
+              onMouseEnter={e => { if (student.parasha_id !== p.name) e.currentTarget.style.background = 'var(--bg-card)' }}
+              onMouseLeave={e => { if (student.parasha_id !== p.name) e.currentTarget.style.background = 'transparent' }}>
+              <div className="flex items-center gap-3">
+                <span className="text-xs w-5 text-right flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{p.num}</span>
+                <span className="text-sm" style={{ color: 'var(--text-2)' }}>{p.name}</span>
+              </div>
+              <span className="hebrew text-sm" style={{ color: student.parasha_id === p.name ? '#d97706' : 'var(--text-3)' }}>{p.heb}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function TeacherStudents() {
   const { profile } = useAuth()
   const [students, setStudents] = useState([])
   const [selected, setSelected] = useState(null)
   const [calcOpen, setCalcOpen] = useState(false)
+  const [assignOpen, setAssignOpen] = useState(false)
 
   useEffect(() => {
     if (!profile) return
@@ -507,23 +566,23 @@ export default function TeacherStudents() {
                     </div>
                   )}
 
-                  {/* Assign parasha CTA — shown when student has no parasha */}
-                  {!student.parasha_id && (
-                    <button onClick={() => setCalcOpen(true)}
-                      className="w-full py-3 rounded-xl text-sm font-semibold mb-3 flex items-center justify-center gap-2"
-                      style={{
-                        background: 'linear-gradient(135deg, rgba(249,184,0,0.18), rgba(249,184,0,0.06))',
-                        border: '1px solid rgba(249,184,0,0.35)',
-                        color: '#d97706',
-                      }}>
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.3"/>
-                        <path d="M8 5v3l2 2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-                        <path d="M5 1.5L8 3l3-1.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+                  {/* Assign perasha actions */}
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <button onClick={() => setAssignOpen(true)}
+                      className="py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5"
+                      style={{ background: 'linear-gradient(135deg, rgba(108,51,230,0.18), rgba(108,51,230,0.06))', border: '1px solid rgba(108,51,230,0.3)', color: '#8b5cf6' }}>
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.2"/>
+                        <path d="M4 6h4M6 4v4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
                       </svg>
-                      Calcular Perashá de Bar Mitzvá
+                      Asignar perashá
                     </button>
-                  )}
+                    <button onClick={() => setCalcOpen(true)}
+                      className="py-2.5 rounded-xl text-xs font-medium"
+                      style={{ background: 'rgba(249,184,0,0.1)', color: '#d97706', border: '1px solid rgba(249,184,0,0.2)' }}>
+                      Bar Mitzvá
+                    </button>
+                  </div>
 
                   {/* Quick actions */}
                   <div className="grid grid-cols-2 gap-2">
@@ -531,19 +590,10 @@ export default function TeacherStudents() {
                       style={{ background: `${color}15`, color, border: `1px solid ${color}25` }}>
                       Enviar deber
                     </button>
-                    {student.parasha_id && (
-                      <button onClick={() => setCalcOpen(true)}
-                        className="py-2.5 rounded-xl text-xs font-medium"
-                        style={{ background: 'rgba(249,184,0,0.1)', color: '#d97706', border: '1px solid rgba(249,184,0,0.2)' }}>
-                        Recalcular perashá
-                      </button>
-                    )}
-                    {!student.parasha_id && (
-                      <button className="py-2.5 rounded-xl text-xs font-medium"
-                        style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-                        Ver historial
-                      </button>
-                    )}
+                    <button className="py-2.5 rounded-xl text-xs font-medium"
+                      style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+                      Ver historial
+                    </button>
                   </div>
                 </div>
               )
@@ -557,6 +607,13 @@ export default function TeacherStudents() {
           student={student}
           onAssign={handleAssign}
           onClose={() => setCalcOpen(false)}
+        />
+      )}
+      {assignOpen && student && (
+        <AssignParashaModal
+          student={student}
+          onAssign={handleAssign}
+          onClose={() => setAssignOpen(false)}
         />
       )}
     </div>

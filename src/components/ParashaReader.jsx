@@ -67,12 +67,10 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
       p_aliyah_idx: aliyahIdx,
     }).then(({ error }) => { if (error) console.error('increment_audio_listen:', error) })
 
-    // Notificar al profesor solo la primera vez por aliyá en esta sesión
-    const notifKey = `${parasha.id}-${aliyahIdx}`
-    if (profile.teacher_id && !notifiedRef.current.has(notifKey)) {
-      notifiedRef.current.add(notifKey)
+    if (profile.teacher_id) {
+      const notifKey = `${parasha.id}-${aliyahIdx}`
       const aliyahLabel = currentAliyah.n === 8 ? 'Maftir' : `${currentAliyah.n}ª aliyá`
-      supabase.from('notifications').insert({
+      const notifBase = {
         teacher_id: profile.teacher_id,
         student_id: profile.id,
         student_name: profile.name,
@@ -80,8 +78,14 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
         aliyah_idx: aliyahIdx,
         aliyah_label: aliyahLabel,
         message: `${profile.name} ha escuchado ${parasha.name} · ${aliyahLabel}`,
-        type: 'listen',
-      })
+      }
+      // Always insert a raw event for the dashboard chart
+      supabase.from('notifications').insert({ ...notifBase, type: 'listen_event' })
+      // Notify teacher only once per aliyah per session
+      if (!notifiedRef.current.has(notifKey)) {
+        notifiedRef.current.add(notifKey)
+        supabase.from('notifications').insert({ ...notifBase, type: 'listen' })
+      }
     }
   }
 

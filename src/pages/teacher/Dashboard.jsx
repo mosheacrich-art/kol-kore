@@ -46,7 +46,7 @@ export default function TeacherDashboard() {
         .from('notifications')
         .select('created_at')
         .eq('teacher_id', profile.id)
-        .eq('type', 'listen')
+        .eq('type', 'listen_event')
         .gte('created_at', since.toISOString())
 
       const counts = Array(7).fill(0)
