@@ -884,16 +884,19 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
 function SeferView({ parasha }) {
   const iframeRef = useRef(null)
   const BASE = import.meta.env.BASE_URL
-  const hash = parasha?.heb ? '#parasha=' + encodeURIComponent(parasha.heb) : ''
-  const src = `${BASE}imprimir-tikun/index.html?embed=1${hash}`
+  const src = `${BASE}imprimir-tikun/index.html?embed=1`
 
-  const prevHeb = useRef(parasha?.heb)
-  useEffect(() => {
-    if (prevHeb.current === parasha?.heb) return
-    prevHeb.current = parasha?.heb
+  const scrollToParasha = () => {
     if (parasha?.heb && iframeRef.current?.contentWindow) {
       iframeRef.current.contentWindow.postMessage({ scrollToParasha: parasha.heb }, '*')
     }
+  }
+
+  const prevHeb = useRef(null)
+  useEffect(() => {
+    if (prevHeb.current === parasha?.heb) return
+    prevHeb.current = parasha?.heb
+    scrollToParasha()
   }, [parasha?.heb])
 
   return (
@@ -904,6 +907,7 @@ function SeferView({ parasha }) {
         title="Modo Sefer"
         style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
         loading="lazy"
+        onLoad={scrollToParasha}
       />
     </div>
   )
