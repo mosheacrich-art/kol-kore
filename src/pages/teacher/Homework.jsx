@@ -3,11 +3,12 @@ import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { PARASHOT } from '../../data/parashot'
+import { useLang } from '../../context/LangContext'
 
 const statusStyle = {
-  pending:   { bg: 'var(--bg-card)', color: 'var(--text-3)', label: 'Pendiente' },
-  submitted: { bg: 'rgba(45,212,191,0.1)', color: '#0d9488', label: 'Entregado' },
-  late:      { bg: 'rgba(239,68,68,0.1)', color: '#ef4444', label: 'Tarde' },
+  pending:   { bg: 'var(--bg-card)', color: 'var(--text-3)' },
+  submitted: { bg: 'rgba(45,212,191,0.1)', color: '#0d9488' },
+  late:      { bg: 'rgba(239,68,68,0.1)', color: '#ef4444' },
 }
 
 const ALIYAH_LABELS = ['1ª Aliyá', '2ª Aliyá', '3ª Aliyá', '4ª Aliyá', '5ª Aliyá', '6ª Aliyá', '7ª Aliyá', 'Maftir']
@@ -15,6 +16,7 @@ const ALIYAH_LABELS = ['1ª Aliyá', '2ª Aliyá', '3ª Aliyá', '4ª Aliyá', '
 export default function TeacherHomework() {
   const { isDark } = useTheme()
   const { profile } = useAuth()
+  const { t } = useLang()
   const [composing, setComposing] = useState(false)
   const [sent, setSent] = useState([])
   const [students, setStudents] = useState([])
@@ -76,7 +78,7 @@ export default function TeacherHomework() {
           שִׁעוּרֵי בַּיִת · Deberes
         </p>
         <h1 className="text-3xl font-light" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-          Gestión de Deberes
+          {t('homework_title')}
         </h1>
       </div>
 
@@ -87,7 +89,7 @@ export default function TeacherHomework() {
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
           </svg>
-          Nuevo deber
+          {t('new_hw')}
         </button>
       </div>
 
@@ -98,7 +100,7 @@ export default function TeacherHomework() {
           <div className="w-full max-w-md rounded-2xl p-6 max-h-[90vh] overflow-y-auto"
             style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)' }}>
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-base font-semibold" style={{ color: 'var(--text)' }}>Enviar deber</h2>
+              <h2 className="text-base font-semibold" style={{ color: 'var(--text)' }}>{t('send_hw_title')}</h2>
               <button onClick={() => setComposing(false)}
                 className="w-7 h-7 rounded-full flex items-center justify-center"
                 style={{ background: 'var(--bg-card)', color: 'var(--text-3)' }}>✕</button>
@@ -107,7 +109,7 @@ export default function TeacherHomework() {
             <div className="flex flex-col gap-3">
               {/* Alumno */}
               <div>
-                <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>Para</label>
+                <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('to_label')}</label>
                 <select value={form.to} onChange={e => setForm(f => ({ ...f, to: e.target.value }))}
                   className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
                   {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -116,21 +118,21 @@ export default function TeacherHomework() {
 
               {/* Tarea */}
               <div>
-                <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>Tarea</label>
+                <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('task_label')}</label>
                 <input value={form.task} onChange={e => setForm(f => ({ ...f, task: e.target.value }))}
-                  placeholder="Descripción del deber..."
+                  placeholder={t('task_placeholder')}
                   className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
               </div>
 
               {/* Perashá */}
               <div>
                 <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>
-                  Perashá <span style={{ color: 'var(--text-muted)' }}>(opcional)</span>
+                  {t('parasha_optional')}
                 </label>
                 <select value={form.parasha_id}
                   onChange={e => setForm(f => ({ ...f, parasha_id: e.target.value, aliyah_idx: 0 }))}
                   className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
-                  <option value="">— Sin perashá específica —</option>
+                  <option value="">{t('no_parasha_opt')}</option>
                   {PARASHOT.map(p => (
                     <option key={p.id} value={p.id}>{p.name} · {p.heb}</option>
                   ))}
@@ -140,7 +142,7 @@ export default function TeacherHomework() {
               {/* Aliyá — solo si hay perashá */}
               {form.parasha_id && (
                 <div>
-                  <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>Trozo (Aliyá)</label>
+                  <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('aliyah_label')}</label>
                   <select value={form.aliyah_idx}
                     onChange={e => setForm(f => ({ ...f, aliyah_idx: Number(e.target.value) }))}
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
@@ -173,10 +175,10 @@ export default function TeacherHomework() {
                   </div>
                   <div>
                     <div className="text-xs font-medium" style={{ color: form.require_audio ? '#6c33e6' : 'var(--text)' }}>
-                      Requiere grabación de audio
+                      {t('require_audio_label')}
                     </div>
                     <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {form.require_audio ? 'El alumno debe grabar esta aliyá' : 'Sin audio obligatorio'}
+                      {form.require_audio ? t('must_record') : t('no_audio_req')}
                     </div>
                   </div>
                   <div className="ml-auto w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0"
@@ -192,13 +194,13 @@ export default function TeacherHomework() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>Materia</label>
+                  <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('subject_label')}</label>
                   <input value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
                     placeholder="Ej: Trop"
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
                 </div>
                 <div>
-                  <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>Fecha límite</label>
+                  <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('due_label')}</label>
                   <input type="date" value={form.due} onChange={e => setForm(f => ({ ...f, due: e.target.value }))}
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
                     style={{ ...inputStyle, colorScheme: isDark ? 'dark' : 'light' }} />
@@ -210,12 +212,12 @@ export default function TeacherHomework() {
               <button onClick={() => setComposing(false)}
                 className="flex-1 py-2.5 rounded-xl text-xs font-medium"
                 style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-                Cancelar
+                {t('cancel')}
               </button>
               <button onClick={sendHomework} disabled={saving || !form.task}
                 className="flex-1 btn-gold py-2.5 rounded-xl text-xs font-semibold"
                 style={{ opacity: saving || !form.task ? 0.6 : 1 }}>
-                {saving ? 'Enviando…' : 'Enviar deber'}
+                {saving ? t('sending') : t('send_hw')}
               </button>
             </div>
           </div>
@@ -226,11 +228,12 @@ export default function TeacherHomework() {
       <div className="fade-up-3 flex flex-col gap-3">
         {sent.length === 0 && (
           <div className="text-center py-16 text-sm" style={{ color: 'var(--text-muted)' }}>
-            No hay deberes enviados aún
+            {t('no_hw_sent')}
           </div>
         )}
         {sent.map(item => {
           const s = statusStyle[item.status] || statusStyle.pending
+          const statusLabel = item.status === 'submitted' ? t('status_submitted') : item.status === 'late' ? t('status_late') : t('status_pending')
           const parasha = item.parasha_id ? PARASHOT.find(p => p.id === item.parasha_id) : null
           const aliyahLabel = parasha && item.aliyah_idx != null
             ? (parasha.aliyot[item.aliyah_idx]?.n === 8 ? 'Maftir' : `${parasha.aliyot[item.aliyah_idx]?.n}ª Aliyá`)
@@ -249,7 +252,7 @@ export default function TeacherHomework() {
                     {item.student?.name || 'Todos'}
                   </span>
                   <span className="text-xs px-2 py-0.5 rounded-full"
-                    style={{ background: s.bg, color: s.color }}>{s.label}</span>
+                    style={{ background: s.bg, color: s.color }}>{statusLabel}</span>
                 </div>
                 <p className="text-xs" style={{ color: 'var(--text-2)' }}>{item.task}</p>
 
@@ -269,7 +272,7 @@ export default function TeacherHomework() {
                           <rect x="3" y="0.5" width="3" height="5" rx="1.5" stroke="currentColor" strokeWidth="1"/>
                           <path d="M1 4.5c0 1.9 1.6 3.5 3.5 3.5S8 6.4 8 4.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
                         </svg>
-                        Audio requerido
+                        {t('audio_required_badge')}
                       </span>
                     )}
                   </div>
@@ -284,13 +287,13 @@ export default function TeacherHomework() {
                   )}
                   {item.due && (
                     <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      Límite {new Date(item.due).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                      {t('limit_label')} {new Date(item.due).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
                     </span>
                   )}
                 </div>
                 {item.status === 'submitted' && item.recording_url && (
                   <div className="mt-2">
-                    <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Grabación del alumno:</p>
+                    <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>{t('student_recording')}</p>
                     <audio
                       controls
                       src={item.recording_url}

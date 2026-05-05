@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
+import { useLang } from '../../context/LangContext'
+import LangToggle from '../../components/LangToggle'
 
 export default function GuestLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { isDark, toggle } = useTheme()
+  const { t } = useLang()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const active = location.pathname === '/guest/study' || location.pathname.startsWith('/guest/study/')
@@ -36,7 +39,7 @@ export default function GuestLayout() {
           <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
             style={{ background: 'rgba(45,212,191,0.2)', color: '#0d9488' }}>?</div>
           <div>
-            <div className="text-xs font-medium" style={{ color: 'var(--text)' }}>Invitado</div>
+            <div className="text-xs font-medium" style={{ color: 'var(--text)' }}>{t('guest')}</div>
             <div className="text-xs hebrew" style={{ color: 'rgba(45,212,191,0.7)' }}>אוֹרֵחַ</div>
           </div>
         </div>
@@ -52,7 +55,7 @@ export default function GuestLayout() {
           }}>
           <StudyIcon active={active} />
           <div>
-            <div className="text-xs font-medium">Estudiar Perashá</div>
+            <div className="text-xs font-medium">{t('nav_study')}</div>
             <div className="text-xs hebrew" style={{ color: active ? 'var(--text-gold)' : 'var(--text-muted)' }}>לִמּוּד</div>
           </div>
         </button>
@@ -63,12 +66,13 @@ export default function GuestLayout() {
           className="w-full flex items-center gap-2 text-xs py-2.5 px-3 rounded-xl transition-all"
           style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
           <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
-          {isDark ? 'Modo claro' : 'Modo oscuro'}
+          {isDark ? t('light_mode') : t('dark_mode')}
         </button>
+        <LangToggle />
         <button onClick={() => navigate('/login')}
           className="w-full text-xs py-2.5 px-3 rounded-xl text-left transition-all"
           style={{ color: 'var(--text-muted)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
-          ← Volver al inicio
+          {t('back_to_home')}
         </button>
       </div>
     </>
@@ -112,7 +116,7 @@ export default function GuestLayout() {
           <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
           <span className="ml-auto text-xs px-2 py-0.5 rounded-full"
             style={{ background: 'rgba(45,212,191,0.1)', color: '#0d9488', border: '1px solid rgba(45,212,191,0.2)' }}>
-            Invitado
+            {t('guest')}
           </span>
         </div>
 

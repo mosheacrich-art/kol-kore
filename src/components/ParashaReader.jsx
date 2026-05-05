@@ -7,18 +7,15 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import AudioPlayer from './AudioPlayer'
 import { BOOK_COLORS } from '../data/parashot'
+import { useLang } from '../context/LangContext'
 
 function fmtSec(s) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
-const MODES = [
-  { id: 'taamim', label: 'Taamim', heb: 'טְעָמִים', desc: 'Con taamim y nikkud' },
-  { id: 'nikkud', label: 'Nikkud', heb: 'נִקּוּד', desc: 'Solo nikkud' },
-  { id: 'plain',  label: 'Llano',  heb: 'כְּתָב',   desc: 'Sin marcas' },
-  { id: 'split',  label: 'Partida',heb: 'מְפוּצָּל', desc: 'Pantalla partida' },
-  { id: 'sefer',  label: 'Sefer',  heb: 'סֵפֶר',    desc: 'Modo sefer (tikkun.io)' },
-]
+const MODE_IDS = ['taamim', 'nikkud', 'plain', 'split', 'sefer']
+const MODE_HEB = ['טְעָמִים', 'נִקּוּד', 'כְּתָב', 'מְפוּצָּל', 'סֵפֶר']
+const MODE_TKEYS = ['mode_taamim', 'mode_nikkud', 'mode_plain', 'mode_split', 'mode_sefer']
 
 const BOOK_TO_NUM = { Genesis: 1, Exodus: 2, Leviticus: 3, Numbers: 4, Deuteronomy: 5 }
 const MIN_FONT = 14
@@ -31,6 +28,8 @@ function tikkunHash(ref) {
 }
 
 export default function ParashaReader({ parasha, guestMode = false, initialAliyah = 0 }) {
+  const { t } = useLang()
+  const MODES = MODE_IDS.map((id, i) => ({ id, heb: MODE_HEB[i], label: t(MODE_TKEYS[i]) }))
   const [aliyahIdx, setAliyahIdx] = useState(initialAliyah)
   const [mode, setMode] = useState('taamim')
   const [fontSize, setFontSize] = useState(30)
@@ -191,7 +190,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
       setRecSeconds(0)
       timerRef.current = setInterval(() => setRecSeconds(s => s + 1), 1000)
     } catch (err) {
-      alert('No se pudo acceder al micrófono: ' + (err.message || err))
+      alert(err.message || err)
     }
   }
 
@@ -204,7 +203,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
     const file = e.target.files?.[0]
     if (!file) return
     if (!file.type.startsWith('audio/') && !file.type.startsWith('video/')) {
-      alert('Solo se aceptan archivos de audio (mp3, wav, m4a, mp4…)')
+      alert(t('audio_file_error'))
       return
     }
     const notifData = buildNotifData()
@@ -356,7 +355,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
               </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold" style={{ color: '#6c33e6' }}>Tienes un deber aquí</p>
+              <p className="text-xs font-semibold" style={{ color: '#6c33e6' }}>{t('pending_hw')}</p>
               <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>{pendingHomework.task}</p>
             </div>
             <div className="w-2 h-2 rounded-full animate-pulse flex-shrink-0" style={{ background: '#6c33e6' }} />
@@ -371,7 +370,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
                   <path d="M1.5 5.5c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
                   <path d="M5.5 9.5v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
                 </svg>
-                Grabar
+                {t('record')}
               </button>
               <button onClick={() => uploadInputRef.current?.click()}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
@@ -380,7 +379,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
                   <path d="M5.5 1v7M2 5l3.5-4L9 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M1 9.5h9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
                 </svg>
-                Subir
+                {t('upload')}
               </button>
             </div>
           )}
@@ -395,7 +394,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
             <circle cx="6" cy="6" r="5" stroke="#16a34a" strokeWidth="1.2"/>
             <path d="M3.5 6l2 2L8.5 4" stroke="#16a34a" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span className="text-xs font-medium" style={{ color: '#16a34a' }}>Audio enviado al profesor</span>
+          <span className="text-xs font-medium" style={{ color: '#16a34a' }}>{t('audio_sent')}</span>
         </div>
       )}
 
@@ -408,9 +407,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
             <path d="M1.5 5.5c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke={bookColor} strokeWidth="1.2" strokeLinecap="round" opacity="0.5"/>
           </svg>
           <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            {profile?.role === 'student'
-              ? 'Sin audio del profesor · graba y envíaselo'
-              : 'Sin audio para esta aliyá · graba o sube uno abajo'}
+            {profile?.role === 'student' ? t('no_audio') : t('no_audio_teacher')}
           </span>
         </div>
       )}
@@ -448,7 +445,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
         )}
         {mode !== 'sefer' && !loading && !error && verses.length === 0 && (
           <div className="flex-1 flex items-center justify-center">
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin texto disponible</p>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('loading')}</p>
           </div>
         )}
       </div>
@@ -462,7 +459,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
             <div className="flex items-center gap-2 flex-1 justify-start">
               <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
               <span className="text-xs font-medium tabular-nums" style={{ color: '#ef4444' }}>
-                Grabando… {fmtSec(recSeconds)}
+                {t('record')}… {fmtSec(recSeconds)}
               </span>
             </div>
             <button onClick={stopRec}
@@ -471,7 +468,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                 <rect x="1.5" y="1.5" width="7" height="7" rx="1" fill="#ef4444"/>
               </svg>
-              Parar
+              {t('stop')}
             </button>
           </>
         ) : audio ? (
@@ -496,7 +493,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
                   <path d="M1.5 5.5c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
                   <path d="M5.5 9.5v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
                 </svg>
-                Grabar
+                {t('record')}
               </button>
             )}
             {profile?.role !== 'student' && (
@@ -530,7 +527,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
                 <path d="M5.5 1v7M2 5l3.5-4L9 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M1 9.5h9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
               </svg>
-              Subir
+              {t('upload')}
             </button>
             <button onClick={startRec}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium flex-shrink-0 transition-all"

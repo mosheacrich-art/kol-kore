@@ -1,11 +1,13 @@
 import { useRef, useState } from 'react'
 import { PARASHOT } from '../data/parashot'
+import { useLang } from '../context/LangContext'
 
 const BASE = import.meta.env.BASE_URL
 
 export default function ImprimirTikun() {
   const iframeRef = useRef(null)
   const [selected, setSelected] = useState('')
+  const { t } = useLang()
 
   const jumpTo = (heb) => {
     setSelected(heb)
@@ -29,7 +31,7 @@ export default function ImprimirTikun() {
 
         {/* Parasha jump selector */}
         <div className="flex items-center gap-2">
-          <span className="text-xs" style={{ color: 'var(--text-3)' }}>Ir a:</span>
+          <span className="text-xs" style={{ color: 'var(--text-3)' }}>{t('go_to')}</span>
           <select
             value={selected}
             onChange={e => jumpTo(e.target.value)}
@@ -41,7 +43,7 @@ export default function ImprimirTikun() {
               fontFamily: '"Taamey Frank CLM", "SBL Hebrew", serif',
               maxWidth: '220px',
             }}>
-            <option value="">— Selecciona parashá —</option>
+            <option value="">{t('select_parasha_opt')}</option>
             {PARASHOT.map(p => (
               <option key={p.id} value={p.heb}>
                 {p.heb}  ·  {p.name}
@@ -51,9 +53,7 @@ export default function ImprimirTikun() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            Ctrl+P para imprimir o guardar PDF
-          </span>
+          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('print_hint')}</span>
           <button
             onClick={printTikun}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
@@ -63,7 +63,7 @@ export default function ImprimirTikun() {
               <path d="M4 4V2h5v2" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
               <path d="M4 8h5M4 10h3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
             </svg>
-            Imprimir / PDF
+            {t('print_pdf')}
           </button>
         </div>
       </div>

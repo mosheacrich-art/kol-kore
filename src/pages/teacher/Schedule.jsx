@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import { useLang } from '../../context/LangContext'
 
 const WEEK_DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 const CLASS_TYPES = ['Clase', 'Trop', 'Lectura', 'Repaso', 'Maftir', 'Brajot']
@@ -28,6 +29,7 @@ function fmt(date) {
 
 export default function TeacherSchedule() {
   const { profile } = useAuth()
+  const { t } = useLang()
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()))
   const [selectedDay, setSelectedDay] = useState(() => {
     const today = new Date().getDay()
@@ -88,7 +90,7 @@ export default function TeacherSchedule() {
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-3xl font-light" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-              Calendario de clases
+              {t('schedule_heading')}
             </h1>
             <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>{weekLabel}</p>
           </div>
@@ -98,7 +100,7 @@ export default function TeacherSchedule() {
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
             </svg>
-            Nueva clase
+            {t('new_class')}
           </button>
         </div>
       </div>
@@ -114,10 +116,10 @@ export default function TeacherSchedule() {
               <path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
-          <button onClick={() => { setWeekStart(getWeekStart(new Date())); const t = new Date().getDay(); setSelectedDay(t === 0 ? 6 : t - 1) }}
+          <button onClick={() => { setWeekStart(getWeekStart(new Date())); const td = new Date().getDay(); setSelectedDay(td === 0 ? 6 : td - 1) }}
             className="text-xs px-3 py-1.5 rounded-full transition-all"
             style={{ background: 'rgba(108,51,230,0.1)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)' }}>
-            Hoy
+            {t('today_btn')}
           </button>
           <button onClick={() => setWeekStart(w => addDays(w, 7))}
             className="p-2 rounded-lg transition-all"
@@ -169,7 +171,7 @@ export default function TeacherSchedule() {
                 {WEEK_DAYS[selectedDay]} {weekDays[selectedDay]?.getDate()} · {weekDays[selectedDay]?.toLocaleDateString('es', { month: 'long' })}
                 {weekDays[selectedDay]?.toDateString() === today.toDateString() && (
                   <span className="ml-2 text-xs px-2 py-0.5 rounded-full"
-                    style={{ background: 'rgba(45,212,191,0.15)', color: '#0d9488' }}>Hoy</span>
+                    style={{ background: 'rgba(45,212,191,0.15)', color: '#0d9488' }}>{t('today')}</span>
                 )}
               </h2>
               <button onClick={() => setShowModal(true)}
@@ -178,7 +180,7 @@ export default function TeacherSchedule() {
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                   <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
                 </svg>
-                Añadir
+                {t('add_btn')}
               </button>
             </div>
 
@@ -196,11 +198,11 @@ export default function TeacherSchedule() {
                     <path d="M6 2v2M14 2v2M2 8h16" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
                   </svg>
                 </div>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin clases este día</p>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('no_classes_day')}</p>
                 <button onClick={() => setShowModal(true)}
                   className="text-xs px-4 py-2 rounded-lg transition-all"
                   style={{ background: 'rgba(249,184,0,0.1)', color: '#d97706', border: '1px solid rgba(249,184,0,0.2)' }}>
-                  + Añadir clase
+                  {t('add_class_btn')}
                 </button>
               </div>
             ) : (
@@ -260,13 +262,13 @@ export default function TeacherSchedule() {
         {/* Week summary */}
         <div className="fade-up-4">
           <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <h2 className="text-sm font-semibold mb-5" style={{ color: 'var(--text)' }}>Resumen semana</h2>
+            <h2 className="text-sm font-semibold mb-5" style={{ color: 'var(--text)' }}>{t('week_summary')}</h2>
             <div className="grid grid-cols-2 gap-3 mb-5">
               {[
-                { label: 'Clases', value: classes.length, color: '#f9b800' },
-                { label: 'Horas', value: `${(totalMinutes / 60).toFixed(1)}h`, color: '#6c33e6' },
-                { label: 'Alumnos', value: uniqueStudents.length, color: '#2dd4bf' },
-                { label: 'Hoy', value: classes.filter(c => new Date(c.scheduled_at).toDateString() === today.toDateString()).length, color: '#a78bfa' },
+                { label: t('classes_label'), value: classes.length, color: '#f9b800' },
+                { label: t('hours_label'), value: `${(totalMinutes / 60).toFixed(1)}h`, color: '#6c33e6' },
+                { label: t('students_label'), value: uniqueStudents.length, color: '#2dd4bf' },
+                { label: t('today'), value: classes.filter(c => new Date(c.scheduled_at).toDateString() === today.toDateString()).length, color: '#a78bfa' },
               ].map(s => (
                 <div key={s.label} className="rounded-xl p-3 text-center"
                   style={{ background: `${s.color}10`, border: `1px solid ${s.color}18` }}>
@@ -278,7 +280,7 @@ export default function TeacherSchedule() {
 
             {uniqueStudents.length > 0 && (
               <div>
-                <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>Clases por alumno</p>
+                <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>{t('classes_by_student')}</p>
                 {uniqueStudents.map(name => {
                   const count = classes.filter(c => c.student_name === name).length
                   const color = colorFor(name)
@@ -289,7 +291,7 @@ export default function TeacherSchedule() {
                         <div className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
                         <span className="text-xs" style={{ color: 'var(--text-2)' }}>{name.split(' ')[0]}</span>
                       </div>
-                      <span className="text-xs" style={{ color }}>{count} clase{count !== 1 ? 's' : ''}</span>
+                      <span className="text-xs" style={{ color }}>{count} {t('classes_label').toLowerCase()}</span>
                     </div>
                   )
                 })}
@@ -298,7 +300,7 @@ export default function TeacherSchedule() {
 
             {classes.length === 0 && (
               <p className="text-xs text-center py-4" style={{ color: 'var(--text-muted)' }}>
-                Sin clases esta semana
+                {t('no_classes_week')}
               </p>
             )}
           </div>
@@ -310,6 +312,7 @@ export default function TeacherSchedule() {
           profile={profile}
           students={students}
           defaultDay={weekDays[selectedDay]}
+          t={t}
           onClose={() => setShowModal(false)}
           onSaved={(cls) => { setClasses(prev => [...prev, cls].sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))) }}
         />
@@ -318,7 +321,7 @@ export default function TeacherSchedule() {
   )
 }
 
-function AddClassModal({ profile, students, defaultDay, onClose, onSaved }) {
+function AddClassModal({ profile, students, defaultDay, t, onClose, onSaved }) {
   const defaultDate = defaultDay instanceof Date ? defaultDay : new Date()
   const pad = n => n.toString().padStart(2, '0')
   const defaultDateStr = `${defaultDate.getFullYear()}-${pad(defaultDate.getMonth() + 1)}-${pad(defaultDate.getDate())}`
@@ -339,7 +342,7 @@ function AddClassModal({ profile, students, defaultDay, onClose, onSaved }) {
 
   const handleSave = async (e) => {
     e.preventDefault()
-    if (!studentName.trim()) { setError('Introduce un nombre de alumno'); return }
+    if (!studentName.trim()) { setError(t('student_name_error')); return }
     setSaving(true)
     setError('')
     const scheduled_at = new Date(`${date}T${time}:00`).toISOString()
@@ -374,7 +377,7 @@ function AddClassModal({ profile, students, defaultDay, onClose, onSaved }) {
 
         <div className="flex items-center justify-between px-6 pt-6 pb-4"
           style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-          <h2 className="text-base font-semibold" style={{ color: 'var(--text)' }}>Nueva clase</h2>
+          <h2 className="text-base font-semibold" style={{ color: 'var(--text)' }}>{t('new_class')}</h2>
           <button onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center"
             style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
@@ -388,33 +391,33 @@ function AddClassModal({ profile, students, defaultDay, onClose, onSaved }) {
 
           {/* Student picker */}
           <div>
-            <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>Alumno</label>
+            <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('student_label')}</label>
             {students.length > 0 ? (
               <select value={studentId} onChange={e => setStudentId(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl text-sm" style={inputStyle}>
-                <option value="">— Escribir nombre manualmente —</option>
+                <option value="">{t('write_manually')}</option>
                 {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             ) : null}
             {!studentId && (
               <input type="text" value={customName} onChange={e => setCustomName(e.target.value)}
-                placeholder="Nombre del alumno" required={!studentId}
+                placeholder={t('student_name_placeholder')} required={!studentId}
                 className="w-full px-3.5 py-2.5 rounded-xl text-sm mt-1.5" style={inputStyle} />
             )}
           </div>
 
           {/* Type */}
           <div>
-            <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>Tipo</label>
+            <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('type_label')}</label>
             <div className="flex flex-wrap gap-1.5">
-              {CLASS_TYPES.map(t => (
-                <button key={t} type="button" onClick={() => setType(t)}
+              {CLASS_TYPES.map(ct => (
+                <button key={ct} type="button" onClick={() => setType(ct)}
                   className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
                   style={{
-                    background: type === t ? '#f9b800' : 'var(--bg-card)',
-                    color: type === t ? '#0d0b1e' : 'var(--text-3)',
-                    border: `1px solid ${type === t ? '#f9b800' : 'var(--border)'}`,
-                  }}>{t}</button>
+                    background: type === ct ? '#f9b800' : 'var(--bg-card)',
+                    color: type === ct ? '#0d0b1e' : 'var(--text-3)',
+                    border: `1px solid ${type === ct ? '#f9b800' : 'var(--border)'}`,
+                  }}>{ct}</button>
               ))}
             </div>
           </div>
@@ -422,12 +425,12 @@ function AddClassModal({ profile, students, defaultDay, onClose, onSaved }) {
           {/* Date + time */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>Fecha</label>
+              <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('date_label')}</label>
               <input type="date" value={date} onChange={e => setDate(e.target.value)} required
                 className="w-full px-3.5 py-2.5 rounded-xl text-sm" style={inputStyle} />
             </div>
             <div>
-              <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>Hora</label>
+              <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('hour_label')}</label>
               <input type="time" value={time} onChange={e => setTime(e.target.value)} required
                 className="w-full px-3.5 py-2.5 rounded-xl text-sm" style={inputStyle} />
             </div>
@@ -435,7 +438,7 @@ function AddClassModal({ profile, students, defaultDay, onClose, onSaved }) {
 
           {/* Duration */}
           <div>
-            <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>Duración</label>
+            <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('duration_label')}</label>
             <div className="flex gap-2">
               {[30, 45, 60, 90].map(d => (
                 <button key={d} type="button" onClick={() => setDuration(d)}
@@ -451,9 +454,9 @@ function AddClassModal({ profile, students, defaultDay, onClose, onSaved }) {
 
           {/* Notes */}
           <div>
-            <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>Notas (opcional)</label>
+            <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('notes_optional')}</label>
             <input type="text" value={notes} onChange={e => setNotes(e.target.value)}
-              placeholder="ej. Traer tikún, parasha Vaera…"
+              placeholder={t('notes_placeholder')}
               className="w-full px-3.5 py-2.5 rounded-xl text-sm" style={inputStyle} />
           </div>
 
@@ -467,7 +470,7 @@ function AddClassModal({ profile, students, defaultDay, onClose, onSaved }) {
               border: saving ? '1px solid var(--border)' : 'none',
               boxShadow: saving ? 'none' : '0 4px 16px rgba(108,51,230,0.3)',
             }}>
-            {saving ? 'Guardando…' : 'Guardar clase'}
+            {saving ? t('saving') : t('save_class')}
           </button>
         </form>
       </div>

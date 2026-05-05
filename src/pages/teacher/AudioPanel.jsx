@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { ALL_PARASHOT, BOOK_COLORS, SEFARIM_LIST } from '../../data/parashot'
 import { useAudio } from '../../context/AudioContext'
 import AudioPlayer from '../../components/AudioPlayer'
+import { useLang } from '../../context/LangContext'
 
 export default function TeacherAudioPanel() {
   const [selectedParasha, setSelectedParasha] = useState(ALL_PARASHOT[0])
@@ -16,11 +17,12 @@ export default function TeacherAudioPanel() {
   const color = BOOK_COLORS[selectedParasha.book] || '#6c33e6'
   const currentKey = `${selectedParasha.id}-${selectedAliyah}`
   const isSyncing = syncingKeys.has(currentKey)
+  const { t } = useLang()
 
   const handleFile = async (file) => {
     if (!file) return
     if (!file.type.startsWith('audio/') && !file.type.startsWith('video/')) {
-      alert('Solo se aceptan archivos de audio (mp3, wav, m4a, mp4…)')
+      alert(t('audio_file_error'))
       return
     }
     setUploading(true)
@@ -52,10 +54,10 @@ export default function TeacherAudioPanel() {
         <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-3xl font-light" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-              Panel de Audios
+              {t('audio_panel_title')}
             </h1>
             <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
-              Sube audios por aliyá · Tus alumnos los escuchan al estudiar
+              {t('audio_panel_sub')}
             </p>
           </div>
           {totalAudios > 0 && (
@@ -82,7 +84,7 @@ export default function TeacherAudioPanel() {
                   color: bookFilter === 'all' ? 'var(--text)' : 'var(--text-3)',
                   border: '1px solid var(--border)',
                 }}>
-                Todas
+                {t('all_filter')}
               </button>
               {SEFARIM_LIST.map(s => {
                 const c = BOOK_COLORS[s.id]
@@ -159,7 +161,7 @@ export default function TeacherAudioPanel() {
 
             {/* Aliyah selector */}
             <div className="mb-5">
-              <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>Selecciona la aliyá</p>
+              <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{t('select_aliyah')}</p>
               <div className="flex gap-2 flex-wrap">
                 {selectedParasha.aliyot.map((a, i) => {
                   const hasAudio = !!get(selectedParasha.id, i)
@@ -194,16 +196,16 @@ export default function TeacherAudioPanel() {
             {/* Current audio preview */}
             {currentAudio && (
               <div className="mb-4">
-                <p className="text-xs mb-2" style={{ color: 'var(--text-3)' }}>Audio actual</p>
+                <p className="text-xs mb-2" style={{ color: 'var(--text-3)' }}>{t('current_audio')}</p>
                 <AudioPlayer audio={currentAudio} label={selectedParasha.aliyot[selectedAliyah].label} />
                 <div className="flex items-center justify-between mt-2">
                   <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                    Subido: {currentAudio.uploadedAt}
+                    {t('uploaded_label')} {currentAudio.uploadedAt}
                   </span>
                   <button onClick={() => remove(selectedParasha.id, selectedAliyah)}
                     className="text-xs px-2.5 py-1 rounded-lg transition-all"
                     style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
-                    Eliminar
+                    {t('delete')}
                   </button>
                 </div>
               </div>
@@ -215,7 +217,7 @@ export default function TeacherAudioPanel() {
                 style={{ background: `${color}12`, border: `1px solid ${color}25`, color }}>
                 <span className="inline-block w-3 h-3 rounded-full border border-t-transparent animate-spin flex-shrink-0"
                   style={{ borderColor: `${color}40`, borderTopColor: color }} />
-                {uploading ? 'Subiendo audio…' : 'Sincronizando con IA…'}
+                {uploading ? t('uploading_audio') : t('syncing_ai')}
               </div>
             )}
 
@@ -244,10 +246,10 @@ export default function TeacherAudioPanel() {
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium" style={{ color: dragging ? color : 'var(--text-2)' }}>
-                  {currentAudio ? 'Reemplazar audio' : 'Subir audio'}
+                  {currentAudio ? t('replace_audio') : t('upload_audio')}
                 </p>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                  Arrastra aquí o haz clic · MP3, WAV, M4A
+                  {t('drag_hint')}
                 </p>
                 <p className="text-xs mt-1 hebrew" style={{ color: 'var(--text-gold)' }}>
                   {selectedParasha.heb} · {selectedParasha.aliyot[selectedAliyah].label}
@@ -263,7 +265,7 @@ export default function TeacherAudioPanel() {
             <div className="rounded-2xl p-5"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
               <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>
-                Audios de <span className="hebrew" style={{ color }}>{selectedParasha.heb}</span>
+                {t('audios_of')} <span className="hebrew" style={{ color }}>{selectedParasha.heb}</span>
               </p>
               <div className="flex flex-col gap-2">
                 {selectedParasha.aliyot.map((a, i) => {
@@ -289,7 +291,7 @@ export default function TeacherAudioPanel() {
                                 style={{ background: `${color}15`, color, border: `1px solid ${color}30` }}>
                                 <span className="inline-block w-2.5 h-2.5 rounded-full border border-t-transparent animate-spin"
                                   style={{ borderColor: `${color}50`, borderTopColor: color }} />
-                                sincronizando…
+                                {t('syncing_label')}
                               </span>
                             )
                             : (
@@ -298,11 +300,11 @@ export default function TeacherAudioPanel() {
                                   onClick={async () => { await generateSync(selectedParasha.id, i) }}
                                   className="text-xs px-1.5 py-0.5 rounded-full transition-all"
                                   style={{ background: `${color}15`, color, border: `1px solid ${color}30` }}>
-                                  ⚡ Reintentar sync
+                                  {t('retry_sync')}
                                 </button>
                                 {syncErrors[key] && (
                                   <span className="text-xs max-w-xs" style={{ color: '#ef4444' }} title={syncErrors[key]}>
-                                    Error: {syncErrors[key].length > 60 ? syncErrors[key].slice(0, 60) + '…' : syncErrors[key]}
+                                    {t('error_prefix')} {syncErrors[key].length > 60 ? syncErrors[key].slice(0, 60) + '…' : syncErrors[key]}
                                   </span>
                                 )}
                               </div>

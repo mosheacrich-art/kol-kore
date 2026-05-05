@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import { useLang } from '../../context/LangContext'
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -15,6 +16,7 @@ function timeAgo(dateStr) {
 
 export default function TeacherNotifications() {
   const { profile } = useAuth()
+  const { t } = useLang()
   const [notifs, setNotifs] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -53,18 +55,18 @@ export default function TeacherNotifications() {
         </p>
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-light" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-            Notificaciones
+            {t('notif_title')}
           </h1>
           {unreadCount > 0 && (
             <button onClick={markAllRead}
               className="text-xs px-3 py-1.5 rounded-full"
               style={{ background: 'rgba(108,51,230,0.1)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)' }}>
-              Marcar todas como leídas
+              {t('mark_all_read')}
             </button>
           )}
         </div>
         <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
-          {unreadCount > 0 ? `${unreadCount} sin leer` : 'Todo al día'}
+          {unreadCount > 0 ? `${unreadCount} ${t('unread_n')}` : t('up_to_date')}
         </p>
       </div>
 
@@ -84,10 +86,8 @@ export default function TeacherNotifications() {
               <path d="M10 20a2 2 0 004 0" stroke="rgba(108,51,230,0.5)" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
           </div>
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin notificaciones aún</p>
-          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-            Aquí verás cuando tus alumnos suban o graben audio
-          </p>
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('no_notifs')}</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{t('no_notifs_desc')}</p>
         </div>
       )}
 
@@ -139,7 +139,7 @@ export default function TeacherNotifications() {
                   <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{n.aliyah_label}</span>
                 )}
                 {!n.read && (
-                  <span className="ml-auto text-xs" style={{ color: '#8b5cf6' }}>Clic para marcar leída</span>
+                  <span className="ml-auto text-xs" style={{ color: '#8b5cf6' }}>{t('click_mark_read')}</span>
                 )}
               </div>
               {n.type === 'audio' && n.recording_url && (

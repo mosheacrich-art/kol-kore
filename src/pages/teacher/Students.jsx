@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { PARASHOT } from '../../data/parashot'
+import { useLang } from '../../context/LangContext'
 
 const COLORS = ['#6c33e6', '#f9b800', '#2dd4bf', '#f87171', '#a78bfa']
 
@@ -98,7 +99,7 @@ async function calcBarMitzvah(birthDateStr) {
   }
 }
 
-function BarMitzvahCalc({ student, onAssign, onClose }) {
+function BarMitzvahCalc({ student, onAssign, onClose, t }) {
   const [birthDate, setBirthDate] = useState('')
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -114,7 +115,7 @@ function BarMitzvahCalc({ student, onAssign, onClose }) {
       const res = await calcBarMitzvah(birthDate)
       setResult(res)
     } catch {
-      setError('No se pudo calcular. Verifica la fecha e inténtalo de nuevo.')
+      setError(t('bm_error'))
     }
     setLoading(false)
   }
@@ -154,7 +155,7 @@ function BarMitzvahCalc({ student, onAssign, onClose }) {
         {/* Date input */}
         <div className="mb-4">
           <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>
-            Fecha de nacimiento (gregoriana)
+            {t('birth_date_greg')}
           </label>
           <div className="flex gap-2">
             <input
@@ -174,7 +175,7 @@ function BarMitzvahCalc({ student, onAssign, onClose }) {
                 color: birthDate && !loading ? '#d97706' : 'var(--text-muted)',
                 border: `1px solid ${birthDate && !loading ? 'rgba(249,184,0,0.35)' : 'var(--border)'}`,
               }}>
-              {loading ? '…' : 'Calcular'}
+              {loading ? '…' : t('calc_label')}
             </button>
           </div>
         </div>
@@ -190,7 +191,7 @@ function BarMitzvahCalc({ student, onAssign, onClose }) {
           <div className="flex flex-col items-center py-8 gap-3">
             <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin"
               style={{ borderColor: 'rgba(249,184,0,0.25)', borderTopColor: '#f9b800' }} />
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Consultando calendario hebreo…</p>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('heb_calendar_loading')}</p>
           </div>
         )}
 
@@ -200,10 +201,10 @@ function BarMitzvahCalc({ student, onAssign, onClose }) {
             <div className="rounded-xl overflow-hidden"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               {[
-                { label: 'Nacimiento hebreo', value: result.birthHebrewScript, sub: result.birthHebrewLatin },
-                { label: 'Bar Mitzvá hebreo', value: result.bmHebrewLatin },
-                { label: 'Bar Mitzvá gregoriano', value: result.bmGregDisplay },
-                { label: 'Shabat de lectura', value: result.shabbatDisplay },
+                { label: t('birth_heb'), value: result.birthHebrewScript, sub: result.birthHebrewLatin },
+                { label: t('bm_heb'), value: result.bmHebrewLatin },
+                { label: t('bm_greg'), value: result.bmGregDisplay },
+                { label: t('reading_shabbat'), value: result.shabbatDisplay },
               ].map((row, i, arr) => (
                 <div key={row.label}
                   className="flex items-center justify-between px-4 py-2.5"
@@ -238,13 +239,13 @@ function BarMitzvahCalc({ student, onAssign, onClose }) {
           <button onClick={onClose}
             className="flex-1 py-2.5 rounded-xl text-xs font-medium"
             style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-            Cancelar
+            {t('cancel')}
           </button>
           {result && (
             <button onClick={assign} disabled={saving}
               className="flex-1 btn-gold py-2.5 rounded-xl text-xs font-semibold"
               style={{ opacity: saving ? 0.7 : 1 }}>
-              {saving ? 'Guardando…' : 'Asignar Perashá ✓'}
+              {saving ? t('saving') : t('assign_confirm')}
             </button>
           )}
         </div>
@@ -253,7 +254,7 @@ function BarMitzvahCalc({ student, onAssign, onClose }) {
   )
 }
 
-function AssignParashaModal({ student, onAssign, onClose }) {
+function AssignParashaModal({ student, onAssign, onClose, t }) {
   const [search, setSearch] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -283,7 +284,7 @@ function AssignParashaModal({ student, onAssign, onClose }) {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar perashá…"
+            placeholder={t('search_parasha_placeholder')}
             autoFocus
             className="w-full px-3 py-2 rounded-xl text-sm outline-none"
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }}
@@ -313,6 +314,7 @@ function AssignParashaModal({ student, onAssign, onClose }) {
 
 export default function TeacherStudents() {
   const { profile } = useAuth()
+  const { t } = useLang()
   const [students, setStudents] = useState([])
   const [selected, setSelected] = useState(null)
   const [calcOpen, setCalcOpen] = useState(false)
@@ -366,10 +368,10 @@ export default function TeacherStudents() {
           תַּלְמִידִים · Alumnos
         </p>
         <h1 className="text-3xl font-light" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-          Mis Alumnos
+          {t('students_title')}
         </h1>
         <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
-          {students.length} alumno{students.length !== 1 ? 's' : ''} · {students.filter(s => s.parasha_id).length} con perashá asignada
+          {students.length} · {students.filter(s => s.parasha_id).length} {t('with_parasha_assigned')}
         </p>
       </div>
 
@@ -379,7 +381,7 @@ export default function TeacherStudents() {
           <div className="grid grid-cols-1 gap-3"
             style={selected ? {} : { gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
             {students.length === 0 && (
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No hay alumnos aún</p>
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('no_students')}</p>
             )}
             {students.map((s, i) => {
               const color = COLORS[i % COLORS.length]
@@ -403,12 +405,12 @@ export default function TeacherStudents() {
                       </div>
                       <div className="flex items-center gap-2 mb-3">
                         <span className="text-xs" style={{ color: 'var(--text-3)' }}>
-                          {s.parasha_id || 'Sin perashá asignada'}
+                          {s.parasha_id || t('no_parasha')}
                         </span>
                         {!s.parasha_id && (
                           <span className="text-xs px-1.5 py-0.5 rounded-md"
                             style={{ background: 'rgba(249,184,0,0.1)', color: '#d97706', border: '1px solid rgba(249,184,0,0.2)' }}>
-                            Pendiente
+                            {t('pending_label')}
                           </span>
                         )}
                       </div>
@@ -445,7 +447,7 @@ export default function TeacherStudents() {
                       <div>
                         <h2 className="text-lg font-medium" style={{ color: 'var(--text)' }}>{student.name}</h2>
                         <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
-                          {student.parasha_id || 'Sin perashá asignada'}
+                          {student.parasha_id || t('no_parasha')}
                         </p>
                       </div>
                     </div>
@@ -457,9 +459,9 @@ export default function TeacherStudents() {
                   {/* Stats */}
                   <div className="grid grid-cols-3 gap-3 mb-6">
                     {[
-                      { label: 'Escuchas', value: student.listens || 0, color },
-                      { label: 'Progreso', value: `${student.progress || 0}%`, color },
-                      { label: 'Racha', value: `${student.streak || 0}d`, color: '#f9b800' },
+                      { label: t('listens'), value: student.listens || 0, color },
+                      { label: t('progress'), value: `${student.progress || 0}%`, color },
+                      { label: t('streak'), value: `${student.streak || 0}d`, color: '#f9b800' },
                     ].map(stat => (
                       <div key={stat.label} className="rounded-xl p-3 text-center"
                         style={{ background: `${stat.color}10`, border: `1px solid ${stat.color}20` }}>
@@ -472,9 +474,9 @@ export default function TeacherStudents() {
                   {/* Info rows */}
                   <div className="mb-6">
                     {[
-                      { label: 'Bar Mitzvá', value: student.bar_mitzvah ? new Date(student.bar_mitzvah).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : '—' },
-                      { label: 'Perashá', value: student.parasha_id || '—' },
-                      { label: 'Próxima clase', value: student.next_class || '—' },
+                      { label: t('bar_mitzvah'), value: student.bar_mitzvah ? new Date(student.bar_mitzvah).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) : '—' },
+                      { label: t('my_parasha'), value: student.parasha_id || '—' },
+                      { label: t('next_class'), value: student.next_class || '—' },
                     ].map(item => (
                       <div key={item.label} className="flex justify-between items-center py-2"
                         style={{ borderBottom: '1px solid var(--border-subtle)' }}>
@@ -490,20 +492,20 @@ export default function TeacherStudents() {
                       {/* Time */}
                       <div className="rounded-xl p-4"
                         style={{ background: 'rgba(45,212,191,0.07)', border: '1px solid rgba(45,212,191,0.18)' }}>
-                        <p className="text-xs mb-2" style={{ color: '#0d9488' }}>Tiempo en la aplicación</p>
+                        <p className="text-xs mb-2" style={{ color: '#0d9488' }}>{t('app_time')}</p>
                         <div className="flex items-center gap-4">
                           <div>
                             <div className="text-2xl font-light" style={{ color: '#0d9488' }}>
                               {formatTime(trackData.totalSeconds)}
                             </div>
-                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>total acumulado</div>
+                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('total_acc')}</div>
                           </div>
                           <div className="w-px h-8 self-center" style={{ background: 'rgba(45,212,191,0.2)' }} />
                           <div>
                             <div className="text-lg font-light" style={{ color: '#2dd4bf' }}>
                               {formatTime(trackData.todaySeconds)}
                             </div>
-                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>hoy</div>
+                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('today_label')}</div>
                           </div>
                         </div>
                       </div>
@@ -532,7 +534,7 @@ export default function TeacherStudents() {
                         if (!rows.length) return (
                           <div className="rounded-xl p-4 text-center"
                             style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Sin actividad registrada aún</p>
+                            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('no_activity')}</p>
                           </div>
                         )
 
@@ -541,9 +543,9 @@ export default function TeacherStudents() {
                             style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
                             <div className="grid grid-cols-4 px-3 py-2 text-xs"
                               style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border-subtle)', background: 'var(--overlay)' }}>
-                              <span className="col-span-2">Sección</span>
-                              <span className="text-center">Escuchas</span>
-                              <span className="text-right">Tiempo</span>
+                              <span className="col-span-2">{t('section')}</span>
+                              <span className="text-center">{t('listens')}</span>
+                              <span className="text-right">{t('time')}</span>
                             </div>
                             {rows.map(row => (
                               <div key={row.key}
@@ -575,12 +577,12 @@ export default function TeacherStudents() {
                         <rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.2"/>
                         <path d="M4 6h4M6 4v4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
                       </svg>
-                      Asignar perashá
+                      {t('assign_parasha')}
                     </button>
                     <button onClick={() => setCalcOpen(true)}
                       className="py-2.5 rounded-xl text-xs font-medium"
                       style={{ background: 'rgba(249,184,0,0.1)', color: '#d97706', border: '1px solid rgba(249,184,0,0.2)' }}>
-                      Bar Mitzvá
+                      {t('bar_mitzvah_calc')}
                     </button>
                   </div>
 
@@ -588,11 +590,11 @@ export default function TeacherStudents() {
                   <div className="grid grid-cols-2 gap-2">
                     <button className="py-2.5 rounded-xl text-xs font-medium"
                       style={{ background: `${color}15`, color, border: `1px solid ${color}25` }}>
-                      Enviar deber
+                      {t('send_hw')}
                     </button>
                     <button className="py-2.5 rounded-xl text-xs font-medium"
                       style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-                      Ver historial
+                      {t('view_history')}
                     </button>
                   </div>
                 </div>
@@ -607,6 +609,7 @@ export default function TeacherStudents() {
           student={student}
           onAssign={handleAssign}
           onClose={() => setCalcOpen(false)}
+          t={t}
         />
       )}
       {assignOpen && student && (
@@ -614,6 +617,7 @@ export default function TeacherStudents() {
           student={student}
           onAssign={handleAssign}
           onClose={() => setAssignOpen(false)}
+          t={t}
         />
       )}
     </div>

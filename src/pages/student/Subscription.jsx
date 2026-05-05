@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
+import { useLang } from '../../context/LangContext'
 
 const MONTHLY_ID = 'pdt_0Ne7sWfihRRycFHWb1SB2'
 const ANNUAL_ID  = 'pdt_0Ne7sn0u5XBSPuebqTIsh'
@@ -10,6 +11,7 @@ export default function StudentSubscription() {
   const { user, profile, setProfile } = useAuth()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { t } = useLang()
   const justPaid = searchParams.get('success') === '1'
 
   const isActive = profile?.subscription_status === 'active'
@@ -31,30 +33,30 @@ export default function StudentSubscription() {
   }, [justPaid, isActive])
 
   if (justPaid && !isActive) {
-    return <ActivatingView />
+    return <ActivatingView t={t} />
   }
 
   if (isActive) {
-    return <ActiveView profile={profile} justPaid={justPaid} navigate={navigate} />
+    return <ActiveView profile={profile} justPaid={justPaid} navigate={navigate} t={t} />
   }
 
-  return <CheckoutView user={user} profile={profile} />
+  return <CheckoutView user={user} profile={profile} t={t} />
 }
 
-function ActivatingView() {
+function ActivatingView({ t }) {
   return (
     <div className="p-4 sm:p-8 max-w-lg mx-auto flex flex-col items-center justify-center min-h-[60vh] gap-6">
       <div className="w-14 h-14 rounded-full border-2 border-t-transparent animate-spin"
         style={{ borderColor: 'rgba(108,51,230,0.2)', borderTopColor: '#6c33e6' }} />
       <div className="text-center">
-        <p className="text-lg font-medium" style={{ color: 'var(--text)' }}>Activando tu suscripción…</p>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>Esto tarda unos segundos. No cierres la página.</p>
+        <p className="text-lg font-medium" style={{ color: 'var(--text)' }}>{t('activating_sub')}</p>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>{t('activating_desc')}</p>
       </div>
     </div>
   )
 }
 
-function ActiveView({ profile, justPaid, navigate }) {
+function ActiveView({ profile, justPaid, navigate, t }) {
   return (
     <div className="p-4 sm:p-8 max-w-2xl mx-auto">
       <div className="mb-8 fade-up-1">
@@ -77,8 +79,8 @@ function ActiveView({ profile, justPaid, navigate }) {
             </svg>
           </div>
           <div>
-            <p className="text-sm font-semibold" style={{ color: '#16a34a' }}>¡Bienvenido a Perashapp Pro!</p>
-            <p className="text-xs" style={{ color: 'var(--text-3)' }}>Tu suscripción ya está activa.</p>
+            <p className="text-sm font-semibold" style={{ color: '#16a34a' }}>{t('welcome_pro')}</p>
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>{t('sub_active_now')}</p>
           </div>
         </div>
       )}
@@ -88,9 +90,9 @@ function ActiveView({ profile, justPaid, navigate }) {
         <div className="flex items-center gap-3">
           <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: '#22c55e' }} />
           <div>
-            <p className="text-sm font-semibold" style={{ color: '#16a34a' }}>Suscripción activa</p>
+            <p className="text-sm font-semibold" style={{ color: '#16a34a' }}>{t('sub_active')}</p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
-              Tienes acceso completo a Perashapp Pro
+              {t('full_access')}
             </p>
           </div>
         </div>
@@ -98,9 +100,9 @@ function ActiveView({ profile, justPaid, navigate }) {
 
       <div className="p-4 rounded-2xl mb-6 fade-up-3"
         style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>Incluye</p>
+        <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{t('includes')}</p>
         <ul className="flex flex-col gap-2">
-          {['Audio del profesor sincronizado palabra a palabra', 'Todas las parashas del año', 'Taamim, nikkud y modo sefer', 'Envío de grabaciones al profesor'].map(item => (
+          {(t('sub_features') || []).map(item => (
             <li key={item} className="flex items-center gap-2">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0 }}>
                 <circle cx="6" cy="6" r="5" stroke="#22c55e" strokeWidth="1.2"/>
@@ -115,25 +117,17 @@ function ActiveView({ profile, justPaid, navigate }) {
       <button onClick={() => navigate('/student/study')}
         className="w-full py-3 rounded-xl text-sm font-semibold transition-all"
         style={{ background: 'linear-gradient(135deg, #6c33e6, #8b5cf6)', color: '#fff', boxShadow: '0 4px 20px rgba(108,51,230,0.3)' }}>
-        Ir a estudiar →
+        {t('go_study')}
       </button>
 
       <p className="text-xs text-center mt-4" style={{ color: 'var(--text-muted)' }}>
-        Para cancelar tu suscripción escríbenos a soporte@perashapp.com
+        {t('cancel_info')}
       </p>
     </div>
   )
 }
 
-const FEATURES = [
-  'Audio del profesor sincronizado palabra a palabra',
-  'Todas las parashas del año',
-  'Taamim, nikkud y modo sefer',
-  'Envío de grabaciones al profesor',
-  'Acceso desde cualquier dispositivo',
-]
-
-function CheckoutView({ user, profile }) {
+function CheckoutView({ user, profile, t }) {
   const [plan, setPlan] = useState('annual')
   const [paying, setPaying] = useState(false)
 
@@ -171,10 +165,10 @@ function CheckoutView({ user, profile }) {
           הַרְשָׁמָה · Suscripción
         </p>
         <h1 className="text-3xl font-light" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-          Elige tu plan
+          {t('choose_plan')}
         </h1>
         <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
-          Cancela cuando quieras
+          {t('cancel_anytime')}
         </p>
       </div>
 
@@ -190,7 +184,7 @@ function CheckoutView({ user, profile }) {
           <div className="absolute -top-3 right-4">
             <span className="text-xs px-2.5 py-1 rounded-full font-semibold"
               style={{ background: 'linear-gradient(135deg, #f9b800, #ffd54f)', color: '#0d0b1e' }}>
-              Ahorra 17%
+              {t('save_17')}
             </span>
           </div>
           <div className="flex items-center gap-2 mb-3">
@@ -198,15 +192,15 @@ function CheckoutView({ user, profile }) {
               style={{ borderColor: plan === 'annual' ? '#f9b800' : 'var(--border)' }}>
               {plan === 'annual' && <div className="w-2 h-2 rounded-full" style={{ background: '#f9b800' }} />}
             </div>
-            <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Anual</span>
+            <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{t('annual_plan')}</span>
           </div>
           <div className="mb-0.5">
             <span className="text-3xl font-light" style={{ color: 'var(--text)' }}>$99</span>
-            <span className="text-sm ml-1" style={{ color: 'var(--text-3)' }}>/año</span>
+            <span className="text-sm ml-1" style={{ color: 'var(--text-3)' }}>{t('year_unit')}</span>
           </div>
-          <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>= $8,25/mes · La opción más económica</p>
+          <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{t('annual_desc')}</p>
           <ul className="flex flex-col gap-1.5">
-            {FEATURES.map(f => (
+            {(t('sub_features') || []).map(f => (
               <li key={f} className="flex items-start gap-1.5">
                 <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ flexShrink: 0, marginTop: '2px' }}>
                   <circle cx="5.5" cy="5.5" r="4.5" stroke="#f9b800" strokeWidth="1"/>
@@ -231,20 +225,20 @@ function CheckoutView({ user, profile }) {
                 style={{ borderColor: plan === 'monthly' ? '#8b5cf6' : 'var(--border)' }}>
                 {plan === 'monthly' && <div className="w-2 h-2 rounded-full" style={{ background: '#8b5cf6' }} />}
               </div>
-              <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Mensual</span>
+              <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{t('monthly_plan')}</span>
             </div>
             <span className="text-xs px-2 py-0.5 rounded-full"
               style={{ background: 'rgba(108,51,230,0.1)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)' }}>
-              Flexible
+              {t('flexible')}
             </span>
           </div>
           <div className="mb-0.5">
             <span className="text-3xl font-light" style={{ color: 'var(--text)' }}>$9,99</span>
-            <span className="text-sm ml-1" style={{ color: 'var(--text-3)' }}>/mes</span>
+            <span className="text-sm ml-1" style={{ color: 'var(--text-3)' }}>{t('month_unit')}</span>
           </div>
-          <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>Cancela en cualquier momento</p>
+          <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{t('monthly_desc')}</p>
           <ul className="flex flex-col gap-1.5">
-            {FEATURES.map(f => (
+            {(t('sub_features') || []).map(f => (
               <li key={f} className="flex items-start gap-1.5">
                 <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ flexShrink: 0, marginTop: '2px' }}>
                   <circle cx="5.5" cy="5.5" r="4.5" stroke="#8b5cf6" strokeWidth="1"/>
@@ -262,10 +256,10 @@ function CheckoutView({ user, profile }) {
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
-              {plan === 'annual' ? 'Plan Anual' : 'Plan Mensual'}
+              {plan === 'annual' ? t('plan_annual') : t('plan_monthly')}
             </p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-              Se renueva automáticamente · Cancela cuando quieras
+              {t('auto_renew')}
             </p>
           </div>
           <p className="text-2xl font-light" style={{ color: 'var(--text)' }}>
@@ -281,11 +275,11 @@ function CheckoutView({ user, profile }) {
             border: paying ? '1px solid var(--border)' : 'none',
             boxShadow: paying ? 'none' : '0 4px 20px rgba(108,51,230,0.35)',
           }}>
-          {paying ? <><Spinner /> Redirigiendo al pago…</> : 'Suscribirse →'}
+          {paying ? <><Spinner /> {t('redirecting_payment')}</> : t('subscribe_btn')}
         </button>
 
         <p className="text-xs text-center mt-3" style={{ color: 'var(--text-muted)' }}>
-          Pago seguro · Cancela cuando quieras
+          {t('secure_payment')}
         </p>
       </div>
     </div>

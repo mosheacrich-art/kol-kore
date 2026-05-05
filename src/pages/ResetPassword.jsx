@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
+import { useLang } from '../context/LangContext'
 
 export default function ResetPassword() {
   const navigate = useNavigate()
   const { clearRecovery } = useAuth()
   const { isDark } = useTheme()
+  const { t } = useLang()
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
@@ -26,8 +28,8 @@ export default function ResetPassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (password.length < 6) { setError('La contraseña debe tener al menos 6 caracteres'); return }
-    if (password !== confirm) { setError('Las contraseñas no coinciden'); return }
+    if (password.length < 6) { setError(t('password_min_error')); return }
+    if (password !== confirm) { setError(t('passwords_no_match')); return }
     setLoading(true)
     setError('')
     const { error: err } = await supabase.auth.updateUser({ password })
@@ -47,7 +49,7 @@ export default function ResetPassword() {
         <div className="text-center mb-8">
           <p className="text-xs hebrew mb-2" style={{ color: 'var(--text-gold)' }}>שִׁנּוּי סִיסְמָה</p>
           <h1 className="text-2xl font-light" style={{ color: 'var(--text)', letterSpacing: '-0.5px' }}>
-            Nueva contraseña
+            {t('new_password_title')}
           </h1>
         </div>
 
@@ -62,17 +64,17 @@ export default function ResetPassword() {
                   <path d="M6 10l3 3 5-5" stroke="#16a34a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
-              <p className="text-sm font-semibold" style={{ color: '#16a34a' }}>Contraseña actualizada</p>
-              <p className="text-xs text-center" style={{ color: 'var(--text-3)' }}>Redirigiendo a tu perfil…</p>
+              <p className="text-sm font-semibold" style={{ color: '#16a34a' }}>{t('password_updated')}</p>
+              <p className="text-xs text-center" style={{ color: 'var(--text-3)' }}>{t('redirecting_profile')}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">
               <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                placeholder="Nueva contraseña (mín. 6 caracteres)" required autoFocus
+                placeholder={t('new_password')} required autoFocus
                 className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none"
                 style={inputStyle} />
               <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)}
-                placeholder="Repetir contraseña" required
+                placeholder={t('repeat_password')} required
                 className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none"
                 style={inputStyle} />
               {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
@@ -83,7 +85,7 @@ export default function ResetPassword() {
                   color: loading ? 'var(--text-3)' : '#fff',
                   border: loading ? '1px solid var(--border)' : 'none',
                 }}>
-                {loading ? '…' : 'Guardar nueva contraseña'}
+                {loading ? '…' : t('save_password')}
               </button>
             </form>
           )}
