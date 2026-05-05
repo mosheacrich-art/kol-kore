@@ -172,6 +172,41 @@ function ReaderView({ parasha, basePath, guestMode }) {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden" style={{ height: '100%' }}>
+      <div className="flex-shrink-0 flex items-center gap-3 px-6 py-3"
+        style={{ background: 'var(--overlay)', borderBottom: '1px solid var(--border-subtle)' }}>
+        <button onClick={() => navigate(basePath)}
+          className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg transition-all"
+          style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M8 2L4 6l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Todas las perashiot
+        </button>
+        <div className="h-4 w-px" style={{ background: 'var(--border)' }} />
+        <span className="text-xs" style={{ color: 'var(--text-3)' }}>
+          {parasha.combined ? 'Perashá doble' : `Perashá ${parasha.num} de 54`}
+        </span>
+
+        <div className="ml-auto flex gap-2">
+          {!parasha.combined && parasha.num > 1 && (
+            <button
+              onClick={() => navigate(`${basePath}/${PARASHOT[parasha.num - 2].id}`)}
+              className="text-xs px-3 py-1.5 rounded-lg transition-all"
+              style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+              ← {PARASHOT[parasha.num - 2].name}
+            </button>
+          )}
+          {!parasha.combined && parasha.num < 54 && (
+            <button
+              onClick={() => navigate(`${basePath}/${PARASHOT[parasha.num].id}`)}
+              className="text-xs px-3 py-1.5 rounded-lg transition-all"
+              style={{ background: `${color}15`, color, border: `1px solid ${color}25` }}>
+              {PARASHOT[parasha.num].name} →
+            </button>
+          )}
+        </div>
+      </div>
+
       <div className="flex-1 overflow-hidden">
         <ParashaReader parasha={parasha} guestMode={guestMode} initialAliyah={initialAliyah} />
       </div>
