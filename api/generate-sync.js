@@ -178,14 +178,15 @@ function align(whisperWords, sefariaWords) {
     }
   }
 
-  // Final guardrail: the client expects v2 timestamps to be monotonic by
-  // Sefaria word index. Clamp tiny reversals so playback never gets stuck.
-  let lastEnd = 0
+  // Final guardrail: the client expects v2 starts to be monotonic by Sefaria
+  // word index. Do not clamp to the previous end; chanted words can have long
+  // end times, and using those as the next start makes the highlight stick.
+  let lastStart = 0
   for (let i = 0; i < sLen; i++) {
-    const start = Math.max(out[i].start, lastEnd)
+    const start = Math.max(out[i].start, lastStart)
     const end = Math.max(out[i].end, start + 0.05)
     out[i] = { start: +start.toFixed(3), end: +end.toFixed(3) }
-    lastEnd = out[i].end
+    lastStart = out[i].start
   }
 
   return { aligned: out, anchorPct }
@@ -231,7 +232,11 @@ export default async function handler(req, res) {
     if (!audioRes.ok) return res.status(500).json({ error: `No se pudo descargar el audio: ${audioRes.status}` })
     const blob = await audioRes.blob()
 
-    // 3. Transcribe with Whisper
+    // 3. Wait for Sefaria now so Whisper gets the actual aliyah as context.
+    sefariaWords = await sefariaPromise
+    const whisperPrompt = prompt || sefariaWords.join(' ').slice(0, 900)
+
+    // 4. Transcribe with Whisper
     const ext = (fileType || 'audio/webm').split('/')[1]?.split(';')[0] || 'webm'
     const form = new FormData()
     form.append('file', new File([blob], `audio.${ext}`, { type: fileType || 'audio/webm' }))
@@ -239,7 +244,7 @@ export default async function handler(req, res) {
     form.append('language', 'he')
     form.append('response_format', 'verbose_json')
     form.append('timestamp_granularities[]', 'word')
-    form.append('prompt', prompt || 'בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ׃')
+    if (whisperPrompt) form.append('prompt', whisperPrompt)
 
     const whisperRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
@@ -254,9 +259,6 @@ export default async function handler(req, res) {
 
     const { words: whisperWords } = await whisperRes.json()
     if (!whisperWords?.length) return res.status(200).json({ words: [] })
-
-    // 4. Wait for Sefaria and align
-    sefariaWords = await sefariaPromise
 
     if (!sefariaWords.length) {
       // No Sefaria text — return raw Whisper (old format, client does alignment)
