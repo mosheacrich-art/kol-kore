@@ -69,9 +69,25 @@ export default function TikkunView({
 
   const wordRefs = useRef([])
 
-  // Map Whisper timestamp index → tikkun word index proportionally
+  const isV2 = useMemo(() => {
+    const first = wordTimestamps?.find(x => x != null)
+    return first != null && !('word' in first)
+  }, [wordTimestamps])
+
   const activeIdx = useMemo(() => {
     if (!wordTimestamps?.length || audioCurrentTime == null || !words.length) return -1
+    if (isV2) {
+      let best = -1
+      const limit = Math.min(wordTimestamps.length, words.length)
+      for (let i = 0; i < limit; i++) {
+        const ts = wordTimestamps[i]
+        if (ts && ts.start <= audioCurrentTime) best = i
+        else if (ts && ts.start > audioCurrentTime) break
+      }
+      return best
+    }
+
+    // Legacy raw Whisper timestamps: keep proportional fallback for old data.
     let lo = 0, hi = wordTimestamps.length - 1, best = -1
     while (lo <= hi) {
       const mid = (lo + hi) >> 1
@@ -82,7 +98,7 @@ export default function TikkunView({
     const wLen = wordTimestamps.length
     const sLen = words.length
     return wLen === 1 ? 0 : Math.min(Math.round(best * (sLen - 1) / (wLen - 1)), sLen - 1)
-  }, [wordTimestamps, audioCurrentTime, words])
+  }, [wordTimestamps, audioCurrentTime, words, isV2])
 
   useEffect(() => {
     if (!audioPlaying || activeIdx < 0) return

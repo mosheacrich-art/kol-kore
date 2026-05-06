@@ -588,13 +588,14 @@ function buildAlignMap(whisperWords, sefariaTexts) {
   let sStart = 0
   for (let wi = 0; wi < wLen; wi++) {
     if (!wn[wi].length) continue
-    let best = -1, bestScore = 0.5
+    let best = -1, bestScore = 0
     const sEnd = Math.min(sStart + WINDOW, sLen)
     for (let si = sStart; si < sEnd; si++) {
       if (!sn[si]) continue
       const maxLen = Math.max(wn[wi].length, sn[si].length)
       const score = 1 - levenshtein(wn[wi], sn[si]) / maxLen
-      if (score > bestScore) { bestScore = score; best = si }
+      const minScore = maxLen <= 3 ? 1 : maxLen <= 4 ? 0.75 : 0.85
+      if (score >= minScore && score > bestScore) { bestScore = score; best = si }
     }
     if (best >= 0) { anchors.push({ wi, si: best }); sStart = best + 1 }
   }

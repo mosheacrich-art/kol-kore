@@ -83,9 +83,12 @@ function align(whisperWords, sefariaWords) {
     if (wn[wi] === sn[si]) return 4        // exact / known-equivalent
     const maxLen = Math.max(wn[wi].length, sn[si].length)
     const sim = 1 - levenshtein(wn[wi], sn[si]) / maxLen
+    // Short Hebrew words are common and ambiguous. One-letter differences such
+    // as אשר/אמר should not become anchors because they can throw off the rest.
+    if (maxLen <= 3) return -3
     if (sim >= 0.85) return 2              // high fuzzy
-    if (sim >= 0.6)  return 1              // moderate fuzzy
-    return -2                              // mismatch — prefer a gap
+    if (maxLen >= 4 && sim >= 0.75) return 1 // moderate fuzzy for longer words
+    return -3                              // mismatch — prefer gaps over false anchors
   }
 
   const GAP = -1   // cost of one insertion or deletion
@@ -108,9 +111,12 @@ function align(whisperWords, sefariaWords) {
   let matched = 0
   let i = sLen, j = wLen
   while (i > 0 || j > 0) {
-    if (i > 0 && j > 0 && dp[i][j] === dp[i-1][j-1] + matchScore(j-1, i-1)) {
-      sparse[i-1] = { start: whisperWords[j-1].start, end: whisperWords[j-1].end }
-      matched++
+    const score = i > 0 && j > 0 ? matchScore(j-1, i-1) : -Infinity
+    if (i > 0 && j > 0 && dp[i][j] === dp[i-1][j-1] + score) {
+      if (score > 0) {
+        sparse[i-1] = { start: whisperWords[j-1].start, end: whisperWords[j-1].end }
+        matched++
+      }
       i--; j--
     } else if (i > 0 && dp[i][j] === dp[i-1][j] + GAP) {
       i--   // sefaria word with no whisper match → will be interpolated
@@ -136,7 +142,7 @@ function align(whisperWords, sefariaWords) {
     // If the left anchor's end overshoots the right anchor's start (long sung note),
     // distribute from left.start instead so interpolated times stay monotonic.
     const lRef = (out[li].end < rStart) ? out[li].end : out[li].start
-    const span = rStart - lRef
+    const span = Math.max(0.05 * gap, rStart - lRef)
     for (let i = li + 1; i < ri; i++) {
       const t = (i - li) / gap
       const start = lRef + t * span
@@ -170,6 +176,16 @@ function align(whisperWords, sefariaWords) {
       const t = (i / Math.max(1, sLen - 1)) * totalDuration
       out[i] = { start: +t.toFixed(3), end: +(t + 0.3).toFixed(3) }
     }
+  }
+
+  // Final guardrail: the client expects v2 timestamps to be monotonic by
+  // Sefaria word index. Clamp tiny reversals so playback never gets stuck.
+  let lastEnd = 0
+  for (let i = 0; i < sLen; i++) {
+    const start = Math.max(out[i].start, lastEnd)
+    const end = Math.max(out[i].end, start + 0.05)
+    out[i] = { start: +start.toFixed(3), end: +end.toFixed(3) }
+    lastEnd = out[i].end
   }
 
   return { aligned: out, anchorPct }
