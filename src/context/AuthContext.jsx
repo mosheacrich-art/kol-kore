@@ -26,11 +26,15 @@ export function AuthProvider({ children }) {
         }
         if (!active) return
 
-        // If still no profile, create it (fallback — trigger should handle it)
+        // If still no profile, create it (fallback)
+        // Use role from user_metadata (set during email/password signUp) or sessionStorage (OAuth)
         if (!data && userMetadata) {
-          const role = sessionStorage.getItem('oauth_intended_role') || 'student'
-          const name = userMetadata.full_name || userMetadata.name ||
-            userMetadata.email?.split('@')[0] || 'Usuario'
+          const role = userMetadata.app_role
+            || sessionStorage.getItem('oauth_intended_role')
+            || 'student'
+          const name = userMetadata.app_name
+            || userMetadata.full_name || userMetadata.name
+            || userMetadata.email?.split('@')[0] || 'Usuario'
           const extra = role === 'teacher'
             ? { teacher_code: Math.random().toString(36).substring(2, 8).toUpperCase() }
             : {}
@@ -42,9 +46,11 @@ export function AuthProvider({ children }) {
         }
         if (!active) return
 
-        // Handle pending role change (teacher OAuth)
+        // Handle pending role change for OAuth users ONLY.
+        // Email/password users always have app_role in user_metadata — never override them.
         const pendingRole = sessionStorage.getItem('oauth_intended_role')
-        if (data && pendingRole && pendingRole !== data.role) {
+        const isOAuthUser = !userMetadata?.app_role
+        if (isOAuthUser && data && pendingRole && pendingRole !== data.role) {
           const extra = pendingRole === 'teacher'
             ? { teacher_code: Math.random().toString(36).substring(2, 8).toUpperCase() }
             : {}
@@ -91,24 +97,31 @@ export function AuthProvider({ children }) {
   }
 
   const signUp = async (email, password, name, role) => {
+    // Ensure stale OAuth role doesn't interfere with email/password signup
+    sessionStorage.removeItem('oauth_intended_role')
+
     let data, error
     try {
       ;({ data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: { app_role: role, app_name: name },  // persisted in user_metadata
+        },
       }))
-    } catch (err) { return { error: err } }
+    } catch (err) { return err }
     if (error) return error
 
     if (data.user) {
       const extra = role === 'teacher'
         ? { teacher_code: Math.random().toString(36).substring(2, 8).toUpperCase() }
         : {}
-      await supabase.from('profiles').upsert(
+      const { error: upsertErr } = await supabase.from('profiles').upsert(
         { id: data.user.id, role, name, ...extra },
         { onConflict: 'id' }
       )
+      if (upsertErr) console.error('Profile upsert error:', upsertErr.message)
     }
 
     // session === null → Supabase requires email confirmation
