@@ -3,25 +3,44 @@ import { supabase } from '../lib/supabase'
 
 const AudioCtx = createContext(null)
 
-// Call the server-side Vercel API route which proxies to OpenAI Whisper.
-// Avoids CORS — the browser cannot call api.openai.com directly.
+const SYNC_SERVICE_URL = import.meta.env.VITE_SYNC_SERVICE_URL || ''
+
+function parseSyncResponse(json) {
+  if (json.format === 'v2') {
+    if (json.needs_review) console.warn(`Sync needs_review: anchor_pct=${json.anchor_pct}`)
+    return json.words
+  }
+  return (json.words ?? []).map(w => ({ word: w.word, start: w.start, end: w.end }))
+}
+
 async function callSyncApi(audioUrl, fileType, aliyahRef, prompt) {
   const { data: { session } } = await supabase.auth.getSession()
+  const authHeader = session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
+
+  // Try stable-ts service first (better timestamps, VAD)
+  if (SYNC_SERVICE_URL && aliyahRef) {
+    try {
+      const res = await fetch(`${SYNC_SERVICE_URL}/sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeader },
+        body: JSON.stringify({ audioUrl, aliyahRef }),
+      })
+      if (res.ok) return parseSyncResponse(await res.json())
+      console.warn('Sync service error, falling back to Vercel:', res.status)
+    } catch (err) {
+      console.warn('Sync service unreachable, falling back to Vercel:', err.message)
+    }
+  }
+
+  // Fallback: Vercel → OpenAI Whisper
   const res = await fetch('/api/generate-sync', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-    },
+    headers: { 'Content-Type': 'application/json', ...authHeader },
     body: JSON.stringify({ audioUrl, fileType, ...(aliyahRef ? { aliyahRef } : {}), ...(prompt ? { prompt } : {}) }),
   })
   const json = await res.json()
   if (!res.ok) throw new Error(json.error || `Error ${res.status}`)
-  if (json.format === 'v2') {
-    if (json.needs_review) console.warn(`Sync needs_review: anchor_pct=${json.anchor_pct}`)
-    return json.words  // [{start, end}, ...] indexed by sefaria word idx
-  }
-  return (json.words ?? []).map(w => ({ word: w.word, start: w.start, end: w.end }))
+  return parseSyncResponse(json)
 }
 
 export function AudioProvider({ children }) {
