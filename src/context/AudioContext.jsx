@@ -6,9 +6,13 @@ const AudioCtx = createContext(null)
 // Call the server-side Vercel API route which proxies to OpenAI Whisper.
 // Avoids CORS — the browser cannot call api.openai.com directly.
 async function callSyncApi(audioUrl, fileType, aliyahRef, prompt) {
+  const { data: { session } } = await supabase.auth.getSession()
   const res = await fetch('/api/generate-sync', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+    },
     body: JSON.stringify({ audioUrl, fileType, ...(aliyahRef ? { aliyahRef } : {}), ...(prompt ? { prompt } : {}) }),
   })
   const json = await res.json()

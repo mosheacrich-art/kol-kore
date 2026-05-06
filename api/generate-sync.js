@@ -1,4 +1,18 @@
+import { createClient } from '@supabase/supabase-js'
+
 export const config = { maxDuration: 60 }
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || ''
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || ''
+const supabaseAdmin = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
+
+function isAllowedAudioUrl(url) {
+  try {
+    const { protocol, hostname } = new URL(url)
+    if (protocol !== 'https:') return false
+    return hostname.endsWith('.supabase.co') || hostname.endsWith('.supabase.in')
+  } catch { return false }
+}
 
 // Words Whisper hears that differ from the written text
 const WHISPER_TO_TEXT = {
@@ -152,12 +166,21 @@ function align(whisperWords, sefariaWords) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).end()
 
+  // C-02: Verify Supabase JWT
+  const token = req.headers.authorization?.replace('Bearer ', '')
+  if (!token || !supabaseAdmin) return res.status(401).json({ error: 'Unauthorized' })
+  const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token)
+  if (authErr || !user) return res.status(401).json({ error: 'Unauthorized' })
+
   const { audioUrl, fileType, aliyahRef, prompt } = req.body ?? {}
   if (!audioUrl) return res.status(400).json({ error: 'audioUrl required' })
+
+  // C-01: SSRF — only allow Supabase Storage URLs
+  if (!isAllowedAudioUrl(audioUrl)) return res.status(400).json({ error: 'Invalid audio URL' })
 
   const apiKey = (process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY || '').trim()
   if (!apiKey) return res.status(500).json({ error: 'OPENAI_API_KEY no configurada en el servidor' })
