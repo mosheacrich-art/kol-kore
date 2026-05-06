@@ -587,7 +587,7 @@ function buildAlignMap(whisperWords, sefariaTexts) {
   const anchors = [{ wi: 0, si: 0 }]
   let sStart = 0
   for (let wi = 0; wi < wLen; wi++) {
-    if (wn[wi].length < 2) continue
+    if (!wn[wi].length) continue
     let best = -1, bestScore = 0.5
     const sEnd = Math.min(sStart + WINDOW, sLen)
     for (let si = sStart; si < sEnd; si++) {
@@ -667,7 +667,8 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
     if (isV2(wordTimestamps)) {
       // v2: direct lookup — find last word whose start <= currentTime
       let best = -1
-      for (let i = 0; i < wordTimestamps.length; i++) {
+      const limit = Math.min(wordTimestamps.length, allWords.length)
+      for (let i = 0; i < limit; i++) {
         const ts = wordTimestamps[i]
         if (ts && ts.start <= audioCurrentTime) best = i
         else if (ts && ts.start > audioCurrentTime) break
@@ -795,7 +796,8 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
     if (!wordTimestamps?.length || audioCurrentTime == null || !allWordsTaamim.length) return -1
     if (isV2(wordTimestamps)) {
       let best = -1
-      for (let i = 0; i < wordTimestamps.length; i++) {
+      const limit = Math.min(wordTimestamps.length, allWordsTaamim.length)
+      for (let i = 0; i < limit; i++) {
         const ts = wordTimestamps[i]
         if (ts && ts.start <= audioCurrentTime) best = i
         else if (ts && ts.start > audioCurrentTime) break

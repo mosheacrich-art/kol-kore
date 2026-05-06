@@ -78,7 +78,7 @@ function align(whisperWords, sefariaWords) {
   const anchors = [{ wi: 0, si: 0 }]
   let sStart = 0
   for (let wi = 0; wi < wLen; wi++) {
-    if (wn[wi].length < 2) continue
+    if (!wn[wi].length) continue
     let best = -1, bestScore = 0.5
     const sEnd = Math.min(sStart + WINDOW, sLen)
     for (let si = sStart; si < sEnd; si++) {

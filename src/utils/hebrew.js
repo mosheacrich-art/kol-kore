@@ -63,6 +63,7 @@ export function stripHtml(str) {
     .replace(/[{(\[][פספס][)}\]]/g, '') // Sefaria paragraph markers {פ} [ס] etc.
     .replace(/\s*\|\s*/g, ' ')          // Sefaria | separator
     .replace(/&[a-zA-Z]+;|&#\d+;/g, s => { _decodeEl && (_decodeEl.innerHTML = s); return _decodeEl ? _decodeEl.value : s })
+    .replace(/־/g, ' ')            // maqaf → space (matches server word-split)
     .replace(/[\s ]+/g, ' ')
     .trim()
 }
