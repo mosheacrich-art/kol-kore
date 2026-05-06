@@ -158,6 +158,7 @@ function StudentModal({ onClose, isDark, t, tl }) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [forgotSent, setForgotSent] = useState(false)
+  const [confirmationSent, setConfirmationSent] = useState(false)
 
   const handleForgot = async (e) => {
     e.preventDefault()
@@ -185,9 +186,11 @@ function StudentModal({ onClose, isDark, t, tl }) {
 
     if (!name.trim()) { setError(tl('full_name')); setLoading(false); return }
 
-    const err = await signUp(email, password, name.trim(), 'student')
-    if (err) { setError('Error al registrarse: ' + err.message); setLoading(false); return }
-    // Profile useEffect will redirect to /student/profile → paywall handles subscription
+    const result = await signUp(email, password, name.trim(), 'student')
+    setLoading(false)
+    if (result?.needsConfirmation) { setConfirmationSent(true); return }
+    if (result) { setError('Error al registrarse: ' + result.message); return }
+    // null → success, profile useEffect redirects
   }
 
   const inputStyle = {
@@ -228,8 +231,30 @@ function StudentModal({ onClose, isDark, t, tl }) {
           </button>
         </div>
 
-        {/* Forgot password form */}
-        {isForgot ? (
+        {/* Email confirmation screen */}
+        {confirmationSent ? (
+          <div className="px-6 py-8 flex flex-col items-center gap-4 text-center">
+            <div className="w-14 h-14 rounded-full flex items-center justify-center"
+              style={{ background: 'rgba(108,51,230,0.12)', border: '1px solid rgba(108,51,230,0.2)' }}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                <path d="M3 8l9 6 9-6" stroke="#6c33e6" strokeWidth="1.5" strokeLinecap="round"/>
+                <rect x="2" y="5" width="20" height="14" rx="2" stroke="#6c33e6" strokeWidth="1.5"/>
+              </svg>
+            </div>
+            <div>
+              <p className="font-semibold text-base" style={{ color: 'var(--text)' }}>{tl('email_sent')}</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
+                {tl('email_sent_desc')}
+              </p>
+              <p className="text-xs mt-2 font-medium" style={{ color: '#6c33e6' }}>{email}</p>
+            </div>
+            <button type="button" onClick={onClose}
+              className="mt-2 text-xs px-4 py-2 rounded-xl transition-all"
+              style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+              {tl('close')}
+            </button>
+          </div>
+        ) : isForgot ? (
           <form onSubmit={handleForgot} className="px-6 py-5 flex flex-col gap-3">
             {forgotSent ? (
               <div className="flex flex-col items-center gap-3 py-4 text-center">
@@ -345,7 +370,7 @@ function StudentModal({ onClose, isDark, t, tl }) {
           </button>
 
         </form>
-        )} {/* end isForgot conditional */}
+        )} {/* end isForgot / confirmationSent conditional */}
       </div>
     </div>
   )
@@ -361,6 +386,7 @@ function SimpleAuthForm({ role, color, onCancel, onDone, t, tl }) {
   const [name, setName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [confirmationSent, setConfirmationSent] = useState(false)
 
   const inputStyle = {
     background: t.inputBg,
@@ -372,18 +398,40 @@ function SimpleAuthForm({ role, color, onCancel, onDone, t, tl }) {
     e.preventDefault()
     setLoading(true)
     setError('')
-    let err
     if (isRegister) {
       if (!name.trim()) { setError(tl('full_name')); setLoading(false); return }
-      err = await signUp(email, password, name.trim(), role)
+      const result = await signUp(email, password, name.trim(), role)
+      setLoading(false)
+      if (result?.needsConfirmation) { setConfirmationSent(true); return }
+      if (result) { setError('Error: ' + result.message); return }
     } else {
-      err = await signIn(email, password)
-    }
-    setLoading(false)
-    if (err) {
-      setError(isRegister ? 'Error: ' + err.message : tl('login_error'))
+      const err = await signIn(email, password)
+      setLoading(false)
+      if (err) setError(tl('login_error'))
     }
   }
+
+  if (confirmationSent) return (
+    <div className="px-7 pb-7 pt-2 flex flex-col items-center gap-4 text-center">
+      <div className="w-12 h-12 rounded-full flex items-center justify-center"
+        style={{ background: `${color}15`, border: `1px solid ${color}30` }}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M3 8l9 6 9-6" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
+          <rect x="2" y="5" width="20" height="14" rx="2" stroke={color} strokeWidth="1.5"/>
+        </svg>
+      </div>
+      <div>
+        <p className="font-semibold text-sm" style={{ color: 'var(--text)' }}>{tl('email_sent')}</p>
+        <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{tl('email_sent_desc')}</p>
+        <p className="text-xs mt-1 font-medium" style={{ color }}>{email}</p>
+      </div>
+      <button type="button" onClick={onCancel}
+        className="text-xs px-4 py-2 rounded-xl"
+        style={{ background: t.cancelBg, color: t.cancelText }}>
+        {tl('close')}
+      </button>
+    </div>
+  )
 
   return (
     <form onSubmit={handleSubmit} className="px-7 pb-7 flex flex-col gap-3">

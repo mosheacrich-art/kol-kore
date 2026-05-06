@@ -93,9 +93,14 @@ export function AuthProvider({ children }) {
   const signUp = async (email, password, name, role) => {
     let data, error
     try {
-      ;({ data, error } = await supabase.auth.signUp({ email, password }))
-    } catch (err) { return err }
+      ;({ data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      }))
+    } catch (err) { return { error: err } }
     if (error) return error
+
     if (data.user) {
       const extra = role === 'teacher'
         ? { teacher_code: Math.random().toString(36).substring(2, 8).toUpperCase() }
@@ -104,6 +109,13 @@ export function AuthProvider({ children }) {
         { id: data.user.id, role, name, ...extra },
         { onConflict: 'id' }
       )
+    }
+
+    // session === null → Supabase requires email confirmation
+    if (!data.session) return { needsConfirmation: true }
+
+    // Immediate login (email confirmation disabled in Supabase)
+    if (data.user) {
       const { data: p } = await supabase
         .from('profiles').select('*').eq('id', data.user.id).maybeSingle()
       setProfile(p ?? null)
