@@ -65,7 +65,9 @@ function splitWords(text) {
   return text.split(/\s+/).filter(w => w.length > 0)
 }
 
-// Align whisper words to sefaria words using greedy anchor matching + interpolation.
+// Align whisper words to sefaria words using Needleman-Wunsch global alignment.
+// Handles insertions/deletions robustly — Whisper missing a section no longer
+// throws off all subsequent matches the way the old greedy search could.
 // Returns a fully-populated array indexed by sefariaWordIdx: [{start, end}, ...]
 function align(whisperWords, sefariaWords) {
   const wn = whisperWords.map(w => normalizeWord(w.word))
@@ -73,45 +75,51 @@ function align(whisperWords, sefariaWords) {
   const wLen = wn.length
   const sLen = sn.length
 
-  // Find anchor matches: whisper word → sefaria word
-  const WINDOW = 10
-  const anchors = [{ wi: 0, si: 0 }]
-  let sStart = 0
-  for (let wi = 0; wi < wLen; wi++) {
-    if (!wn[wi].length) continue
-    let best = -1, bestScore = 0.5
-    const sEnd = Math.min(sStart + WINDOW, sLen)
-    for (let si = sStart; si < sEnd; si++) {
-      if (!sn[si]) continue
-      const maxLen = Math.max(wn[wi].length, sn[si].length)
-      const score = 1 - levenshtein(wn[wi], sn[si]) / maxLen
-      if (score > bestScore) { bestScore = score; best = si }
-    }
-    if (best >= 0) { anchors.push({ wi, si: best }); sStart = best + 1 }
+  // Per-cell score: how well whisper word wi matches sefaria word si.
+  // normalizeWord already maps equivalences (אדוני→יהוה, לומר→לאמר ...) so exact match
+  // after normalization catches those cases with full score.
+  function matchScore(wi, si) {
+    if (!wn[wi] || !sn[si]) return -2
+    if (wn[wi] === sn[si]) return 4        // exact / known-equivalent
+    const maxLen = Math.max(wn[wi].length, sn[si].length)
+    const sim = 1 - levenshtein(wn[wi], sn[si]) / maxLen
+    if (sim >= 0.85) return 2              // high fuzzy
+    if (sim >= 0.6)  return 1              // moderate fuzzy
+    return -2                              // mismatch — prefer a gap
   }
-  anchors.push({ wi: wLen - 1, si: sLen - 1 })
 
-  const realAnchors = anchors.length - 2  // exclude virtual start/end
-  const anchorPct = sLen > 0 ? realAnchors / sLen : 0
+  const GAP = -1   // cost of one insertion or deletion
 
-  // Build whisperIdx → sefariaIdx map
-  const w2s = new Array(wLen)
-  for (let ai = 0; ai < anchors.length - 1; ai++) {
-    const { wi: w0, si: s0 } = anchors[ai]
-    const { wi: w1, si: s1 } = anchors[ai + 1]
-    for (let wi = w0; wi <= w1; wi++) {
-      const t = w1 > w0 ? (wi - w0) / (w1 - w0) : 0
-      w2s[wi] = Math.min(Math.round(s0 + t * (s1 - s0)), sLen - 1)
+  // Build DP table (sLen+1) x (wLen+1)
+  const dp = Array.from({ length: sLen + 1 }, (_, i) =>
+    Float32Array.from({ length: wLen + 1 }, (_, j) => (i === 0 ? j * GAP : j === 0 ? i * GAP : 0))
+  )
+  for (let i = 1; i <= sLen; i++) {
+    for (let j = 1; j <= wLen; j++) {
+      const diag = dp[i-1][j-1] + matchScore(j-1, i-1)
+      const up   = dp[i-1][j]   + GAP   // sefaria word unmatched (whisper gap)
+      const left = dp[i][j-1]   + GAP   // extra whisper word, skip it
+      dp[i][j] = Math.max(diag, up, left)
     }
   }
 
-  // Build sparse sefariaIdx → timestamp (first whisper word that maps here)
+  // Traceback — prefer diagonal (match) on tie to minimise gaps
   const sparse = new Array(sLen).fill(null)
-  for (let wi = 0; wi < wLen; wi++) {
-    const si = w2s[wi]
-    if (sparse[si] === null)
-      sparse[si] = { start: whisperWords[wi].start, end: whisperWords[wi].end }
+  let matched = 0
+  let i = sLen, j = wLen
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && dp[i][j] === dp[i-1][j-1] + matchScore(j-1, i-1)) {
+      sparse[i-1] = { start: whisperWords[j-1].start, end: whisperWords[j-1].end }
+      matched++
+      i--; j--
+    } else if (i > 0 && dp[i][j] === dp[i-1][j] + GAP) {
+      i--   // sefaria word with no whisper match → will be interpolated
+    } else {
+      j--   // extra whisper word → discard
+    }
   }
+
+  const anchorPct = sLen > 0 ? matched / sLen : 0
 
   // Interpolate nulls between known anchors
   const knownIdxs = []
@@ -124,11 +132,15 @@ function align(whisperWords, sefariaWords) {
     const li = knownIdxs[ki], ri = knownIdxs[ki + 1]
     if (ri - li <= 1) continue
     const gap = ri - li
-    const lEnd = out[li].end, rStart = out[ri].start
+    const rStart = out[ri].start
+    // If the left anchor's end overshoots the right anchor's start (long sung note),
+    // distribute from left.start instead so interpolated times stay monotonic.
+    const lRef = (out[li].end < rStart) ? out[li].end : out[li].start
+    const span = rStart - lRef
     for (let i = li + 1; i < ri; i++) {
       const t = (i - li) / gap
-      const start = lEnd + t * (rStart - lEnd)
-      const dur = Math.max(0.05, (rStart - lEnd) / gap * 0.7)
+      const start = lRef + t * span
+      const dur = Math.max(0.05, span / gap * 0.7)
       out[i] = { start: +start.toFixed(3), end: +(start + dur).toFixed(3) }
     }
   }
