@@ -9,6 +9,7 @@ function detectLang() {
   const browser = (navigator.language || navigator.userLanguage || 'es').toLowerCase()
   if (browser.startsWith('fr')) return 'fr'
   if (browser.startsWith('en')) return 'en'
+  if (browser.startsWith('he')) return 'he'
   return 'es'
 }
 
