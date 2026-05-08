@@ -28,13 +28,8 @@ export default function AuthCallback() {
 
   useEffect(() => {
     if (loading || !profile) return
-    const isNew = sessionStorage.getItem('new_student')
-    if (isNew && profile.role === 'student') {
-      sessionStorage.removeItem('new_student')
-      navigate('/student/subscription', { replace: true })
-    } else {
-      navigate(profile.role === 'teacher' ? '/teacher/dashboard' : '/student/profile', { replace: true })
-    }
+    sessionStorage.removeItem('new_student')
+    navigate(profile.role === 'teacher' ? '/teacher/dashboard' : '/student/profile', { replace: true })
   }, [profile, loading, navigate])
 
   return (

@@ -33,12 +33,13 @@ export default function StudentLayout() {
 
   // Show paywall if student has no active subscription.
   // Exception: if coming back from payment (?success=1), let Subscription.jsx handle the polling.
-  const justPaid = searchParams.get('success') === '1'
-  const isSubscribed = profile?.subscription_status === 'active'
-  const devBypass = sessionStorage.getItem('dev_bypass') === '1'
-  if (profile && !isSubscribed && !justPaid && !devBypass) {
-    return <Paywall user={user} profile={profile} navigate={navigate} />
-  }
+  // Paywall temporarily disabled — re-enable by restoring the block below
+  // const justPaid = searchParams.get('success') === '1'
+  // const isSubscribed = profile?.subscription_status === 'active'
+  // const devBypass = sessionStorage.getItem('dev_bypass') === '1'
+  // if (profile && !isSubscribed && !justPaid && !devBypass) {
+  //   return <Paywall user={user} profile={profile} navigate={navigate} />
+  // }
 
   return (
     <div className="flex h-screen" style={{ background: 'var(--bg)' }}>
