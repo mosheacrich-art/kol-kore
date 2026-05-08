@@ -46,6 +46,12 @@ export function AuthProvider({ children }) {
         }
         if (!active) return
 
+        // If DB trigger created the profile with email as name, fix it using user_metadata
+        if (data && userMetadata?.app_name && data.name !== userMetadata.app_name) {
+          await supabase.from('profiles').update({ name: userMetadata.app_name }).eq('id', userId)
+          data = { ...data, name: userMetadata.app_name }
+        }
+
         // Handle pending role change for OAuth users ONLY.
         // Email/password users always have app_role in user_metadata — never override them.
         const pendingRole = sessionStorage.getItem('oauth_intended_role')
