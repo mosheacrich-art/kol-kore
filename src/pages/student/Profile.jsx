@@ -248,9 +248,12 @@ export default function StudentProfile() {
             <div className="text-2xl font-light" style={{ color: '#6c33e6' }}>—</div>
           )}
           {profile.bar_mitzvah && (
-            <p className="text-xs mt-2 font-medium" style={{ color: 'var(--text-3)' }}>
-              {new Date(profile.bar_mitzvah).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
-            </p>
+            <div className="mt-3 pt-2.5" style={{ borderTop: '1px solid rgba(108,51,230,0.15)' }}>
+              <p className="text-xs mb-0.5" style={{ color: 'rgba(108,51,230,0.5)' }}>{t('bar_mitzvah_date')}</p>
+              <p className="text-sm font-semibold" style={{ color: '#8b5cf6' }}>
+                {new Date(profile.bar_mitzvah).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
+            </div>
           )}
         </div>
 

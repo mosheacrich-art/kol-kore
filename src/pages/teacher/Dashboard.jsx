@@ -40,20 +40,24 @@ export default function TeacherDashboard() {
       const studentList = studs || []
       setStudents(studentList)
 
-      // Daily listens from notifications (last 7 days)
+      // Daily listens from audio_listens (last 7 days), filtered by teacher's students
       const since = new Date()
       since.setDate(since.getDate() - 6)
       since.setHours(0, 0, 0, 0)
-      const { data: listenEvents } = await supabase
-        .from('notifications')
-        .select('created_at')
-        .eq('teacher_id', profile.id)
-        .eq('type', 'listen_event')
-        .gte('created_at', since.toISOString())
+      const studentIds = (studs || []).map(s => s.id)
+      let listenEvents = []
+      if (studentIds.length > 0) {
+        const { data } = await supabase
+          .from('audio_listens')
+          .select('created_at')
+          .in('student_id', studentIds)
+          .gte('created_at', since.toISOString())
+        listenEvents = data || []
+      }
 
       const counts = Array(7).fill(0)
       const days = getLastSevenDays()
-      listenEvents?.forEach(ev => {
+      listenEvents.forEach(ev => {
         const evDate = new Date(ev.created_at).toDateString()
         const idx = days.findIndex(d => d.toDateString() === evDate)
         if (idx >= 0) counts[idx]++
@@ -120,10 +124,9 @@ export default function TeacherDashboard() {
       </div>
 
       {/* KPI row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 fade-up-2">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8 fade-up-2">
         {[
           { label: t('active_students'), value: students.length, sub: t('registered'), color: '#6c33e6', glow: 'rgba(108,51,230,0.15)' },
-          { label: t('total_listens'), value: totalListens, sub: t('accumulated'), color: '#f9b800', glow: 'rgba(249,184,0,0.12)' },
           { label: t('pending_hw_kpi'), value: pendingHw, sub: t('not_sent'), color: '#2dd4bf', glow: 'rgba(45,212,191,0.12)' },
           { label: t('next_class'), value: nextClassLabel.time, sub: nextClassLabel.sub, color: '#f87171', glow: 'rgba(248,113,113,0.12)' },
         ].map(kpi => (
