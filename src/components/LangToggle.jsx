@@ -4,6 +4,7 @@ const LANGS = [
   { code: 'es', flag: '🇪🇸', label: 'ES' },
   { code: 'en', flag: '🇬🇧', label: 'EN' },
   { code: 'fr', flag: '🇫🇷', label: 'FR' },
+  { code: 'it', flag: '🇮🇹', label: 'IT' },
   { code: 'he', flag: '🇮🇱', label: 'HE' },
 ]
 
