@@ -34,14 +34,18 @@ export default function TeacherNotifications() {
   }, [profile])
 
   const markRead = async (id) => {
-    await supabase.from('notifications').update({ read: true }).eq('id', id)
+    await supabase.from('notifications').update({ read: true })
+      .eq('id', id)
+      .eq('teacher_id', profile.id)
     setNotifs(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
   }
 
   const markAllRead = async () => {
     const unreadIds = notifs.filter(n => !n.read).map(n => n.id)
     if (!unreadIds.length) return
-    await supabase.from('notifications').update({ read: true }).in('id', unreadIds)
+    await supabase.from('notifications').update({ read: true })
+      .in('id', unreadIds)
+      .eq('teacher_id', profile.id)
     setNotifs(prev => prev.map(n => ({ ...n, read: true })))
   }
 

@@ -134,13 +134,15 @@ function CheckoutView({ user, profile, t }) {
   const handlePay = async () => {
     setPaying(true)
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
         body: JSON.stringify({
           productId: plan === 'annual' ? ANNUAL_ID : MONTHLY_ID,
-          userId: user?.id,
-          email: user?.email,
           name: profile?.name,
         }),
       })

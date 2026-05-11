@@ -4,6 +4,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import { useStudyTimer } from '../../hooks/useStudyTimer'
+import { supabase } from '../../lib/supabase'
 import LangToggle from '../../components/LangToggle'
 
 const MONTHLY_ID = 'pdt_0Ne7sWfihRRycFHWb1SB2'
@@ -207,13 +208,15 @@ function Paywall({ user, profile, navigate }) {
   const handlePay = async () => {
     setPaying(true)
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
         body: JSON.stringify({
           productId: plan === 'annual' ? ANNUAL_ID : MONTHLY_ID,
-          userId: user?.id,
-          email: user?.email,
           name: profile?.name,
         }),
       })

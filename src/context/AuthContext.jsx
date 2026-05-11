@@ -26,11 +26,13 @@ export function AuthProvider({ children }) {
         }
         if (!active) return
 
-        // If still no profile, create it (fallback)
-        // Use role from user_metadata (set during email/password signUp) or sessionStorage (OAuth)
+        // If still no profile, create it (first OAuth login — profile doesn't exist yet)
+        // Role comes from sessionStorage only during profile CREATION, never to update an existing one.
         if (!data && userMetadata) {
+          const ALLOWED_ROLES = ['teacher', 'student']
+          const pendingRoleRaw = sessionStorage.getItem('oauth_intended_role')
           const role = userMetadata.app_role
-            || sessionStorage.getItem('oauth_intended_role')
+            || (ALLOWED_ROLES.includes(pendingRoleRaw) ? pendingRoleRaw : null)
             || 'student'
           const name = userMetadata.app_name
             || userMetadata.full_name || userMetadata.name
@@ -44,6 +46,8 @@ export function AuthProvider({ children }) {
             .select()
           data = rows?.[0] ?? null
         }
+        // Always clear the sessionStorage role after profile creation — never use it to update existing profiles
+        sessionStorage.removeItem('oauth_intended_role')
         if (!active) return
 
         // If DB trigger created the profile with email as name, fix it using user_metadata
@@ -51,22 +55,6 @@ export function AuthProvider({ children }) {
           await supabase.from('profiles').update({ name: userMetadata.app_name }).eq('id', userId)
           data = { ...data, name: userMetadata.app_name }
         }
-
-        // Handle pending role change for OAuth users ONLY.
-        // Email/password users always have app_role in user_metadata — never override them.
-        const pendingRole = sessionStorage.getItem('oauth_intended_role')
-        const isOAuthUser = !userMetadata?.app_role
-        if (isOAuthUser && data && pendingRole && pendingRole !== data.role) {
-          const extra = pendingRole === 'teacher'
-            ? { teacher_code: Math.random().toString(36).substring(2, 8).toUpperCase() }
-            : {}
-          await supabase.from('profiles').update({ role: pendingRole, ...extra }).eq('id', userId)
-          if (!active) return
-          const { data: updated } = await supabase
-            .from('profiles').select('*').eq('id', userId).maybeSingle()
-          data = updated ?? data
-        }
-        sessionStorage.removeItem('oauth_intended_role')
 
         // Mark new students for subscription redirect
         const isNew = createdAt && (Date.now() - new Date(createdAt).getTime()) < 30000
