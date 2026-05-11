@@ -4,16 +4,21 @@ import { supabase } from '../lib/supabase'
 const AuthCtx = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [user, setUser]       = useState(null)
-  const [profile, setProfile] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser]             = useState(null)
+  const [profile, setProfile]       = useState(null)
+  const [loading, setLoading]       = useState(true)
   const [recoveryMode, setRecoveryMode] = useState(false)
+  const [oauthConflict, setOauthConflict] = useState(null) // existing role when there's a mismatch
 
   useEffect(() => {
     let active = true
 
     const fetchProfile = async (userId, userMetadata, createdAt) => {
       try {
+        const ALLOWED_ROLES = ['teacher', 'student']
+        const pendingRoleRaw = sessionStorage.getItem('oauth_intended_role')
+        const intendedRole = ALLOWED_ROLES.includes(pendingRoleRaw) ? pendingRoleRaw : null
+
         let { data } = await supabase
           .from('profiles').select('*').eq('id', userId).maybeSingle()
 
@@ -26,14 +31,11 @@ export function AuthProvider({ children }) {
         }
         if (!active) return
 
-        // If still no profile, create it (first OAuth login — profile doesn't exist yet)
-        // Role comes from sessionStorage only during profile CREATION, never to update an existing one.
+        const isNewUser = createdAt && (Date.now() - new Date(createdAt).getTime()) < 60000
+
         if (!data && userMetadata) {
-          const ALLOWED_ROLES = ['teacher', 'student']
-          const pendingRoleRaw = sessionStorage.getItem('oauth_intended_role')
-          const role = userMetadata.app_role
-            || (ALLOWED_ROLES.includes(pendingRoleRaw) ? pendingRoleRaw : null)
-            || 'student'
+          // First OAuth login — no profile yet. Create with intended role.
+          const role = userMetadata.app_role || intendedRole || 'student'
           const name = userMetadata.app_name
             || userMetadata.full_name || userMetadata.name
             || userMetadata.email?.split('@')[0] || 'Usuario'
@@ -45,8 +47,28 @@ export function AuthProvider({ children }) {
             .upsert({ id: userId, role, name, ...extra }, { onConflict: 'id' })
             .select()
           data = rows?.[0] ?? null
+        } else if (data && intendedRole && data.role !== intendedRole) {
+          if (isNewUser) {
+            // DB trigger created the profile with a default role that doesn't match what
+            // the user selected — correct it now.
+            const extra = intendedRole === 'teacher' && !data.teacher_code
+              ? { teacher_code: Math.random().toString(36).substring(2, 8).toUpperCase() }
+              : {}
+            await supabase.from('profiles').update({ role: intendedRole, ...extra }).eq('id', userId)
+            data = { ...data, role: intendedRole, ...extra }
+          } else {
+            // Existing account with a different role — role conflict. Sign out and surface the error.
+            sessionStorage.removeItem('oauth_intended_role')
+            if (active) {
+              setOauthConflict({ existing: data.role, intended: intendedRole })
+              setLoading(false)
+            }
+            // Defer signOut to avoid triggering a recursive auth state change
+            setTimeout(() => supabase.auth.signOut(), 100)
+            return
+          }
         }
-        // Always clear the sessionStorage role after profile creation — never use it to update existing profiles
+
         sessionStorage.removeItem('oauth_intended_role')
         if (!active) return
 
@@ -145,12 +167,14 @@ export function AuthProvider({ children }) {
   }
 
   const clearRecovery = () => setRecoveryMode(false)
+  const clearOauthConflict = () => setOauthConflict(null)
 
   return (
     <AuthCtx.Provider value={{
       user, profile, setProfile, loading,
       signIn, signUp, signInWithGoogle, signOut,
       recoveryMode, clearRecovery,
+      oauthConflict, clearOauthConflict,
     }}>
       {children}
     </AuthCtx.Provider>

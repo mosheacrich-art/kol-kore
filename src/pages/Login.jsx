@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
@@ -9,12 +9,17 @@ import LangToggle from '../components/LangToggle'
 
 export default function Login() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { profile, signIn, signUp, signInWithGoogle } = useAuth()
   const { isDark } = useTheme()
   const { t: tl } = useLang()
   const [expanded, setExpanded] = useState(null)
-  // modal state: null | 'student-register' | 'teacher' | 'student-login'
+  // modal state: null | 'student' | (future)
   const [modal, setModal] = useState(null)
+
+  const oauthError   = searchParams.get('oauth_error')
+  const existingRole = searchParams.get('existing')
+  const intendedRole = searchParams.get('intended')
 
   useEffect(() => {
     if (!profile) return
@@ -100,6 +105,21 @@ export default function Login() {
             {tl('choose_role')}
           </p>
         </div>
+
+        {/* OAuth role-conflict error banner */}
+        {oauthError === 'conflict' && existingRole && (
+          <div className="mb-6 p-4 rounded-2xl text-sm fade-up-2"
+            style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)' }}>
+            <p className="font-semibold mb-1" style={{ color: '#f87171' }}>
+              {tl('oauth_conflict_title')}
+            </p>
+            <p className="text-xs" style={{ color: 'rgba(252,165,165,0.85)' }}>
+              {existingRole === 'teacher'
+                ? tl('oauth_conflict_desc_teacher')
+                : tl('oauth_conflict_desc_student')}
+            </p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 fade-up-2">
           {/* Teacher card — inline expand as before */}

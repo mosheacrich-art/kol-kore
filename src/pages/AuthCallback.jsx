@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 
 export default function AuthCallback() {
-  const { profile, loading } = useAuth()
+  const { profile, loading, oauthConflict, clearOauthConflict } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -25,6 +25,16 @@ export default function AuthCallback() {
     const t = setTimeout(() => navigate('/login', { replace: true }), 20000)
     return () => clearTimeout(t)
   }, [navigate])
+
+  // Role conflict: existing account with a different role tried to sign in via Google
+  useEffect(() => {
+    if (!oauthConflict) return
+    clearOauthConflict()
+    navigate(
+      `/login?oauth_error=conflict&existing=${oauthConflict.existing}&intended=${oauthConflict.intended}`,
+      { replace: true }
+    )
+  }, [oauthConflict])
 
   useEffect(() => {
     if (loading || !profile) return
