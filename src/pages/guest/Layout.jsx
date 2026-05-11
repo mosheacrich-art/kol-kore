@@ -22,7 +22,7 @@ export default function GuestLayout() {
         <button onClick={() => go('/')} className="flex items-center gap-3">
           <StarSvg />
           <div>
-            <div className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Perashá</div>
+            <div className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</div>
             <div className="text-xs hebrew" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</div>
           </div>
         </button>
@@ -115,7 +115,7 @@ export default function GuestLayout() {
             <HamburgerIcon />
           </button>
           <StarSvg size={24} />
-          <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Perashá</span>
+          <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</span>
           <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
           <span className="ml-auto text-xs px-2 py-0.5 rounded-full"
             style={{ background: 'rgba(45,212,191,0.1)', color: '#0d9488', border: '1px solid rgba(45,212,191,0.2)' }}>

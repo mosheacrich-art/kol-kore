@@ -1,4 +1,4 @@
-import { Outlet, useNavigate, useLocation } from 'react-router-dom'
+﻿import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
@@ -7,14 +7,14 @@ import { supabase } from '../../lib/supabase'
 import LangToggle from '../../components/LangToggle'
 
 const NAV_KEYS = [
-  { path: '/teacher/dashboard',      key: 'nav_dashboard',      shortKey: 'nav_dashboard', heb: 'לוּחַ' },
-  { path: '/teacher/students',       key: 'nav_students',       shortKey: 'nav_students',  heb: 'תַּלְמִידִים' },
-  { path: '/teacher/homework',       key: 'nav_homework',       shortKey: 'nav_homework',  heb: 'שִׁעוּרֵי בַּיִת' },
-  { path: '/teacher/schedule',       key: 'nav_schedule',       shortKey: 'nav_schedule',  heb: 'שִׁעוּרִים' },
-  { path: '/teacher/audio',          key: 'nav_audio',          shortKey: 'nav_audio',     heb: 'הֶקְלָטוֹת' },
-  { path: '/teacher/study',          key: 'nav_parashot',       shortKey: 'nav_parashot',  heb: 'פָּרָשִׁיּוֹת' },
-  { path: '/teacher/notifications',  key: 'nav_notifications',  shortKey: 'nav_notifications', heb: 'הוֹדָעוֹת', badge: true },
-  { path: '/teacher/imprimir',       key: 'nav_print_tikun',    shortKey: 'nav_print_tikun', heb: 'תִּקּוּן' },
+  { path: '/teacher/dashboard',      key: 'nav_dashboard',      shortKey: 'nav_dashboard', heb: '×œ×•Ö¼×—Ö·' },
+  { path: '/teacher/students',       key: 'nav_students',       shortKey: 'nav_students',  heb: '×ªÖ·Ö¼×œÖ°×žÖ´×™×“Ö´×™×' },
+  { path: '/teacher/homework',       key: 'nav_homework',       shortKey: 'nav_homework',  heb: '×©Ö´××¢×•Ö¼×¨Öµ×™ ×‘Ö·Ö¼×™Ö´×ª' },
+  { path: '/teacher/schedule',       key: 'nav_schedule',       shortKey: 'nav_schedule',  heb: '×©Ö´××¢×•Ö¼×¨Ö´×™×' },
+  { path: '/teacher/audio',          key: 'nav_audio',          shortKey: 'nav_audio',     heb: '×”Ö¶×§Ö°×œÖ¸×˜×•Ö¹×ª' },
+  { path: '/teacher/study',          key: 'nav_parashot',       shortKey: 'nav_parashot',  heb: '×¤Ö¸Ö¼×¨Ö¸×©Ö´××™Ö¼×•Ö¹×ª' },
+  { path: '/teacher/notifications',  key: 'nav_notifications',  shortKey: 'nav_notifications', heb: '×”×•Ö¹×“Ö¸×¢×•Ö¹×ª', badge: true },
+  { path: '/teacher/imprimir',       key: 'nav_print_tikun',    shortKey: 'nav_print_tikun', heb: '×ªÖ´Ö¼×§Ö¼×•Ö¼×Ÿ' },
 ]
 
 const BOTTOM_NAV_INDICES = [0, 1, 2, 6]
@@ -57,7 +57,7 @@ export default function TeacherLayout() {
           onClick={() => { setSidebarOpen(false); setMoreOpen(false) }} />
       )}
 
-      {/* ── Desktop sidebar ───────────────────────────────────────────────── */}
+      {/* â”€â”€ Desktop sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <aside className="hidden md:flex flex-shrink-0 flex-col py-8 px-4 w-64 sticky top-0 h-screen"
         style={{ background: 'var(--bg-deep)', borderInlineEnd: '1px solid var(--border-subtle)' }}>
         <SidebarContent profile={profile} location={location} isDark={isDark}
@@ -65,7 +65,7 @@ export default function TeacherLayout() {
           unreadCount={unreadCount} showClose={false} allNavItems={allNavItems} />
       </aside>
 
-      {/* ── Mobile sidebar drawer ─────────────────────────────────────────── */}
+      {/* â”€â”€ Mobile sidebar drawer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <aside className={`md:hidden fixed inset-y-0 z-50 w-64 flex flex-col px-4
         transition-transform duration-300 ease-in-out sidebar-drawer
         ${isRTL ? 'right-0' : 'left-0'}
@@ -76,7 +76,7 @@ export default function TeacherLayout() {
           unreadCount={unreadCount} showClose onClose={() => setSidebarOpen(false)} allNavItems={allNavItems} />
       </aside>
 
-      {/* ── "Más" bottom sheet ────────────────────────────────────────────── */}
+      {/* â”€â”€ "MÃ¡s" bottom sheet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className={`md:hidden fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl
         transition-transform duration-300 ease-in-out mobile-bottom-nav
         ${moreOpen ? 'translate-y-0' : 'translate-y-full'}`}
@@ -100,7 +100,7 @@ export default function TeacherLayout() {
         </div>
       </div>
 
-      {/* ── Main ─────────────────────────────────────────────────────────── */}
+      {/* â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <main className="flex-1 flex flex-col overflow-auto scroll-smooth-ios main-with-bottom-nav">
 
         {/* Header */}
@@ -117,14 +117,14 @@ export default function TeacherLayout() {
             )}
           </button>
           <StarSvg />
-          <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Perashá</span>
-          <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
+          <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</span>
+          <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>×¤Ö¸Ö¼×¨Ö¸×©Ö¸××”</span>
         </div>
 
         <Outlet />
       </main>
 
-      {/* ── Mobile bottom nav ─────────────────────────────────────────────── */}
+      {/* â”€â”€ Mobile bottom nav â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex mobile-bottom-nav"
         style={{ background: 'var(--bg-deep)', borderTop: '1px solid var(--border-subtle)' }}>
         {bottomNavItems.map(item => {
@@ -145,12 +145,12 @@ export default function TeacherLayout() {
             </button>
           )
         })}
-        {/* Más */}
+        {/* MÃ¡s */}
         <button onClick={() => setMoreOpen(v => !v)}
           className="flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[56px] py-2 transition-colors"
           style={{ color: moreOpen ? '#f9b800' : 'var(--text-3)' }}>
           <MoreIcon active={moreOpen} />
-          <span className="text-[10px] font-medium leading-none">Más</span>
+          <span className="text-[10px] font-medium leading-none">MÃ¡s</span>
         </button>
       </nav>
     </div>
@@ -166,8 +166,8 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
         <button onClick={() => go('/teacher/dashboard')} className="flex items-center gap-3">
           <StarSvg />
           <div>
-            <div className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Perashá</div>
-            <div className="text-xs hebrew" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</div>
+            <div className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</div>
+            <div className="text-xs hebrew" style={{ color: 'var(--text-gold)' }}>×¤Ö¸Ö¼×¨Ö¸×©Ö¸××”</div>
           </div>
         </button>
         {showClose && (
@@ -188,7 +188,7 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
             <div className="text-xs font-medium truncate" style={{ color: 'var(--text)' }}>
               {profile?.name ?? 'Profesor'}
             </div>
-            <div className="text-xs" style={{ color: 'var(--text-gold)' }}>מוֹרֶה · Profesor</div>
+            <div className="text-xs" style={{ color: 'var(--text-gold)' }}>×ž×•Ö¹×¨Ö¶×” Â· Profesor</div>
           </div>
         </div>
       </div>
@@ -227,13 +227,13 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
         <button onClick={toggle}
           className="w-full flex items-center gap-2 text-xs py-2.5 px-3 rounded-xl transition-all"
           style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
-          <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
+          <span style={{ fontSize: '14px' }}>{isDark ? 'â˜€ï¸' : 'ðŸŒ™'}</span>
           {isDark ? t('light_mode') : t('dark_mode')}
         </button>
         <button onClick={async () => { await signOut(); navigate('/login') }}
           className="w-full text-xs py-2.5 px-3 rounded-xl text-left transition-all"
           style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
-          → {t('logout')}
+          â†’ {t('logout')}
         </button>
       </div>
     </>
