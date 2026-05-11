@@ -4,7 +4,7 @@ import { useEffect, lazy, Suspense } from 'react'
 import { AudioProvider } from './context/AudioContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
-import { LangProvider } from './context/LangContext'
+import { LangProvider, useLang } from './context/LangContext'
 import { Capacitor } from '@capacitor/core'
 
 const AuthCallback        = lazy(() => import('./pages/AuthCallback'))
@@ -119,18 +119,25 @@ function AppRoutes() {
 // Use HashRouter on native (Capacitor), BrowserRouter on web
 const Router = Capacitor.isNativePlatform() ? HashRouter : BrowserRouter
 
+function DirWrapper({ children }) {
+  const { lang } = useLang()
+  return <div dir={lang === 'he' ? 'rtl' : 'ltr'} style={{ display: 'contents' }}>{children}</div>
+}
+
 export default function App() {
   return (
     <LangProvider>
-      <ThemeProvider>
-        <AuthProvider>
-          <AudioProvider>
-            <Router>
-              <AppRoutes />
-            </Router>
-          </AudioProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      <DirWrapper>
+        <ThemeProvider>
+          <AuthProvider>
+            <AudioProvider>
+              <Router>
+                <AppRoutes />
+              </Router>
+            </AudioProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </DirWrapper>
     </LangProvider>
   )
 }

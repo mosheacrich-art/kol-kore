@@ -24,7 +24,8 @@ export default function TeacherLayout() {
   const location = useLocation()
   const { isDark, toggle } = useTheme()
   const { profile, signOut } = useAuth()
-  const { t } = useLang()
+  const { t, lang } = useLang()
+  const isRTL = lang === 'he'
   const [unreadCount, setUnreadCount] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
@@ -58,17 +59,18 @@ export default function TeacherLayout() {
 
       {/* ── Desktop sidebar ───────────────────────────────────────────────── */}
       <aside className="hidden md:flex flex-shrink-0 flex-col py-8 px-4 w-64 sticky top-0 h-screen"
-        style={{ background: 'var(--bg-deep)', borderRight: '1px solid var(--border-subtle)' }}>
+        style={{ background: 'var(--bg-deep)', borderInlineEnd: '1px solid var(--border-subtle)' }}>
         <SidebarContent profile={profile} location={location} isDark={isDark}
           toggle={toggle} go={go} signOut={signOut} navigate={navigate}
           unreadCount={unreadCount} showClose={false} allNavItems={allNavItems} />
       </aside>
 
       {/* ── Mobile sidebar drawer ─────────────────────────────────────────── */}
-      <aside className={`md:hidden fixed inset-y-0 left-0 z-50 w-64 flex flex-col px-4
+      <aside className={`md:hidden fixed inset-y-0 z-50 w-64 flex flex-col px-4
         transition-transform duration-300 ease-in-out sidebar-drawer
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
-        style={{ background: 'var(--bg-deep)', borderRight: '1px solid var(--border-subtle)' }}>
+        ${isRTL ? 'right-0' : 'left-0'}
+        ${sidebarOpen ? 'translate-x-0' : isRTL ? 'translate-x-full' : '-translate-x-full'}`}
+        style={{ background: 'var(--bg-deep)', borderInlineEnd: '1px solid var(--border-subtle)' }}>
         <SidebarContent profile={profile} location={location} isDark={isDark}
           toggle={toggle} go={go} signOut={signOut} navigate={navigate}
           unreadCount={unreadCount} showClose onClose={() => setSidebarOpen(false)} allNavItems={allNavItems} />
@@ -199,7 +201,7 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
               className="sidebar-item flex items-center gap-3 px-3 py-3 rounded-xl text-left"
               style={{
                 background: active ? 'rgba(249,184,0,0.1)' : 'transparent',
-                borderLeft: active ? '2px solid #f9b800' : '2px solid transparent',
+                borderInlineStart: active ? '2px solid #f9b800' : '2px solid transparent',
                 color: active ? '#b8860b' : 'var(--text-3)',
               }}>
               <NavDot active={active} />
