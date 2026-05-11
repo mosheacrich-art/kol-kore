@@ -10,16 +10,32 @@ import LangToggle from '../components/LangToggle'
 export default function Login() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { profile, signIn, signUp, signInWithGoogle } = useAuth()
+  const { profile, signIn, signUp, signInWithGoogle, oauthConflict, clearOauthConflict } = useAuth()
   const { isDark } = useTheme()
   const { t: tl } = useLang()
   const [expanded, setExpanded] = useState(null)
-  // modal state: null | 'student' | (future)
   const [modal, setModal] = useState(null)
+  const [conflictError, setConflictError] = useState(null) // { existing, intended }
 
+  // Conflict from OAuth redirect (URL params)
   const oauthError   = searchParams.get('oauth_error')
   const existingRole = searchParams.get('existing')
   const intendedRole = searchParams.get('intended')
+
+  useEffect(() => {
+    if (oauthError === 'conflict' && existingRole) {
+      setConflictError({ existing: existingRole, intended: intendedRole })
+    }
+  }, [oauthError, existingRole, intendedRole])
+
+  // Conflict from email/password sign-in (oauthConflict state in context)
+  useEffect(() => {
+    if (!oauthConflict) return
+    clearOauthConflict()
+    setModal(null)
+    setExpanded(null)
+    setConflictError(oauthConflict)
+  }, [oauthConflict])
 
   useEffect(() => {
     if (!profile) return
@@ -106,18 +122,24 @@ export default function Login() {
           </p>
         </div>
 
-        {/* OAuth role-conflict error banner */}
-        {oauthError === 'conflict' && existingRole && (
-          <div className="mb-6 p-4 rounded-2xl text-sm fade-up-2"
+        {/* Role-conflict error banner (email/password or Google) */}
+        {conflictError && (
+          <div className="mb-6 p-4 rounded-2xl text-sm fade-up-2 flex items-start gap-3"
             style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)' }}>
-            <p className="font-semibold mb-1" style={{ color: '#f87171' }}>
-              {tl('oauth_conflict_title')}
-            </p>
-            <p className="text-xs" style={{ color: 'rgba(252,165,165,0.85)' }}>
-              {existingRole === 'teacher'
-                ? tl('oauth_conflict_desc_teacher')
-                : tl('oauth_conflict_desc_student')}
-            </p>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+              <circle cx="9" cy="9" r="7.5" stroke="#f87171" strokeWidth="1.3"/>
+              <path d="M9 5.5v4M9 12.5v.5" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            <div>
+              <p className="font-semibold mb-0.5" style={{ color: '#f87171' }}>
+                {tl('oauth_conflict_title')}
+              </p>
+              <p className="text-xs" style={{ color: 'rgba(252,165,165,0.85)' }}>
+                {conflictError.existing === 'teacher'
+                  ? tl('oauth_conflict_desc_teacher')
+                  : tl('oauth_conflict_desc_student')}
+              </p>
+            </div>
           </div>
         )}
 
@@ -198,9 +220,10 @@ function StudentModal({ onClose, isDark, t, tl }) {
     setError('')
 
     if (isLogin) {
+      sessionStorage.setItem('login_intended_role', 'student')
       const err = await signIn(email, password)
       setLoading(false)
-      if (err) setError(tl('login_error'))
+      if (err) { sessionStorage.removeItem('login_intended_role'); setError(tl('login_error')) }
       return
     }
 
@@ -425,9 +448,10 @@ function SimpleAuthForm({ role, color, onCancel, onDone, t, tl }) {
       if (result?.needsConfirmation) { setConfirmationSent(true); return }
       if (result) { setError('Error: ' + result.message); return }
     } else {
+      sessionStorage.setItem('login_intended_role', role)
       const err = await signIn(email, password)
       setLoading(false)
-      if (err) setError(tl('login_error'))
+      if (err) { sessionStorage.removeItem('login_intended_role'); setError(tl('login_error')) }
     }
   }
 

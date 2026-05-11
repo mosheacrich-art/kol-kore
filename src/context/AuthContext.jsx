@@ -16,8 +16,12 @@ export function AuthProvider({ children }) {
     const fetchProfile = async (userId, userMetadata, createdAt) => {
       try {
         const ALLOWED_ROLES = ['teacher', 'student']
-        const pendingRoleRaw = sessionStorage.getItem('oauth_intended_role')
-        const intendedRole = ALLOWED_ROLES.includes(pendingRoleRaw) ? pendingRoleRaw : null
+        const oauthRoleRaw  = sessionStorage.getItem('oauth_intended_role')
+        const loginRoleRaw  = sessionStorage.getItem('login_intended_role')
+        const intendedRole  = ALLOWED_ROLES.includes(oauthRoleRaw)  ? oauthRoleRaw  : null
+        const loginRole     = ALLOWED_ROLES.includes(loginRoleRaw)  ? loginRoleRaw  : null
+        // The role the user actively chose (OAuth takes priority as it was set more recently)
+        const effectiveRole = intendedRole || loginRole
 
         let { data } = await supabase
           .from('profiles').select('*').eq('id', userId).maybeSingle()
@@ -47,29 +51,30 @@ export function AuthProvider({ children }) {
             .upsert({ id: userId, role, name, ...extra }, { onConflict: 'id' })
             .select()
           data = rows?.[0] ?? null
-        } else if (data && intendedRole && data.role !== intendedRole) {
-          if (isNewUser) {
-            // DB trigger created the profile with a default role that doesn't match what
-            // the user selected — correct it now.
+        } else if (data && effectiveRole && data.role !== effectiveRole) {
+          // Role mismatch detected
+          if (intendedRole && isNewUser) {
+            // OAuth only: DB trigger created profile with wrong default role — correct it.
             const extra = intendedRole === 'teacher' && !data.teacher_code
               ? { teacher_code: Math.random().toString(36).substring(2, 8).toUpperCase() }
               : {}
             await supabase.from('profiles').update({ role: intendedRole, ...extra }).eq('id', userId)
             data = { ...data, role: intendedRole, ...extra }
           } else {
-            // Existing account with a different role — role conflict. Sign out and surface the error.
+            // Existing account with a different role (email/password or OAuth existing user).
             sessionStorage.removeItem('oauth_intended_role')
+            sessionStorage.removeItem('login_intended_role')
             if (active) {
-              setOauthConflict({ existing: data.role, intended: intendedRole })
+              setOauthConflict({ existing: data.role, intended: effectiveRole })
               setLoading(false)
             }
-            // Defer signOut to avoid triggering a recursive auth state change
             setTimeout(() => supabase.auth.signOut(), 100)
             return
           }
         }
 
         sessionStorage.removeItem('oauth_intended_role')
+        sessionStorage.removeItem('login_intended_role')
         if (!active) return
 
         // If DB trigger created the profile with email as name, fix it using user_metadata
@@ -113,8 +118,9 @@ export function AuthProvider({ children }) {
   }
 
   const signUp = async (email, password, name, role) => {
-    // Ensure stale OAuth role doesn't interfere with email/password signup
+    // Ensure stale role keys don't interfere with a fresh signup
     sessionStorage.removeItem('oauth_intended_role')
+    sessionStorage.removeItem('login_intended_role')
 
     let data, error
     try {
