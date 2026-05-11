@@ -233,7 +233,7 @@ export default function Landing() {
             transition={{ delay: 0.25, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             className="font-serif leading-none mb-3"
             style={{ fontSize: 'clamp(64px, 12vw, 120px)', color: t.text, letterSpacing: '-3px', transition: 'color 0.4s' }}>
-            Perashá
+            Parashá
           </motion.h1>
 
           <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -442,7 +442,7 @@ export default function Landing() {
       <div className="py-6 px-6 flex items-center justify-between flex-wrap gap-3"
         style={{ borderTop: `1px solid ${t.border}`, background: t.sectionBg }}>
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold" style={{ color: t.text }}>Perashá</span>
+          <span className="text-sm font-semibold" style={{ color: t.text }}>Parashá</span>
           <span className="hebrew text-sm" style={{ color: t.goldSubtle }}>פָּרָשָׁה</span>
         </div>
         <div className="flex items-center gap-4 flex-wrap">

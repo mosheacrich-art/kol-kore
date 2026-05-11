@@ -35,6 +35,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
   const [aliyahIdx, setAliyahIdx] = useState(initialAliyah)
   const [showPaywall, setShowPaywall] = useState(false)
   const [mode, setMode] = useState('taamim')
+  const [cursorEnabled, setCursorEnabled] = useState(true)
   const [fontSize, setFontSize] = useState(30)
   const [audioCurrentTime, setAudioCurrentTime] = useState(null)
   const [audioPlaying, setAudioPlaying] = useState(false)
@@ -269,6 +270,22 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
           {mode !== 'sefer' && (
             <div className="flex-shrink-0 w-px h-5" style={{ background: 'var(--border)' }} />
           )}
+          {!guestMode && (
+            <button
+              onClick={() => setCursorEnabled(c => !c)}
+              title={cursorEnabled ? 'Desactivar cursor de audio' : 'Activar cursor de audio'}
+              className="flex-shrink-0 w-8 h-8 rounded flex items-center justify-center transition-all"
+              style={{
+                background: cursorEnabled ? `${bookColor}18` : 'var(--bg-card)',
+                border: `1px solid ${cursorEnabled ? bookColor + '40' : 'var(--border-subtle)'}`,
+                color: cursorEnabled ? bookColor : 'var(--text-muted)',
+              }}>
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                <path d="M2 2l4 9 1.5-3.5L11 6 2 2z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          )}
+
           <div className="flex items-center gap-1 p-1 rounded-xl flex-shrink-0"
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
             {MODES.map(m => (
@@ -482,22 +499,22 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
                 verses={verses}
                 bookColor={bookColor}
                 fontSize={fontSize}
-                wordTimestamps={audio?.wordTimestamps ?? null}
-                audioCurrentTime={audioCurrentTime}
+                wordTimestamps={cursorEnabled ? (audio?.wordTimestamps ?? null) : null}
+                audioCurrentTime={cursorEnabled ? audioCurrentTime : null}
                 audioPlaying={audioPlaying}
                 audioDuration={audioDuration}
-                onWordClick={audio ? handleSeek : null}
+                onWordClick={cursorEnabled && audio ? handleSeek : null}
               />
             : <SingleView
                 verses={verses}
                 mode={mode}
                 bookColor={bookColor}
                 fontSize={fontSize}
-                wordTimestamps={audio?.wordTimestamps ?? null}
-                audioCurrentTime={audioCurrentTime}
+                wordTimestamps={cursorEnabled ? (audio?.wordTimestamps ?? null) : null}
+                audioCurrentTime={cursorEnabled ? audioCurrentTime : null}
                 audioPlaying={audioPlaying}
                 audioDuration={audioDuration}
-                onWordClick={audio ? handleSeek : null}
+                onWordClick={cursorEnabled && audio ? handleSeek : null}
               />
         )}
         {mode !== 'sefer' && !loading && !error && verses.length === 0 && (

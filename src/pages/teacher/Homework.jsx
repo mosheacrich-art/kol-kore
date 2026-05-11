@@ -25,6 +25,8 @@ export default function TeacherHomework() {
     parasha_id: '', aliyah_idx: 0, require_audio: false,
   })
   const [saving, setSaving] = useState(false)
+  const [hoverItem, setHoverItem] = useState(null)
+  const [deleting, setDeleting] = useState(null)
 
   useEffect(() => {
     if (!profile) return
@@ -67,6 +69,13 @@ export default function TeacherHomework() {
     setComposing(false)
     setForm(f => ({ ...f, task: '', subject: '', due: '', parasha_id: '', aliyah_idx: 0, require_audio: false }))
     setSaving(false)
+  }
+
+  const deleteHomework = async (id) => {
+    setDeleting(id)
+    await supabase.from('homework').delete().eq('id', id).eq('teacher_id', profile.id)
+    setSent(prev => prev.filter(item => item.id !== id))
+    setDeleting(null)
   }
 
   const inputStyle = { background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }
@@ -240,8 +249,34 @@ export default function TeacherHomework() {
             : null
 
           return (
-            <div key={item.id} className="flex items-start gap-4 p-5 rounded-2xl"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
+            <div key={item.id}
+              className="flex items-start gap-4 p-5 rounded-2xl relative group"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+              onMouseEnter={() => setHoverItem(item.id)}
+              onMouseLeave={() => setHoverItem(null)}>
+
+              {/* Delete button — appears on hover */}
+              <button
+                onClick={() => deleteHomework(item.id)}
+                disabled={deleting === item.id}
+                className="absolute top-3 right-3 w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+                style={{
+                  opacity: hoverItem === item.id ? 1 : 0,
+                  pointerEvents: hoverItem === item.id ? 'auto' : 'none',
+                  background: 'rgba(239,68,68,0.08)',
+                  border: '1px solid rgba(239,68,68,0.15)',
+                  color: '#ef4444',
+                }}>
+                {deleting === item.id ? (
+                  <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin"
+                    style={{ borderColor: 'rgba(239,68,68,0.3)', borderTopColor: '#ef4444' }} />
+                ) : (
+                  <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                    <path d="M1.5 3h8M3.5 3V2h4v1M4 5v3M7 5v3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+                    <path d="M2.5 3l.5 6h5l.5-6" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </button>
               <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 mt-0.5"
                 style={{ background: 'rgba(108,51,230,0.15)', color: '#6c33e6' }}>
                 {item.student?.name?.charAt(0) || '?'}
