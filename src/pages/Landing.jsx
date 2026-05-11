@@ -14,74 +14,22 @@ const STARS = Array.from({ length: 120 }, (_, i) => ({
   delay: Math.random() * 6,
 }))
 
-const FEATURES = [
-  {
-    icon: BookIcon,
-    title: 'Texto completo',
-    heb: 'כָּל הַתּוֹרָה',
-    desc: 'Las 54 perashiot con texto de Sefaria — taamim, nikkud o llano. Modo Sefer con diseño de Tikkun real.',
-    color: '#6c33e6',
-  },
-  {
-    icon: WaveIcon,
-    title: 'Audio sincronizado',
-    heb: 'שִׁמְעוּ וּרְאוּ',
-    desc: 'Cada palabra se ilumina al ritmo del audio gracias a Whisper. Graba tu lectura y escúchala en cualquier momento.',
-    color: '#2dd4bf',
-  },
-  {
-    icon: LinkIcon,
-    title: 'Maestro y alumno',
-    heb: 'רַב וְתַלְמִיד',
-    desc: 'El profesor sube audios por aliyá, asigna deberes y recibe notificaciones en tiempo real de la actividad del alumno.',
-    color: '#f9b800',
-  },
-  {
-    icon: StarIcon,
-    title: 'Bar Mitzvá',
-    heb: 'בַּר מִצְוָה',
-    desc: 'Calculadora de fecha hebrea, perashá asignada y seguimiento de progreso semana a semana.',
-    color: '#f87171',
-  },
+const FEATURES_META = [
+  { icon: BookIcon,  heb: 'כָּל הַתּוֹרָה', color: '#6c33e6', k: ['feat1_title', 'feat1_desc'] },
+  { icon: WaveIcon,  heb: 'שִׁמְעוּ וּרְאוּ', color: '#2dd4bf', k: ['feat2_title', 'feat2_desc'] },
+  { icon: LinkIcon,  heb: 'רַב וְתַלְמִיד', color: '#f9b800', k: ['feat3_title', 'feat3_desc'] },
+  { icon: StarIcon,  heb: 'בַּר מִצְוָה',   color: '#f87171', k: ['feat4_title', 'feat4_desc'] },
 ]
 
-const STEPS = [
-  { n: '01', title: 'Crea tu cuenta', desc: 'Regístrate como alumno o profesor en segundos.', color: '#6c33e6' },
-  { n: '02', title: 'Conecta con tu rav', desc: 'Usa el código único del profesor para vincularte.', color: '#2dd4bf' },
-  { n: '03', title: 'Estudia y progresa', desc: 'Lee, escucha, graba y sigue tu avance en tiempo real.', color: '#f9b800' },
+const STEPS_META = [
+  { n: '01', color: '#6c33e6', k: ['step1_title', 'step1_desc'] },
+  { n: '02', color: '#2dd4bf', k: ['step2_title', 'step2_desc'] },
+  { n: '03', color: '#f9b800', k: ['step3_title', 'step3_desc'] },
 ]
 
-const ROLES = [
-  {
-    role: 'Alumno',
-    heb: 'תַּלְמִיד',
-    color: '#6c33e6',
-    bg: 'rgba(108,51,230,0.08)',
-    border: 'rgba(108,51,230,0.2)',
-    items: [
-      'Accede a las 54 perashiot completas',
-      'Sigue las palabras con el audio',
-      'Graba tu lectura y envíala al profesor',
-      'Consulta tus deberes y progreso',
-      'Calcula tu fecha de Bar Mitzvá',
-    ],
-    cta: 'Soy alumno →',
-  },
-  {
-    role: 'Profesor',
-    heb: 'מוֹרֶה',
-    color: '#f9b800',
-    bg: 'rgba(249,184,0,0.08)',
-    border: 'rgba(249,184,0,0.2)',
-    items: [
-      'Sube audios por aliyá con sincronización',
-      'Gestiona todos tus alumnos',
-      'Asigna deberes y controla el estado',
-      'Recibe notificaciones de actividad',
-      'Dashboard con métricas de estudio',
-    ],
-    cta: 'Soy profesor →',
-  },
+const ROLES_META = [
+  { heb: 'תַּלְמִיד', color: '#6c33e6', bg: 'rgba(108,51,230,0.08)', border: 'rgba(108,51,230,0.2)', labelKey: 'role_student_label', itemsKey: 'role_student_items', ctaKey: 'role_student_cta' },
+  { heb: 'מוֹרֶה',   color: '#f9b800', bg: 'rgba(249,184,0,0.08)',  border: 'rgba(249,184,0,0.2)',  labelKey: 'role_teacher_label', itemsKey: 'role_teacher_items', ctaKey: 'role_teacher_cta' },
 ]
 
 const PARASHOT_TICKER = [
@@ -212,7 +160,7 @@ export default function Landing() {
             className="flex items-center gap-2 text-xs px-4 py-2 rounded-full transition-all"
             style={{ background: t.toggleBg, border: `1px solid ${t.toggleBorder}`, color: t.toggleText, backdropFilter: 'blur(10px)' }}>
             <span style={{ fontSize: '13px' }}>{isDark ? '☀️' : '🌙'}</span>
-            {isDark ? 'Modo claro' : 'Modo oscuro'}
+            {isDark ? tl('light_mode') : tl('dark_mode')}
           </button>
         </div>
 
@@ -226,7 +174,7 @@ export default function Landing() {
             transition={{ delay: 0.15, duration: 0.6 }}
             className="text-xs tracking-[0.4em] uppercase mb-5 font-medium"
             style={{ color: t.goldSubtle }}>
-            Estudio de Torá · לִמּוּד תּוֹרָה
+            {tl('landing_study_label')} · לִמּוּד תּוֹרָה
           </motion.p>
 
           <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
@@ -287,18 +235,18 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <FadeIn className="text-center mb-20">
             <p className="text-xs tracking-[0.35em] uppercase font-medium mb-3" style={{ color: t.goldSubtle }}>
-              Todo lo que necesitas
+              {tl('landing_features_eyebrow')}
             </p>
             <h2 className="text-3xl md:text-4xl font-light mb-4" style={{ color: t.text, letterSpacing: '-1px' }}>
-              Diseñado para el estudio real
+              {tl('landing_features_title')}
             </h2>
             <p className="text-base max-w-md mx-auto" style={{ color: t.text2 }}>
-              No es solo un visor de texto. Es una plataforma completa de aprendizaje.
+              {tl('landing_features_desc')}
             </p>
           </FadeIn>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {FEATURES.map((f, i) => {
+            {FEATURES_META.map((f, i) => {
               const Icon = f.icon
               return (
                 <FadeIn key={i} delay={i * 0.1} direction={i % 2 === 0 ? 'left' : 'right'}>
@@ -321,10 +269,10 @@ export default function Landing() {
                       <Icon color={f.color} />
                     </div>
                     <div className="flex items-baseline gap-3 mb-2">
-                      <h3 className="text-lg font-semibold" style={{ color: t.text }}>{f.title}</h3>
+                      <h3 className="text-lg font-semibold" style={{ color: t.text }}>{tl(f.k[0])}</h3>
                       <span className="hebrew text-sm" style={{ color: f.color }}>{f.heb}</span>
                     </div>
-                    <p className="text-sm leading-relaxed" style={{ color: t.text2 }}>{f.desc}</p>
+                    <p className="text-sm leading-relaxed" style={{ color: t.text2 }}>{tl(f.k[1])}</p>
                   </div>
                 </FadeIn>
               )
@@ -338,10 +286,10 @@ export default function Landing() {
         <div className="max-w-4xl mx-auto">
           <FadeIn className="text-center mb-20">
             <p className="text-xs tracking-[0.35em] uppercase font-medium mb-3" style={{ color: t.goldSubtle }}>
-              Tres pasos
+              {tl('landing_steps_eyebrow')}
             </p>
             <h2 className="text-3xl md:text-4xl font-light" style={{ color: t.text, letterSpacing: '-1px' }}>
-              Empieza en minutos
+              {tl('landing_steps_title')}
             </h2>
           </FadeIn>
 
@@ -350,15 +298,15 @@ export default function Landing() {
             <div className="hidden md:block absolute top-8 left-[calc(16.6%+20px)] right-[calc(16.6%+20px)] h-px"
               style={{ background: `linear-gradient(to right, #6c33e6, #2dd4bf, #f9b800)`, opacity: 0.3 }} />
 
-            {STEPS.map((s, i) => (
+            {STEPS_META.map((s, i) => (
               <FadeIn key={i} delay={i * 0.15} className="flex-1">
                 <div className="flex flex-col items-center text-center p-6">
                   <div className="w-16 h-16 rounded-full flex items-center justify-center mb-5 relative"
                     style={{ background: s.color + '18', border: `2px solid ${s.color}30` }}>
                     <span className="text-xl font-bold" style={{ color: s.color }}>{s.n}</span>
                   </div>
-                  <h3 className="text-base font-semibold mb-2" style={{ color: t.text }}>{s.title}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: t.text2 }}>{s.desc}</p>
+                  <h3 className="text-base font-semibold mb-2" style={{ color: t.text }}>{tl(s.k[0])}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: t.text2 }}>{tl(s.k[1])}</p>
                 </div>
               </FadeIn>
             ))}
@@ -371,24 +319,24 @@ export default function Landing() {
         <div className="max-w-4xl mx-auto">
           <FadeIn className="text-center mb-20">
             <p className="text-xs tracking-[0.35em] uppercase font-medium mb-3" style={{ color: t.goldSubtle }}>
-              Para cada rol
+              {tl('landing_roles_eyebrow')}
             </p>
             <h2 className="text-3xl md:text-4xl font-light" style={{ color: t.text, letterSpacing: '-1px' }}>
-              Hecho a medida para ti
+              {tl('landing_roles_title')}
             </h2>
           </FadeIn>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {ROLES.map((r, i) => (
+            {ROLES_META.map((r, i) => (
               <FadeIn key={i} delay={i * 0.15} direction={i === 0 ? 'left' : 'right'}>
                 <div className="p-8 rounded-2xl h-full flex flex-col"
                   style={{ background: r.bg, border: `1px solid ${r.border}` }}>
                   <div className="flex items-baseline gap-3 mb-6">
-                    <h3 className="text-2xl font-semibold" style={{ color: r.color }}>{r.role}</h3>
+                    <h3 className="text-2xl font-semibold" style={{ color: r.color }}>{tl(r.labelKey)}</h3>
                     <span className="hebrew text-lg" style={{ color: r.color + 'aa' }}>{r.heb}</span>
                   </div>
                   <ul className="flex flex-col gap-3 flex-1 mb-8">
-                    {r.items.map((item, j) => (
+                    {(tl(r.itemsKey) || []).map((item, j) => (
                       <li key={j} className="flex items-start gap-3 text-sm" style={{ color: t.text2 }}>
                         <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5"
                           style={{ background: r.color }} />
@@ -402,7 +350,7 @@ export default function Landing() {
                     style={{ background: r.color + '20', color: r.color, border: `1px solid ${r.color}30` }}
                     onMouseEnter={e => { e.currentTarget.style.background = r.color + '30' }}
                     onMouseLeave={e => { e.currentTarget.style.background = r.color + '20' }}>
-                    {r.cta}
+                    {tl(r.ctaKey)}
                   </button>
                 </div>
               </FadeIn>
@@ -422,14 +370,14 @@ export default function Landing() {
             <HexStar isDark={isDark} size={56} />
           </div>
           <p className="text-xs tracking-[0.35em] uppercase font-medium mb-4" style={{ color: t.goldSubtle }}>
-            Empieza hoy
+            {tl('landing_cta_eyebrow')}
           </p>
           <h2 className="text-3xl md:text-5xl font-light mb-5" style={{ color: t.text, letterSpacing: '-1.5px' }}>
-            Tu estudio de Torah,<br />
+            {tl('landing_cta_title')}<br />
             <span className="hebrew" style={{ color: t.gold }}>כָּאן וְעַכְשָׁו</span>
           </h2>
           <p className="text-base mb-10 max-w-sm mx-auto" style={{ color: t.text2 }}>
-            Gratuito. Sin tarjeta de crédito. Empieza a estudiar en menos de un minuto.
+            {tl('landing_cta_desc')}
           </p>
           <button className="btn-gold px-12 py-4 rounded-full text-base font-semibold"
             onClick={() => navigate('/login')}>
@@ -447,23 +395,21 @@ export default function Landing() {
         </div>
         <div className="flex items-center gap-4 flex-wrap">
           <p className="text-xs" style={{ color: t.text2 }}>
-            Texto de <a href="https://sefaria.org" target="_blank" rel="noreferrer"
-              style={{ color: '#6c33e6', textDecoration: 'none' }}>Sefaria</a> ·
-            Audio por OpenAI Whisper · Tikkun por tikkun.io
+            {tl('landing_footer_credits')}
           </p>
           <div className="flex items-center gap-3">
             <button onClick={() => navigate('/privacy')}
               className="text-xs transition-all" style={{ color: t.text2 }}
               onMouseEnter={e => e.target.style.color = '#6c33e6'}
               onMouseLeave={e => e.target.style.color = t.text2}>
-              Privacidad
+              {tl('landing_footer_privacy')}
             </button>
             <span style={{ color: t.border }}>·</span>
             <button onClick={() => navigate('/terms')}
               className="text-xs transition-all" style={{ color: t.text2 }}
               onMouseEnter={e => e.target.style.color = '#6c33e6'}
               onMouseLeave={e => e.target.style.color = t.text2}>
-              Términos
+              {tl('landing_footer_terms')}
             </button>
           </div>
         </div>

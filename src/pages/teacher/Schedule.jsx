@@ -3,8 +3,6 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 
-const WEEK_DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
-const CLASS_TYPES = ['Clase', 'Trop', 'Lectura', 'Repaso', 'Maftir', 'Brajot']
 const COLORS = ['#6c33e6', '#f9b800', '#2dd4bf', '#f87171', '#a78bfa', '#34d399']
 const TIME_SLOTS = ['09:00', '10:00', '11:00', '12:00', '13:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00']
 
@@ -23,13 +21,16 @@ function addDays(date, n) {
   return d
 }
 
-function fmt(date) {
-  return date.toLocaleDateString('es', { day: 'numeric', month: 'short' })
+function fmt(date, locale) {
+  return date.toLocaleDateString(locale, { day: 'numeric', month: 'short' })
 }
 
 export default function TeacherSchedule() {
   const { profile } = useAuth()
   const { t } = useLang()
+  const WEEK_DAYS  = t('week_days')  || ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom']
+  const CLASS_TYPES = t('class_types') || ['Clase','Trop','Lectura','Repaso','Maftir','Brajot']
+  const locale = t('schedule_locale') || 'es'
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()))
   const [selectedDay, setSelectedDay] = useState(() => {
     const today = new Date().getDay()
@@ -70,12 +71,12 @@ export default function TeacherSchedule() {
   const colorFor = (name) => COLORS[Math.abs(name?.charCodeAt(0) ?? 0) % COLORS.length]
 
   const handleDelete = async (id) => {
-    if (!confirm('¿Eliminar esta clase?')) return
+    if (!confirm(t('delete_class_confirm') || '¿Eliminar esta clase?')) return
     await supabase.from('classes').delete().eq('id', id)
     setClasses(prev => prev.filter(c => c.id !== id))
   }
 
-  const weekLabel = `${fmt(weekStart)} – ${fmt(addDays(weekStart, 6))}`
+  const weekLabel = `${fmt(weekStart, locale)} – ${fmt(addDays(weekStart, 6), locale)}`
 
   // Summary stats for the week
   const uniqueStudents = [...new Set(classes.map(c => c.student_name))]
@@ -168,7 +169,7 @@ export default function TeacherSchedule() {
           <div className="rounded-2xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
-                {WEEK_DAYS[selectedDay]} {weekDays[selectedDay]?.getDate()} · {weekDays[selectedDay]?.toLocaleDateString('es', { month: 'long' })}
+                {WEEK_DAYS[selectedDay]} {weekDays[selectedDay]?.getDate()} · {weekDays[selectedDay]?.toLocaleDateString(locale, { month: 'long' })}
                 {weekDays[selectedDay]?.toDateString() === today.toDateString() && (
                   <span className="ml-2 text-xs px-2 py-0.5 rounded-full"
                     style={{ background: 'rgba(45,212,191,0.15)', color: '#0d9488' }}>{t('today')}</span>
@@ -312,6 +313,7 @@ export default function TeacherSchedule() {
           profile={profile}
           students={students}
           defaultDay={weekDays[selectedDay]}
+          classTypes={CLASS_TYPES}
           t={t}
           onClose={() => setShowModal(false)}
           onSaved={(cls) => { setClasses(prev => [...prev, cls].sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))) }}
@@ -321,14 +323,14 @@ export default function TeacherSchedule() {
   )
 }
 
-function AddClassModal({ profile, students, defaultDay, t, onClose, onSaved }) {
+function AddClassModal({ profile, students, defaultDay, classTypes, t, onClose, onSaved }) {
   const defaultDate = defaultDay instanceof Date ? defaultDay : new Date()
   const pad = n => n.toString().padStart(2, '0')
   const defaultDateStr = `${defaultDate.getFullYear()}-${pad(defaultDate.getMonth() + 1)}-${pad(defaultDate.getDate())}`
 
   const [studentId, setStudentId] = useState('')
   const [customName, setCustomName] = useState('')
-  const [type, setType] = useState('Clase')
+  const [type, setType] = useState(classTypes[0] || 'Clase')
   const [date, setDate] = useState(defaultDateStr)
   const [time, setTime] = useState('18:00')
   const [duration, setDuration] = useState(60)
@@ -410,7 +412,7 @@ function AddClassModal({ profile, students, defaultDay, t, onClose, onSaved }) {
           <div>
             <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('type_label')}</label>
             <div className="flex flex-wrap gap-1.5">
-              {CLASS_TYPES.map(ct => (
+              {classTypes.map(ct => (
                 <button key={ct} type="button" onClick={() => setType(ct)}
                   className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
                   style={{
