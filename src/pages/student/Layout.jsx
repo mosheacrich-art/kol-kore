@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
@@ -11,10 +11,10 @@ const MONTHLY_ID = 'pdt_0Ne7sWfihRRycFHWb1SB2'
 const ANNUAL_ID  = 'pdt_0Ne7sn0u5XBSPuebqTIsh'
 
 const NAV_KEYS = [
-  { path: '/student/profile',      key: 'nav_profile',      shortKey: 'nav_profile',      heb: '×¤Ö°Ö¼×¨×•Ö¹×¤Ö´×™×œ', icon: ProfileIcon },
-  { path: '/student/study',        key: 'nav_study',        shortKey: 'nav_study',         heb: '×œÖ´×žÖ¼×•Ö¼×“',    icon: StudyIcon },
-  { path: '/student/imprimir',     key: 'nav_print',        shortKey: 'nav_print',         heb: '×ªÖ´Ö¼×§Ö¼×•Ö¼×Ÿ',   icon: PrintIcon },
-  { path: '/student/subscription', key: 'nav_subscription', shortKey: 'nav_subscription',  heb: '×”Ö·×¨Ö°×©Ö¸××žÖ¸×”', icon: SubscriptionIcon },
+  { path: '/student/profile',      key: 'nav_profile',      shortKey: 'nav_profile',      heb: 'פְּרוֹפִיל', icon: ProfileIcon },
+  { path: '/student/study',        key: 'nav_study',        shortKey: 'nav_study',         heb: 'לִמּוּד',    icon: StudyIcon },
+  { path: '/student/imprimir',     key: 'nav_print',        shortKey: 'nav_print',         heb: 'תִּקּוּן',   icon: PrintIcon },
+  { path: '/student/subscription', key: 'nav_subscription', shortKey: 'nav_subscription',  heb: 'הַרְשָׁמָה', icon: SubscriptionIcon },
 ]
 
 export default function StudentLayout() {
@@ -35,7 +35,7 @@ export default function StudentLayout() {
 
   // Show paywall if student has no active subscription.
   // Exception: if coming back from payment (?success=1), let Subscription.jsx handle the polling.
-  // Paywall temporarily disabled â€” re-enable by restoring the block below
+  // Paywall temporarily disabled — re-enable by restoring the block below
   // const justPaid = searchParams.get('success') === '1'
   // const isSubscribed = profile?.subscription_status === 'active'
   // const devBypass = sessionStorage.getItem('dev_bypass') === '1'
@@ -53,14 +53,14 @@ export default function StudentLayout() {
           onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* â”€â”€ Desktop sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Desktop sidebar ───────────────────────────────────────────────── */}
       <aside className="hidden md:flex flex-shrink-0 flex-col py-8 px-4 w-64 sticky top-0 h-screen"
         style={{ background: 'var(--bg-deep)', borderInlineEnd: '1px solid var(--border-subtle)' }}>
         <SidebarContent profile={profile} location={location} isDark={isDark}
           toggle={toggle} go={go} signOut={signOut} navigate={navigate} showClose={false} navItems={navItems} />
       </aside>
 
-      {/* â”€â”€ Mobile sidebar drawer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Mobile sidebar drawer ─────────────────────────────────────────── */}
       <aside className={`md:hidden fixed inset-y-0 z-50 w-64 flex flex-col px-4
         transition-transform duration-300 ease-in-out sidebar-drawer
         ${isRTL ? 'right-0' : 'left-0'}
@@ -71,10 +71,10 @@ export default function StudentLayout() {
           onClose={() => setSidebarOpen(false)} navItems={navItems} />
       </aside>
 
-      {/* â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Main ─────────────────────────────────────────────────────────── */}
       <main className="flex-1 flex flex-col min-h-0 overflow-auto scroll-smooth-ios main-with-bottom-nav">
 
-        {/* Header â€” mobile only (hamburger to open drawer) */}
+        {/* Header — mobile only (hamburger to open drawer) */}
         <div className="md:hidden sticky top-0 z-30 flex items-center gap-3 px-4 flex-shrink-0 app-header"
           style={{ background: 'var(--bg-deep)', borderBottom: '1px solid var(--border-subtle)', minHeight: '3.5rem' }}>
           <button className="p-2 rounded-xl" onClick={() => setSidebarOpen(true)}
@@ -83,13 +83,13 @@ export default function StudentLayout() {
           </button>
           <StarOfDavidSmall />
           <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</span>
-          <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>×¤Ö¸Ö¼×¨Ö¸×©Ö¸××”</span>
+          <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
         </div>
 
         <Outlet />
       </main>
 
-      {/* â”€â”€ Mobile bottom nav â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Mobile bottom nav ─────────────────────────────────────────────── */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex mobile-bottom-nav"
         style={{ background: 'var(--bg-deep)', borderTop: '1px solid var(--border-subtle)' }}>
         {navItems.map(item => {
@@ -119,7 +119,7 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
           <StarOfDavidSmall />
           <div>
             <div className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</div>
-            <div className="text-xs hebrew" style={{ color: 'var(--text-gold)' }}>×¤Ö¸Ö¼×¨Ö¸×©Ö¸××”</div>
+            <div className="text-xs hebrew" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</div>
           </div>
         </button>
         {showClose && (
@@ -140,7 +140,7 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
             <div className="text-xs font-medium truncate max-w-[120px]" style={{ color: 'var(--text)' }}>
               {profile?.name ?? 'Alumno'}
             </div>
-            <div className="text-xs" style={{ color: 'var(--text-3)' }}>×ªÖ·Ö¼×œÖ°×žÖ´×™×“</div>
+            <div className="text-xs" style={{ color: 'var(--text-3)' }}>תַּלְמִיד</div>
           </div>
         </div>
       </div>
@@ -174,13 +174,13 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
         <button onClick={toggle}
           className="w-full flex items-center gap-2 text-xs py-2.5 px-3 rounded-xl transition-all"
           style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
-          <span style={{ fontSize: '14px' }}>{isDark ? 'â˜€ï¸' : 'ðŸŒ™'}</span>
+          <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
           {isDark ? t('light_mode') : t('dark_mode')}
         </button>
         <button onClick={async () => { await signOut(); navigate('/login') }}
           className="w-full text-xs py-2.5 px-3 rounded-xl text-left transition-all"
           style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
-          â†’ {t('logout')}
+          → {t('logout')}
         </button>
       </div>
     </>
@@ -189,9 +189,9 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
 
 const FEATURES = [
   'Audio del profesor sincronizado palabra a palabra',
-  'Todas las parashas del aÃ±o',
+  'Todas las parashas del año',
   'Taamim, nikkud y modo sefer',
-  'EnvÃ­o de grabaciones al profesor',
+  'Envío de grabaciones al profesor',
   'Acceso desde cualquier dispositivo',
 ]
 
@@ -248,7 +248,7 @@ function Paywall({ user, profile, navigate }) {
         </svg>
         <div>
           <div className="text-base font-semibold" style={{ color: 'var(--text)' }}>Perashapp</div>
-          <div className="text-xs hebrew" style={{ color: 'var(--text-gold)' }}>×¤Ö¸Ö¼×¨Ö¸×©Ö¸××”</div>
+          <div className="text-xs hebrew" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</div>
         </div>
       </div>
 
@@ -258,7 +258,7 @@ function Paywall({ user, profile, navigate }) {
             Hola, {profile?.name?.split(' ')[0] ?? 'bienvenido'}
           </h1>
           <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-            Activa tu suscripciÃ³n para estudiar con audio sincronizado
+            Activa tu suscripción para estudiar con audio sincronizado
           </p>
         </div>
 
@@ -286,9 +286,9 @@ function Paywall({ user, profile, navigate }) {
             </div>
             <div>
               <span className="text-xl font-light" style={{ color: 'var(--text)' }}>X$</span>
-              <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>/aÃ±o</span>
+              <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>/año</span>
             </div>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-gold)' }}>La opciÃ³n mÃ¡s econÃ³mica</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-gold)' }}>La opción más económica</p>
 
           </button>
 
@@ -339,11 +339,11 @@ function Paywall({ user, profile, navigate }) {
             border: paying ? '1px solid var(--border)' : 'none',
             boxShadow: paying ? 'none' : '0 4px 20px rgba(108,51,230,0.35)',
           }}>
-          {paying ? <><Spinner /> Redirigiendoâ€¦</> : 'Suscribirse â†’'}
+          {paying ? <><Spinner /> Redirigiendo…</> : 'Suscribirse →'}
         </button>
 
         <p className="text-xs text-center mb-5" style={{ color: 'var(--text-muted)' }}>
-          Pago seguro Â· Cancela cuando quieras
+          Pago seguro · Cancela cuando quieras
         </p>
 
         {/* Dev bypass + guest */}
@@ -351,7 +351,7 @@ function Paywall({ user, profile, navigate }) {
           <button onClick={() => { sessionStorage.setItem('dev_bypass', '1'); navigate('/student/study') }}
             className="text-xs py-2 px-5 rounded-xl transition-all font-medium"
             style={{ color: '#8b5cf6', background: 'rgba(108,51,230,0.08)', border: '1px solid rgba(108,51,230,0.2)' }}>
-            Iniciar sesiÃ³n sin pagar (solo desarrollo)
+            Iniciar sesión sin pagar (solo desarrollo)
           </button>
           <button onClick={handleGuest}
             className="text-xs py-2 px-5 rounded-xl transition-all"
