@@ -248,7 +248,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
           </div>
         </div>
 
-        {/* Row 2: Controls — horizontally scrollable on mobile */}
+        {/* Row 2: Controls + Aliyah nav in same row */}
         <div className="no-scrollbar flex items-center gap-2 px-4 sm:px-6 pb-2 overflow-x-auto">
           {mode !== 'sefer' && (
             <div className="flex items-center gap-1 flex-shrink-0">
@@ -302,67 +302,63 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
               </button>
             ))}
           </div>
-        </div>
-      </div>
 
-      {/* Aliyah nav */}
-      <div className="flex-shrink-0 px-4 sm:px-6 py-1.5 flex items-center gap-1.5 overflow-x-auto"
-        style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-        {parasha.aliyot.map((a, i) => {
-          const aliyahAudio = get(parasha.id, i)
-          const locked = guestMode && i > 0
-          return (
-            <button key={i}
-              onClick={() => locked ? setShowPaywall(true) : setAliyahIdx(i)}
-              className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all relative"
-              style={{
-                background: aliyahIdx === i ? bookColor : 'var(--bg-card)',
-                color: aliyahIdx === i ? '#fff' : locked ? 'var(--text-muted)' : 'var(--text-3)',
-                border: `1px solid ${aliyahIdx === i ? 'transparent' : 'var(--border-subtle)'}`,
-              }}>
-              {a.n === 8 ? 'Maftir' : `${a.n}ª`}
-              {locked && (
-                <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center"
-                  style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)' }}>
-                  <svg width="7" height="7" viewBox="0 0 8 8" fill="none">
-                    <rect x="1.5" y="3.5" width="5" height="4" rx="0.8" stroke="var(--text-muted)" strokeWidth="1"/>
-                    <path d="M2.5 3.5V2.5a1.5 1.5 0 013 0v1" stroke="var(--text-muted)" strokeWidth="1" strokeLinecap="round"/>
-                  </svg>
-                </span>
-              )}
-              {aliyahAudio && !guestMode && (
-                <span
-                  title={aliyahAudio.wordTimestamps ? 'Audio con sincronización palabra a palabra' : 'Audio disponible'}
-                  className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
-                  style={{
-                    background: aliyahAudio.wordTimestamps ? '#22c55e' : bookColor,
-                    border: '1px solid var(--bg)',
-                  }}
-                />
-              )}
+          {/* Aliyah nav — right side of same row */}
+          <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
+            <button
+              disabled={aliyahIdx === 0}
+              onClick={() => setAliyahIdx(i => Math.max(0, i - 1))}
+              className="w-7 h-7 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
+              style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M8 2L4 6l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
-          )
-        })}
-
-        <div className="ml-auto flex items-center gap-2 flex-shrink-0">
-          <button
-            disabled={aliyahIdx === 0}
-            onClick={() => setAliyahIdx(i => Math.max(0, i - 1))}
-            className="w-7 h-7 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
-            style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M8 2L4 6l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-          <button
-            disabled={aliyahIdx === parasha.aliyot.length - 1}
-            onClick={() => guestMode && aliyahIdx === 0 ? setShowPaywall(true) : setAliyahIdx(i => Math.min(parasha.aliyot.length - 1, i + 1))}
-            className="w-7 h-7 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
-            style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
+            {parasha.aliyot.map((a, i) => {
+              const aliyahAudio = get(parasha.id, i)
+              const locked = guestMode && i > 0
+              return (
+                <button key={i}
+                  onClick={() => locked ? setShowPaywall(true) : setAliyahIdx(i)}
+                  className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all relative"
+                  style={{
+                    background: aliyahIdx === i ? bookColor : 'var(--bg-card)',
+                    color: aliyahIdx === i ? '#fff' : locked ? 'var(--text-muted)' : 'var(--text-3)',
+                    border: `1px solid ${aliyahIdx === i ? 'transparent' : 'var(--border-subtle)'}`,
+                  }}>
+                  {a.n === 8 ? 'Maftir' : `${a.n}ª`}
+                  {locked && (
+                    <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center"
+                      style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)' }}>
+                      <svg width="7" height="7" viewBox="0 0 8 8" fill="none">
+                        <rect x="1.5" y="3.5" width="5" height="4" rx="0.8" stroke="var(--text-muted)" strokeWidth="1"/>
+                        <path d="M2.5 3.5V2.5a1.5 1.5 0 013 0v1" stroke="var(--text-muted)" strokeWidth="1" strokeLinecap="round"/>
+                      </svg>
+                    </span>
+                  )}
+                  {aliyahAudio && !guestMode && (
+                    <span
+                      title={aliyahAudio.wordTimestamps ? 'Audio con sincronización palabra a palabra' : 'Audio disponible'}
+                      className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
+                      style={{
+                        background: aliyahAudio.wordTimestamps ? '#22c55e' : bookColor,
+                        border: '1px solid var(--bg)',
+                      }}
+                    />
+                  )}
+                </button>
+              )
+            })}
+            <button
+              disabled={aliyahIdx === parasha.aliyot.length - 1}
+              onClick={() => guestMode && aliyahIdx === 0 ? setShowPaywall(true) : setAliyahIdx(i => Math.min(parasha.aliyot.length - 1, i + 1))}
+              className="w-7 h-7 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
+              style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -472,19 +468,6 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
         </div>
       )}
 
-      {/* No-audio notice */}
-      {!audio && recState === 'idle' && !guestMode && (
-        <div className="flex-shrink-0 flex items-center gap-2 px-6 py-1.5"
-          style={{ background: `${bookColor}08`, borderBottom: '1px solid var(--border-subtle)' }}>
-          <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ flexShrink: 0 }}>
-            <rect x="3.5" y="0.5" width="4" height="6" rx="2" stroke={bookColor} strokeWidth="1.2" opacity="0.5"/>
-            <path d="M1.5 5.5c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke={bookColor} strokeWidth="1.2" strokeLinecap="round" opacity="0.5"/>
-          </svg>
-          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            {profile?.role === 'student' ? t('no_audio') : t('no_audio_teacher')}
-          </span>
-        </div>
-      )}
 
       {/* Text area */}
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
@@ -594,6 +577,15 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
           </>
         ) : (
           <>
+            <div className="flex-1 flex items-center gap-1.5 min-w-0">
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ flexShrink: 0 }}>
+                <rect x="3.5" y="0.5" width="4" height="6" rx="2" stroke={bookColor} strokeWidth="1.2" opacity="0.5"/>
+                <path d="M1.5 5.5c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke={bookColor} strokeWidth="1.2" strokeLinecap="round" opacity="0.5"/>
+              </svg>
+              <span className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
+                {profile?.role === 'student' ? t('no_audio') : t('no_audio_teacher')}
+              </span>
+            </div>
             <button onClick={() => uploadInputRef.current?.click()}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium flex-shrink-0 transition-all"
               style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>

@@ -61,9 +61,8 @@ export default function TeacherLayout() {
       {/* ── Desktop sidebar ───────────────────────────────────────────────── */}
       <aside className="hidden md:flex flex-shrink-0 flex-col py-8 px-4 w-64 sticky top-0 h-screen"
         style={{ background: 'var(--bg-deep)', borderInlineEnd: '1px solid var(--border-subtle)' }}>
-        <SidebarContent profile={profile} location={location} isDark={isDark}
-          toggle={toggle} go={go} signOut={signOut} navigate={navigate}
-          unreadCount={unreadCount} showClose={false} allNavItems={allNavItems} />
+        <SidebarContent profile={profile} location={location}
+          go={go} unreadCount={unreadCount} showClose={false} allNavItems={allNavItems} />
       </aside>
 
       {/* ── Mobile sidebar drawer ─────────────────────────────────────────── */}
@@ -72,9 +71,8 @@ export default function TeacherLayout() {
         ${isRTL ? 'right-0' : 'left-0'}
         ${sidebarOpen ? 'translate-x-0' : isRTL ? 'translate-x-full' : '-translate-x-full'}`}
         style={{ background: 'var(--bg-deep)', borderInlineEnd: '1px solid var(--border-subtle)' }}>
-        <SidebarContent profile={profile} location={location} isDark={isDark}
-          toggle={toggle} go={go} signOut={signOut} navigate={navigate}
-          unreadCount={unreadCount} showClose onClose={() => setSidebarOpen(false)} allNavItems={allNavItems} />
+        <SidebarContent profile={profile} location={location}
+          go={go} unreadCount={unreadCount} showClose onClose={() => setSidebarOpen(false)} allNavItems={allNavItems} />
       </aside>
 
       {/* ── "Más" bottom sheet ────────────────────────────────────────────── */}
@@ -120,6 +118,21 @@ export default function TeacherLayout() {
           <StarSvg />
           <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</span>
           <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
+          <div className="ml-auto flex items-center gap-2">
+            <LangToggle />
+            <button onClick={toggle}
+              className="p-2 rounded-xl text-xs transition-all"
+              style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+              title={isDark ? t('light_mode') : t('dark_mode')}>
+              <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
+            </button>
+            <button onClick={async () => { await signOut(); navigate('/login') }}
+              className="p-2 rounded-xl transition-all"
+              title={t('logout')}
+              style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
+              <LogoutIcon />
+            </button>
+          </div>
         </div>
 
         <Outlet />
@@ -158,7 +171,7 @@ export default function TeacherLayout() {
   )
 }
 
-function SidebarContent({ profile, location, isDark, toggle, go, signOut, navigate, unreadCount, showClose, onClose, allNavItems }) {
+function SidebarContent({ profile, location, go, unreadCount, showClose, onClose, allNavItems }) {
   const { t } = useLang()
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
   return (
@@ -223,21 +236,17 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
         })}
       </nav>
 
-      <div className="mt-auto px-3 flex flex-col gap-2">
-        <LangToggle />
-        <button onClick={toggle}
-          className="w-full flex items-center gap-2 text-xs py-2.5 px-3 rounded-xl transition-all"
-          style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
-          <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
-          {isDark ? t('light_mode') : t('dark_mode')}
-        </button>
-        <button onClick={async () => { await signOut(); navigate('/login') }}
-          className="w-full text-xs py-2.5 px-3 rounded-xl text-left transition-all"
-          style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
-          → {t('logout')}
-        </button>
-      </div>
     </>
+  )
+}
+
+function LogoutIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M10 11l3-3-3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M13 8H6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
   )
 }
 

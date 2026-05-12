@@ -5,14 +5,19 @@ import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 
 const COLORS = ['#6c33e6', '#f9b800', '#2dd4bf', '#f87171', '#a78bfa']
-const DAY_LABELS = ['D', 'L', 'M', 'X', 'J', 'V', 'S']
 
-function getLastSevenDays() {
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date()
-    d.setDate(d.getDate() - (6 - i))
-    return d
-  })
+function daysUntil(dateStr) {
+  if (!dateStr) return null
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const bm = new Date(dateStr); bm.setHours(0, 0, 0, 0)
+  return Math.round((bm - today) / (1000 * 60 * 60 * 24))
+}
+
+function bmLabel(days) {
+  if (days === null) return null
+  if (days === 0) return { text: '¡Hoy!', color: '#f9b800' }
+  if (days > 0) return { text: `en ${days}d`, color: days < 30 ? '#f87171' : days < 90 ? '#f9b800' : '#2dd4bf' }
+  return { text: `hace ${Math.abs(days)}d`, color: 'var(--text-muted)' }
 }
 
 export default function TeacherDashboard() {
@@ -20,61 +25,39 @@ export default function TeacherDashboard() {
   const navigate = useNavigate()
   const { t } = useLang()
   const [students, setStudents] = useState([])
-  const [dailyListens, setDailyListens] = useState(Array(7).fill(0))
   const [pendingHw, setPendingHw] = useState(0)
+  const [pendingPerStudent, setPendingPerStudent] = useState({})
   const [nextClass, setNextClass] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!profile) return
-
     const load = async () => {
       setLoading(true)
 
-      // Students
       const { data: studs } = await supabase
         .from('profiles')
-        .select('id, name, listens, progress, parasha_id')
+        .select('id, name, parasha_id, bar_mitzvah, listens')
         .eq('teacher_id', profile.id)
         .eq('role', 'student')
       const studentList = studs || []
       setStudents(studentList)
 
-      // Daily listens from audio_listens (last 7 days), filtered by teacher's students
-      const since = new Date()
-      since.setDate(since.getDate() - 6)
-      since.setHours(0, 0, 0, 0)
-      const studentIds = (studs || []).map(s => s.id)
-      let listenEvents = []
-      if (studentIds.length > 0) {
-        const { data } = await supabase
-          .from('audio_listens')
-          .select('created_at')
-          .in('student_id', studentIds)
-          .gte('created_at', since.toISOString())
-        listenEvents = data || []
-      }
-
-      const counts = Array(7).fill(0)
-      const days = getLastSevenDays()
-      listenEvents.forEach(ev => {
-        const evDate = new Date(ev.created_at).toDateString()
-        const idx = days.findIndex(d => d.toDateString() === evDate)
-        if (idx >= 0) counts[idx]++
-      })
-      setDailyListens(counts)
-
-      // Pending homework for teacher's students
       if (studentList.length > 0) {
-        const { count } = await supabase
+        const ids = studentList.map(s => s.id)
+
+        const { data: hwRows } = await supabase
           .from('homework')
-          .select('*', { count: 'exact', head: true })
-          .in('student_id', studentList.map(s => s.id))
+          .select('student_id')
+          .in('student_id', ids)
           .eq('status', 'pending')
-        setPendingHw(count || 0)
+        const hwData = hwRows || []
+        const perStudent = {}
+        hwData.forEach(r => { perStudent[r.student_id] = (perStudent[r.student_id] || 0) + 1 })
+        setPendingPerStudent(perStudent)
+        setPendingHw(hwData.length)
       }
 
-      // Next scheduled class
       const { data: nc } = await supabase
         .from('classes')
         .select('*')
@@ -87,16 +70,8 @@ export default function TeacherDashboard() {
 
       setLoading(false)
     }
-
     load()
   }, [profile])
-
-  const totalListens = students.reduce((s, a) => s + (a.listens || 0), 0)
-  const avgProgress = students.length
-    ? Math.round(students.reduce((s, a) => s + (a.progress || 0), 0) / students.length)
-    : 0
-  const maxListens = Math.max(...dailyListens, 1)
-  const days = getLastSevenDays()
 
   const nextClassLabel = nextClass
     ? (() => {
@@ -108,6 +83,18 @@ export default function TeacherDashboard() {
         return { time: `${h}:${m}`, sub: isToday ? `${t('today')} · ${nextClass.student_name}` : `${d.toLocaleDateString('es', { weekday: 'short', day: 'numeric' })} · ${nextClass.student_name}` }
       })()
     : { time: '—', sub: t('no_classes') }
+
+  const sortedStudents = [...students].sort((a, b) => {
+    const da = daysUntil(a.bar_mitzvah)
+    const db = daysUntil(b.bar_mitzvah)
+    if (da === null && db === null) return 0
+    if (da === null) return 1
+    if (db === null) return -1
+    const fa = da >= 0 ? da : Infinity
+    const fb = db >= 0 ? db : Infinity
+    if (fa !== fb) return fa - fb
+    return da - db
+  })
 
   return (
     <div className="p-4 sm:p-8">
@@ -142,107 +129,105 @@ export default function TeacherDashboard() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Audio chart */}
+
+        {/* Students panel */}
         <div className="xl:col-span-2 fade-up-3">
           <div className="rounded-2xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{t('audio_chart')}</h2>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{t('all_students')} · {t('last_7_days')}</p>
+                <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{t('my_students')}</h2>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{t('my_parasha')} · {t('bar_mitzvah')} · {t('nav_homework')}</p>
               </div>
-              <span className="text-xs px-3 py-1.5 rounded-full" style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-                {t('total')}: {dailyListens.reduce((a, b) => a + b, 0)}
-              </span>
+              <button onClick={() => navigate('/teacher/students')}
+                className="text-xs px-3 py-1.5 rounded-full transition-all"
+                style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+                Ver todos
+              </button>
             </div>
 
             {loading ? (
-              <div className="flex items-center justify-center" style={{ height: '120px' }}>
+              <div className="flex items-center justify-center py-10">
                 <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin"
                   style={{ borderColor: 'rgba(108,51,230,0.2)', borderTopColor: '#6c33e6' }} />
               </div>
+            ) : sortedStudents.length === 0 ? (
+              <p className="text-xs text-center py-8" style={{ color: 'var(--text-muted)' }}>{t('no_students_yet')}</p>
             ) : (
-              <div className="flex items-end justify-between gap-2" style={{ height: '120px' }}>
-                {days.map((d, i) => {
-                  const count = dailyListens[i]
-                  const label = DAY_LABELS[d.getDay()]
-                  return (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                      <span className="text-xs" style={{ color: 'var(--text-gold)' }}>{count > 0 ? count : ''}</span>
-                      <div className="w-full rounded-t-lg transition-all"
-                        style={{
-                          height: count > 0 ? `${(count / maxListens) * 80}px` : '4px',
-                          background: count > 0 ? 'linear-gradient(to top, rgba(108,51,230,0.8), rgba(249,184,0,0.6))' : 'var(--border)',
-                          minHeight: '4px',
-                        }} />
-                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{label}</span>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {students.length > 0 && (
-              <div className="mt-6 pt-5" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>{t('per_student')}</p>
-                <div className="flex flex-col gap-2.5">
-                  {students.map((s, i) => {
+              <>
+                {/* Header row */}
+                <div className="grid gap-3 px-3 pb-2 text-xs" style={{ gridTemplateColumns: '1fr 1fr 1fr auto', color: 'var(--text-muted)' }}>
+                  <span>{t('nav_students')}</span>
+                  <span>{t('my_parasha')}</span>
+                  <span>{t('bar_mitzvah')}</span>
+                  <span>{t('nav_homework')}</span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {sortedStudents.map((s, i) => {
                     const color = COLORS[i % COLORS.length]
+                    const days = daysUntil(s.bar_mitzvah)
+                    const bm = bmLabel(days)
+                    const hw = pendingPerStudent[s.id] || 0
                     return (
-                      <div key={s.id} className="flex items-center gap-3">
-                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                          style={{ background: `${color}20`, color, border: `1px solid ${color}30` }}>
-                          {s.name?.charAt(0)}
+                      <div key={s.id}
+                        className="grid items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all"
+                        style={{ gridTemplateColumns: '1fr 1fr 1fr auto', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+                        onClick={() => navigate('/teacher/students')}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = `${color}40` }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)' }}>
+
+                        {/* Name */}
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                            style={{ background: `${color}20`, color, border: `1px solid ${color}30` }}>
+                            {s.name?.charAt(0)?.toUpperCase()}
+                          </div>
+                          <span className="text-xs font-medium truncate" style={{ color: 'var(--text)' }}>{s.name}</span>
                         </div>
-                        <span className="text-xs w-24 flex-shrink-0 truncate" style={{ color: 'var(--text-2)' }}>{s.name?.split(' ')[0]}</span>
-                        <div className="flex-1 h-1.5 rounded-full" style={{ background: 'var(--border)' }}>
-                          <div className="h-full rounded-full"
-                            style={{ width: `${Math.min(100, totalListens > 0 ? ((s.listens || 0) / Math.max(...students.map(x => x.listens || 0), 1)) * 100 : 0)}%`, background: `linear-gradient(90deg, ${color}80, ${color})` }} />
+
+                        {/* Parasha */}
+                        <span className="text-xs truncate" style={{ color: s.parasha_id ? 'var(--text-2)' : 'var(--text-muted)' }}>
+                          {s.parasha_id || '—'}
+                        </span>
+
+                        {/* Bar Mitzvah */}
+                        <div className="flex flex-col gap-0.5">
+                          {s.bar_mitzvah ? (
+                            <>
+                              <span className="text-xs" style={{ color: 'var(--text-2)' }}>
+                                {new Date(s.bar_mitzvah).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              </span>
+                              {bm && <span className="text-xs font-medium" style={{ color: bm.color }}>{bm.text}</span>}
+                            </>
+                          ) : (
+                            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>—</span>
+                          )}
                         </div>
-                        <span className="text-xs w-8 text-right" style={{ color }}>{s.listens || 0}</span>
+
+                        {/* Pending HW */}
+                        {hw > 0 ? (
+                          <span className="text-xs min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center font-medium"
+                            style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
+                            {hw}
+                          </span>
+                        ) : (
+                          <span className="w-5 h-5 rounded-full flex items-center justify-center"
+                            style={{ background: 'rgba(45,212,191,0.1)', border: '1px solid rgba(45,212,191,0.2)' }}>
+                            <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                              <path d="M1.5 4.5l2 2 4-4" stroke="#2dd4bf" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </span>
+                        )}
                       </div>
                     )
                   })}
                 </div>
-              </div>
-            )}
-
-            {students.length === 0 && !loading && (
-              <p className="text-xs text-center mt-4" style={{ color: 'var(--text-muted)' }}>
-                {t('no_students_yet')}
-              </p>
+              </>
             )}
           </div>
         </div>
 
         {/* Right column */}
         <div className="fade-up-4">
-          <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <h2 className="text-sm font-semibold mb-5" style={{ color: 'var(--text)' }}>{t('my_students')}</h2>
-            {students.length === 0 ? (
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('no_students_yet')}</p>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {students.map((s, i) => {
-                  const color = COLORS[i % COLORS.length]
-                  return (
-                    <div key={s.id} className="flex items-center gap-3 p-3 rounded-xl"
-                      style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                        style={{ background: `${color}20`, color }}>
-                        {s.name?.charAt(0)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-medium truncate" style={{ color: 'var(--text)' }}>{s.name}</div>
-                        <div className="text-xs" style={{ color: 'var(--text-3)' }}>{s.parasha_id || '—'}</div>
-                      </div>
-                      <span className="text-xs" style={{ color }}>{s.listens || 0} esc.</span>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
           {profile?.teacher_code && (
             <div className="rounded-2xl p-5 mb-4"
               style={{ background: 'linear-gradient(135deg, rgba(249,184,0,0.12), rgba(249,184,0,0.04))', border: '1px solid rgba(249,184,0,0.25)' }}>
@@ -262,9 +247,7 @@ export default function TeacherDashboard() {
                   </svg>
                 </button>
               </div>
-              <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
-                {t('share_code')}
-              </p>
+              <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>{t('share_code')}</p>
             </div>
           )}
 
