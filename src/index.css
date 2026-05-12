@@ -5,6 +5,7 @@
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+0590-U+05FF, U+FB1D-U+FB4F;
   src: url('/fonts/TaameyFrankCLM-Medium.ttf') format('truetype');
 }
 @font-face {
@@ -12,6 +13,7 @@
   font-weight: 700;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+0590-U+05FF, U+FB1D-U+FB4F;
   src: url('/fonts/TaameyFrankCLM-Bold.ttf') format('truetype');
 }
 
@@ -226,14 +228,17 @@ body {
 /* Hebrew text */
 /* Font options to test: 'Noto Serif Hebrew' | 'Hadasim CLM' | 'Keter YG' | 'Taamey Frank CLM' */
 .hebrew {
-  font-family: 'Noto Serif Hebrew', 'Taamey Frank CLM', 'Times New Roman', serif;
-  font-weight: 900;
+  font-family: 'Taamey Frank CLM', 'Noto Serif Hebrew', 'Times New Roman', serif;
+  font-weight: 700;
+  font-synthesis: none;
   direction: rtl;
 }
 
 .hebrew-reader {
-  font-family: 'Noto Serif Hebrew', 'Taamey Frank CLM', 'Times New Roman', serif;
-  font-weight: 900;
+  font-family: 'Taamey Frank CLM', 'Noto Serif Hebrew', 'Times New Roman', serif;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
   direction: rtl;
 }
 

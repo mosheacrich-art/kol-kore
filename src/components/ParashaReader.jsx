@@ -36,7 +36,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
   const [showPaywall, setShowPaywall] = useState(false)
   const [mode, setMode] = useState('taamim')
   const [cursorEnabled, setCursorEnabled] = useState(true)
-  const [fontSize, setFontSize] = useState(30)
+  const [fontSize, setFontSize] = useState(36)
   const [audioCurrentTime, setAudioCurrentTime] = useState(null)
   const [audioPlaying, setAudioPlaying] = useState(false)
   const [audioDuration, setAudioDuration] = useState(0)
@@ -784,7 +784,6 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
           textAlign: 'justify',
           direction: 'rtl',
           color: 'var(--text)',
-          wordSpacing: '0.04em',
         }}>
           {allWords.map((w, i) => {
             const isActive = activeWordIdx === i
