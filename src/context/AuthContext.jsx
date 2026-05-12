@@ -20,8 +20,10 @@ export function AuthProvider({ children }) {
         const loginRoleRaw  = sessionStorage.getItem('login_intended_role')
         const intendedRole  = ALLOWED_ROLES.includes(oauthRoleRaw)  ? oauthRoleRaw  : null
         const loginRole     = ALLOWED_ROLES.includes(loginRoleRaw)  ? loginRoleRaw  : null
-        // The role the user actively chose (OAuth takes priority as it was set more recently)
+        // Role the user actively chose when signing in (used for conflict detection)
         const effectiveRole = intendedRole || loginRole
+        // Role stored in auth metadata at signup time — authoritative source of intended role
+        const metadataRole  = ALLOWED_ROLES.includes(userMetadata?.app_role) ? userMetadata.app_role : null
 
         let { data } = await supabase
           .from('profiles').select('*').eq('id', userId).maybeSingle()
@@ -38,8 +40,8 @@ export function AuthProvider({ children }) {
         const isNewUser = createdAt && (Date.now() - new Date(createdAt).getTime()) < 60000
 
         if (!data && userMetadata) {
-          // First OAuth login — no profile yet. Create with intended role.
-          const role = userMetadata.app_role || intendedRole || 'student'
+          // No profile yet — create it (first OAuth login, or signup upsert failed due to RLS).
+          const role = metadataRole || intendedRole || 'student'
           const name = userMetadata.app_name
             || userMetadata.full_name || userMetadata.name
             || userMetadata.email?.split('@')[0] || 'Usuario'
@@ -52,16 +54,16 @@ export function AuthProvider({ children }) {
             .select()
           data = rows?.[0] ?? null
         } else if (data && effectiveRole && data.role !== effectiveRole) {
-          // Role mismatch detected
+          // The user signed in from a card that doesn't match their existing role.
           if (intendedRole && isNewUser) {
-            // OAuth only: DB trigger created profile with wrong default role — correct it.
+            // OAuth new user: DB trigger created profile with wrong default role — correct it.
             const extra = intendedRole === 'teacher' && !data.teacher_code
               ? { teacher_code: Math.random().toString(36).substring(2, 8).toUpperCase() }
               : {}
             await supabase.from('profiles').update({ role: intendedRole, ...extra }).eq('id', userId)
             data = { ...data, role: intendedRole, ...extra }
           } else {
-            // Existing account with a different role (email/password or OAuth existing user).
+            // Existing account with a different role — block and show error.
             sessionStorage.removeItem('oauth_intended_role')
             sessionStorage.removeItem('login_intended_role')
             if (active) {
@@ -71,6 +73,16 @@ export function AuthProvider({ children }) {
             setTimeout(() => supabase.auth.signOut(), 100)
             return
           }
+        } else if (data && metadataRole && data.role !== metadataRole && !effectiveRole) {
+          // Profile role doesn't match what was explicitly set at signup time.
+          // This happens when: email confirmation is enabled, the signup upsert fails due to
+          // RLS (no session yet), and the DB trigger creates the profile with a default role.
+          // Trust app_role from metadata — it was set once at signup and never changes.
+          const extra = metadataRole === 'teacher' && !data.teacher_code
+            ? { teacher_code: Math.random().toString(36).substring(2, 8).toUpperCase() }
+            : {}
+          await supabase.from('profiles').update({ role: metadataRole, ...extra }).eq('id', userId)
+          data = { ...data, role: metadataRole, ...extra }
         }
 
         sessionStorage.removeItem('oauth_intended_role')
