@@ -15,6 +15,7 @@ const NAV_KEYS = [
   { path: '/teacher/study',          key: 'nav_parashot',       shortKey: 'nav_parashot',  heb: 'פָּרָשִׁיּוֹת' },
   { path: '/teacher/notifications',  key: 'nav_notifications',  shortKey: 'nav_notifications', heb: 'הוֹדָעוֹת', badge: true },
   { path: '/teacher/imprimir',       key: 'nav_print_tikun',    shortKey: 'nav_print_tikun', heb: 'תִּקּוּן' },
+  { path: '/teacher/account',        key: 'nav_account',        shortKey: 'nav_account',   heb: 'חֶשְׁבּוֹן' },
 ]
 
 const BOTTOM_NAV_INDICES = [0, 1, 2, 6]

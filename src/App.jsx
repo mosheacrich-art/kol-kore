@@ -30,6 +30,7 @@ const TeacherSchedule     = lazy(() => import('./pages/teacher/Schedule'))
 const TeacherAudioPanel   = lazy(() => import('./pages/teacher/AudioPanel'))
 const TeacherStudy        = lazy(() => import('./pages/teacher/Study'))
 const TeacherNotifications = lazy(() => import('./pages/teacher/Notifications'))
+const AccountSettings      = lazy(() => import('./pages/AccountSettings'))
 
 function Spinner() {
   return (
@@ -88,6 +89,7 @@ function AppRoutes() {
             <Route path="study/:parashaId" element={<StudentStudy />} />
             <Route path="subscription" element={<StudentSubscription />} />
             <Route path="imprimir" element={<ImprimirTikun />} />
+            <Route path="account" element={<AccountSettings />} />
           </Route>
 
           <Route path="/guest" element={<GuestLayout />}>
@@ -109,6 +111,7 @@ function AppRoutes() {
             <Route path="study/:parashaId" element={<TeacherStudy />} />
             <Route path="notifications" element={<TeacherNotifications />} />
             <Route path="imprimir" element={<ImprimirTikun />} />
+            <Route path="account" element={<AccountSettings />} />
           </Route>
         </Routes>
       </Suspense>

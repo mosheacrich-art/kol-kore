@@ -15,6 +15,7 @@ const NAV_KEYS = [
   { path: '/student/study',        key: 'nav_study',        shortKey: 'nav_study',         heb: 'לִמּוּד',    icon: StudyIcon },
   { path: '/student/imprimir',     key: 'nav_print',        shortKey: 'nav_print',         heb: 'תִּקּוּן',   icon: PrintIcon },
   { path: '/student/subscription', key: 'nav_subscription', shortKey: 'nav_subscription',  heb: 'הַרְשָׁמָה', icon: SubscriptionIcon },
+  { path: '/student/account',      key: 'nav_account',      shortKey: 'nav_account',       heb: 'חֶשְׁבּוֹן',  icon: AccountIcon },
 ]
 
 export default function StudentLayout() {
@@ -429,6 +430,17 @@ function SubscriptionIcon({ active }) {
       <rect x="2" y="4" width="14" height="10" rx="2" stroke={c} strokeWidth="1.3"/>
       <path d="M2 8h14" stroke={c} strokeWidth="1.3"/>
       <path d="M5 12h3M12 12h1" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+function AccountIcon({ active }) {
+  const c = active ? '#8b5cf6' : 'var(--text-3)'
+  return (
+    <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
+      <circle cx="9" cy="9" r="7" stroke={c} strokeWidth="1.3"/>
+      <circle cx="9" cy="7" r="2.5" stroke={c} strokeWidth="1.2"/>
+      <path d="M3.5 15c0-2.8 2.5-5 5.5-5s5.5 2.2 5.5 5" stroke={c} strokeWidth="1.2" strokeLinecap="round"/>
     </svg>
   )
 }
