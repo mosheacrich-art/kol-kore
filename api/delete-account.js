@@ -16,7 +16,13 @@ const adminClient = supabaseUrl && supabaseService
 
 async function del(table, col, val) {
   const { error } = await adminClient.from(table).delete().eq(col, val)
-  if (error) console.error(`[delete-account] ${table}.${col}=${val}:`, error.message)
+  if (error) console.error(`[delete-account] del ${table}.${col}:`, error.message)
+  return error
+}
+
+async function nullify(table, col, val) {
+  const { error } = await adminClient.from(table).update({ [col]: null }).eq(col, val)
+  if (error) console.error(`[delete-account] nullify ${table}.${col}:`, error.message)
   return error
 }
 
@@ -37,14 +43,14 @@ export default async function handler(req, res) {
   if (authErr || !user) return res.status(401).json({ error: 'Unauthorized' })
 
   const uid = user.id
+  const errors = {}
 
   const { data: profile } = await adminClient.from('profiles').select('role').eq('id', uid).maybeSingle()
   const isTeacher = profile?.role === 'teacher'
 
-  const errors = {}
-
   if (isTeacher) {
-    const e1 = await del('profiles', 'teacher_id', uid)        // unlink students
+    // Nullify FK references in students before deleting teacher profile
+    const e1 = await nullify('profiles', 'teacher_id', uid)
     const e2 = await del('notifications', 'teacher_id', uid)
     const e3 = await del('homework', 'teacher_id', uid)
     const e4 = await del('audio_files', 'teacher_id', uid)
@@ -55,23 +61,26 @@ export default async function handler(req, res) {
     if (e4) errors.audio_files = e4.message
     if (e5) errors.classes = e5.message
   } else {
-    const e1 = await del('audio_listens', 'student_id', uid)
-    const e2 = await del('study_sessions', 'student_id', uid)
-    const e3 = await del('aliyah_time', 'student_id', uid)
-    const e4 = await del('notifications', 'student_id', uid)
-    const e5 = await del('audio_files', 'student_id', uid)
-    const e6 = await del('homework', 'student_id', uid)
-    if (e1) errors.audio_listens = e1.message
-    if (e2) errors.study_sessions = e2.message
-    if (e3) errors.aliyah_time = e3.message
-    if (e4) errors.notifications = e4.message
-    if (e5) errors.audio_files = e5.message
-    if (e6) errors.homework = e6.message
+    // Nullify homework FK (preserves teacher record, removes the constraint)
+    const e1 = await nullify('homework', 'student_id', uid)
+    const e2 = await del('audio_listens', 'student_id', uid)
+    const e3 = await del('study_sessions', 'student_id', uid)
+    const e4 = await del('aliyah_time', 'student_id', uid)
+    const e5 = await del('notifications', 'student_id', uid)
+    const e6 = await del('audio_files', 'student_id', uid)
+    if (e1) errors.homework_nullify = e1.message
+    if (e2) errors.audio_listens = e2.message
+    if (e3) errors.study_sessions = e3.message
+    if (e4) errors.aliyah_time = e4.message
+    if (e5) errors.notifications = e5.message
+    if (e6) errors.audio_files = e6.message
   }
 
+  // Delete profile row — must come after all FK references above are cleared
   const { error: profileErr } = await adminClient.from('profiles').delete().eq('id', uid)
   if (profileErr) errors.profile = profileErr.message
 
+  // Delete auth user
   const { error: deleteErr } = await adminClient.auth.admin.deleteUser(uid)
   if (deleteErr) {
     return res.status(500).json({
