@@ -22,27 +22,42 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
 
   if (!anonClient) return res.status(500).json({ error: 'Server misconfigured' })
+  if (!adminClient) return res.status(500).json({ error: 'SUPABASE_SERVICE_ROL_KEY not configured' })
 
   const token = req.headers.authorization?.replace('Bearer ', '')
   if (!token) return res.status(401).json({ error: 'Unauthorized' })
 
-  // Verify JWT using anon client
   const { data: { user }, error: authErr } = await anonClient.auth.getUser(token)
   if (authErr || !user) return res.status(401).json({ error: 'Unauthorized' })
 
-  // Delete profile using user's own JWT (RLS allows users to delete their own row)
-  const userClient = createClient(supabaseUrl, supabaseAnon, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
-    auth: { autoRefreshToken: false, persistSession: false },
-  })
-  await userClient.from('profiles').delete().eq('id', user.id)
+  const uid = user.id
 
-  // Delete the auth user — requires service role key
-  if (!adminClient) {
-    return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY not configured in Vercel env vars' })
+  // Fetch profile to know role
+  const { data: profile } = await adminClient.from('profiles').select('role').eq('id', uid).maybeSingle()
+  const isTeacher = profile?.role === 'teacher'
+
+  if (isTeacher) {
+    // Unlink students before deleting teacher
+    await adminClient.from('profiles').update({ teacher_id: null }).eq('teacher_id', uid)
+    await adminClient.from('notifications').delete().eq('teacher_id', uid)
+    await adminClient.from('homework').delete().eq('teacher_id', uid)
+    await adminClient.from('audio_files').delete().eq('teacher_id', uid)
+    await adminClient.from('classes').delete().eq('teacher_id', uid)
+  } else {
+    // Delete all student data
+    await adminClient.from('audio_listens').delete().eq('student_id', uid)
+    await adminClient.from('study_sessions').delete().eq('student_id', uid)
+    await adminClient.from('aliyah_time').delete().eq('student_id', uid)
+    await adminClient.from('notifications').delete().eq('student_id', uid)
+    await adminClient.from('audio_files').delete().eq('student_id', uid)
+    await adminClient.from('homework').delete().eq('student_id', uid)
   }
 
-  const { error: deleteErr } = await adminClient.auth.admin.deleteUser(user.id)
+  // Delete profile row
+  await adminClient.from('profiles').delete().eq('id', uid)
+
+  // Delete auth user
+  const { error: deleteErr } = await adminClient.auth.admin.deleteUser(uid)
   if (deleteErr) return res.status(500).json({ error: deleteErr.message })
 
   return res.status(200).json({ ok: true })
