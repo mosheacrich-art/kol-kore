@@ -58,7 +58,8 @@ export default function AccountSettings() {
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
-        throw new Error(body.error || 'Error al eliminar la cuenta')
+        const debugInfo = body.debug ? ` | debug: ${JSON.stringify(body.debug)}` : ''
+        throw new Error((body.error || 'Error al eliminar la cuenta') + debugInfo)
       }
       await signOut()
       navigate('/login')
