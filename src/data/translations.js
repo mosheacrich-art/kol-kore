@@ -218,6 +218,8 @@ export const translations = {
     recover_desc: 'Escribe tu email y te enviaremos un enlace para crear una nueva contraseña.',
     email_sent: 'Correo enviado',
     email_sent_desc: 'Revisa tu bandeja de entrada y sigue el enlace para restablecer tu contraseña.',
+    confirm_sent: '¡Casi listo!',
+    confirm_sent_desc: 'Te hemos enviado un enlace de confirmación. Revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta.',
     send_link: 'Enviar enlace',
     register_short: 'Registrarse',
     // Notifications
@@ -568,6 +570,8 @@ export const translations = {
     recover_desc: 'Enter your email and we will send you a link to create a new password.',
     email_sent: 'Email sent',
     email_sent_desc: 'Check your inbox and follow the link to reset your password.',
+    confirm_sent: 'Almost there!',
+    confirm_sent_desc: 'We\'ve sent you a confirmation link. Check your inbox and click the link to activate your account.',
     send_link: 'Send link',
     register_short: 'Sign up',
     // Notifications
@@ -918,6 +922,8 @@ export const translations = {
     recover_desc: 'Entrez votre email et nous vous enverrons un lien pour créer un nouveau mot de passe.',
     email_sent: 'Email envoyé',
     email_sent_desc: 'Vérifiez votre boîte de réception et suivez le lien pour réinitialiser votre mot de passe.',
+    confirm_sent: 'Presque terminé !',
+    confirm_sent_desc: 'Nous vous avons envoyé un lien de confirmation. Vérifiez votre boîte de réception et cliquez sur le lien pour activer votre compte.',
     send_link: 'Envoyer le lien',
     register_short: "S'inscrire",
     // Notifications
@@ -1267,7 +1273,9 @@ export const translations = {
     recover_password: 'Recupera password',
     recover_desc: 'Inserisci la tua email e ti invieremo un link per creare una nuova password.',
     email_sent: 'Email inviata',
-    email_sent_desc: "Controlla la tua casella di posta e segui il link per reimpostare la password.",
+    email_sent_desc: 'Controlla la tua casella di posta e segui il link per reimpostare la password.',
+    confirm_sent: 'Quasi fatto!',
+    confirm_sent_desc: 'Ti abbiamo inviato un link di conferma. Controlla la tua casella di posta e clicca sul link per attivare il tuo account.',
     send_link: 'Invia link',
     register_short: 'Registrati',
     // Notifications
@@ -1618,6 +1626,8 @@ export const translations = {
     recover_desc: 'הכנס את האימייל שלך ונשלח לך קישור ליצירת סיסמה חדשה.',
     email_sent: 'אימייל נשלח',
     email_sent_desc: 'בדוק את תיבת הדואר שלך ועקוב אחר הקישור לאיפוס הסיסמה.',
+    confirm_sent: 'כמעט סיימת!',
+    confirm_sent_desc: 'שלחנו לך קישור אימות. בדוק את תיבת הדואר שלך ולחץ על הקישור כדי להפעיל את החשבון.',
     send_link: 'שלח קישור',
     register_short: 'הירשם',
     // Notifications

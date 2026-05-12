@@ -274,7 +274,7 @@ function StudentModal({ onClose, isDark, t, tl }) {
           </button>
         </div>
 
-        {/* Email confirmation screen */}
+        {/* Account confirmation screen (after registration) */}
         {confirmationSent ? (
           <div className="px-6 py-8 flex flex-col items-center gap-4 text-center">
             <div className="w-14 h-14 rounded-full flex items-center justify-center"
@@ -285,9 +285,9 @@ function StudentModal({ onClose, isDark, t, tl }) {
               </svg>
             </div>
             <div>
-              <p className="font-semibold text-base" style={{ color: 'var(--text)' }}>{tl('email_sent')}</p>
+              <p className="font-semibold text-base" style={{ color: 'var(--text)' }}>{tl('confirm_sent')}</p>
               <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
-                {tl('email_sent_desc')}
+                {tl('confirm_sent_desc')}
               </p>
               <p className="text-xs mt-2 font-medium" style={{ color: '#6c33e6' }}>{email}</p>
             </div>
@@ -465,8 +465,8 @@ function SimpleAuthForm({ role, color, onCancel, onDone, t, tl }) {
         </svg>
       </div>
       <div>
-        <p className="font-semibold text-sm" style={{ color: 'var(--text)' }}>{tl('email_sent')}</p>
-        <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{tl('email_sent_desc')}</p>
+        <p className="font-semibold text-sm" style={{ color: 'var(--text)' }}>{tl('confirm_sent')}</p>
+        <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{tl('confirm_sent_desc')}</p>
         <p className="text-xs mt-1 font-medium" style={{ color }}>{email}</p>
       </div>
       <button type="button" onClick={onCancel}
