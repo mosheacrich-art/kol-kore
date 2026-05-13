@@ -82,15 +82,18 @@ function align(whisperWords, sefariaWords) {
     if (!wn[wi] || !sn[si]) return -2
     let textScore
     if (wn[wi] === sn[si]) {
-      textScore = 4                        // exact / known-equivalent
+      // Exact match always anchors, even for short words (הוא, את, כי…).
+      // Only FUZZY matching of short words is risky (אשר/אמר look alike).
+      textScore = 4
     } else {
       const maxLen = Math.max(wn[wi].length, sn[si].length)
       const sim = 1 - levenshtein(wn[wi], sn[si]) / maxLen
-      // Short Hebrew words are common and ambiguous. One-letter differences such
-      // as אשר/אמר should not become anchors because they can throw off the rest.
+      // Fuzzy matching of short words is too risky — common words look similar.
       if (maxLen <= 3) return -3
-      if (sim >= 0.85) textScore = 2      // high fuzzy
-      else if (maxLen >= 4 && sim >= 0.75) textScore = 1 // moderate fuzzy
+      // Lowered from 0.85 → 0.80 so that יהושע/יהוש (5-char, 1-letter diff,
+      // sim ≈ 0.83) still anchors instead of being skipped.
+      if (sim >= 0.80) textScore = 2
+      else if (maxLen >= 4 && sim >= 0.75) textScore = 1
       else return -3                      // mismatch — prefer gaps over false anchors
     }
     // Positional bias: when the same word appears twice (e.g. עבר לפניך repeated in
@@ -104,9 +107,11 @@ function align(whisperWords, sefariaWords) {
 
   const GAP = -1   // cost of one insertion or deletion
 
-  // Build DP table (sLen+1) x (wLen+1)
+  // Regular Array (Float64) — NOT Float32Array. The positional bias produces
+  // non-integer scores; storing them in Float32 causes precision loss that
+  // breaks the traceback's exact-equality comparison (dp[i][j] === dp[i-1][j-1]+score).
   const dp = Array.from({ length: sLen + 1 }, (_, i) =>
-    Float32Array.from({ length: wLen + 1 }, (_, j) => (i === 0 ? j * GAP : j === 0 ? i * GAP : 0))
+    Array.from({ length: wLen + 1 }, (_, j) => (i === 0 ? j * GAP : j === 0 ? i * GAP : 0))
   )
   for (let i = 1; i <= sLen; i++) {
     for (let j = 1; j <= wLen; j++) {
