@@ -80,15 +80,26 @@ function align(whisperWords, sefariaWords) {
   // after normalization catches those cases with full score.
   function matchScore(wi, si) {
     if (!wn[wi] || !sn[si]) return -2
-    if (wn[wi] === sn[si]) return 4        // exact / known-equivalent
-    const maxLen = Math.max(wn[wi].length, sn[si].length)
-    const sim = 1 - levenshtein(wn[wi], sn[si]) / maxLen
-    // Short Hebrew words are common and ambiguous. One-letter differences such
-    // as אשר/אמר should not become anchors because they can throw off the rest.
-    if (maxLen <= 3) return -3
-    if (sim >= 0.85) return 2              // high fuzzy
-    if (maxLen >= 4 && sim >= 0.75) return 1 // moderate fuzzy for longer words
-    return -3                              // mismatch — prefer gaps over false anchors
+    let textScore
+    if (wn[wi] === sn[si]) {
+      textScore = 4                        // exact / known-equivalent
+    } else {
+      const maxLen = Math.max(wn[wi].length, sn[si].length)
+      const sim = 1 - levenshtein(wn[wi], sn[si]) / maxLen
+      // Short Hebrew words are common and ambiguous. One-letter differences such
+      // as אשר/אמר should not become anchors because they can throw off the rest.
+      if (maxLen <= 3) return -3
+      if (sim >= 0.85) textScore = 2      // high fuzzy
+      else if (maxLen >= 4 && sim >= 0.75) textScore = 1 // moderate fuzzy
+      else return -3                      // mismatch — prefer gaps over false anchors
+    }
+    // Positional bias: when the same word appears twice (e.g. עבר לפניך repeated in
+    // the same passage), prefer the occurrence whose relative position in Sefaria
+    // is closest to the word's relative position in Whisper. Max bonus = 0.5,
+    // enough to break ties without overriding genuine textual differences.
+    const wPct = wLen > 1 ? wi / (wLen - 1) : 0
+    const sPct = sLen > 1 ? si / (sLen - 1) : 0
+    return textScore + 0.5 * (1 - Math.abs(wPct - sPct))
   }
 
   const GAP = -1   // cost of one insertion or deletion
