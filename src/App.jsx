@@ -6,6 +6,8 @@ import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { LangProvider, useLang } from './context/LangContext'
 import { Capacitor } from '@capacitor/core'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 
 const AuthCallback        = lazy(() => import('./pages/AuthCallback'))
 const Landing             = lazy(() => import('./pages/Landing'))
@@ -137,6 +139,8 @@ export default function App() {
               <Router>
                 <AppRoutes />
               </Router>
+              {!Capacitor.isNativePlatform() && <Analytics />}
+              {!Capacitor.isNativePlatform() && <SpeedInsights />}
             </AudioProvider>
           </AuthProvider>
         </ThemeProvider>
