@@ -788,11 +788,7 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
                 onMouseEnter={() => setHoverIdx(i)}
                 onMouseLeave={() => setHoverIdx(-1)}
                 style={{
-                  borderRadius: '4px',
-                  padding: isActive ? '1px 3px' : '1px 0',
-                  backgroundColor: isActive ? `${bookColor}25` : 'transparent',
-                  color: isActive ? bookColor : isHover ? '#3b82f6' : 'inherit',
-                  boxShadow: isActive ? `0 0 0 1.5px ${bookColor}50` : 'none',
+                  color: isActive ? '#3b82f6' : isHover ? '#3b82f6' : 'inherit',
                   cursor: canSeek ? 'pointer' : 'default',
                   transition: 'color 0.08s',
                 }}
@@ -912,11 +908,7 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
     const isActive = activeWordIdx === i
     const isHover = forLeft && hoverIdx === i && !isActive
     return {
-      borderRadius: '4px',
-      padding: isActive ? '1px 3px' : '1px 0',
-      backgroundColor: isActive ? `${bookColor}25` : 'transparent',
-      color: isActive ? bookColor : isHover ? '#3b82f6' : 'inherit',
-      boxShadow: isActive ? `0 0 0 1.5px ${bookColor}50` : 'none',
+      color: isActive ? '#3b82f6' : isHover ? '#3b82f6' : 'inherit',
       cursor: forLeft && canSeek ? 'pointer' : 'default',
       transition: 'color 0.08s',
     }

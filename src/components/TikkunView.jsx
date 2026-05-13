@@ -145,12 +145,8 @@ export default function TikkunView({
                 key={w.id}
                 ref={el => { wordRefs.current[i] = el }}
                 style={{
-                  borderRadius: '4px',
-                  padding: active ? '1px 4px' : '1px 1px',
-                  backgroundColor: active ? `${bookColor}35` : 'transparent',
-                  color: active ? bookColor : 'inherit',
-                  boxShadow: active ? `0 0 0 1.5px ${bookColor}50` : 'none',
-                  transition: 'background-color 0.12s, color 0.12s, box-shadow 0.12s',
+                  color: active ? '#3b82f6' : 'inherit',
+                  transition: 'color 0.12s',
                 }}
               >
                 {w.t}{' '}
