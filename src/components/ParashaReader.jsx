@@ -404,8 +404,8 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
                 </svg>
               </button>
               {studyDropdownOpen && (
-                <div className="absolute top-full mt-1 left-0 z-50 rounded-xl overflow-hidden shadow-xl"
-                  style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)', minWidth: '160px' }}>
+                <div className="absolute top-full mt-1 left-0 rounded-xl overflow-hidden shadow-xl"
+                  style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)', minWidth: '160px', zIndex: 9999 }}>
                   {[
                     { id: 'full',   icon: '▶', tkey: 'study_full' },
                     { id: 'word',   icon: '⏸', tkey: 'study_word' },
