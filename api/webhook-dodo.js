@@ -108,5 +108,82 @@ export default async function handler(req, res) {
   }
 
   console.log(`Webhook ${type}: user ${userId} → ${newStatus} plan=${subscriptionPlan} end=${subscriptionEndDate}`)
+
+  // Send welcome email only on first activation (not on renewals)
+  if (type === 'subscription.active') {
+    try {
+      // Fetch user email from Supabase auth
+      const userRes = await fetch(`${supabaseUrl}/auth/v1/admin/users/${userId}`, {
+        headers: {
+          'apikey': serviceKey,
+          'Authorization': `Bearer ${serviceKey}`,
+        },
+      })
+      const userData = userRes.ok ? await userRes.json() : null
+      const userEmail = userData?.email
+      const userName = userData?.user_metadata?.name || userData?.user_metadata?.full_name || null
+
+      if (userEmail) {
+        const resendKey = process.env.RESEND_API_KEY
+        if (resendKey) {
+          const planLabel = subscriptionPlan === 'annual' ? 'Anual' : 'Mensual'
+          const greeting = userName ? `Hola, ${userName.split(' ')[0]}` : 'Hola'
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${resendKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              from: 'Perashapp <noreply@perashapp.com>',
+              to: userEmail,
+              subject: '¡Bienvenido a Perashapp Pro! 🌟',
+              html: `
+                <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 24px; color: #1a1a2e;">
+                  <div style="text-align: center; margin-bottom: 32px;">
+                    <h1 style="font-size: 22px; font-weight: 300; letter-spacing: -0.5px; margin: 0 0 4px;">Perashapp</h1>
+                    <p style="color: #c9a227; font-size: 14px; margin: 0;">פָּרָשָׁה</p>
+                  </div>
+
+                  <h2 style="font-size: 20px; font-weight: 600; margin: 0 0 8px;">${greeting} 👋</h2>
+                  <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0 0 24px;">
+                    Tu suscripción <strong>${planLabel}</strong> ya está activa. Ahora tienes acceso completo a Perashapp Pro.
+                  </p>
+
+                  <div style="background: #f7f4ff; border-radius: 12px; padding: 20px 24px; margin-bottom: 28px;">
+                    <p style="font-weight: 600; font-size: 13px; margin: 0 0 12px; color: #6c33e6;">Incluye todo esto:</p>
+                    <ul style="margin: 0; padding: 0 0 0 16px; color: #444; font-size: 14px; line-height: 2;">
+                      <li>Audio del profesor sincronizado palabra a palabra</li>
+                      <li>Todas las parashas del año</li>
+                      <li>Taamim, nikkud y modo sefer</li>
+                      <li>Envío de grabaciones al profesor</li>
+                      <li>Acceso desde cualquier dispositivo</li>
+                    </ul>
+                  </div>
+
+                  <div style="text-align: center; margin-bottom: 32px;">
+                    <a href="https://perashapp.com/student/study"
+                      style="display: inline-block; background: linear-gradient(135deg, #6c33e6, #8b5cf6); color: #fff;
+                             text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 15px;">
+                      Empezar a estudiar →
+                    </a>
+                  </div>
+
+                  <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
+                    Para cualquier consulta escríbenos a
+                    <a href="mailto:mosheacrichcohen@gmail.com" style="color: #6c33e6;">mosheacrichcohen@gmail.com</a>
+                  </p>
+                </div>
+              `,
+            }),
+          })
+          console.log(`Welcome email sent to ${userEmail}`)
+        }
+      }
+    } catch (emailErr) {
+      console.error('Welcome email failed (non-fatal):', emailErr.message)
+    }
+  }
+
   return res.status(200).json({ received: true })
 }
