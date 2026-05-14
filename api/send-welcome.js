@@ -1,18 +1,29 @@
+const ADMIN_USER_ID = '1f4d0329-ddf5-48a4-965f-5f37d7416447'
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
 
-  // Protect with admin secret
+  const supabaseUrl = process.env.VITE_SUPABASE_URL
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const anonKey = process.env.VITE_SUPABASE_ANON_KEY
+  const resendKey = process.env.RESEND_API_KEY
+
+  // Accept either x-admin-secret header or a valid admin JWT
   const adminSecret = process.env.ADMIN_SECRET
-  if (!adminSecret || req.headers['x-admin-secret'] !== adminSecret) {
-    return res.status(401).json({ error: 'Unauthorized' })
+  const isSecretAuth = adminSecret && req.headers['x-admin-secret'] === adminSecret
+
+  if (!isSecretAuth) {
+    const token = req.headers.authorization?.replace('Bearer ', '')
+    if (!token) return res.status(401).json({ error: 'Unauthorized' })
+    const callerRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: { 'apikey': anonKey || serviceKey, 'Authorization': `Bearer ${token}` },
+    })
+    const caller = await callerRes.json()
+    if (caller?.id !== ADMIN_USER_ID) return res.status(403).json({ error: 'Forbidden' })
   }
 
   const { userId, plan } = req.body ?? {}
   if (!userId) return res.status(400).json({ error: 'userId required' })
-
-  const supabaseUrl = process.env.VITE_SUPABASE_URL
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  const resendKey = process.env.RESEND_API_KEY
 
   if (!supabaseUrl || !serviceKey || !resendKey) {
     return res.status(500).json({ error: 'Server config error' })
