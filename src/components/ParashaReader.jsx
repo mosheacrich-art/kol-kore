@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useAliyahText } from '../hooks/useSefaria'
 import { processVerse, splitWords } from '../utils/hebrew'
@@ -42,6 +43,8 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
   const [audioDuration, setAudioDuration] = useState(0)
   const [studyMode, setStudyMode] = useState('full') // 'full' | 'word' | 'phrase'
   const [studyDropdownOpen, setStudyDropdownOpen] = useState(false)
+  const [studyDropdownPos, setStudyDropdownPos] = useState({ top: 0, left: 0 })
+  const studyBtnRef = useRef(null)
   const studyPauseRef = useRef(-1)
   const phraseBoundariesRef = useRef(new Set())
   const audioPlayerRef = useRef(null)
@@ -385,9 +388,14 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
 
           {/* Study mode dropdown — only when synced audio exists */}
           {!guestMode && audio?.wordTimestamps && (
-            <div className="relative flex-shrink-0">
+            <div className="flex-shrink-0">
               <button
-                onClick={() => setStudyDropdownOpen(o => !o)}
+                ref={studyBtnRef}
+                onClick={() => {
+                  const rect = studyBtnRef.current?.getBoundingClientRect()
+                  if (rect) setStudyDropdownPos({ top: rect.bottom + 6, left: rect.left })
+                  setStudyDropdownOpen(o => !o)
+                }}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all"
                 style={{
                   background: studyMode !== 'full' ? `${bookColor}18` : 'var(--bg-card)',
@@ -403,33 +411,39 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
                   <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
-              {studyDropdownOpen && (
-                <div className="absolute top-full mt-1 left-0 rounded-xl overflow-hidden shadow-xl"
-                  style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)', minWidth: '160px', zIndex: 9999 }}>
-                  {[
-                    { id: 'full',   icon: '▶', tkey: 'study_full' },
-                    { id: 'word',   icon: '⏸', tkey: 'study_word' },
-                    { id: 'phrase', icon: '↵', tkey: 'study_phrase' },
-                  ].map(opt => (
-                    <button key={opt.id}
-                      onClick={() => { setStudyMode(opt.id); setStudyDropdownOpen(false); studyPauseRef.current = -1 }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-left transition-all"
-                      style={{
-                        background: studyMode === opt.id ? `${bookColor}15` : 'transparent',
-                        color: studyMode === opt.id ? bookColor : 'var(--text-2)',
-                      }}>
-                      <span style={{ fontSize: '11px' }}>{opt.icon}</span>
-                      {t(opt.tkey)}
-                      {studyMode === opt.id && (
-                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="ml-auto">
-                          <path d="M2 5l2.5 2.5L8 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
+          )}
+
+          {/* Study dropdown rendered via portal so it's never clipped by overflow */}
+          {studyDropdownOpen && createPortal(
+            <div
+              style={{ position: 'fixed', top: studyDropdownPos.top, left: studyDropdownPos.left, zIndex: 9999,
+                background: 'var(--bg-deep)', border: '1px solid var(--border)', borderRadius: '12px',
+                overflow: 'hidden', minWidth: '170px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
+              onMouseDown={e => e.stopPropagation()}>
+              {[
+                { id: 'full',   icon: '▶', tkey: 'study_full' },
+                { id: 'word',   icon: '⏸', tkey: 'study_word' },
+                { id: 'phrase', icon: '↵', tkey: 'study_phrase' },
+              ].map(opt => (
+                <button key={opt.id}
+                  onClick={() => { setStudyMode(opt.id); setStudyDropdownOpen(false); studyPauseRef.current = -1 }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-left transition-all"
+                  style={{
+                    background: studyMode === opt.id ? `${bookColor}15` : 'transparent',
+                    color: studyMode === opt.id ? bookColor : 'var(--text-2)',
+                  }}>
+                  <span style={{ fontSize: '11px' }}>{opt.icon}</span>
+                  {t(opt.tkey)}
+                  {studyMode === opt.id && (
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="ml-auto">
+                      <path d="M2 5l2.5 2.5L8 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>,
+            document.body
           )}
 
           {/* Aliyah nav — right side of same row */}
