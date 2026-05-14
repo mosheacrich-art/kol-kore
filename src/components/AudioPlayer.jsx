@@ -15,7 +15,26 @@ const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTi
         onPlay?.()
         onPlayingChange?.(true)
       }
-    }
+    },
+    pause() {
+      if (!audioRef.current || audioRef.current.paused) return
+      audioRef.current.pause()
+      setPlaying(false)
+      onPlayingChange?.(false)
+    },
+    toggle() {
+      if (!audioRef.current) return
+      if (audioRef.current.paused) {
+        audioRef.current.play()
+        setPlaying(true)
+        onPlay?.()
+        onPlayingChange?.(true)
+      } else {
+        audioRef.current.pause()
+        setPlaying(false)
+        onPlayingChange?.(false)
+      }
+    },
   }))
   const [playing, setPlaying] = useState(false)
   const [progress, setProgress] = useState(0)

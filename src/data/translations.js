@@ -59,6 +59,10 @@ export const translations = {
     mode_plain: 'Llano',
     mode_split: 'Partida',
     mode_sefer: 'Sefer',
+    // Study mode
+    study_full: 'Aliyá completa',
+    study_word: 'Palabra a palabra',
+    study_phrase: 'Frase a frase',
     // Reader misc
     no_audio: 'Sin audio del profesor · graba y envíaselo',
     no_audio_teacher: 'Sin audio para esta aliyá · graba o sube uno abajo',
@@ -427,6 +431,10 @@ export const translations = {
     mode_plain: 'Plain',
     mode_split: 'Split',
     mode_sefer: 'Sefer',
+    // Study mode
+    study_full: 'Full aliyah',
+    study_word: 'Word by word',
+    study_phrase: 'Phrase by phrase',
     // Reader misc
     no_audio: 'No teacher audio · record and send it',
     no_audio_teacher: 'No audio for this aliyah · record or upload one below',
@@ -795,6 +803,10 @@ export const translations = {
     mode_plain: 'Simple',
     mode_split: 'Partagé',
     mode_sefer: 'Séfer',
+    // Study mode
+    study_full: 'Aliyah complète',
+    study_word: 'Mot par mot',
+    study_phrase: 'Phrase par phrase',
     // Reader misc
     no_audio: 'Pas d\'audio du professeur · enregistrez et envoyez-le',
     no_audio_teacher: 'Pas d\'audio pour cette aliyah · enregistrez ou téléchargez ci-dessous',
@@ -1163,6 +1175,10 @@ export const translations = {
     mode_plain: 'Semplice',
     mode_split: 'Diviso',
     mode_sefer: 'Sefer',
+    // Study mode
+    study_full: 'Aliyah completa',
+    study_word: 'Parola per parola',
+    study_phrase: 'Frase per frase',
     // Reader misc
     no_audio: 'Nessun audio del professore · registra e inviagli',
     no_audio_teacher: 'Nessun audio per questa aliyah · registra o carica uno sotto',
@@ -1531,6 +1547,10 @@ export const translations = {
     mode_plain: 'פשוט',
     mode_split: 'מפוצל',
     mode_sefer: 'ספר',
+    // Study mode
+    study_full: 'עלייה שלמה',
+    study_word: 'מילה אחר מילה',
+    study_phrase: 'פסוק אחר פסוק',
     // Reader misc
     no_audio: 'אין אודיו ממורה · הקלט ושלח',
     no_audio_teacher: 'אין אודיו לעלייה זו · הקלט או העלה',

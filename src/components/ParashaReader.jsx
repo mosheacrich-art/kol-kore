@@ -40,11 +40,37 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
   const [audioCurrentTime, setAudioCurrentTime] = useState(null)
   const [audioPlaying, setAudioPlaying] = useState(false)
   const [audioDuration, setAudioDuration] = useState(0)
+  const [studyMode, setStudyMode] = useState('full') // 'full' | 'word' | 'phrase'
+  const [studyDropdownOpen, setStudyDropdownOpen] = useState(false)
+  const studyPauseRef = useRef(-1)
+  const phraseBoundariesRef = useRef(new Set())
   const audioPlayerRef = useRef(null)
 
   const handleSeek = useCallback((time) => {
+    studyPauseRef.current = -1  // reset so study mode resumes correctly after manual seek
     audioPlayerRef.current?.seekTo(time)
   }, [])
+
+  // Spacebar toggles play/pause (skip when typing in inputs)
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.code !== 'Space') return
+      const tag = document.activeElement?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable) return
+      e.preventDefault()
+      audioPlayerRef.current?.toggle()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  // Close study dropdown on outside click
+  useEffect(() => {
+    if (!studyDropdownOpen) return
+    const close = () => setStudyDropdownOpen(false)
+    window.addEventListener('mousedown', close)
+    return () => window.removeEventListener('mousedown', close)
+  }, [studyDropdownOpen])
   const [pendingHomework, setPendingHomework] = useState(null)
   const pendingHomeworkRef = useRef(null)
   const { get, upload, uploadStudentRecording, remove } = useAudio()
@@ -137,6 +163,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
   useEffect(() => {
     setAudioCurrentTime(null)
     setAudioPlaying(false)
+    studyPauseRef.current = -1
     return () => {
       clearInterval(timerRef.current)
       if (mediaRecorderRef.current?.state === 'recording') {
@@ -161,6 +188,46 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
       })
     }
   }, [aliyahIdx, parasha.id])
+
+  // Auto-pause based on studyMode
+  useEffect(() => {
+    if (studyMode === 'full' || !audioPlaying || !audio?.wordTimestamps?.length) return
+    if (audioCurrentTime == null) return
+
+    const wt = audio.wordTimestamps
+    const v2 = wt[0] != null && !('word' in wt[0])
+
+    let activeIdx = -1
+    if (v2) {
+      for (let i = 0; i < wt.length; i++) {
+        if (wt[i] && wt[i].start <= audioCurrentTime) activeIdx = i
+        else if (wt[i] && wt[i].start > audioCurrentTime) break
+      }
+    } else {
+      let lo = 0, hi = wt.length - 1
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1
+        if (wt[mid].start <= audioCurrentTime) { activeIdx = mid; lo = mid + 1 }
+        else hi = mid - 1
+      }
+    }
+
+    if (activeIdx <= 0 || activeIdx <= studyPauseRef.current) return
+
+    const prevIdx = studyPauseRef.current
+
+    if (studyMode === 'word') {
+      audioPlayerRef.current?.pause()
+      studyPauseRef.current = activeIdx
+    } else if (studyMode === 'phrase') {
+      let shouldPause = false
+      for (let i = Math.max(0, prevIdx); i < activeIdx; i++) {
+        if (phraseBoundariesRef.current.has(i)) { shouldPause = true; break }
+      }
+      if (shouldPause) audioPlayerRef.current?.pause()
+      studyPauseRef.current = activeIdx
+    }
+  }, [audioCurrentTime, audioPlaying, studyMode, audio?.wordTimestamps])
 
   const startRec = async () => {
     try {
@@ -226,6 +293,19 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
   }
 
   const { verses, loading, error } = useAliyahText(currentAliyah.ref, true)
+
+  // Build phrase boundaries (sof pasuk ׃) for study mode
+  useEffect(() => {
+    const boundaries = new Set()
+    let idx = 0
+    for (const verse of verses) {
+      verse.split(/\s+/).filter(Boolean).forEach(w => {
+        if (w.includes('׃')) boundaries.add(idx)
+        idx++
+      })
+    }
+    phraseBoundariesRef.current = boundaries
+  }, [verses])
 
   const nextAliyah = parasha.aliyot[aliyahIdx + 1]
   useAliyahText(nextAliyah?.ref, !!nextAliyah)
@@ -302,6 +382,55 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
               </button>
             ))}
           </div>
+
+          {/* Study mode dropdown — only when synced audio exists */}
+          {!guestMode && audio?.wordTimestamps && (
+            <div className="relative flex-shrink-0">
+              <button
+                onClick={() => setStudyDropdownOpen(o => !o)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all"
+                style={{
+                  background: studyMode !== 'full' ? `${bookColor}18` : 'var(--bg-card)',
+                  border: `1px solid ${studyMode !== 'full' ? bookColor + '40' : 'var(--border-subtle)'}`,
+                  color: studyMode !== 'full' ? bookColor : 'var(--text-3)',
+                }}>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.2"/>
+                  <path d="M6 3.5v2.5l1.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+                {t(studyMode === 'full' ? 'study_full' : studyMode === 'word' ? 'study_word' : 'study_phrase')}
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              {studyDropdownOpen && (
+                <div className="absolute top-full mt-1 left-0 z-50 rounded-xl overflow-hidden shadow-xl"
+                  style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)', minWidth: '160px' }}>
+                  {[
+                    { id: 'full',   icon: '▶', tkey: 'study_full' },
+                    { id: 'word',   icon: '⏸', tkey: 'study_word' },
+                    { id: 'phrase', icon: '↵', tkey: 'study_phrase' },
+                  ].map(opt => (
+                    <button key={opt.id}
+                      onClick={() => { setStudyMode(opt.id); setStudyDropdownOpen(false); studyPauseRef.current = -1 }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-left transition-all"
+                      style={{
+                        background: studyMode === opt.id ? `${bookColor}15` : 'transparent',
+                        color: studyMode === opt.id ? bookColor : 'var(--text-2)',
+                      }}>
+                      <span style={{ fontSize: '11px' }}>{opt.icon}</span>
+                      {t(opt.tkey)}
+                      {studyMode === opt.id && (
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="ml-auto">
+                          <path d="M2 5l2.5 2.5L8 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Aliyah nav — right side of same row */}
           <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
