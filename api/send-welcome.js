@@ -66,7 +66,7 @@ export default async function handler(req, res) {
 
           <h2 style="font-size: 20px; font-weight: 600; margin: 0 0 8px;">${greeting} 👋</h2>
           <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0 0 24px;">
-            Your <strong>${planLabel}</strong> subscription is now active. You have full access to Perashapp Pro.
+            Your subscription is now active. You have full access to Perashapp Pro.
           </p>
 
           <div style="background: #f7f4ff; border-radius: 12px; padding: 20px 24px; margin-bottom: 28px;">
