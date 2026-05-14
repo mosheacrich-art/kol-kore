@@ -219,10 +219,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
 
     const prevIdx = studyPauseRef.current
 
-    if (studyMode === 'word') {
-      audioPlayerRef.current?.pause()
-      studyPauseRef.current = activeIdx
-    } else if (studyMode === 'phrase') {
+    if (studyMode === 'phrase') {
       let shouldPause = false
       for (let i = Math.max(0, prevIdx); i < activeIdx; i++) {
         if (phraseBoundariesRef.current.has(i)) { shouldPause = true; break }
@@ -406,7 +403,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
                   <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.2"/>
                   <path d="M6 3.5v2.5l1.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
                 </svg>
-                {t(studyMode === 'full' ? 'study_full' : studyMode === 'word' ? 'study_word' : 'study_phrase')}
+                {t(studyMode === 'full' ? 'study_full' : 'study_phrase')}
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                   <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
@@ -423,7 +420,6 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
               onMouseDown={e => e.stopPropagation()}>
               {[
                 { id: 'full',   icon: '▶', tkey: 'study_full' },
-                { id: 'word',   icon: '⏸', tkey: 'study_word' },
                 { id: 'phrase', icon: '↵', tkey: 'study_phrase' },
               ].map(opt => (
                 <button key={opt.id}
