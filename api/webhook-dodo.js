@@ -37,6 +37,9 @@ const STATUS_MAP = {
   'subscription.on_hold':   'on_hold',
 }
 
+const MONTHLY_PRODUCT_ID = 'pdt_0Ne7sWfihRRycFHWb1SB2'
+const ANNUAL_PRODUCT_ID  = 'pdt_0Ne7sn0u5XBSPuebqTIsh'
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
 
@@ -63,11 +66,28 @@ export default async function handler(req, res) {
     return res.status(200).json({ received: true })
   }
 
+  // Determine plan type from product_id
+  const productId = data?.product_id
+  const subscriptionPlan = productId === ANNUAL_PRODUCT_ID ? 'annual'
+    : productId === MONTHLY_PRODUCT_ID ? 'monthly'
+    : null
+
+  // Extract end date — Dodo may send next_billing_date or expiry_date
+  const rawEndDate = data?.next_billing_date || data?.expiry_date || data?.current_period_end || null
+  const subscriptionEndDate = rawEndDate ? new Date(rawEndDate).toISOString() : null
+
   const supabaseUrl = process.env.VITE_SUPABASE_URL
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!supabaseUrl || !serviceKey) {
     console.error('Supabase env vars missing in webhook handler')
     return res.status(500).json({ error: 'Server config error' })
+  }
+
+  const patch = {
+    subscription_status: newStatus,
+    subscription_id: subscriptionId,
+    ...(subscriptionPlan ? { subscription_plan: subscriptionPlan } : {}),
+    ...(subscriptionEndDate ? { subscription_end_date: subscriptionEndDate } : {}),
   }
 
   const updateRes = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}`, {
@@ -78,7 +98,7 @@ export default async function handler(req, res) {
       'Content-Type': 'application/json',
       'Prefer': 'return=minimal',
     },
-    body: JSON.stringify({ subscription_status: newStatus, subscription_id: subscriptionId }),
+    body: JSON.stringify(patch),
   })
 
   if (!updateRes.ok) {
@@ -87,6 +107,6 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'DB update failed' })
   }
 
-  console.log(`Webhook ${type}: user ${userId} → ${newStatus}`)
+  console.log(`Webhook ${type}: user ${userId} → ${newStatus} plan=${subscriptionPlan} end=${subscriptionEndDate}`)
   return res.status(200).json({ received: true })
 }

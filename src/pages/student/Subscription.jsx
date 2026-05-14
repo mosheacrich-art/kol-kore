@@ -57,6 +57,12 @@ function ActivatingView({ t }) {
 }
 
 function ActiveView({ profile, justPaid, navigate, t }) {
+  const endDate = profile?.subscription_end_date ? new Date(profile.subscription_end_date) : null
+  const daysLeft = endDate ? Math.ceil((endDate - Date.now()) / (1000 * 60 * 60 * 24)) : null
+  const plan = profile?.subscription_plan
+
+  const planLabel = plan === 'annual' ? t('annual_plan') : plan === 'monthly' ? t('monthly_plan') : null
+
   return (
     <div className="p-4 sm:p-8 max-w-2xl mx-auto">
       <div className="mb-8 fade-up-1">
@@ -85,18 +91,49 @@ function ActiveView({ profile, justPaid, navigate, t }) {
         </div>
       )}
 
-      <div className="p-5 rounded-2xl mb-6 fade-up-2"
+      {/* Status card */}
+      <div className="p-5 rounded-2xl mb-4 fade-up-2"
         style={{ background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.2)' }}>
-        <div className="flex items-center gap-3">
-          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: '#22c55e' }} />
-          <div>
-            <p className="text-sm font-semibold" style={{ color: '#16a34a' }}>{t('sub_active')}</p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
-              {t('full_access')}
-            </p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: '#22c55e' }} />
+            <div>
+              <p className="text-sm font-semibold" style={{ color: '#16a34a' }}>{t('sub_active')}</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{t('full_access')}</p>
+            </div>
           </div>
+          {planLabel && (
+            <span className="text-xs px-2.5 py-1 rounded-full flex-shrink-0"
+              style={{ background: 'rgba(34,197,94,0.15)', color: '#16a34a', border: '1px solid rgba(34,197,94,0.3)' }}>
+              {planLabel}
+            </span>
+          )}
         </div>
       </div>
+
+      {/* Renewal info */}
+      {endDate && (
+        <div className="p-4 rounded-2xl mb-4 fade-up-2 flex items-center justify-between gap-3"
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <div>
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+              {daysLeft > 0 ? 'Renueva el' : 'Venció el'}
+            </p>
+            <p className="text-sm font-medium mt-0.5" style={{ color: 'var(--text)' }}>
+              {endDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+          </div>
+          {daysLeft !== null && (
+            <div className="text-right flex-shrink-0">
+              <p className="text-2xl font-light tabular-nums"
+                style={{ color: daysLeft <= 7 ? '#f59e0b' : '#16a34a' }}>
+                {Math.max(0, daysLeft)}
+              </p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>días</p>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="p-4 rounded-2xl mb-6 fade-up-3"
         style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
