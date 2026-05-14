@@ -13,7 +13,8 @@ export default function StudentStudy({ basePath = '/student/study' }) {
   const parasha = parashaId ? ALL_PARASHOT.find(p => p.id === parashaId) : null
 
   const isGuest = basePath.startsWith('/guest')
-  const isSubscribed = profile?.subscription_status === 'active'
+  const isTeacher = profile?.role === 'teacher'
+  const isSubscribed = isTeacher || profile?.subscription_status === 'active'
   const guestMode = isGuest || !isSubscribed
   if (parasha) return <ReaderView parasha={parasha} basePath={basePath} guestMode={guestMode} isSubscribed={isSubscribed} />
   return <ListView basePath={basePath} guestMode={guestMode} />
