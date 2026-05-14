@@ -253,7 +253,14 @@ export default async function handler(req, res) {
     const whisperPrompt = prompt || sefariaWords.join(' ').slice(0, 900)
 
     // 4. Transcribe with Whisper
-    const ext = (fileType || 'audio/webm').split('/')[1]?.split(';')[0] || 'webm'
+    const MIME_TO_EXT = {
+      'audio/x-m4a': 'm4a', 'audio/m4a': 'm4a', 'audio/mp4': 'mp4',
+      'audio/mpeg': 'mp3', 'audio/mp3': 'mp3', 'audio/ogg': 'ogg',
+      'audio/flac': 'flac', 'audio/wav': 'wav', 'audio/wave': 'wav',
+      'audio/webm': 'webm', 'video/mp4': 'mp4', 'video/webm': 'webm',
+    }
+    const mime = (fileType || 'audio/webm').split(';')[0].trim().toLowerCase()
+    const ext = MIME_TO_EXT[mime] || mime.split('/')[1]?.split(';')[0] || 'webm'
     const form = new FormData()
     form.append('file', new File([blob], `audio.${ext}`, { type: fileType || 'audio/webm' }))
     form.append('model', 'whisper-1')
