@@ -28,7 +28,7 @@ function tikkunHash(ref) {
   return `#/r/${BOOK_TO_NUM[m[1]]}-${m[2]}-${m[3]}`
 }
 
-export default function ParashaReader({ parasha, guestMode = false, initialAliyah = 0 }) {
+export default function ParashaReader({ parasha, guestMode = false, isSubscribed = true, initialAliyah = 0 }) {
   const { t } = useLang()
   const navigate = useNavigate()
   const MODES = MODE_IDS.map((id, i) => ({ id, heb: MODE_HEB[i], label: t(MODE_TKEYS[i]) }))
@@ -362,7 +362,7 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
         </div>
       </div>
 
-      {/* Guest paywall modal */}
+      {/* Paywall modal — subscription or guest */}
       {showPaywall && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
           style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
@@ -379,28 +379,46 @@ export default function ParashaReader({ parasha, guestMode = false, initialAliya
               </svg>
             </div>
 
-            <div className="text-center">
-              <h3 className="text-base font-semibold mb-1" style={{ color: 'var(--text)' }}>
-                {t('guest_locked_title')}
-              </h3>
-              <p className="text-sm leading-relaxed" style={{ color: 'var(--text-3)' }}>
-                {t('guest_locked_msg')}
-              </p>
-            </div>
-
-            <button onClick={() => navigate('/login?tab=register')}
-              className="w-full py-3 rounded-xl text-sm font-semibold transition-all"
-              style={{ background: 'linear-gradient(135deg, #6c33e6, #8b5cf6)', color: '#fff', boxShadow: '0 4px 20px rgba(108,51,230,0.35)' }}>
-              {t('guest_locked_cta')}
-            </button>
-
-            <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
-              {t('guest_locked_already')}{' '}
-              <button onClick={() => navigate('/login')}
-                className="underline" style={{ color: '#8b5cf6' }}>
-                {t('guest_locked_login')}
-              </button>
-            </p>
+            {!isSubscribed && profile ? (
+              <>
+                <div className="text-center">
+                  <h3 className="text-base font-semibold mb-1" style={{ color: 'var(--text)' }}>
+                    {t('sub_locked_title')}
+                  </h3>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-3)' }}>
+                    {t('sub_locked_msg')}
+                  </p>
+                </div>
+                <button onClick={() => navigate('/student/subscription')}
+                  className="w-full py-3 rounded-xl text-sm font-semibold transition-all"
+                  style={{ background: 'linear-gradient(135deg, #6c33e6, #8b5cf6)', color: '#fff', boxShadow: '0 4px 20px rgba(108,51,230,0.35)' }}>
+                  {t('sub_locked_cta')}
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="text-center">
+                  <h3 className="text-base font-semibold mb-1" style={{ color: 'var(--text)' }}>
+                    {t('guest_locked_title')}
+                  </h3>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-3)' }}>
+                    {t('guest_locked_msg')}
+                  </p>
+                </div>
+                <button onClick={() => navigate('/login?tab=register')}
+                  className="w-full py-3 rounded-xl text-sm font-semibold transition-all"
+                  style={{ background: 'linear-gradient(135deg, #6c33e6, #8b5cf6)', color: '#fff', boxShadow: '0 4px 20px rgba(108,51,230,0.35)' }}>
+                  {t('guest_locked_cta')}
+                </button>
+                <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
+                  {t('guest_locked_already')}{' '}
+                  <button onClick={() => navigate('/login')}
+                    className="underline" style={{ color: '#8b5cf6' }}>
+                    {t('guest_locked_login')}
+                  </button>
+                </p>
+              </>
+            )}
           </div>
         </div>
       )}

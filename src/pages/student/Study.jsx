@@ -4,14 +4,18 @@ import { PARASHOT, ALL_PARASHOT, COMBINED_PARASHOT, SEFARIM_LIST, BOOK_COLORS } 
 import { useAudio } from '../../context/AudioContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useLang } from '../../context/LangContext'
+import { useAuth } from '../../context/AuthContext'
 import ParashaReader from '../../components/ParashaReader'
 
 export default function StudentStudy({ basePath = '/student/study' }) {
   const { parashaId } = useParams()
+  const { profile } = useAuth()
   const parasha = parashaId ? ALL_PARASHOT.find(p => p.id === parashaId) : null
 
-  const guestMode = basePath.startsWith('/guest')
-  if (parasha) return <ReaderView parasha={parasha} basePath={basePath} guestMode={guestMode} />
+  const isGuest = basePath.startsWith('/guest')
+  const isSubscribed = profile?.subscription_status === 'active'
+  const guestMode = isGuest || !isSubscribed
+  if (parasha) return <ReaderView parasha={parasha} basePath={basePath} guestMode={guestMode} isSubscribed={isSubscribed} />
   return <ListView basePath={basePath} guestMode={guestMode} />
 }
 
@@ -163,7 +167,7 @@ function ListView({ basePath, guestMode }) {
   )
 }
 
-function ReaderView({ parasha, basePath, guestMode }) {
+function ReaderView({ parasha, basePath, guestMode, isSubscribed }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const initialAliyah = Math.min(
@@ -210,7 +214,7 @@ function ReaderView({ parasha, basePath, guestMode }) {
       </div>
 
       <div className="flex-1 overflow-hidden">
-        <ParashaReader parasha={parasha} guestMode={guestMode} initialAliyah={initialAliyah} />
+        <ParashaReader parasha={parasha} guestMode={guestMode} isSubscribed={isSubscribed} initialAliyah={initialAliyah} />
       </div>
     </div>
   )

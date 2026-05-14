@@ -34,15 +34,8 @@ export default function StudentLayout() {
   const go = (path) => { navigate(path); setSidebarOpen(false) }
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
 
-  // Show paywall if student has no active subscription.
-  // Exception: if coming back from payment (?success=1), let Subscription.jsx handle the polling.
-  // Paywall temporarily disabled — re-enable by restoring the block below
-  // const justPaid = searchParams.get('success') === '1'
-  // const isSubscribed = profile?.subscription_status === 'active'
-  // const devBypass = sessionStorage.getItem('dev_bypass') === '1'
-  // if (profile && !isSubscribed && !justPaid && !devBypass) {
-  //   return <Paywall user={user} profile={profile} navigate={navigate} />
-  // }
+  const justPaid = searchParams.get('success') === '1'
+  const isSubscribed = profile?.subscription_status === 'active'
 
   return (
     <div className="flex h-screen" style={{ background: 'var(--bg)' }}>
@@ -87,6 +80,23 @@ export default function StudentLayout() {
           <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
         </div>
 
+        {/* Warning banner for non-subscribed students */}
+        {profile && !isSubscribed && !justPaid && (
+          <div className="flex items-center gap-3 px-4 py-2.5 flex-shrink-0"
+            style={{ background: 'rgba(251,191,36,0.12)', borderBottom: '1px solid rgba(251,191,36,0.25)' }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+              <path d="M8 2L14 13H2L8 2z" stroke="#f59e0b" strokeWidth="1.3" strokeLinejoin="round"/>
+              <path d="M8 6v3.5M8 11.5v.5" stroke="#f59e0b" strokeWidth="1.3" strokeLinecap="round"/>
+            </svg>
+            <p className="text-xs flex-1" style={{ color: '#f59e0b' }}>{t('not_subscribed_banner')}</p>
+            <button onClick={() => navigate('/student/subscription')}
+              className="text-xs font-semibold px-3 py-1 rounded-lg flex-shrink-0 transition-all"
+              style={{ background: 'rgba(251,191,36,0.15)', color: '#f59e0b', border: '1px solid rgba(251,191,36,0.3)' }}>
+              {t('not_subscribed_cta')}
+            </button>
+          </div>
+        )}
+
         <Outlet />
       </main>
 
@@ -96,10 +106,11 @@ export default function StudentLayout() {
         {navItems.map(item => {
           const Icon = item.icon
           const active = isActive(item.path)
+          const lockedMobile = !isSubscribed && item.path === '/student/imprimir'
           return (
-            <button key={item.path} onClick={() => go(item.path)}
+            <button key={item.path} onClick={() => lockedMobile ? go('/student/subscription') : go(item.path)}
               className="flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[56px] py-2 transition-colors"
-              style={{ color: active ? '#8b5cf6' : 'var(--text-3)' }}>
+              style={{ color: active ? '#8b5cf6' : lockedMobile ? 'var(--text-muted)' : 'var(--text-3)' }}>
               <Icon active={active} />
               <span className="text-[10px] font-medium leading-none">{item.shortLabel}</span>
             </button>
@@ -113,6 +124,7 @@ export default function StudentLayout() {
 function SidebarContent({ profile, location, isDark, toggle, go, signOut, navigate, showClose, onClose, navItems }) {
   const { t } = useLang()
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
+  const isSubscribed = profile?.subscription_status === 'active'
   return (
     <>
       <div className="px-3 mb-10 flex items-center justify-between">
@@ -137,11 +149,15 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
             style={{ background: 'rgba(108,51,230,0.3)', color: '#c4b5fd' }}>
             {profile?.name?.[0]?.toUpperCase() ?? 'A'}
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <div className="text-xs font-medium truncate max-w-[120px]" style={{ color: 'var(--text)' }}>
               {profile?.name ?? 'Alumno'}
             </div>
-            <div className="text-xs" style={{ color: 'var(--text-3)' }}>תַּלְמִיד</div>
+            {isSubscribed ? (
+              <div className="text-xs font-semibold mt-0.5" style={{ color: '#a78bfa' }}>{t('subscribed_badge')}</div>
+            ) : (
+              <div className="text-xs" style={{ color: 'var(--text-3)' }}>תַּלְמִיד</div>
+            )}
           </div>
         </div>
       </div>
@@ -150,21 +166,29 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
         {navItems.map(item => {
           const Icon = item.icon
           const active = isActive(item.path)
+          const lockedItem = !isSubscribed && item.path === '/student/imprimir'
           return (
-            <button key={item.path} onClick={() => go(item.path)}
+            <button key={item.path} onClick={() => lockedItem ? go('/student/subscription') : go(item.path)}
               className="sidebar-item flex items-center gap-3 px-3 py-3 rounded-xl text-left"
               style={{
                 background: active ? 'rgba(108,51,230,0.13)' : 'transparent',
                 borderInlineStart: active ? '2px solid #8b5cf6' : '2px solid transparent',
-                color: active ? '#8b5cf6' : 'var(--text-3)',
+                color: active ? '#8b5cf6' : lockedItem ? 'var(--text-muted)' : 'var(--text-3)',
+                opacity: lockedItem ? 0.7 : 1,
               }}>
               <Icon active={active} />
-              <div>
+              <div className="flex-1 min-w-0">
                 <div className="text-xs font-medium">{item.label}</div>
                 <div className="text-xs hebrew" style={{ color: active ? 'var(--text-gold)' : 'var(--text-muted)' }}>
                   {item.heb}
                 </div>
               </div>
+              {lockedItem && (
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0, opacity: 0.5 }}>
+                  <rect x="2" y="5.5" width="8" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+                  <path d="M4 5.5V4a2 2 0 014 0v1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+              )}
             </button>
           )
         })}
