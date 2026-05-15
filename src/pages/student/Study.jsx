@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { PARASHOT, ALL_PARASHOT, COMBINED_PARASHOT, SEFARIM_LIST, BOOK_COLORS } from '../../data/parashot'
+import { MOADIM_LIST, ALL_MOADIM } from '../../data/moadim'
 import { useAudio } from '../../context/AudioContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useLang } from '../../context/LangContext'
@@ -10,7 +11,9 @@ import ParashaReader from '../../components/ParashaReader'
 export default function StudentStudy({ basePath = '/student/study' }) {
   const { parashaId } = useParams()
   const { profile } = useAuth()
-  const parasha = parashaId ? ALL_PARASHOT.find(p => p.id === parashaId) : null
+  const parasha = parashaId
+    ? (ALL_PARASHOT.find(p => p.id === parashaId) || ALL_MOADIM.find(p => p.id === parashaId))
+    : null
 
   const isGuest = basePath.startsWith('/guest')
   const isTeacher = profile?.role === 'teacher'
@@ -44,6 +47,24 @@ function ListView({ basePath, guestMode }) {
       parashot: filtered.filter(p => p.book === s.id),
     })).filter(s => s.parashot.length > 0)
   }, [filtered])
+
+  const filteredMoadim = useMemo(() => {
+    if (!search) return ALL_MOADIM
+    const q = search.toLowerCase()
+    return ALL_MOADIM.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      p.heb.includes(search)
+    )
+  }, [search])
+
+  const byChag = useMemo(() => {
+    return MOADIM_LIST.map(m => ({
+      ...m,
+      readings: filteredMoadim.filter(p => p.chag === m.id),
+    })).filter(m => m.readings.length > 0)
+  }, [filteredMoadim])
+
+  const [openChag, setOpenChag] = useState(null)
 
   const cardDefault = isDark
     ? { bg: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.05)' }
@@ -164,6 +185,82 @@ function ListView({ basePath, guestMode }) {
           )
         })}
       </div>
+
+      {/* ── Moadim / Perashiot especiales ────────────────────────────────── */}
+      {byChag.length > 0 && (
+        <div className="mt-6 fade-up-3">
+          <div className="flex items-center gap-3 mb-3 px-1">
+            <div className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
+            <p className="text-xs tracking-widest uppercase" style={{ color: 'var(--text-gold)' }}>
+              מוֹעֲדִים · Perashiot especiales
+            </p>
+            <div className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
+          </div>
+          <div className="flex flex-col gap-2.5">
+            {byChag.map(chag => {
+              const isOpen = openChag === chag.id || !!search
+              return (
+                <div key={chag.id} className="rounded-2xl overflow-hidden transition-all"
+                  style={{ border: `1px solid ${isOpen ? chag.color + '30' : 'var(--border)'}` }}>
+                  <button onClick={() => !search && setOpenChag(isOpen ? null : chag.id)}
+                    className="w-full flex items-center justify-between px-5 py-4 text-left"
+                    style={{ background: isOpen ? `${chag.color}0d` : 'var(--bg-card)' }}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ background: chag.color }} />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>{chag.name}</span>
+                          <span className="hebrew text-sm" style={{ color: chag.color }}>{chag.heb}</span>
+                        </div>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{chag.en} · {chag.readings.length} lecturas</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs px-2 py-0.5 rounded-full"
+                        style={{ background: `${chag.color}15`, color: chag.color, border: `1px solid ${chag.color}20` }}>
+                        {chag.readings.length}
+                      </span>
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+                        style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s', color: 'var(--text-muted)' }}>
+                        <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                  </button>
+
+                  {isOpen && (
+                    <div className="px-4 pb-3 pt-1" style={{ background: 'var(--bg-card)' }}>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mt-2">
+                        {chag.readings.map(p => (
+                          <button key={p.id} onClick={() => navigate(`${basePath}/${p.id}`)}
+                            className="text-left p-3 rounded-xl transition-all duration-200"
+                            style={{ background: cardDefault.bg, border: `1px solid ${cardDefault.border}` }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.background = `${chag.color}12`
+                              e.currentTarget.style.borderColor = `${chag.color}30`
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.background = cardDefault.bg
+                              e.currentTarget.style.borderColor = cardDefault.border
+                            }}>
+                            <div className="hebrew text-sm mb-1" style={{ color: chag.color }}>{p.heb}</div>
+                            <div className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{p.name}</div>
+                            <div className="text-xs mt-0.5 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+                              <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                                <path d="M1 4h6M4 1l3 3-3 3" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                              {p.aliyot.length} aliyot
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -191,7 +288,7 @@ function ReaderView({ parasha, basePath, guestMode, isSubscribed }) {
         </button>
         <div className="h-4 w-px" style={{ background: 'var(--border)' }} />
         <span className="text-xs" style={{ color: 'var(--text-3)' }}>
-          {parasha.combined ? 'Perashá doble' : `Perashá ${parasha.num} de 54`}
+          {parasha.combined ? 'Perashá doble' : parasha.num ? `Perashá ${parasha.num} de 54` : 'Lectura especial · מוֹעֲדִים'}
         </span>
 
         <div className="ml-auto flex gap-2">

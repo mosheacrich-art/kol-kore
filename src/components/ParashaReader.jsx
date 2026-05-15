@@ -140,7 +140,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
   const [uploadedMsg, setUploadedMsg] = useState(false)
 
   const currentAliyah = parasha.aliyot[aliyahIdx]
-  const bookColor = BOOK_COLORS[parasha.book] || '#6c33e6'
+  const bookColor = parasha.color || BOOK_COLORS[parasha.book] || '#6c33e6'
   const audio = get(parasha.id, aliyahIdx)
 
   // Fetch student audio recordings for this aliyah (teacher only)
