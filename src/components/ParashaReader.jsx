@@ -76,6 +76,9 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
   }, [studyDropdownOpen])
   const [pendingHomework, setPendingHomework] = useState(null)
   const pendingHomeworkRef = useRef(null)
+  const [studentAudios, setStudentAudios] = useState([])
+  const [studentAudiosOpen, setStudentAudiosOpen] = useState(false)
+  const [playingStudentUrl, setPlayingStudentUrl] = useState(null)
   const { get, upload, uploadStudentRecording, remove } = useAudio()
   const { profile } = useAuth()
   const notifiedRef = useRef(new Set())    // aliyot ya notificadas en esta sesión
@@ -134,6 +137,22 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
   const bookColor = BOOK_COLORS[parasha.book] || '#6c33e6'
   const audio = get(parasha.id, aliyahIdx)
 
+  // Fetch student audio recordings for this aliyah (teacher only)
+  useEffect(() => {
+    if (profile?.role !== 'teacher' || !profile?.id) return
+    setStudentAudios([])
+    supabase
+      .from('notifications')
+      .select('id, student_name, recording_url, created_at, aliyah_label')
+      .eq('teacher_id', profile.id)
+      .eq('type', 'audio')
+      .eq('parasha_id', parasha.id)
+      .eq('aliyah_idx', aliyahIdx)
+      .order('created_at', { ascending: false })
+      .limit(5)
+      .then(({ data }) => setStudentAudios(data || []))
+  }, [profile?.id, profile?.role, parasha.id, aliyahIdx])
+
   // Fetch pending homework with audio requirement for this aliyah
   useEffect(() => {
     if (profile?.role !== 'student' || !profile?.id) return
@@ -166,6 +185,8 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
   useEffect(() => {
     setAudioCurrentTime(null)
     setAudioPlaying(false)
+    setPlayingStudentUrl(null)
+    setStudentAudiosOpen(false)
     studyPauseRef.current = -1
     return () => {
       clearInterval(timerRef.current)
@@ -625,6 +646,60 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
         </div>
       )}
 
+
+      {/* Student audios panel — teacher only */}
+      {profile?.role === 'teacher' && studentAudios.length > 0 && (
+        <div className="flex-shrink-0" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+          <button
+            onClick={() => setStudentAudiosOpen(o => !o)}
+            className="w-full flex items-center gap-2 px-5 py-2 text-xs font-medium transition-all"
+            style={{ background: 'rgba(108,51,230,0.06)', color: '#8b5cf6' }}>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <rect x="3.5" y="0.5" width="3" height="5" rx="1.5" stroke="currentColor" strokeWidth="1.1"/>
+              <path d="M1.5 5c0 2 1.5 3.5 3.5 3.5S8.5 7 8.5 5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+              <path d="M8 7l3 3M11 7l-3 3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+            </svg>
+            Audios de alumnos · {studentAudios.length}
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="ml-auto"
+              style={{ transform: studentAudiosOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+              <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          {studentAudiosOpen && (
+            <div className="flex flex-col gap-1 px-4 pb-3 pt-1"
+              style={{ background: 'rgba(108,51,230,0.04)' }}>
+              {studentAudios.map((sa, i) => (
+                <div key={sa.id}
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl"
+                  style={{
+                    background: playingStudentUrl === sa.recording_url ? 'rgba(108,51,230,0.1)' : 'var(--bg-card)',
+                    border: `1px solid ${playingStudentUrl === sa.recording_url ? 'rgba(108,51,230,0.25)' : 'var(--border-subtle)'}`,
+                  }}>
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-semibold"
+                    style={{ background: 'rgba(108,51,230,0.15)', color: '#8b5cf6' }}>
+                    {i + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate" style={{ color: 'var(--text-2)' }}>{sa.student_name}</p>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      {new Date(sa.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  <audio
+                    controls
+                    src={sa.recording_url}
+                    preload="none"
+                    onPlay={() => setPlayingStudentUrl(sa.recording_url)}
+                    onPause={() => setPlayingStudentUrl(null)}
+                    onEnded={() => setPlayingStudentUrl(null)}
+                    style={{ height: '28px', width: '160px', borderRadius: '6px', flexShrink: 0 }}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Text area */}
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">

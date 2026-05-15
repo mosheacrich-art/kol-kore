@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
@@ -17,6 +18,7 @@ function timeAgo(dateStr) {
 export default function TeacherNotifications() {
   const { profile } = useAuth()
   const { t } = useLang()
+  const navigate = useNavigate()
   const [notifs, setNotifs] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -147,7 +149,7 @@ export default function TeacherNotifications() {
                 )}
               </div>
               {n.type === 'audio' && n.recording_url && (
-                <div className="mt-2">
+                <div className="mt-2 flex flex-col gap-2">
                   <audio
                     controls
                     src={n.recording_url}
@@ -155,6 +157,20 @@ export default function TeacherNotifications() {
                     style={{ width: '100%', height: '32px', borderRadius: '6px' }}
                     onClick={e => e.stopPropagation()}
                   />
+                  {n.parasha_id && (
+                    <button
+                      onClick={e => {
+                        e.stopPropagation()
+                        navigate(`/teacher/study/${n.parasha_id}?aliyah=${n.aliyah_idx ?? 0}`)
+                      }}
+                      className="self-start flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                      style={{ background: 'rgba(108,51,230,0.12)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.25)' }}>
+                      <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                        <path d="M1.5 5.5h8M6 2l3.5 3.5L6 9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      Leer perashá
+                    </button>
+                  )}
                 </div>
               )}
             </div>
