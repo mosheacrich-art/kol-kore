@@ -61,8 +61,7 @@ export const translations = {
     mode_sefer: 'Sefer',
     // Study mode
     study_full: 'Aliyá completa',
-    study_word: 'Palabra a palabra',
-    study_phrase: 'Frase a frase',
+    study_phrase: 'Pasuk a pasuk',
     // Reader misc
     no_audio: 'Sin audio del profesor · graba y envíaselo',
     no_audio_teacher: 'Sin audio para esta aliyá · graba o sube uno abajo',
@@ -433,8 +432,7 @@ export const translations = {
     mode_sefer: 'Sefer',
     // Study mode
     study_full: 'Full aliyah',
-    study_word: 'Word by word',
-    study_phrase: 'Phrase by phrase',
+    study_phrase: 'Pasuk by pasuk',
     // Reader misc
     no_audio: 'No teacher audio · record and send it',
     no_audio_teacher: 'No audio for this aliyah · record or upload one below',
@@ -805,8 +803,7 @@ export const translations = {
     mode_sefer: 'Séfer',
     // Study mode
     study_full: 'Aliyah complète',
-    study_word: 'Mot par mot',
-    study_phrase: 'Phrase par phrase',
+    study_phrase: 'Pasuk par pasuk',
     // Reader misc
     no_audio: 'Pas d\'audio du professeur · enregistrez et envoyez-le',
     no_audio_teacher: 'Pas d\'audio pour cette aliyah · enregistrez ou téléchargez ci-dessous',
@@ -1177,8 +1174,7 @@ export const translations = {
     mode_sefer: 'Sefer',
     // Study mode
     study_full: 'Aliyah completa',
-    study_word: 'Parola per parola',
-    study_phrase: 'Frase per frase',
+    study_phrase: 'Pasuk per pasuk',
     // Reader misc
     no_audio: 'Nessun audio del professore · registra e inviagli',
     no_audio_teacher: 'Nessun audio per questa aliyah · registra o carica uno sotto',
@@ -1549,7 +1545,6 @@ export const translations = {
     mode_sefer: 'ספר',
     // Study mode
     study_full: 'עלייה שלמה',
-    study_word: 'מילה אחר מילה',
     study_phrase: 'פסוק אחר פסוק',
     // Reader misc
     no_audio: 'אין אודיו ממורה · הקלט ושלח',
