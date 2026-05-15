@@ -17,10 +17,11 @@ const Privacy             = lazy(() => import('./pages/legal/Privacy'))
 const Terms               = lazy(() => import('./pages/legal/Terms'))
 const ImprimirTikun       = lazy(() => import('./pages/ImprimirTikun'))
 
-const StudentLayout       = lazy(() => import('./pages/student/Layout'))
-const StudentProfile      = lazy(() => import('./pages/student/Profile'))
-const StudentStudy        = lazy(() => import('./pages/student/Study'))
-const StudentSubscription = lazy(() => import('./pages/student/Subscription'))
+const StudentLayout        = lazy(() => import('./pages/student/Layout'))
+const StudentProfile       = lazy(() => import('./pages/student/Profile'))
+const StudentStudy         = lazy(() => import('./pages/student/Study'))
+const StudentSubscription  = lazy(() => import('./pages/student/Subscription'))
+const StudentNotifications = lazy(() => import('./pages/student/Notifications'))
 
 const GuestLayout         = lazy(() => import('./pages/guest/Layout'))
 
@@ -91,6 +92,7 @@ function AppRoutes() {
             <Route path="study" element={<StudentStudy />} />
             <Route path="study/:parashaId" element={<StudentStudy />} />
             <Route path="subscription" element={<StudentSubscription />} />
+            <Route path="notifications" element={<StudentNotifications />} />
             <Route path="imprimir" element={<ImprimirTikun />} />
             <Route path="account" element={<AccountSettings />} />
           </Route>

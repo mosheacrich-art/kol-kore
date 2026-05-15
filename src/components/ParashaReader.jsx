@@ -79,6 +79,12 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
   const [studentAudios, setStudentAudios] = useState([])
   const [studentAudiosOpen, setStudentAudiosOpen] = useState(false)
   const [playingStudentUrl, setPlayingStudentUrl] = useState(null)
+  const [evalMode, setEvalMode] = useState(false)
+  const [evalTarget, setEvalTarget] = useState(null)
+  const [evalErrors, setEvalErrors] = useState([])
+  const [evalComment, setEvalComment] = useState('')
+  const [evalSending, setEvalSending] = useState(false)
+  const evalAudioRef = useRef(null)
   const { get, upload, uploadStudentRecording, remove } = useAudio()
   const { profile } = useAuth()
   const notifiedRef = useRef(new Set())    // aliyot ya notificadas en esta sesión
@@ -143,7 +149,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
     setStudentAudios([])
     supabase
       .from('notifications')
-      .select('id, student_name, recording_url, created_at, aliyah_label')
+      .select('id, student_name, student_id, recording_url, created_at, aliyah_label')
       .eq('teacher_id', profile.id)
       .eq('type', 'audio')
       .eq('parasha_id', parasha.id)
@@ -187,6 +193,10 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
     setAudioPlaying(false)
     setPlayingStudentUrl(null)
     setStudentAudiosOpen(false)
+    setEvalMode(false)
+    setEvalTarget(null)
+    setEvalErrors([])
+    setEvalComment('')
     studyPauseRef.current = -1
     return () => {
       clearInterval(timerRef.current)
@@ -311,6 +321,39 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
       await autoSubmitHomework()
     }
     e.target.value = ''
+  }
+
+  const handleWordMark = (wordIdx, wordText) => {
+    const time = evalAudioRef.current?.currentTime ?? 0
+    setEvalErrors(prev => {
+      const exists = prev.findIndex(e => e.wordIdx === wordIdx)
+      if (exists >= 0) return prev.filter((_, i) => i !== exists)
+      return [...prev, { wordIdx, word: wordText, time, label: fmtSec(Math.round(time)) }]
+    })
+  }
+
+  const handleSendEval = async () => {
+    if (!evalTarget || !profile) return
+    setEvalSending(true)
+    const aliyahLabel = currentAliyah.n === 8 ? 'Maftir' : `${currentAliyah.n}ª aliyá`
+    const sortedErrors = [...evalErrors].sort((a, b) => a.time - b.time)
+    await supabase.from('notifications').insert({
+      teacher_id: profile.id,
+      student_id: evalTarget.student_id,
+      student_name: evalTarget.student_name,
+      parasha_id: parasha.id,
+      aliyah_idx: aliyahIdx,
+      aliyah_label: aliyahLabel,
+      type: 'evaluation',
+      recording_url: evalTarget.recording_url,
+      message: JSON.stringify({ errors: sortedErrors, comment: evalComment, teacherName: profile.name }),
+      read: false,
+    })
+    setEvalMode(false)
+    setEvalTarget(null)
+    setEvalErrors([])
+    setEvalComment('')
+    setEvalSending(false)
   }
 
   const { verses, loading, error } = useAliyahText(currentAliyah.ref, true)
@@ -653,13 +696,13 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
           <button
             onClick={() => setStudentAudiosOpen(o => !o)}
             className="w-full flex items-center gap-2 px-5 py-2 text-xs font-medium transition-all"
-            style={{ background: 'rgba(108,51,230,0.06)', color: '#8b5cf6' }}>
+            style={{ background: evalMode ? 'rgba(239,68,68,0.06)' : 'rgba(108,51,230,0.06)', color: evalMode ? '#ef4444' : '#8b5cf6' }}>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <rect x="3.5" y="0.5" width="3" height="5" rx="1.5" stroke="currentColor" strokeWidth="1.1"/>
               <path d="M1.5 5c0 2 1.5 3.5 3.5 3.5S8.5 7 8.5 5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
               <path d="M8 7l3 3M11 7l-3 3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
             </svg>
-            Audios de alumnos · {studentAudios.length}
+            {evalMode ? `Evaluando a ${evalTarget?.student_name} — haz clic en las palabras del texto` : `Audios de alumnos · ${studentAudios.length}`}
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="ml-auto"
               style={{ transform: studentAudiosOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
               <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -668,34 +711,103 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
           {studentAudiosOpen && (
             <div className="flex flex-col gap-1 px-4 pb-3 pt-1"
               style={{ background: 'rgba(108,51,230,0.04)' }}>
-              {studentAudios.map((sa, i) => (
-                <div key={sa.id}
-                  className="flex items-center gap-3 px-3 py-2 rounded-xl"
-                  style={{
-                    background: playingStudentUrl === sa.recording_url ? 'rgba(108,51,230,0.1)' : 'var(--bg-card)',
-                    border: `1px solid ${playingStudentUrl === sa.recording_url ? 'rgba(108,51,230,0.25)' : 'var(--border-subtle)'}`,
-                  }}>
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-semibold"
-                    style={{ background: 'rgba(108,51,230,0.15)', color: '#8b5cf6' }}>
-                    {i + 1}
+              {studentAudios.map((sa, i) => {
+                const isEvalTarget = evalMode && evalTarget?.id === sa.id
+                return (
+                  <div key={sa.id}
+                    className="flex items-center gap-3 px-3 py-2 rounded-xl"
+                    style={{
+                      background: isEvalTarget ? 'rgba(239,68,68,0.08)' : playingStudentUrl === sa.recording_url ? 'rgba(108,51,230,0.1)' : 'var(--bg-card)',
+                      border: `1px solid ${isEvalTarget ? 'rgba(239,68,68,0.25)' : playingStudentUrl === sa.recording_url ? 'rgba(108,51,230,0.25)' : 'var(--border-subtle)'}`,
+                    }}>
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-semibold"
+                      style={{ background: isEvalTarget ? 'rgba(239,68,68,0.15)' : 'rgba(108,51,230,0.15)', color: isEvalTarget ? '#ef4444' : '#8b5cf6' }}>
+                      {i + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate" style={{ color: 'var(--text-2)' }}>{sa.student_name}</p>
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {new Date(sa.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    <audio
+                      ref={isEvalTarget ? evalAudioRef : null}
+                      controls
+                      src={sa.recording_url}
+                      preload="none"
+                      onPlay={() => setPlayingStudentUrl(sa.recording_url)}
+                      onPause={() => setPlayingStudentUrl(null)}
+                      onEnded={() => setPlayingStudentUrl(null)}
+                      style={{ height: '28px', width: '140px', borderRadius: '6px', flexShrink: 0 }}
+                    />
+                    {!evalMode ? (
+                      <button
+                        onClick={() => { setEvalMode(true); setEvalTarget(sa); setEvalErrors([]); setEvalComment('') }}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium flex-shrink-0 transition-all"
+                        style={{ background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                          <path d="M1 7.5V9h1.5l4.5-4.5-1.5-1.5L1 7.5z" stroke="currentColor" strokeWidth="1" strokeLinejoin="round"/>
+                          <path d="M6.5 2l1.5 1.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+                        </svg>
+                        Evaluar
+                      </button>
+                    ) : isEvalTarget ? (
+                      <button
+                        onClick={() => { setEvalMode(false); setEvalTarget(null); setEvalErrors([]); setEvalComment('') }}
+                        className="px-2 py-1 rounded-lg text-xs font-medium flex-shrink-0"
+                        style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+                        Cancelar
+                      </button>
+                    ) : null}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium truncate" style={{ color: 'var(--text-2)' }}>{sa.student_name}</p>
-                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {new Date(sa.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                )
+              })}
+
+              {/* Eval panel */}
+              {evalMode && (
+                <div className="mt-2 rounded-xl p-3 flex flex-col gap-2.5"
+                  style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.18)' }}>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold" style={{ color: '#ef4444' }}>
+                      {evalErrors.length > 0 ? `${evalErrors.length} error${evalErrors.length > 1 ? 'es' : ''} marcado${evalErrors.length > 1 ? 's' : ''}` : 'Haz clic en las palabras del texto para marcar errores'}
                     </p>
                   </div>
-                  <audio
-                    controls
-                    src={sa.recording_url}
-                    preload="none"
-                    onPlay={() => setPlayingStudentUrl(sa.recording_url)}
-                    onPause={() => setPlayingStudentUrl(null)}
-                    onEnded={() => setPlayingStudentUrl(null)}
-                    style={{ height: '28px', width: '160px', borderRadius: '6px', flexShrink: 0 }}
+                  {evalErrors.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {[...evalErrors].sort((a, b) => a.time - b.time).map((err, i) => (
+                        <button key={i}
+                          onClick={() => setEvalErrors(prev => prev.filter(e => e.wordIdx !== err.wordIdx))}
+                          className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg"
+                          style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)' }}
+                          title="Click para quitar">
+                          <span className="text-xs font-mono tabular-nums" style={{ color: 'var(--text-muted)' }}>{err.label}</span>
+                          <span className="hebrew text-sm" style={{ color: '#ef4444' }}>{err.word}</span>
+                          <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>×</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <textarea
+                    value={evalComment}
+                    onChange={e => setEvalComment(e.target.value)}
+                    placeholder="Añade un comentario para el alumno (opcional)..."
+                    rows={2}
+                    className="w-full px-3 py-2 rounded-xl text-xs resize-none outline-none"
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }}
                   />
+                  <button
+                    onClick={handleSendEval}
+                    disabled={evalSending || evalErrors.length === 0}
+                    className="w-full py-2 rounded-xl text-xs font-semibold transition-all"
+                    style={{
+                      background: evalErrors.length === 0 || evalSending ? 'var(--bg-card)' : 'rgba(239,68,68,0.12)',
+                      color: evalErrors.length === 0 || evalSending ? 'var(--text-muted)' : '#ef4444',
+                      border: `1px solid ${evalErrors.length === 0 || evalSending ? 'var(--border)' : 'rgba(239,68,68,0.3)'}`,
+                    }}>
+                    {evalSending ? 'Enviando…' : evalErrors.length === 0 ? 'Marca al menos un error para enviar' : `Enviar evaluación a ${evalTarget?.student_name}`}
+                  </button>
                 </div>
-              ))}
+              )}
             </div>
           )}
         </div>
@@ -714,22 +826,26 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
                 verses={verses}
                 bookColor={bookColor}
                 fontSize={fontSize}
-                wordTimestamps={cursorEnabled ? (audio?.wordTimestamps ?? null) : null}
-                audioCurrentTime={cursorEnabled ? audioCurrentTime : null}
+                wordTimestamps={cursorEnabled && !evalMode ? (audio?.wordTimestamps ?? null) : null}
+                audioCurrentTime={cursorEnabled && !evalMode ? audioCurrentTime : null}
                 audioPlaying={audioPlaying}
                 audioDuration={audioDuration}
-                onWordClick={cursorEnabled && audio ? handleSeek : null}
+                onWordClick={cursorEnabled && audio && !evalMode ? handleSeek : null}
+                onWordMark={evalMode ? handleWordMark : null}
+                markedWordIndices={evalMode ? new Set(evalErrors.map(e => e.wordIdx)) : null}
               />
             : <SingleView
                 verses={verses}
                 mode={mode}
                 bookColor={bookColor}
                 fontSize={fontSize}
-                wordTimestamps={cursorEnabled ? (audio?.wordTimestamps ?? null) : null}
-                audioCurrentTime={cursorEnabled ? audioCurrentTime : null}
+                wordTimestamps={cursorEnabled && !evalMode ? (audio?.wordTimestamps ?? null) : null}
+                audioCurrentTime={cursorEnabled && !evalMode ? audioCurrentTime : null}
                 audioPlaying={audioPlaying}
                 audioDuration={audioDuration}
-                onWordClick={cursorEnabled && audio ? handleSeek : null}
+                onWordClick={cursorEnabled && audio && !evalMode ? handleSeek : null}
+                onWordMark={evalMode ? handleWordMark : null}
+                markedWordIndices={evalMode ? new Set(evalErrors.map(e => e.wordIdx)) : null}
               />
         )}
         {mode !== 'sefer' && !loading && !error && verses.length === 0 && (
@@ -943,7 +1059,7 @@ function wordIdxToTime(wordIdx, wordTimestamps, s2w, duration) {
   return wordTimestamps[wi].start
 }
 
-function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCurrentTime, audioPlaying, audioDuration, onWordClick }) {
+function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCurrentTime, audioPlaying, audioDuration, onWordClick, onWordMark, markedWordIndices }) {
   const wordRefs = useRef([])
   const [hoverIdx, setHoverIdx] = useState(-1)
 
@@ -992,12 +1108,13 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
   }, [activeWordIdx, audioPlaying])
 
   const handleClick = (i) => {
+    if (onWordMark) { onWordMark(i, allWords[i].text); return }
     if (!onWordClick) return
     const t = wordIdxToTime(i, wordTimestamps, alignMap?.s2w, audioDuration)
     if (t != null) onWordClick(t)
   }
 
-  const canSeek = !!onWordClick
+  const canInteract = !!onWordClick || !!onWordMark
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto px-4 py-6">
@@ -1011,7 +1128,12 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
         }}>
           {allWords.map((w, i) => {
             const isActive = activeWordIdx === i
-            const isHover = hoverIdx === i && !isActive
+            const isMarked = markedWordIndices?.has(i)
+            const isHover = hoverIdx === i && !isActive && !isMarked
+            let color = 'inherit'
+            if (isMarked) color = '#ef4444'
+            else if (isActive) color = '#3b82f6'
+            else if (isHover) color = onWordMark ? '#ef4444' : '#3b82f6'
             return (
               <span
                 key={i}
@@ -1020,9 +1142,10 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
                 onMouseEnter={() => setHoverIdx(i)}
                 onMouseLeave={() => setHoverIdx(-1)}
                 style={{
-                  color: isActive ? '#3b82f6' : isHover ? '#3b82f6' : 'inherit',
-                  cursor: canSeek ? 'pointer' : 'default',
+                  color,
+                  cursor: canInteract ? 'pointer' : 'default',
                   transition: 'color 0.08s',
+                  textDecoration: isMarked ? 'underline wavy #ef4444' : 'none',
                 }}
               >
                 {colorWord(w.text, mode)}{' '}
@@ -1035,7 +1158,7 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
   )
 }
 
-function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTime, audioPlaying, audioDuration, onWordClick }) {
+function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTime, audioPlaying, audioDuration, onWordClick, onWordMark, markedWordIndices }) {
   const flexRef = useRef(null)
   const [leftPct, setLeftPct] = useState(50)
   const [hoverIdx, setHoverIdx] = useState(-1)
@@ -1128,9 +1251,10 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
     document.body.style.userSelect = 'none'
   }
 
-  const canSeek = !!onWordClick
+  const canInteract = !!onWordClick || !!onWordMark
 
   const handleClickLeft = (i) => {
+    if (onWordMark) { onWordMark(i, allWordsTaamim[i]); return }
     if (!onWordClick) return
     const t = wordIdxToTime(i, wordTimestamps, alignMap?.s2w, audioDuration)
     if (t != null) onWordClick(t)
@@ -1138,11 +1262,17 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
 
   const wordStyle = (i, forLeft = false) => {
     const isActive = activeWordIdx === i
-    const isHover = forLeft && hoverIdx === i && !isActive
+    const isMarked = forLeft && markedWordIndices?.has(i)
+    const isHover = forLeft && hoverIdx === i && !isActive && !isMarked
+    let color = 'inherit'
+    if (isMarked) color = '#ef4444'
+    else if (isActive) color = '#3b82f6'
+    else if (isHover) color = onWordMark ? '#ef4444' : '#3b82f6'
     return {
-      color: isActive ? '#3b82f6' : isHover ? '#3b82f6' : 'inherit',
-      cursor: forLeft && canSeek ? 'pointer' : 'default',
+      color,
+      cursor: forLeft && canInteract ? 'pointer' : 'default',
       transition: 'color 0.08s',
+      textDecoration: isMarked ? 'underline wavy #ef4444' : 'none',
     }
   }
 

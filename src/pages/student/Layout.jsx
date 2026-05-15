@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
@@ -11,11 +11,12 @@ const MONTHLY_ID = 'pdt_0Ne7sWfihRRycFHWb1SB2'
 const ANNUAL_ID  = 'pdt_0Ne7sn0u5XBSPuebqTIsh'
 
 const NAV_KEYS = [
-  { path: '/student/profile',      key: 'nav_profile',      shortKey: 'nav_profile',      heb: 'פְּרוֹפִיל', icon: ProfileIcon },
-  { path: '/student/study',        key: 'nav_study',        shortKey: 'nav_study',         heb: 'לִמּוּד',    icon: StudyIcon },
-  { path: '/student/imprimir',     key: 'nav_print',        shortKey: 'nav_print',         heb: 'תִּקּוּן',   icon: PrintIcon },
-  { path: '/student/subscription', key: 'nav_subscription', shortKey: 'nav_subscription',  heb: 'הַרְשָׁמָה', icon: SubscriptionIcon },
-  { path: '/student/account',      key: 'nav_account',      shortKey: 'nav_account',       heb: 'חֶשְׁבּוֹן',  icon: AccountIcon },
+  { path: '/student/profile',        key: 'nav_profile',        shortKey: 'nav_profile',       heb: 'פְּרוֹפִיל',  icon: ProfileIcon },
+  { path: '/student/study',          key: 'nav_study',          shortKey: 'nav_study',          heb: 'לִמּוּד',     icon: StudyIcon },
+  { path: '/student/notifications',  key: 'nav_notifications',  shortKey: 'nav_notifications',  heb: 'הֲעָרוֹת',   icon: NotifIcon, badge: true },
+  { path: '/student/imprimir',       key: 'nav_print',          shortKey: 'nav_print',          heb: 'תִּקּוּן',    icon: PrintIcon },
+  { path: '/student/subscription',   key: 'nav_subscription',   shortKey: 'nav_subscription',   heb: 'הַרְשָׁמָה',  icon: SubscriptionIcon },
+  { path: '/student/account',        key: 'nav_account',        shortKey: 'nav_account',        heb: 'חֶשְׁבּוֹן',   icon: AccountIcon },
 ]
 
 export default function StudentLayout() {
@@ -27,9 +28,21 @@ export default function StudentLayout() {
   const { t, lang } = useLang()
   const isRTL = lang === 'he'
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [unreadEvals, setUnreadEvals] = useState(0)
   useStudyTimer(profile?.id)
 
-  const navItems = NAV_KEYS.map(n => ({ ...n, label: t(n.key), shortLabel: t(n.shortKey) }))
+  useEffect(() => {
+    if (!profile?.id) return
+    supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('student_id', profile.id)
+      .eq('type', 'evaluation')
+      .eq('read', false)
+      .then(({ count }) => setUnreadEvals(count ?? 0))
+  }, [profile?.id, location.pathname])
+
+  const navItems = NAV_KEYS.map(n => ({ ...n, label: t(n.key) ?? n.heb, shortLabel: t(n.shortKey) ?? n.heb }))
 
   const go = (path) => { navigate(path); setSidebarOpen(false) }
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
@@ -51,7 +64,7 @@ export default function StudentLayout() {
       <aside className="hidden md:flex flex-shrink-0 flex-col py-8 px-4 w-64 sticky top-0 h-screen"
         style={{ background: 'var(--bg-deep)', borderInlineEnd: '1px solid var(--border-subtle)' }}>
         <SidebarContent profile={profile} location={location} isDark={isDark}
-          toggle={toggle} go={go} signOut={signOut} navigate={navigate} showClose={false} navItems={navItems} />
+          toggle={toggle} go={go} signOut={signOut} navigate={navigate} showClose={false} navItems={navItems} unreadEvals={unreadEvals} />
       </aside>
 
       {/* ── Mobile sidebar drawer ─────────────────────────────────────────── */}
@@ -62,7 +75,7 @@ export default function StudentLayout() {
         style={{ background: 'var(--bg-deep)', borderInlineEnd: '1px solid var(--border-subtle)' }}>
         <SidebarContent profile={profile} location={location} isDark={isDark}
           toggle={toggle} go={go} signOut={signOut} navigate={navigate} showClose
-          onClose={() => setSidebarOpen(false)} navItems={navItems} />
+          onClose={() => setSidebarOpen(false)} navItems={navItems} unreadEvals={unreadEvals} />
       </aside>
 
       {/* ── Main ─────────────────────────────────────────────────────────── */}
@@ -107,11 +120,16 @@ export default function StudentLayout() {
           const Icon = item.icon
           const active = isActive(item.path)
           const lockedMobile = !isSubscribed && item.path === '/student/imprimir'
+          const showBadge = item.badge && unreadEvals > 0
           return (
             <button key={item.path} onClick={() => lockedMobile ? go('/student/subscription') : go(item.path)}
-              className="flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[56px] py-2 transition-colors"
+              className="flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[56px] py-2 transition-colors relative"
               style={{ color: active ? '#8b5cf6' : lockedMobile ? 'var(--text-muted)' : 'var(--text-3)' }}>
               <Icon active={active} />
+              {showBadge && (
+                <span className="absolute top-2 right-[calc(50%-14px)] w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
+                  style={{ background: '#ef4444', color: '#fff' }}>{unreadEvals > 9 ? '9+' : unreadEvals}</span>
+              )}
               <span className="text-[10px] font-medium leading-none">{item.shortLabel}</span>
             </button>
           )
@@ -121,7 +139,7 @@ export default function StudentLayout() {
   )
 }
 
-function SidebarContent({ profile, location, isDark, toggle, go, signOut, navigate, showClose, onClose, navItems }) {
+function SidebarContent({ profile, location, isDark, toggle, go, signOut, navigate, showClose, onClose, navItems, unreadEvals = 0 }) {
   const { t } = useLang()
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
   const isSubscribed = profile?.subscription_status === 'active'
@@ -167,6 +185,7 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
           const Icon = item.icon
           const active = isActive(item.path)
           const lockedItem = !isSubscribed && item.path === '/student/imprimir'
+          const showBadge = item.badge && unreadEvals > 0
           return (
             <button key={item.path} onClick={() => lockedItem ? go('/student/subscription') : go(item.path)}
               className="sidebar-item flex items-center gap-3 px-3 py-3 rounded-xl text-left"
@@ -183,6 +202,10 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
                   {item.heb}
                 </div>
               </div>
+              {showBadge && (
+                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                  style={{ background: '#ef4444', color: '#fff' }}>{unreadEvals > 9 ? '9+' : unreadEvals}</span>
+              )}
               {lockedItem && (
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0, opacity: 0.5 }}>
                   <rect x="2" y="5.5" width="8" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.2"/>
@@ -454,6 +477,16 @@ function SubscriptionIcon({ active }) {
       <rect x="2" y="4" width="14" height="10" rx="2" stroke={c} strokeWidth="1.3"/>
       <path d="M2 8h14" stroke={c} strokeWidth="1.3"/>
       <path d="M5 12h3M12 12h1" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+function NotifIcon({ active }) {
+  const c = active ? '#8b5cf6' : 'var(--text-3)'
+  return (
+    <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
+      <path d="M9 2C6 2 4 4.5 4 7v4l-1.5 2H15.5L14 11V7c0-2.5-2-5-5-5z" stroke={c} strokeWidth="1.3" strokeLinejoin="round"/>
+      <path d="M7.5 15a1.5 1.5 0 003 0" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
     </svg>
   )
 }
