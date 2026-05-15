@@ -11,7 +11,6 @@ const NAV_KEYS = [
   { path: '/teacher/students',       key: 'nav_students',       shortKey: 'nav_students',  heb: 'תַּלְמִידִים' },
   { path: '/teacher/homework',       key: 'nav_homework',       shortKey: 'nav_homework',  heb: 'שִׁעוּרֵי בַּיִת' },
   { path: '/teacher/schedule',       key: 'nav_schedule',       shortKey: 'nav_schedule',  heb: 'שִׁעוּרִים' },
-  { path: '/teacher/audio',          key: 'nav_audio',          shortKey: 'nav_audio',     heb: 'הֶקְלָטוֹת' },
   { path: '/teacher/study',          key: 'nav_parashot',       shortKey: 'nav_parashot',  heb: 'פָּרָשִׁיּוֹת' },
   { path: '/teacher/haftara',        key: 'nav_haftara',        shortKey: 'nav_haftara',   heb: 'הַפְטָרָה' },
   { path: '/teacher/notifications',  key: 'nav_notifications',  shortKey: 'nav_notifications', heb: 'הוֹדָעוֹת', badge: true },
@@ -177,22 +176,15 @@ function SidebarContent({ profile, location, go, unreadCount, showClose, onClose
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
   return (
     <>
-      <div className="px-3 mb-10 flex items-center justify-between">
-        <button onClick={() => go('/teacher/dashboard')} className="flex items-center gap-3">
-          <StarSvg />
-          <div>
-            <div className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</div>
-            <div className="text-xs hebrew" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</div>
-          </div>
-        </button>
-        {showClose && (
+      {showClose && (
+        <div className="px-3 mb-6 flex items-center justify-end">
           <button onClick={onClose} className="p-1.5 rounded-lg" style={{ color: 'var(--text-3)' }}>
             <XIcon />
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
-      <div className="mx-3 mb-8 p-3 rounded-xl"
+      <div className="mx-3 mb-8 mt-2 p-3 rounded-xl"
         style={{ background: 'rgba(249,184,0,0.1)', border: '1px solid rgba(249,184,0,0.18)' }}>
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
