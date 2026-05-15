@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import { useTheme } from '../../context/ThemeContext'
 import { PARASHOT } from '../../data/parashot'
 import { useLang } from '../../context/LangContext'
 
@@ -312,6 +313,146 @@ function AssignParashaModal({ student, onAssign, onClose, t }) {
   )
 }
 
+function SendHomeworkModal({ student, teacherId, onClose, t }) {
+  const { isDark } = useTheme()
+  const [form, setForm] = useState({ task: '', subject: '', due: '', parasha_id: '', aliyah_idx: 0, require_audio: false })
+  const [saving, setSaving] = useState(false)
+  const inputStyle = { background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }
+  const selectedParasha = PARASHOT.find(p => p.id === form.parasha_id)
+
+  const send = async () => {
+    if (!form.task) return
+    setSaving(true)
+    await supabase.from('homework').insert({
+      teacher_id: teacherId,
+      student_id: student.id,
+      task: form.task,
+      subject: form.subject || null,
+      due: form.due || null,
+      parasha_id: form.parasha_id || null,
+      aliyah_idx: form.parasha_id ? form.aliyah_idx : null,
+      require_audio: form.parasha_id ? form.require_audio : false,
+      status: 'pending',
+    })
+    setSaving(false)
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)' }}>
+      <div className="w-full max-w-md rounded-2xl p-6 max-h-[90vh] overflow-y-auto"
+        style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)' }}>
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <p className="text-xs mb-0.5" style={{ color: 'var(--text-gold)' }}>שִׁעוּרֵי בַּיִת · Deber</p>
+            <h2 className="text-base font-semibold" style={{ color: 'var(--text)' }}>
+              Enviar deber a {student.name?.split(' ')[0]}
+            </h2>
+          </div>
+          <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center"
+            style={{ background: 'var(--bg-card)', color: 'var(--text-3)' }}>✕</button>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <div>
+            <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('task_label')}</label>
+            <input value={form.task} onChange={e => setForm(f => ({ ...f, task: e.target.value }))}
+              placeholder={t('task_placeholder')} autoFocus
+              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
+          </div>
+
+          <div>
+            <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('parasha_optional')}</label>
+            <select value={form.parasha_id}
+              onChange={e => setForm(f => ({ ...f, parasha_id: e.target.value, aliyah_idx: 0 }))}
+              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
+              <option value="">{t('no_parasha_opt')}</option>
+              {PARASHOT.map(p => <option key={p.id} value={p.id}>{p.name} · {p.heb}</option>)}
+            </select>
+          </div>
+
+          {form.parasha_id && (
+            <div>
+              <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('aliyah_label')}</label>
+              <select value={form.aliyah_idx}
+                onChange={e => setForm(f => ({ ...f, aliyah_idx: Number(e.target.value) }))}
+                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
+                {(selectedParasha?.aliyot || []).map((a, i) => (
+                  <option key={i} value={i}>{a.n === 8 ? 'Maftir' : `${a.n}ª Aliyá`} — {a.ref}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {form.parasha_id && (
+            <button type="button" onClick={() => setForm(f => ({ ...f, require_audio: !f.require_audio }))}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-left transition-all"
+              style={{
+                background: form.require_audio ? 'rgba(108,51,230,0.1)' : 'var(--bg-card)',
+                border: `1px solid ${form.require_audio ? 'rgba(108,51,230,0.3)' : 'var(--border)'}`,
+              }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: form.require_audio ? 'rgba(108,51,230,0.2)' : 'var(--border-subtle)' }}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <rect x="5" y="1" width="4" height="7" rx="2"
+                    stroke={form.require_audio ? '#6c33e6' : 'var(--text-3)'} strokeWidth="1.2"/>
+                  <path d="M2 7c0 2.8 2.2 5 5 5s5-2.2 5-5"
+                    stroke={form.require_audio ? '#6c33e6' : 'var(--text-3)'} strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <div className="flex-1">
+                <div className="text-xs font-medium" style={{ color: form.require_audio ? '#6c33e6' : 'var(--text)' }}>
+                  {t('require_audio_label')}
+                </div>
+                <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  {form.require_audio ? t('must_record') : t('no_audio_req')}
+                </div>
+              </div>
+              <div className="w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0"
+                style={{ borderColor: form.require_audio ? '#6c33e6' : 'var(--border)', background: form.require_audio ? '#6c33e6' : 'transparent' }}>
+                {form.require_audio && (
+                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                    <path d="M1.5 4l2 2L6.5 2" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </div>
+            </button>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('subject_label')}</label>
+              <input value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
+                placeholder="Ej: Trop"
+                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
+            </div>
+            <div>
+              <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('due_label')}</label>
+              <input type="date" value={form.due} onChange={e => setForm(f => ({ ...f, due: e.target.value }))}
+                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                style={{ ...inputStyle, colorScheme: isDark ? 'dark' : 'light' }} />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-2 mt-5">
+          <button onClick={onClose}
+            className="flex-1 py-2.5 rounded-xl text-xs font-medium"
+            style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+            {t('cancel')}
+          </button>
+          <button onClick={send} disabled={saving || !form.task}
+            className="flex-1 btn-gold py-2.5 rounded-xl text-xs font-semibold"
+            style={{ opacity: saving || !form.task ? 0.6 : 1 }}>
+            {saving ? t('sending') : t('send_hw')}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function TeacherStudents() {
   const { profile } = useAuth()
   const { t } = useLang()
@@ -319,6 +460,7 @@ export default function TeacherStudents() {
   const [selected, setSelected] = useState(null)
   const [calcOpen, setCalcOpen] = useState(false)
   const [assignOpen, setAssignOpen] = useState(false)
+  const [hwOpen, setHwOpen] = useState(false)
 
   useEffect(() => {
     if (!profile) return
@@ -588,7 +730,8 @@ export default function TeacherStudents() {
 
                   {/* Quick actions */}
                   <div className="grid grid-cols-2 gap-2">
-                    <button className="py-2.5 rounded-xl text-xs font-medium"
+                    <button onClick={() => setHwOpen(true)}
+                      className="py-2.5 rounded-xl text-xs font-medium"
                       style={{ background: `${color}15`, color, border: `1px solid ${color}25` }}>
                       {t('send_hw')}
                     </button>
@@ -617,6 +760,14 @@ export default function TeacherStudents() {
           student={student}
           onAssign={handleAssign}
           onClose={() => setAssignOpen(false)}
+          t={t}
+        />
+      )}
+      {hwOpen && student && (
+        <SendHomeworkModal
+          student={student}
+          teacherId={profile.id}
+          onClose={() => setHwOpen(false)}
           t={t}
         />
       )}

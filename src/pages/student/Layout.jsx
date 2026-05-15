@@ -11,11 +11,9 @@ const MONTHLY_ID = 'pdt_0Ne7sWfihRRycFHWb1SB2'
 const ANNUAL_ID  = 'pdt_0Ne7sn0u5XBSPuebqTIsh'
 
 const NAV_KEYS = [
-  { path: '/student/profile',        key: 'nav_profile',        shortKey: 'nav_profile',       heb: 'פְּרוֹפִיל',  icon: ProfileIcon },
   { path: '/student/study',          key: 'nav_study',          shortKey: 'nav_study',          heb: 'לִמּוּד',     icon: StudyIcon },
   { path: '/student/haftara',        key: 'nav_haftara',        shortKey: 'nav_haftara',        heb: 'הַפְטָרָה',   icon: HaftaraIcon },
   { path: '/student/notifications',  key: 'nav_notifications',  shortKey: 'nav_notifications',  heb: 'הֲעָרוֹת',   icon: NotifIcon, badge: true },
-  { path: '/student/imprimir',       key: 'nav_print',          shortKey: 'nav_print',          heb: 'תִּקּוּן',    icon: PrintIcon },
   { path: '/student/subscription',   key: 'nav_subscription',   shortKey: 'nav_subscription',   heb: 'הַרְשָׁמָה',  icon: SubscriptionIcon },
   { path: '/student/account',        key: 'nav_account',        shortKey: 'nav_account',        heb: 'חֶשְׁבּוֹן',   icon: AccountIcon },
 ]
@@ -147,10 +145,10 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
   return (
     <>
       <div className="px-3 mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <button onClick={() => go('/student/profile')} className="flex items-center gap-2">
           <StarOfDavidSmall />
           <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</span>
-        </div>
+        </button>
         {showClose && (
           <button onClick={onClose} className="p-1.5 rounded-lg" style={{ color: 'var(--text-3)' }}>
             <XIcon />
