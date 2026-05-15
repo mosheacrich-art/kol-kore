@@ -265,7 +265,7 @@ function ReaderView({ haftara, basePath, guestMode, isSubscribed }) {
       </div>
 
       <div className="flex-1 overflow-hidden">
-        <ParashaReader parasha={haftara} guestMode={guestMode} isSubscribed={isSubscribed} initialAliyah={initialAliyah} />
+        <ParashaReader parasha={haftara} guestMode={guestMode} isSubscribed={isSubscribed} initialAliyah={initialAliyah} availableModes={['nikkud', 'plain']} />
       </div>
     </div>
   )

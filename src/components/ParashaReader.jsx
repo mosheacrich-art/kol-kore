@@ -29,13 +29,14 @@ function tikkunHash(ref) {
   return `#/r/${BOOK_TO_NUM[m[1]]}-${m[2]}-${m[3]}`
 }
 
-export default function ParashaReader({ parasha, guestMode = false, isSubscribed = true, initialAliyah = 0 }) {
+export default function ParashaReader({ parasha, guestMode = false, isSubscribed = true, initialAliyah = 0, availableModes = null }) {
   const { t } = useLang()
   const navigate = useNavigate()
-  const MODES = MODE_IDS.map((id, i) => ({ id, heb: MODE_HEB[i], label: t(MODE_TKEYS[i]) }))
+  const ALL_MODES = MODE_IDS.map((id, i) => ({ id, heb: MODE_HEB[i], label: t(MODE_TKEYS[i]) }))
+  const MODES = availableModes ? ALL_MODES.filter(m => availableModes.includes(m.id)) : ALL_MODES
   const [aliyahIdx, setAliyahIdx] = useState(initialAliyah)
   const [showPaywall, setShowPaywall] = useState(false)
-  const [mode, setMode] = useState('taamim')
+  const [mode, setMode] = useState(availableModes ? availableModes[0] : 'taamim')
   const [cursorEnabled, setCursorEnabled] = useState(true)
   const [fontSize, setFontSize] = useState(36)
   const [audioCurrentTime, setAudioCurrentTime] = useState(null)
