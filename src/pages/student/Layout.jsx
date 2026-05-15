@@ -146,14 +146,11 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
   const isSubscribed = profile?.subscription_status === 'active'
   return (
     <>
-      <div className="px-3 mb-10 flex items-center justify-between">
-        <button onClick={() => go('/student/profile')} className="flex items-center gap-3">
+      <div className="px-3 mb-8 flex items-center justify-between">
+        <div className="flex items-center gap-2">
           <StarOfDavidSmall />
-          <div>
-            <div className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</div>
-            <div className="text-xs hebrew" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</div>
-          </div>
-        </button>
+          <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</span>
+        </div>
         {showClose && (
           <button onClick={onClose} className="p-1.5 rounded-lg" style={{ color: 'var(--text-3)' }}>
             <XIcon />
@@ -161,25 +158,27 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
         )}
       </div>
 
-      <div className="mx-3 mb-8 p-3 rounded-xl"
-        style={{ background: 'rgba(108,51,230,0.12)', border: '1px solid rgba(108,51,230,0.18)' }}>
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
-            style={{ background: 'rgba(108,51,230,0.3)', color: '#c4b5fd' }}>
-            {profile?.name?.[0]?.toUpperCase() ?? 'A'}
+      <button onClick={() => go('/student/profile')}
+        className="mx-3 mb-6 flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all"
+        style={{ background: 'rgba(108,51,230,0.08)', border: '1px solid rgba(108,51,230,0.15)' }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(108,51,230,0.15)' }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(108,51,230,0.08)' }}>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+          style={{ background: 'rgba(108,51,230,0.3)', color: '#c4b5fd' }}>
+          {profile?.name?.[0]?.toUpperCase() ?? 'A'}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-xs font-medium truncate" style={{ color: 'var(--text)' }}>
+            {profile?.name ?? 'Alumno'}
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-xs font-medium truncate max-w-[120px]" style={{ color: 'var(--text)' }}>
-              {profile?.name ?? 'Alumno'}
-            </div>
-            {isSubscribed ? (
-              <div className="text-xs font-semibold mt-0.5" style={{ color: '#a78bfa' }}>{t('subscribed_badge')}</div>
-            ) : (
-              <div className="text-xs" style={{ color: 'var(--text-3)' }}>תַּלְמִיד</div>
-            )}
+          <div className="text-xs" style={{ color: '#a78bfa' }}>
+            {isSubscribed ? t('subscribed_badge') : 'תַּלְמִיד'}
           </div>
         </div>
-      </div>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0, color: 'rgba(139,92,246,0.5)' }}>
+          <path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
 
       <nav className="flex flex-col gap-1">
         {navItems.map(item => {
