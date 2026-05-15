@@ -3,6 +3,7 @@ export const translations = {
     // Nav — student
     nav_profile: 'Mi Perfil',
     nav_study: 'Estudiar Perashá',
+    nav_haftara: 'Estudiar Haftará',
     nav_print: 'Imprimir Tikún',
     nav_subscription: 'Suscripción',
     // Nav — teacher
@@ -374,6 +375,7 @@ export const translations = {
     // Nav — student
     nav_profile: 'My Profile',
     nav_study: 'Study Torah',
+    nav_haftara: 'Study Haftarah',
     nav_print: 'Print Tikkun',
     nav_subscription: 'Subscription',
     // Nav — teacher
@@ -745,6 +747,7 @@ export const translations = {
     // Nav — student
     nav_profile: 'Mon Profil',
     nav_study: 'Étudier la Paracha',
+    nav_haftara: 'Étudier la Haftara',
     nav_print: 'Imprimer le Tikoun',
     nav_subscription: 'Abonnement',
     // Nav — teacher
@@ -1116,6 +1119,7 @@ export const translations = {
     // Nav — student
     nav_profile: 'Il Mio Profilo',
     nav_study: 'Studiare la Parashah',
+    nav_haftara: 'Studiare la Haftarah',
     nav_print: 'Stampa Tikkun',
     nav_subscription: 'Abbonamento',
     // Nav — teacher
@@ -1487,6 +1491,7 @@ export const translations = {
     // Nav — student
     nav_profile: 'הפרופיל שלי',
     nav_study: 'לימוד פרשה',
+    nav_haftara: 'לימוד הפטרה',
     nav_print: 'הדפסת תיקון',
     nav_subscription: 'מנוי',
     // Nav — teacher

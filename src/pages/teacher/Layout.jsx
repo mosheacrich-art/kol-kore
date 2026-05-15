@@ -13,6 +13,7 @@ const NAV_KEYS = [
   { path: '/teacher/schedule',       key: 'nav_schedule',       shortKey: 'nav_schedule',  heb: 'שִׁעוּרִים' },
   { path: '/teacher/audio',          key: 'nav_audio',          shortKey: 'nav_audio',     heb: 'הֶקְלָטוֹת' },
   { path: '/teacher/study',          key: 'nav_parashot',       shortKey: 'nav_parashot',  heb: 'פָּרָשִׁיּוֹת' },
+  { path: '/teacher/haftara',        key: 'nav_haftara',        shortKey: 'nav_haftara',   heb: 'הַפְטָרָה' },
   { path: '/teacher/notifications',  key: 'nav_notifications',  shortKey: 'nav_notifications', heb: 'הוֹדָעוֹת', badge: true },
   { path: '/teacher/imprimir',       key: 'nav_print_tikun',    shortKey: 'nav_print_tikun', heb: 'תִּקּוּן' },
   { path: '/teacher/account',        key: 'nav_account',        shortKey: 'nav_account',   heb: 'חֶשְׁבּוֹן' },

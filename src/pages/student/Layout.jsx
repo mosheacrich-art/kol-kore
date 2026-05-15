@@ -13,6 +13,7 @@ const ANNUAL_ID  = 'pdt_0Ne7sn0u5XBSPuebqTIsh'
 const NAV_KEYS = [
   { path: '/student/profile',        key: 'nav_profile',        shortKey: 'nav_profile',       heb: 'פְּרוֹפִיל',  icon: ProfileIcon },
   { path: '/student/study',          key: 'nav_study',          shortKey: 'nav_study',          heb: 'לִמּוּד',     icon: StudyIcon },
+  { path: '/student/haftara',        key: 'nav_haftara',        shortKey: 'nav_haftara',        heb: 'הַפְטָרָה',   icon: HaftaraIcon },
   { path: '/student/notifications',  key: 'nav_notifications',  shortKey: 'nav_notifications',  heb: 'הֲעָרוֹת',   icon: NotifIcon, badge: true },
   { path: '/student/imprimir',       key: 'nav_print',          shortKey: 'nav_print',          heb: 'תִּקּוּן',    icon: PrintIcon },
   { path: '/student/subscription',   key: 'nav_subscription',   shortKey: 'nav_subscription',   heb: 'הַרְשָׁמָה',  icon: SubscriptionIcon },
@@ -487,6 +488,20 @@ function NotifIcon({ active }) {
     <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
       <path d="M9 2C6 2 4 4.5 4 7v4l-1.5 2H15.5L14 11V7c0-2.5-2-5-5-5z" stroke={c} strokeWidth="1.3" strokeLinejoin="round"/>
       <path d="M7.5 15a1.5 1.5 0 003 0" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+function HaftaraIcon({ active }) {
+  const c = active ? '#8b5cf6' : 'var(--text-3)'
+  return (
+    <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
+      <path d="M3 4h12" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
+      <path d="M3 7h8" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
+      <path d="M3 10h10" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
+      <path d="M3 13h6" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
+      <circle cx="14" cy="13" r="2.5" stroke={c} strokeWidth="1.2"/>
+      <path d="M14 11.5v1.5l1 1" stroke={c} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   )
 }
