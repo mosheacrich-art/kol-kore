@@ -19,37 +19,28 @@ export const ALL_MOADIM = [
     id: 'parshat-shekalim', name: 'Parashá Shekalim', heb: 'פָּרָשַׁת שְׁקָלִים',
     chag: 'arba-parshiot', color: '#ef4444',
     aliyot: [
-      { n: 1, label: '1ª Aliyá', ref: 'Exodus 30:11-13' },
-      { n: 2, label: '2ª Aliyá', ref: 'Exodus 30:14-15' },
-      { n: 3, label: 'Maftir',   ref: 'Exodus 30:16' },
+      { n: 1, label: 'Maftir', ref: 'Exodus 30:11-16' },
     ],
   },
   {
     id: 'parshat-zajor', name: 'Parashá Zajor', heb: 'פָּרָשַׁת זָכוֹר',
     chag: 'arba-parshiot', color: '#ef4444',
     aliyot: [
-      { n: 1, label: '1ª Aliyá', ref: 'Deuteronomy 25:17-18' },
-      { n: 2, label: 'Maftir',   ref: 'Deuteronomy 25:19' },
+      { n: 1, label: 'Maftir', ref: 'Deuteronomy 25:17-19' },
     ],
   },
   {
     id: 'parshat-para', name: 'Parashá Pará', heb: 'פָּרָשַׁת פָּרָה',
     chag: 'arba-parshiot', color: '#ef4444',
     aliyot: [
-      { n: 1, label: '1ª Aliyá', ref: 'Numbers 19:1-5' },
-      { n: 2, label: '2ª Aliyá', ref: 'Numbers 19:6-10' },
-      { n: 3, label: '3ª Aliyá', ref: 'Numbers 19:11-16' },
-      { n: 4, label: 'Maftir',   ref: 'Numbers 19:17-22' },
+      { n: 1, label: 'Maftir', ref: 'Numbers 19:1-22' },
     ],
   },
   {
     id: 'parshat-hajodesh', name: 'Parashá HaJodesh', heb: 'פָּרָשַׁת הַחֹדֶשׁ',
     chag: 'arba-parshiot', color: '#ef4444',
     aliyot: [
-      { n: 1, label: '1ª Aliyá', ref: 'Exodus 12:1-5' },
-      { n: 2, label: '2ª Aliyá', ref: 'Exodus 12:6-12' },
-      { n: 3, label: '3ª Aliyá', ref: 'Exodus 12:13-17' },
-      { n: 4, label: 'Maftir',   ref: 'Exodus 12:18-20' },
+      { n: 1, label: 'Maftir', ref: 'Exodus 12:1-20' },
     ],
   },
 
