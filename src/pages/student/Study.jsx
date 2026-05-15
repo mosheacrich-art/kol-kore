@@ -212,7 +212,7 @@ function ListView({ basePath, guestMode }) {
                           <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>{chag.name}</span>
                           <span className="hebrew text-sm" style={{ color: chag.color }}>{chag.heb}</span>
                         </div>
-                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{chag.en} · {chag.readings.length} lecturas</p>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{chag.readings.length} lecturas</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

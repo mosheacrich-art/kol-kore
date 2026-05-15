@@ -113,7 +113,7 @@ function ListView({ basePath }) {
                       <span className="hebrew text-sm" style={{ color }}>{book.heb}</span>
                     </div>
                     <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {book.en} · {book.haftarot.length} haftarot
+                      {book.haftarot.length} haftarot
                     </p>
                   </div>
                 </div>
@@ -186,7 +186,7 @@ function ListView({ basePath }) {
                           <span className="hebrew text-sm" style={{ color: chag.color }}>{chag.heb}</span>
                         </div>
                         <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          {chag.en} · {chag.haftarot.length} haftarot
+                          {chag.haftarot.length} haftarot
                         </p>
                       </div>
                     </div>
@@ -265,7 +265,7 @@ function ReaderView({ haftara, basePath, guestMode, isSubscribed }) {
       </div>
 
       <div className="flex-1 overflow-hidden">
-        <ParashaReader parasha={haftara} guestMode={guestMode} isSubscribed={isSubscribed} initialAliyah={initialAliyah} availableModes={['nikkud', 'plain']} />
+        <ParashaReader parasha={haftara} guestMode={guestMode} isSubscribed={isSubscribed} initialAliyah={initialAliyah} availableModes={['nikkud']} />
       </div>
     </div>
   )

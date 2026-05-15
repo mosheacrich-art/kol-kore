@@ -431,7 +431,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
             </button>
           )}
 
-          <div className="flex items-center gap-1 p-1 rounded-xl flex-shrink-0"
+          {MODES.length > 1 && <div className="flex items-center gap-1 p-1 rounded-xl flex-shrink-0"
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
             {MODES.map(m => (
               <button key={m.id} onClick={() => setMode(m.id)}
@@ -446,7 +446,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
                 <span className="hidden sm:inline ml-1">{m.label}</span>
               </button>
             ))}
-          </div>
+          </div>}
 
           {/* Study mode dropdown — only when synced audio exists */}
           {!guestMode && audio?.wordTimestamps && (
