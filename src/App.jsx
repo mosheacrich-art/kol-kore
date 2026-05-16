@@ -23,6 +23,7 @@ const StudentStudy         = lazy(() => import('./pages/student/Study'))
 const StudentSubscription  = lazy(() => import('./pages/student/Subscription'))
 const StudentNotifications = lazy(() => import('./pages/student/Notifications'))
 const StudentHaftara       = lazy(() => import('./pages/student/HaftaraStudy'))
+const StudentTefila        = lazy(() => import('./pages/student/TefilaStudy'))
 
 const GuestLayout         = lazy(() => import('./pages/guest/Layout'))
 
@@ -34,6 +35,7 @@ const TeacherSchedule     = lazy(() => import('./pages/teacher/Schedule'))
 const TeacherAudioPanel   = lazy(() => import('./pages/teacher/AudioPanel'))
 const TeacherStudy        = lazy(() => import('./pages/teacher/Study'))
 const TeacherHaftara      = lazy(() => import('./pages/teacher/HaftaraStudy'))
+const TeacherTefila       = lazy(() => import('./pages/teacher/TefilaStudy'))
 const TeacherNotifications = lazy(() => import('./pages/teacher/Notifications'))
 const AccountSettings      = lazy(() => import('./pages/AccountSettings'))
 const AdminPage            = lazy(() => import('./pages/admin/AdminPage'))
@@ -97,6 +99,8 @@ function AppRoutes() {
             <Route path="notifications" element={<StudentNotifications />} />
             <Route path="haftara" element={<StudentHaftara />} />
             <Route path="haftara/:haftaraId" element={<StudentHaftara />} />
+            <Route path="tefila" element={<StudentTefila />} />
+            <Route path="tefila/:tefilaId" element={<StudentTefila />} />
             <Route path="imprimir" element={<ImprimirTikun />} />
             <Route path="account" element={<AccountSettings />} />
           </Route>
@@ -122,6 +126,8 @@ function AppRoutes() {
             <Route path="study/:parashaId" element={<TeacherStudy />} />
             <Route path="haftara" element={<TeacherHaftara />} />
             <Route path="haftara/:haftaraId" element={<TeacherHaftara />} />
+            <Route path="tefila" element={<TeacherTefila />} />
+            <Route path="tefila/:tefilaId" element={<TeacherTefila />} />
             <Route path="notifications" element={<TeacherNotifications />} />
             <Route path="imprimir" element={<ImprimirTikun />} />
             <Route path="account" element={<AccountSettings />} />

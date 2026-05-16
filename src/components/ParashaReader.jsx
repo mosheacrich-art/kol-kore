@@ -357,7 +357,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
     setEvalSending(false)
   }
 
-  const { verses, loading, error } = useAliyahText(currentAliyah.ref, true)
+  const { verses, loading, error } = useAliyahText(currentAliyah.ref, true, currentAliyah.heText || null)
 
   // Build phrase boundaries (sof pasuk ׃) for study mode
   useEffect(() => {
@@ -373,7 +373,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
   }, [verses])
 
   const nextAliyah = parasha.aliyot[aliyahIdx + 1]
-  useAliyahText(nextAliyah?.ref, !!nextAliyah)
+  useAliyahText(nextAliyah?.ref, !!nextAliyah, nextAliyah?.heText || null)
 
   return (
     <div className="flex flex-col h-full" style={{ background: 'var(--bg)' }}>

@@ -13,6 +13,7 @@ const ANNUAL_ID  = 'pdt_0Ne7sn0u5XBSPuebqTIsh'
 const NAV_KEYS = [
   { path: '/student/study',          key: 'nav_study',          shortKey: 'nav_study',          heb: 'לִמּוּד',     icon: StudyIcon },
   { path: '/student/haftara',        key: 'nav_haftara',        shortKey: 'nav_haftara',        heb: 'הַפְטָרָה',   icon: HaftaraIcon },
+  { path: '/student/tefila',         key: 'nav_tefila',         shortKey: 'nav_tefila',         heb: 'תְּפִלָּה',    icon: TefilaIcon },
   { path: '/student/notifications',  key: 'nav_notifications',  shortKey: 'nav_notifications',  heb: 'הֲעָרוֹת',   icon: NotifIcon, badge: true },
   { path: '/student/subscription',   key: 'nav_subscription',   shortKey: 'nav_subscription',   heb: 'הַרְשָׁמָה',  icon: SubscriptionIcon },
   { path: '/student/account',        key: 'nav_account',        shortKey: 'nav_account',        heb: 'חֶשְׁבּוֹן',   icon: AccountIcon },
@@ -485,6 +486,17 @@ function NotifIcon({ active }) {
     <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
       <path d="M9 2C6 2 4 4.5 4 7v4l-1.5 2H15.5L14 11V7c0-2.5-2-5-5-5z" stroke={c} strokeWidth="1.3" strokeLinejoin="round"/>
       <path d="M7.5 15a1.5 1.5 0 003 0" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+function TefilaIcon({ active }) {
+  const c = active ? '#8b5cf6' : 'var(--text-3)'
+  return (
+    <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
+      <path d="M9 2C6 2 4 4 4 7v5l-1 2h12l-1-2V7c0-3-2-5-5-5z" stroke={c} strokeWidth="1.3" strokeLinejoin="round"/>
+      <path d="M7 15.5a2 2 0 004 0" stroke={c} strokeWidth="1.2" strokeLinecap="round"/>
+      <path d="M9 4v4" stroke={c} strokeWidth="1.2" strokeLinecap="round"/>
     </svg>
   )
 }
