@@ -4,6 +4,7 @@ export const translations = {
     nav_profile: 'Mi Perfil',
     nav_study: 'Estudiar Perashá',
     nav_haftara: 'Estudiar Haftará',
+    nav_tefila: 'Tefilá',
     nav_print: 'Imprimir Tikún',
     nav_subscription: 'Suscripción',
     // Nav — teacher
@@ -369,6 +370,17 @@ export const translations = {
     redirecting_profile: 'Redirigiendo a tu perfil…',
     // Guest layout
     back_to_home: '← Volver al inicio',
+    // Siddur
+    siddur_pick_subtitle: 'Elige el nusaj de tu siddur para empezar',
+    siddur_select: 'Seleccionar',
+    siddur_ashkenaz_desc: 'Rito europeo — alemán, lituano, galitziano, húngaro',
+    siddur_sefard_desc: 'Rito jasídico y sefardí oriental (Ari)',
+    siddur_change_nusach: 'Cambiar nusaj',
+    siddur_nusach_label: 'Nusaj',
+    siddur_search: 'Buscar oración...',
+    siddur_loading: 'Cargando siddur desde Sefaria…',
+    siddur_error: 'No se pudo cargar el siddur',
+    siddur_sections: 'secciones',
   },
 
   en: {
@@ -376,6 +388,7 @@ export const translations = {
     nav_profile: 'My Profile',
     nav_study: 'Study Torah',
     nav_haftara: 'Study Haftarah',
+    nav_tefila: 'Tefila',
     nav_print: 'Print Tikkun',
     nav_subscription: 'Subscription',
     // Nav — teacher
@@ -741,6 +754,17 @@ export const translations = {
     redirecting_profile: 'Redirecting to your profile…',
     // Guest layout
     back_to_home: '← Back to home',
+    // Siddur
+    siddur_pick_subtitle: 'Choose your siddur nusach to get started',
+    siddur_select: 'Select',
+    siddur_ashkenaz_desc: 'European rite — German, Lithuanian, Galician, Hungarian',
+    siddur_sefard_desc: 'Hasidic and Eastern Sephardic rite (Ari)',
+    siddur_change_nusach: 'Change nusach',
+    siddur_nusach_label: 'Nusach',
+    siddur_search: 'Search prayer...',
+    siddur_loading: 'Loading siddur from Sefaria…',
+    siddur_error: 'Could not load the siddur',
+    siddur_sections: 'sections',
   },
 
   fr: {
@@ -748,6 +772,7 @@ export const translations = {
     nav_profile: 'Mon Profil',
     nav_study: 'Étudier la Paracha',
     nav_haftara: 'Étudier la Haftara',
+    nav_tefila: 'Téfila',
     nav_print: 'Imprimer le Tikoun',
     nav_subscription: 'Abonnement',
     // Nav — teacher
@@ -1113,6 +1138,17 @@ export const translations = {
     redirecting_profile: 'Redirection vers votre profil…',
     // Guest layout
     back_to_home: '← Retour à l\'accueil',
+    // Siddur
+    siddur_pick_subtitle: 'Choisissez le nousah de votre siddour pour commencer',
+    siddur_select: 'Sélectionner',
+    siddur_ashkenaz_desc: 'Rite européen — allemand, lituanien, galicien, hongrois',
+    siddur_sefard_desc: 'Rite hassidique et séfarade oriental (Ari)',
+    siddur_change_nusach: 'Changer le nousah',
+    siddur_nusach_label: 'Nousah',
+    siddur_search: 'Rechercher une prière...',
+    siddur_loading: 'Chargement du siddour depuis Sefaria…',
+    siddur_error: 'Impossible de charger le siddour',
+    siddur_sections: 'sections',
   },
 
   it: {
@@ -1120,6 +1156,7 @@ export const translations = {
     nav_profile: 'Il Mio Profilo',
     nav_study: 'Studiare la Parashah',
     nav_haftara: 'Studiare la Haftarah',
+    nav_tefila: 'Tefillà',
     nav_print: 'Stampa Tikkun',
     nav_subscription: 'Abbonamento',
     // Nav — teacher
@@ -1485,6 +1522,17 @@ export const translations = {
     redirecting_profile: 'Reindirizzamento al tuo profilo…',
     // Guest layout
     back_to_home: '← Torna alla home',
+    // Siddur
+    siddur_pick_subtitle: 'Scegli il nusah del tuo siddur per iniziare',
+    siddur_select: 'Seleziona',
+    siddur_ashkenaz_desc: 'Rito europeo — tedesco, lituano, galiziano, ungherese',
+    siddur_sefard_desc: 'Rito chassidico e sefardita orientale (Ari)',
+    siddur_change_nusach: 'Cambia nusah',
+    siddur_nusach_label: 'Nusah',
+    siddur_search: 'Cerca preghiera...',
+    siddur_loading: 'Caricamento siddur da Sefaria…',
+    siddur_error: 'Impossibile caricare il siddur',
+    siddur_sections: 'sezioni',
   },
 
   he: {
@@ -1492,6 +1540,7 @@ export const translations = {
     nav_profile: 'הפרופיל שלי',
     nav_study: 'לימוד פרשה',
     nav_haftara: 'לימוד הפטרה',
+    nav_tefila: 'תְּפִלָּה',
     nav_print: 'הדפסת תיקון',
     nav_subscription: 'מנוי',
     // Nav — teacher
@@ -1857,5 +1906,16 @@ export const translations = {
     redirecting_profile: 'מעביר לפרופיל שלך…',
     // Guest layout
     back_to_home: '← חזרה לדף הבית',
+    // Siddur
+    siddur_pick_subtitle: 'בחר את נוסח הסידור שלך להתחיל',
+    siddur_select: 'בחר',
+    siddur_ashkenaz_desc: 'נוסח אשכנז — גרמניה, ליטא, גליציה, הונגריה',
+    siddur_sefard_desc: 'נוסח חסידי וספרדי מזרחי (האר"י)',
+    siddur_change_nusach: 'שנה נוסח',
+    siddur_nusach_label: 'נוסח',
+    siddur_search: 'חפש תפילה...',
+    siddur_loading: 'טוען סידור מסיפריה…',
+    siddur_error: 'לא ניתן לטעון את הסידור',
+    siddur_sections: 'מקטעים',
   },
 }

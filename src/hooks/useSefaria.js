@@ -1,11 +1,36 @@
 import { useState, useEffect, useRef } from 'react'
 import { flattenVerses, stripHtml } from '../utils/hebrew'
 
-// Simple in-memory cache keyed by URL
+// ── Text fetching ─────────────────────────────────────────────────────────
+
 const cache = new Map()
 
+// Process raw Sefaria `he` array into clean prayer-only text
+function processVerses(raw) {
+  return flattenVerses(raw)
+    .map(v =>
+      // 1. Strip <small>…</small> blocks entirely (Sefaria annotations/rubrics)
+      stripHtml(v.replace(/<small[^>]*>[\s\S]*?<\/small>/gi, ''))
+    )
+    .map(v =>
+      // 2. Remove inline parenthetical/bracketed content that has no nikkud
+      v
+        .replace(/\([^)]*\)/g, m => /[ְ-ׇ]/.test(m) ? m : '')
+        .replace(/\[[^\]]*\]/g, m => /[ְ-ׇ]/.test(m) ? m : '')
+        .replace(/\s{2,}/g, ' ')
+        .trim()
+    )
+    // 3. Drop any paragraph still lacking nikkud (remaining rubrics / empty strings)
+    .filter(v => v && /[ְ-ׇ]/.test(v))
+}
+
+// Sefaria API: spaces → underscores, commas stay literal
+function refToUrl(ref) {
+  return `https://www.sefaria.org/api/texts/${ref.replace(/ /g, '_')}?commentary=0&context=0&pad=0&wrapLinks=0&transLangPref=en`
+}
+
 async function fetchRef(ref) {
-  const url = `https://www.sefaria.org/api/texts/${encodeURIComponent(ref)}?commentary=0&context=0&pad=0&wrapLinks=0&transLangPref=en`
+  const url = refToUrl(ref)
   if (cache.has(url)) return cache.get(url)
   const res = await fetch(url)
   if (!res.ok) throw new Error(`Sefaria API error ${res.status}`)
@@ -14,64 +39,238 @@ async function fetchRef(ref) {
   return data
 }
 
-// Returns verses for a specific aliyah ref like "Genesis 1:1-2:3"
-export function useAliyah(ref) {
-  const [state, setState] = useState({ verses: [], loading: false, error: null })
+export function useAliyah(ref, enabled = true, heText = null) {
+  const [state, setState] = useState({ verses: heText || [], loading: false, error: null })
   const lastRef = useRef(null)
 
   useEffect(() => {
-    if (!ref || ref === lastRef.current) return
+    if (heText) { setState({ verses: heText, loading: false, error: null }); return }
+    if (!ref || !enabled || ref === lastRef.current) return
     lastRef.current = ref
-
     setState(s => ({ ...s, loading: true, error: null }))
-
     fetchRef(ref)
       .then(data => {
-        // he can be a flat array or nested (chapter arrays)
-        const heRaw = data.he || []
-        const verses = flattenVerses(heRaw).map(stripHtml)
+        const verses = processVerses(data.he || [])
         setState({ verses, loading: false, error: null })
       })
-      .catch(err => {
-        setState({ verses: [], loading: false, error: err.message })
-      })
-  }, [ref])
+      .catch(err => setState({ verses: [], loading: false, error: err.message }))
+  }, [ref, enabled, heText])
 
   return state
 }
 
-// Returns verses for all aliyot of a parasha simultaneously (prefetching)
-// We don't use this for the reader — we lazily load per aliyah
-export function useAliyahText(ref, enabled = true) {
-  const [verses, setVerses] = useState([])
+export function useAliyahText(ref, enabled = true, heText = null) {
+  const [verses, setVerses] = useState(heText || [])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    if (heText) { setVerses(heText); return }
     if (!ref || !enabled) return
-    // Check cache first for instant display
-    const cacheKey = `https://www.sefaria.org/api/texts/${encodeURIComponent(ref)}?commentary=0&context=0&pad=0&wrapLinks=0&transLangPref=en`
-    if (cache.has(cacheKey)) {
-      const data = cache.get(cacheKey)
-      const v = flattenVerses(data.he || []).map(stripHtml)
-      setVerses(v)
+
+    const url = refToUrl(ref)
+    if (cache.has(url)) {
+      const data = cache.get(url)
+      setVerses(processVerses(data.he || []))
       return
     }
 
     setLoading(true)
     setError(null)
-
     fetchRef(ref)
       .then(data => {
-        const v = flattenVerses(data.he || []).map(stripHtml)
-        setVerses(v)
+        setVerses(processVerses(data.he || []))
         setLoading(false)
       })
-      .catch(err => {
-        setError(err.message)
-        setLoading(false)
-      })
-  }, [ref, enabled])
+      .catch(err => { setError(err.message); setLoading(false) })
+  }, [ref, enabled, heText])
 
   return { verses, loading, error }
+}
+
+// ── Siddur index (structure from Sefaria v2 API) ──────────────────────────
+
+const siddurIndexCache = new Map()
+
+const SERVICE_META = {
+  // Ashkenaz — services are children of a "Weekday" wrapper node
+  Shacharit: { id: 'shacharit', heb: 'שַׁחֲרִית', color: '#f59e0b', name: 'Shajarit' },
+  Minchah:   { id: 'mincha',    heb: 'מִנְחָה',    color: '#8b5cf6', name: 'Minjá'   },
+  Mincha:    { id: 'mincha',    heb: 'מִנְחָה',    color: '#8b5cf6', name: 'Minjá'   },
+  Maariv:    { id: 'maariv',   heb: 'עַרְבִית',   color: '#1e40af', name: 'Arvit'   },
+  // Sefard — combined titles at root level (no "Weekday" wrapper)
+  'Weekday Shacharit': { id: 'shacharit', heb: 'שַׁחֲרִית', color: '#f59e0b', name: 'Shajarit' },
+  'Weekday Mincha':    { id: 'mincha',    heb: 'מִנְחָה',    color: '#8b5cf6', name: 'Minjá'   },
+  'Weekday Maariv':    { id: 'maariv',   heb: 'עַרְבִית',   color: '#1e40af', name: 'Arvit'   },
+}
+
+// Collect all leaves under a node; track the immediate child of the service as subGroup
+function extractSections(srvNode, pathPrefix, bookName) {
+  const sections = []
+  if (!srvNode.nodes?.length) return sections
+
+  for (const child of srvNode.nodes) {
+    const childPath = [...pathPrefix, child.title]
+    if (!child.nodes?.length) {
+      // Leaf directly under service (Sefard-style)
+      sections.push({ title: child.title, heTitle: child.heTitle || '', ref: [bookName, ...childPath].join(', '), subGroup: '' })
+    } else {
+      // Subgroup with children (Ashkenaz-style)
+      const subGroup = child.title
+      collectDeep(child.nodes, childPath, bookName, subGroup, sections)
+    }
+  }
+  return sections
+}
+
+function collectDeep(nodes, basePath, bookName, subGroup, results) {
+  for (const node of nodes) {
+    const nodePath = [...basePath, node.title]
+    if (!node.nodes?.length) {
+      results.push({ title: node.title, heTitle: node.heTitle || '', ref: [bookName, ...nodePath].join(', '), subGroup })
+    } else {
+      collectDeep(node.nodes, nodePath, bookName, subGroup, results)
+    }
+  }
+}
+
+function buildService(srvNode, pathPrefix, bookName) {
+  const meta = SERVICE_META[srvNode.title]
+  const sections = extractSections(srvNode, pathPrefix, bookName)
+
+  const subsections = []
+  for (const s of sections) {
+    let group = subsections.find(g => g.name === s.subGroup)
+    if (!group) { group = { name: s.subGroup, items: [] }; subsections.push(group) }
+    group.items.push({ title: s.title, heTitle: s.heTitle, ref: s.ref })
+  }
+
+  return { ...meta, total: sections.length, subsections, allSections: sections }
+}
+
+// Titles to exclude from all services
+const EXCLUDED_SECTIONS = new Set(['Avinu Malkeinu'])
+
+function filterService(srv) {
+  const allSections = srv.allSections.filter(s => !EXCLUDED_SECTIONS.has(s.title))
+  const subsections = srv.subsections
+    .map(sub => ({ ...sub, items: sub.items.filter(i => !EXCLUDED_SECTIONS.has(i.title)) }))
+    .filter(sub => sub.items.length > 0)
+  return { ...srv, allSections, subsections, total: allSections.length }
+}
+
+// Inline Hebrew text for Berajot service (not from Sefaria)
+export const BERAJOT_INLINE = {
+  'berajot:talit-tefilin': {
+    name: 'Talit y Tefilín',
+    heTitle: 'טַלִּית וּתְפִלִּין',
+    aliyot: [
+      {
+        n: 1, label: 'בְּהִתְעַטֵּף בְּצִיצִית',
+        heText: [
+          'בָּרוּךְ אַתָּה יְהֹוָה אֱלֹהֵינוּ מֶלֶךְ הָעוֹלָם, אֲשֶׁר קִדְּשָׁנוּ בְּמִצְוֹתָיו, וְצִוָּנוּ לְהִתְעַטֵּף בַּצִּיצִת.',
+        ],
+      },
+      {
+        n: 2, label: 'לְהָנִיחַ תְּפִלִּין',
+        heText: [
+          'בָּרוּךְ אַתָּה יְהֹוָה אֱלֹהֵינוּ מֶלֶךְ הָעוֹלָם, אֲשֶׁר קִדְּשָׁנוּ בְּמִצְוֹתָיו, וְצִוָּנוּ לְהָנִיחַ תְּפִלִּין.',
+        ],
+      },
+      {
+        n: 3, label: 'עַל מִצְוַת תְּפִלִּין',
+        heText: [
+          'בָּרוּךְ אַתָּה יְהֹוָה אֱלֹהֵינוּ מֶלֶךְ הָעוֹלָם, אֲשֶׁר קִדְּשָׁנוּ בְּמִצְוֹתָיו, וְצִוָּנוּ עַל מִצְוַת תְּפִלִּין.',
+          'בָּרוּךְ שֵׁם כְּבוֹד מַלְכוּתוֹ לְעוֹלָם וָעֶד.',
+        ],
+      },
+    ],
+  },
+  'berajot:birjot-hatora': {
+    name: 'Birjot HaTorá',
+    heTitle: 'בִּרְכוֹת הַתּוֹרָה',
+    aliyot: [
+      {
+        n: 1, label: 'לִפְנֵי הַקְּרִיאָה',
+        heText: [
+          'בָּרְכוּ אֶת יְהֹוָה הַמְבֹרָךְ.',
+          'בָּרוּךְ יְהֹוָה הַמְבֹרָךְ לְעוֹלָם וָעֶד.',
+          'בָּרוּךְ אַתָּה יְהֹוָה אֱלֹהֵינוּ מֶלֶךְ הָעוֹלָם, אֲשֶׁר בָּחַר בָּנוּ מִכָּל הָעַמִּים, וְנָתַן לָנוּ אֶת תּוֹרָתוֹ. בָּרוּךְ אַתָּה יְהֹוָה, נוֹתֵן הַתּוֹרָה.',
+        ],
+      },
+      {
+        n: 2, label: 'לְאַחַר הַקְּרִיאָה',
+        heText: [
+          'בָּרוּךְ אַתָּה יְהֹוָה אֱלֹהֵינוּ מֶלֶךְ הָעוֹלָם, אֲשֶׁר נָתַן לָנוּ תּוֹרַת אֱמֶת, וְחַיֵּי עוֹלָם נָטַע בְּתוֹכֵנוּ. בָּרוּךְ אַתָּה יְהֹוָה, נוֹתֵן הַתּוֹרָה.',
+        ],
+      },
+    ],
+  },
+}
+
+// Hardcoded Berajot service (prepended before the main services)
+function makeBerajotService() {
+  const items = [
+    { title: 'Talit y Tefilín', heTitle: 'טַלִּית וּתְפִלִּין', ref: 'berajot:talit-tefilin' },
+    { title: 'Birjot HaTorá',  heTitle: 'בִּרְכוֹת הַתּוֹרָה',  ref: 'berajot:birjot-hatora' },
+  ]
+  return {
+    id: 'berajot', name: 'Berajot', heb: 'בְּרָכוֹת', color: '#10b981',
+    total: 2,
+    subsections: [{ name: '', items }],
+    allSections: items.map(i => ({ ...i, subGroup: '' })),
+  }
+}
+
+function parseWeekdayServices(data, bookName) {
+  const schema = data.schema
+  if (!schema) return []
+
+  const rootNodes = schema.nodes || []
+  const nusach = bookName.includes('Sefard') ? 'sefard' : 'ashkenaz'
+
+  let raw = []
+
+  // Strategy 1 (Ashkenaz): explicit "Weekday" wrapper node whose children are the services
+  const weekdayNode = rootNodes.find(n => n.title === 'Weekday' || n.title === 'Weekday Prayers')
+  if (weekdayNode?.nodes?.length) {
+    raw = weekdayNode.nodes
+      .filter(n => SERVICE_META[n.title])
+      .map(srvNode => buildService(srvNode, ['Weekday', srvNode.title], bookName))
+  } else {
+    // Strategy 2 (Sefard): combined titles like "Weekday Shacharit" at root level
+    const sefardServices = rootNodes.filter(n => SERVICE_META[n.title])
+    raw = sefardServices.map(srvNode => buildService(srvNode, [srvNode.title], bookName))
+  }
+
+  // Filter unwanted sections and prepend Berajot
+  return [makeBerajotService(), ...raw.map(filterService)]
+}
+
+export function useSiddurIndex(nusach) {
+  const [state, setState] = useState({ services: null, loading: false, error: null })
+
+  useEffect(() => {
+    if (!nusach) return
+    const slug     = nusach === 'ashkenaz' ? 'Siddur_Ashkenaz' : 'Siddur_Sefard'
+    const bookName = nusach === 'ashkenaz' ? 'Siddur Ashkenaz' : 'Siddur Sefard'
+
+    if (siddurIndexCache.has(slug)) {
+      setState({ services: siddurIndexCache.get(slug), loading: false, error: null })
+      return
+    }
+
+    setState(s => ({ ...s, loading: true, error: null }))
+
+    fetch(`https://www.sefaria.org/api/v2/index/${slug}`)
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
+      .then(data => {
+        const services = parseWeekdayServices(data, bookName)
+        siddurIndexCache.set(slug, services)
+        setState({ services, loading: false, error: null })
+      })
+      .catch(err => setState({ services: null, loading: false, error: err.message }))
+  }, [nusach])
+
+  return state
 }
