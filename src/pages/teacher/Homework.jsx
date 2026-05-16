@@ -3,6 +3,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { PARASHOT } from '../../data/parashot'
+import { ALL_HAFTAROT } from '../../data/haftarot'
 import { useLang } from '../../context/LangContext'
 
 const statusStyle = {
@@ -22,7 +23,9 @@ export default function TeacherHomework() {
   const [students, setStudents] = useState([])
   const [form, setForm] = useState({
     to: '', task: '', subject: '', due: '',
+    type: 'parasha',
     parasha_id: '', aliyah_idx: 0, require_audio: false,
+    haftara_id: '',
   })
   const [saving, setSaving] = useState(false)
   const [hoverItem, setHoverItem] = useState(null)
@@ -59,15 +62,17 @@ export default function TeacherHomework() {
       task: form.task,
       subject: form.subject || null,
       due: form.due || null,
-      parasha_id: form.parasha_id || null,
-      aliyah_idx: form.parasha_id ? form.aliyah_idx : null,
-      require_audio: form.parasha_id ? form.require_audio : false,
+      type: form.type,
+      parasha_id: form.type === 'parasha' ? (form.parasha_id || null) : null,
+      aliyah_idx: form.type === 'parasha' && form.parasha_id ? form.aliyah_idx : null,
+      require_audio: form.type === 'parasha' && form.parasha_id ? form.require_audio : false,
+      haftara_id: form.type === 'haftara' ? (form.haftara_id || null) : null,
       status: 'pending',
     }).select('*, student:student_id(name)').single()
 
     if (data) setSent(prev => [data, ...prev])
     setComposing(false)
-    setForm(f => ({ ...f, task: '', subject: '', due: '', parasha_id: '', aliyah_idx: 0, require_audio: false }))
+    setForm(f => ({ ...f, task: '', subject: '', due: '', type: 'parasha', parasha_id: '', aliyah_idx: 0, require_audio: false, haftara_id: '' }))
     setSaving(false)
   }
 
@@ -133,23 +138,48 @@ export default function TeacherHomework() {
                   className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
               </div>
 
-              {/* Perashá */}
+              {/* Tipo de deberes */}
               <div>
-                <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>
-                  {t('parasha_optional')}
-                </label>
-                <select value={form.parasha_id}
-                  onChange={e => setForm(f => ({ ...f, parasha_id: e.target.value, aliyah_idx: 0 }))}
-                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
-                  <option value="">{t('no_parasha_opt')}</option>
-                  {PARASHOT.map(p => (
-                    <option key={p.id} value={p.id}>{p.name} · {p.heb}</option>
+                <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('hw_type_label')}</label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[
+                    { key: 'parasha', label: t('nav_study'),   color: '#f59e0b' },
+                    { key: 'haftara', label: t('nav_haftara'), color: '#10b981' },
+                    { key: 'tefila',  label: t('nav_tefila'),  color: '#8b5cf6' },
+                  ].map(opt => (
+                    <button key={opt.key} type="button"
+                      onClick={() => setForm(f => ({ ...f, type: opt.key, parasha_id: '', aliyah_idx: 0, haftara_id: '', require_audio: false }))}
+                      className="py-2 rounded-xl text-xs font-medium transition-all"
+                      style={{
+                        background: form.type === opt.key ? `${opt.color}18` : 'var(--bg-card)',
+                        border: `1px solid ${form.type === opt.key ? opt.color + '50' : 'var(--border)'}`,
+                        color: form.type === opt.key ? opt.color : 'var(--text-3)',
+                      }}>
+                      {opt.label}
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
 
-              {/* Aliyá — solo si hay perashá */}
-              {form.parasha_id && (
+              {/* Perashá — solo si tipo es parasha */}
+              {form.type === 'parasha' && (
+                <div>
+                  <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>
+                    {t('parasha_optional')}
+                  </label>
+                  <select value={form.parasha_id}
+                    onChange={e => setForm(f => ({ ...f, parasha_id: e.target.value, aliyah_idx: 0 }))}
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
+                    <option value="">{t('no_parasha_opt')}</option>
+                    {PARASHOT.map(p => (
+                      <option key={p.id} value={p.id}>{p.name} · {p.heb}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Aliyá — solo si tipo es parasha y hay perashá */}
+              {form.type === 'parasha' && form.parasha_id && (
                 <div>
                   <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('aliyah_label')}</label>
                   <select value={form.aliyah_idx}
@@ -162,8 +192,23 @@ export default function TeacherHomework() {
                 </div>
               )}
 
-              {/* Requiere audio — solo si hay perashá */}
-              {form.parasha_id && (
+              {/* Haftará — solo si tipo es haftara */}
+              {form.type === 'haftara' && (
+                <div>
+                  <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('haftara_optional')}</label>
+                  <select value={form.haftara_id}
+                    onChange={e => setForm(f => ({ ...f, haftara_id: e.target.value }))}
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
+                    <option value="">{t('no_haftara_opt')}</option>
+                    {ALL_HAFTAROT.map(h => (
+                      <option key={h.id} value={h.id}>{h.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Requiere audio — solo si tipo es parasha y hay perashá */}
+              {form.type === 'parasha' && form.parasha_id && (
                 <button type="button"
                   onClick={() => setForm(f => ({ ...f, require_audio: !f.require_audio }))}
                   className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-left transition-all"
@@ -243,10 +288,15 @@ export default function TeacherHomework() {
         {sent.map(item => {
           const s = statusStyle[item.status] || statusStyle.pending
           const statusLabel = item.status === 'submitted' ? t('status_submitted') : item.status === 'late' ? t('status_late') : t('status_pending')
+          const hwType = item.type || 'parasha'
           const parasha = item.parasha_id ? PARASHOT.find(p => p.id === item.parasha_id) : null
           const aliyahLabel = parasha && item.aliyah_idx != null
             ? (parasha.aliyot[item.aliyah_idx]?.n === 8 ? 'Maftir' : `${parasha.aliyot[item.aliyah_idx]?.n}ª Aliyá`)
             : null
+          const haftara = item.haftara_id ? ALL_HAFTAROT.find(h => h.id === item.haftara_id) : null
+          const typeColors = { parasha: '#f59e0b', haftara: '#10b981', tefila: '#8b5cf6' }
+          const typeLabels = { parasha: t('nav_study'), haftara: t('nav_haftara'), tefila: t('nav_tefila') }
+          const typeColor = typeColors[hwType] || '#f59e0b'
 
           return (
             <div key={item.id}
@@ -291,27 +341,37 @@ export default function TeacherHomework() {
                 </div>
                 <p className="text-xs" style={{ color: 'var(--text-2)' }}>{item.task}</p>
 
-                {/* Parasha + aliyah badge */}
-                {parasha && aliyahLabel && (
-                  <div className="flex items-center gap-1.5 mt-2">
+                {/* Type + content badge */}
+                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                  <span className="text-xs px-2 py-0.5 rounded-md font-medium"
+                    style={{ background: `${typeColor}12`, color: typeColor, border: `1px solid ${typeColor}30` }}>
+                    {typeLabels[hwType]}
+                  </span>
+                  {parasha && aliyahLabel && (
                     <span className="text-xs px-2 py-0.5 rounded-md flex items-center gap-1"
-                      style={{ background: 'rgba(108,51,230,0.1)', color: '#6c33e6', border: '1px solid rgba(108,51,230,0.2)' }}>
+                      style={{ background: `${typeColor}10`, color: typeColor, border: `1px solid ${typeColor}20` }}>
                       <span className="hebrew">{parasha.heb}</span>
                       <span>·</span>
                       <span>{aliyahLabel}</span>
                     </span>
-                    {item.require_audio && (
-                      <span className="text-xs px-2 py-0.5 rounded-md flex items-center gap-1"
-                        style={{ background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.15)' }}>
-                        <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                          <rect x="3" y="0.5" width="3" height="5" rx="1.5" stroke="currentColor" strokeWidth="1"/>
-                          <path d="M1 4.5c0 1.9 1.6 3.5 3.5 3.5S8 6.4 8 4.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-                        </svg>
-                        {t('audio_required_badge')}
-                      </span>
-                    )}
-                  </div>
-                )}
+                  )}
+                  {haftara && (
+                    <span className="text-xs px-2 py-0.5 rounded-md flex items-center gap-1"
+                      style={{ background: `${typeColor}10`, color: typeColor, border: `1px solid ${typeColor}20` }}>
+                      <span className="hebrew">{haftara.heb}</span>
+                    </span>
+                  )}
+                  {item.require_audio && (
+                    <span className="text-xs px-2 py-0.5 rounded-md flex items-center gap-1"
+                      style={{ background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.15)' }}>
+                      <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                        <rect x="3" y="0.5" width="3" height="5" rx="1.5" stroke="currentColor" strokeWidth="1"/>
+                        <path d="M1 4.5c0 1.9 1.6 3.5 3.5 3.5S8 6.4 8 4.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+                      </svg>
+                      {t('audio_required_badge')}
+                    </span>
+                  )}
+                </div>
 
                 <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                   {item.subject && (
