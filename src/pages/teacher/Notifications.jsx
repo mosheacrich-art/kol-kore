@@ -21,6 +21,8 @@ export default function TeacherNotifications() {
   const navigate = useNavigate()
   const [notifs, setNotifs] = useState([])
   const [loading, setLoading] = useState(true)
+  const [hoverItem, setHoverItem] = useState(null)
+  const [deleting, setDeleting] = useState(null)
 
   useEffect(() => {
     if (!profile) return
@@ -49,6 +51,13 @@ export default function TeacherNotifications() {
       .in('id', unreadIds)
       .eq('teacher_id', profile.id)
     setNotifs(prev => prev.map(n => ({ ...n, read: true })))
+  }
+
+  const deleteNotif = async (id) => {
+    setDeleting(id)
+    await supabase.from('notifications').delete().eq('id', id).eq('teacher_id', profile.id)
+    setNotifs(prev => prev.filter(n => n.id !== id))
+    setDeleting(null)
   }
 
   const unreadCount = notifs.filter(n => !n.read).length
@@ -101,12 +110,37 @@ export default function TeacherNotifications() {
         {notifs.map(n => (
           <div key={n.id}
             onClick={() => !n.read && markRead(n.id)}
-            className="flex items-start gap-4 p-4 rounded-2xl transition-all duration-200"
+            onMouseEnter={() => setHoverItem(n.id)}
+            onMouseLeave={() => setHoverItem(null)}
+            className="relative group flex items-start gap-4 p-4 rounded-2xl transition-all duration-200"
             style={{
               background: n.read ? 'var(--bg-card)' : 'rgba(108,51,230,0.07)',
               border: `1px solid ${n.read ? 'var(--border-subtle)' : 'rgba(108,51,230,0.2)'}`,
               cursor: n.read ? 'default' : 'pointer',
             }}>
+
+            {/* Delete button */}
+            <button
+              onClick={e => { e.stopPropagation(); deleteNotif(n.id) }}
+              disabled={deleting === n.id}
+              className="absolute top-3 right-3 w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+              style={{
+                opacity: hoverItem === n.id ? 1 : 0,
+                pointerEvents: hoverItem === n.id ? 'auto' : 'none',
+                background: 'rgba(239,68,68,0.08)',
+                border: '1px solid rgba(239,68,68,0.15)',
+                color: '#ef4444',
+              }}>
+              {deleting === n.id ? (
+                <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin"
+                  style={{ borderColor: 'rgba(239,68,68,0.3)', borderTopColor: '#ef4444' }} />
+              ) : (
+                <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                  <path d="M1.5 3h8M3.5 3V2h4v1M4 5v3M7 5v3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+                  <path d="M2.5 3l.5 6h5l.5-6" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </button>
 
             {/* Icon */}
             <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
