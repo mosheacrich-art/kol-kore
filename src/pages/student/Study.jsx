@@ -8,12 +8,34 @@ import { useLang } from '../../context/LangContext'
 import { useAuth } from '../../context/AuthContext'
 import ParashaReader from '../../components/ParashaReader'
 
+const SIMANIM = {
+  id: 'simanim',
+  name: 'Simanim',
+  heb: 'סִימָנִים',
+  color: '#6c33e6',
+  availableModes: ['nikkud'],
+  aliyot: [{
+    n: 1,
+    label: 'טַעֲמֵי הַמִּקְרָא',
+    heText: [
+      'מֻנַּח פַּשְׁטָא מֻנַּח זַרְקָא מֻנַּח סֶגּוֹל מֻנַּח',
+      'מֻנַּח רְבִיעִי מַהְפַּךְ פַּשְׁטָא זָקֵף-קָטֹן',
+      'זָקֵף-גָּדוֹל מֶרְכָּא טִפְחָא מֻנַּח אֶתְנַחְתָּא',
+      'פָּזֵר תְּלִישָׁא-קְטַנָּה תְּלִישָׁא-גְּדוֹלָה קַדְמָא-וְאַזְלָא',
+      'אַזְלָא-גֵּרֵשׁ גֵּרְשַׁיִם דַּרְגָּא תְּבִיר',
+      'יְתִיב פָּסִיק ׀ סוֹף-פָּסוּק׃',
+    ],
+  }],
+}
+
 export default function StudentStudy({ basePath = '/student/study' }) {
   const { parashaId } = useParams()
   const { profile } = useAuth()
-  const parasha = parashaId
-    ? (ALL_PARASHOT.find(p => p.id === parashaId) || ALL_MOADIM.find(p => p.id === parashaId))
-    : null
+  const parasha = parashaId === 'simanim'
+    ? SIMANIM
+    : parashaId
+      ? (ALL_PARASHOT.find(p => p.id === parashaId) || ALL_MOADIM.find(p => p.id === parashaId))
+      : null
 
   const isGuest = basePath.startsWith('/guest')
   const isTeacher = profile?.role === 'teacher'
@@ -102,6 +124,27 @@ function ListView({ basePath, guestMode }) {
       </div>
 
       <div className="flex flex-col gap-2.5 fade-up-3">
+        {/* Simanim card — before Bereshit */}
+        {!search && (
+          <button onClick={() => navigate(`${basePath}/simanim`)}
+            className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left transition-all duration-200 mb-1"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(108,51,230,0.3)'; e.currentTarget.style.background = 'rgba(108,51,230,0.05)' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.background = 'var(--bg-card)' }}>
+            <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ background: '#6c33e6' }} />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>Simanim</span>
+                <span className="hebrew text-sm" style={{ color: '#6c33e6' }}>סִימָנִים</span>
+              </div>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>טַעֲמֵי הַמִּקְרָא · Todos los trop de la Torá</p>
+            </div>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ color: 'var(--text-muted)', flexShrink: 0 }}>
+              <path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        )}
+
         {byBook.map(book => {
           const isOpen = openBook === book.id || !!search
           const color = BOOK_COLORS[book.id] || '#6c33e6'
@@ -288,7 +331,7 @@ function ReaderView({ parasha, basePath, guestMode, isSubscribed }) {
         </button>
         <div className="h-4 w-px" style={{ background: 'var(--border)' }} />
         <span className="text-xs" style={{ color: 'var(--text-3)' }}>
-          {parasha.combined ? 'Perashá doble' : parasha.num ? `Perashá ${parasha.num} de 54` : 'Lectura especial · מוֹעֲדִים'}
+          {parasha.id === 'simanim' ? 'Simanim · סִימָנִים' : parasha.combined ? 'Perashá doble' : parasha.num ? `Perashá ${parasha.num} de 54` : 'Lectura especial · מוֹעֲדִים'}
         </span>
 
         <div className="ml-auto flex gap-2">
@@ -312,7 +355,7 @@ function ReaderView({ parasha, basePath, guestMode, isSubscribed }) {
       </div>
 
       <div className="flex-1 overflow-hidden">
-        <ParashaReader parasha={parasha} guestMode={guestMode} isSubscribed={isSubscribed} initialAliyah={initialAliyah} />
+        <ParashaReader parasha={parasha} guestMode={guestMode} isSubscribed={isSubscribed} initialAliyah={initialAliyah} availableModes={parasha.availableModes} />
       </div>
     </div>
   )
