@@ -13,7 +13,7 @@ const SIMANIM = {
   name: 'Simanim',
   heb: 'סִימָנִים',
   color: '#6c33e6',
-  availableModes: ['nikkud'],
+  availableModes: ['taamim'],
   aliyot: [{
     n: 1,
     label: 'טַעֲמֵי הַמִּקְרָא',
