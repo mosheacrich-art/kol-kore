@@ -40,12 +40,14 @@ export default function TeacherLayout() {
 
   useEffect(() => {
     if (!profile?.id) return
-    supabase
-      .from('notifications')
-      .select('id', { count: 'exact' })
-      .eq('teacher_id', profile.id)
-      .eq('read', false)
-      .then(({ count }) => setUnreadCount(count || 0))
+    Promise.all([
+      supabase.from('notifications').select('id', { count: 'exact', head: true })
+        .eq('teacher_id', profile.id).eq('read', false),
+      supabase.from('contact_messages').select('id', { count: 'exact', head: true })
+        .eq('read', false),
+    ]).then(([notifRes, contactRes]) => {
+      setUnreadCount((notifRes.count || 0) + (contactRes.count || 0))
+    })
   }, [profile?.id, location.pathname])
 
   const go = (path) => { navigate(path); setSidebarOpen(false); setMoreOpen(false) }
