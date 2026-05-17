@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useLang } from '../context/LangContext'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
 
 export default function ContactModal({ onClose }) {
   const { t } = useLang()
@@ -12,22 +13,12 @@ export default function ContactModal({ onClose }) {
   const handleSend = async () => {
     if (!message.trim()) return
     setStatus('sending')
-    try {
-      const res = await fetch('https://formsubmit.co/ajax/mosheacrichcohen@gmail.com', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({
-          name: name || 'Usuario',
-          message,
-          _subject: `Parashapp · Contacto de ${name || 'usuario'}`,
-          _template: 'table',
-        }),
-      })
-      if (!res.ok) throw new Error()
-      setStatus('sent')
-    } catch {
-      setStatus('error')
-    }
+    const { error } = await supabase.from('contact_messages').insert({
+      name: name.trim() || 'Usuario',
+      message: message.trim(),
+      user_id: profile?.id || null,
+    })
+    setStatus(error ? 'error' : 'sent')
   }
 
   return (
@@ -38,7 +29,6 @@ export default function ContactModal({ onClose }) {
         style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)', boxShadow: '0 24px 60px rgba(0,0,0,0.5)' }}
         onClick={e => e.stopPropagation()}>
 
-        {/* Header */}
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs tracking-widest uppercase mb-1" style={{ color: 'var(--text-gold)' }}>
@@ -76,28 +66,18 @@ export default function ContactModal({ onClose }) {
           </div>
         ) : (
           <>
-            {/* Name */}
             <div>
               <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('contact_name')}</label>
-              <input
-                value={name}
-                onChange={e => setName(e.target.value)}
+              <input value={name} onChange={e => setName(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }}
-              />
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }} />
             </div>
-
-            {/* Message */}
             <div>
               <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('contact_message')}</label>
-              <textarea
-                value={message}
-                onChange={e => setMessage(e.target.value)}
-                placeholder={t('contact_placeholder')}
-                rows={5}
+              <textarea value={message} onChange={e => setMessage(e.target.value)}
+                placeholder={t('contact_placeholder')} rows={5}
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none"
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }}
-              />
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }} />
             </div>
 
             {status === 'error' && (
@@ -110,8 +90,7 @@ export default function ContactModal({ onClose }) {
                 style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}>
                 {t('cancel')}
               </button>
-              <button
-                onClick={handleSend}
+              <button onClick={handleSend}
                 disabled={status === 'sending' || !message.trim()}
                 className="px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
                 style={{
