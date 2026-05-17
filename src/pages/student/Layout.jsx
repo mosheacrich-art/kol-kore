@@ -81,16 +81,31 @@ export default function StudentLayout() {
       {/* ── Main ─────────────────────────────────────────────────────────── */}
       <main className="flex-1 flex flex-col min-h-0 overflow-auto scroll-smooth-ios main-with-bottom-nav">
 
-        {/* Header — mobile only (hamburger to open drawer) */}
-        <div className="md:hidden sticky top-0 z-30 flex items-center gap-3 px-4 flex-shrink-0 app-header"
+        {/* Header */}
+        <div className="sticky top-0 z-30 flex items-center gap-3 px-4 flex-shrink-0 app-header"
           style={{ background: 'var(--bg-deep)', borderBottom: '1px solid var(--border-subtle)', minHeight: '3.5rem' }}>
-          <button className="p-2 rounded-xl" onClick={() => setSidebarOpen(true)}
+          <button className="md:hidden p-2 rounded-xl" onClick={() => setSidebarOpen(true)}
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-2)' }}>
             <HamburgerIcon />
           </button>
           <StarOfDavidSmall />
           <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</span>
           <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
+          <div className="ml-auto flex items-center gap-2">
+            <LangToggle />
+            <button onClick={toggle}
+              className="p-2 rounded-xl text-xs transition-all"
+              style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+              title={isDark ? t('light_mode') : t('dark_mode')}>
+              <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
+            </button>
+            <button onClick={async () => { await signOut(); navigate('/login') }}
+              className="p-2 rounded-xl transition-all"
+              title={t('logout')}
+              style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
+              <LogoutIcon />
+            </button>
+          </div>
         </div>
 
         {/* Warning banner for non-subscribed students */}
@@ -408,6 +423,16 @@ function Paywall({ user, profile, navigate }) {
         </div>
       </div>
     </div>
+  )
+}
+
+function LogoutIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M10 11l3-3-3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M13 8H6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
   )
 }
 
