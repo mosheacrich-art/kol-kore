@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
 import LangToggle from '../../components/LangToggle'
+import ContactModal from '../../components/ContactModal'
 
 const NAV_KEYS = [
   { path: '/teacher/dashboard',      key: 'nav_dashboard',      shortKey: 'nav_dashboard', heb: 'לוּחַ' },
@@ -31,6 +32,7 @@ export default function TeacherLayout() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
+  const [contactOpen, setContactOpen] = useState(false)
 
   const allNavItems = NAV_KEYS.map(n => ({ ...n, label: t(n.key), shortLabel: t(n.shortKey) }))
   const bottomNavItems = BOTTOM_NAV_INDICES.map(i => allNavItems[i])
@@ -121,6 +123,25 @@ export default function TeacherLayout() {
           <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
           <div className="ml-auto flex items-center gap-2">
             <LangToggle />
+            <button onClick={() => setContactOpen(true)}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
+              style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}
+              title={t('contact_us')}>
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                <rect x="1" y="2.5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                <path d="M1 4l5.5 4L12 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              {t('contact_us')}
+            </button>
+            <button onClick={() => setContactOpen(true)}
+              className="sm:hidden p-2 rounded-xl transition-all"
+              style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}
+              title={t('contact_us')}>
+              <svg width="15" height="15" viewBox="0 0 13 13" fill="none">
+                <rect x="1" y="2.5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                <path d="M1 4l5.5 4L12 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
             <button onClick={toggle}
               className="p-2 rounded-xl text-xs transition-all"
               style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
@@ -136,6 +157,7 @@ export default function TeacherLayout() {
           </div>
         </div>
 
+        {contactOpen && <ContactModal onClose={() => setContactOpen(false)} />}
         <Outlet />
       </main>
 

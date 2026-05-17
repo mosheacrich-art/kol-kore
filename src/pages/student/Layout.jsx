@@ -6,6 +6,7 @@ import { useLang } from '../../context/LangContext'
 import { useStudyTimer } from '../../hooks/useStudyTimer'
 import { supabase } from '../../lib/supabase'
 import LangToggle from '../../components/LangToggle'
+import ContactModal from '../../components/ContactModal'
 
 const MONTHLY_ID = 'pdt_0Ne7sWfihRRycFHWb1SB2'
 const ANNUAL_ID  = 'pdt_0Ne7sn0u5XBSPuebqTIsh'
@@ -28,6 +29,7 @@ export default function StudentLayout() {
   const { t, lang } = useLang()
   const isRTL = lang === 'he'
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [contactOpen, setContactOpen] = useState(false)
   const [unreadEvals, setUnreadEvals] = useState(0)
   useStudyTimer(profile?.id)
 
@@ -93,6 +95,25 @@ export default function StudentLayout() {
           <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
           <div className="ml-auto flex items-center gap-2">
             <LangToggle />
+            <button onClick={() => setContactOpen(true)}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
+              style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}
+              title={t('contact_us')}>
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                <rect x="1" y="2.5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                <path d="M1 4l5.5 4L12 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              {t('contact_us')}
+            </button>
+            <button onClick={() => setContactOpen(true)}
+              className="sm:hidden p-2 rounded-xl transition-all"
+              style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}
+              title={t('contact_us')}>
+              <svg width="15" height="15" viewBox="0 0 13 13" fill="none">
+                <rect x="1" y="2.5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                <path d="M1 4l5.5 4L12 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
             <button onClick={toggle}
               className="p-2 rounded-xl text-xs transition-all"
               style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
@@ -106,6 +127,7 @@ export default function StudentLayout() {
               <LogoutIcon />
             </button>
           </div>
+          {contactOpen && <ContactModal onClose={() => setContactOpen(false)} />}
         </div>
 
         {/* Warning banner for non-subscribed students */}
@@ -231,14 +253,7 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
         })}
       </nav>
 
-      <div className="mt-auto px-3 flex flex-col gap-2">
-        <LangToggle />
-        <button onClick={toggle}
-          className="w-full flex items-center gap-2 text-xs py-2.5 px-3 rounded-xl transition-all"
-          style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
-          <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
-          {isDark ? t('light_mode') : t('dark_mode')}
-        </button>
+      <div className="mt-auto px-3">
         <button onClick={async () => { await signOut(); navigate('/login') }}
           className="w-full text-xs py-2.5 px-3 rounded-xl text-left transition-all"
           style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>

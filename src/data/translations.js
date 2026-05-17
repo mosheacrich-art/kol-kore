@@ -384,6 +384,17 @@ export const translations = {
     siddur_loading: 'Cargando siddur desde Sefaria…',
     siddur_error: 'No se pudo cargar el siddur',
     siddur_sections: 'secciones',
+    // Contact
+    contact_us: 'Contáctanos',
+    contact_title: 'Escríbenos',
+    contact_desc: 'Cuéntanos cualquier duda, sugerencia o problema y te responderemos lo antes posible.',
+    contact_name: 'Tu nombre',
+    contact_message: 'Mensaje',
+    contact_placeholder: 'Escribe tu mensaje aquí...',
+    contact_send: 'Enviar mensaje',
+    contact_sending: 'Enviando…',
+    contact_sent: '¡Mensaje enviado! Te responderemos pronto.',
+    contact_error: 'Error al enviar. Inténtalo de nuevo.',
   },
 
   en: {
@@ -771,6 +782,17 @@ export const translations = {
     siddur_loading: 'Loading siddur from Sefaria…',
     siddur_error: 'Could not load the siddur',
     siddur_sections: 'sections',
+    // Contact
+    contact_us: 'Contact us',
+    contact_title: 'Write to us',
+    contact_desc: 'Share any question, suggestion or issue and we will get back to you as soon as possible.',
+    contact_name: 'Your name',
+    contact_message: 'Message',
+    contact_placeholder: 'Write your message here...',
+    contact_send: 'Send message',
+    contact_sending: 'Sending…',
+    contact_sent: 'Message sent! We will reply soon.',
+    contact_error: 'Failed to send. Please try again.',
   },
 
   fr: {
@@ -1158,6 +1180,17 @@ export const translations = {
     siddur_loading: 'Chargement du siddour depuis Sefaria…',
     siddur_error: 'Impossible de charger le siddour',
     siddur_sections: 'sections',
+    // Contact
+    contact_us: 'Nous contacter',
+    contact_title: 'Écrivez-nous',
+    contact_desc: 'Partagez toute question, suggestion ou problème et nous vous répondrons dès que possible.',
+    contact_name: 'Votre nom',
+    contact_message: 'Message',
+    contact_placeholder: 'Écrivez votre message ici...',
+    contact_send: 'Envoyer le message',
+    contact_sending: 'Envoi…',
+    contact_sent: 'Message envoyé ! Nous vous répondrons bientôt.',
+    contact_error: 'Échec de l\'envoi. Veuillez réessayer.',
   },
 
   it: {
@@ -1545,6 +1578,17 @@ export const translations = {
     siddur_loading: 'Caricamento siddur da Sefaria…',
     siddur_error: 'Impossibile caricare il siddur',
     siddur_sections: 'sezioni',
+    // Contact
+    contact_us: 'Contattaci',
+    contact_title: 'Scrivici',
+    contact_desc: 'Condividi qualsiasi domanda, suggerimento o problema e ti risponderemo il prima possibile.',
+    contact_name: 'Il tuo nome',
+    contact_message: 'Messaggio',
+    contact_placeholder: 'Scrivi il tuo messaggio qui...',
+    contact_send: 'Invia messaggio',
+    contact_sending: 'Invio…',
+    contact_sent: 'Messaggio inviato! Ti risponderemo presto.',
+    contact_error: 'Invio fallito. Riprova.',
   },
 
   he: {
@@ -1932,5 +1976,16 @@ export const translations = {
     siddur_loading: 'טוען סידור מסיפריה…',
     siddur_error: 'לא ניתן לטעון את הסידור',
     siddur_sections: 'מקטעים',
+    // Contact
+    contact_us: 'צרו קשר',
+    contact_title: 'כתבו לנו',
+    contact_desc: 'שתפו כל שאלה, הצעה או בעיה ונחזור אליכם בהקדם.',
+    contact_name: 'שמך',
+    contact_message: 'הודעה',
+    contact_placeholder: 'כתבו את ההודעה כאן...',
+    contact_send: 'שלח הודעה',
+    contact_sending: 'שולח…',
+    contact_sent: 'ההודעה נשלחה! נחזור אליך בקרוב.',
+    contact_error: 'שגיאה בשליחה. נסו שוב.',
   },
 }
