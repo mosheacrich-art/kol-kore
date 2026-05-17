@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import ParashaReader from '../../components/ParashaReader'
 import { useSiddurIndex, BERAJOT_INLINE } from '../../hooks/useSefaria'
+import { tSef } from '../../data/sefariaTitles'
 
 export default function TefilaStudy({ basePath = '/student/tefila' }) {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -93,7 +94,7 @@ function NusachPicker({ onSelect }) {
 
 function SiddurListView({ nusach, onSelectRef, onChangeNusach }) {
   const { isDark } = useTheme()
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const [search, setSearch] = useState('')
   const [openService, setOpenService] = useState('shacharit')
   const [openSub, setOpenSub] = useState(null)
@@ -231,7 +232,7 @@ function SiddurListView({ nusach, onSelectRef, onChangeNusach }) {
                               </svg>
                               <span className="text-xs font-semibold tracking-wide uppercase"
                                 style={{ color: srv.color, opacity: 0.8 }}>
-                                {sub.name}
+                                {tSef(sub.name, lang)}
                               </span>
                               <div className="h-px flex-1" style={{ background: `${srv.color}20` }} />
                               <span className="text-xs" style={{ color: srv.color, opacity: 0.5 }}>{sub.items.length}</span>
@@ -255,7 +256,7 @@ function SiddurListView({ nusach, onSelectRef, onChangeNusach }) {
                                     <div className="hebrew text-sm mb-1 leading-tight" style={{ color: srv.color }}>{item.heTitle}</div>
                                   )}
                                   <div className="text-xs font-medium" style={{ color: item.heTitle ? 'var(--text-2)' : 'var(--text)' }}>
-                                    {item.title}
+                                    {tSef(item.title, lang)}
                                   </div>
                                 </button>
                               ))}
@@ -278,7 +279,7 @@ function SiddurListView({ nusach, onSelectRef, onChangeNusach }) {
 // ── Siddur Reader View ────────────────────────────────────────────────────
 
 function SiddurReaderView({ nusach, sefRef, guestMode, isSubscribed, onBack, onNavigate }) {
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const { services } = useSiddurIndex(nusach)
 
   const { service, section, prev, next } = useMemo(() => {
@@ -293,7 +294,7 @@ function SiddurReaderView({ nusach, sefRef, guestMode, isSubscribed, onBack, onN
 
   const isBerajot   = sefRef.startsWith('berajot:')
   const berajotData = isBerajot ? BERAJOT_INLINE[sefRef] : null
-  const displayName = berajotData?.name || section?.title || sefRef.split(', ').pop()
+  const displayName = berajotData?.name || tSef(section?.title, lang) || sefRef.split(', ').pop()
   const displayHeb  = berajotData?.heTitle || section?.heTitle || ''
   const color       = service?.color || '#10b981'
 
@@ -334,14 +335,14 @@ function SiddurReaderView({ nusach, sefRef, guestMode, isSubscribed, onBack, onN
             <button onClick={() => onNavigate(prev.ref)}
               className="text-xs px-3 py-1.5 rounded-lg transition-all"
               style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-              ← {prev.title}
+              ← {tSef(prev.title, lang)}
             </button>
           )}
           {next && (
             <button onClick={() => onNavigate(next.ref)}
               className="text-xs px-3 py-1.5 rounded-lg transition-all"
               style={{ background: `${color}15`, color, border: `1px solid ${color}25` }}>
-              {next.title} →
+              {tSef(next.title, lang)} →
             </button>
           )}
         </div>
