@@ -952,7 +952,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
                 <path d="M1.5 5.5c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
                 <path d="M5.5 9.5v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
               </svg>
-              Grabar
+              {t('record')}
             </button>
           </>
         )}
