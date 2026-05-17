@@ -91,6 +91,17 @@ export function useAliyahText(ref, enabled = true, heText = null) {
 // ── Siddur index (structure from Sefaria v2 API) ──────────────────────────
 
 const siddurIndexCache = new Map()
+const siddurShabbatIndexCache = new Map()
+const rawIndexCache = new Map()
+
+async function fetchSiddurRaw(slug) {
+  if (rawIndexCache.has(slug)) return rawIndexCache.get(slug)
+  const res = await fetch(`https://www.sefaria.org/api/v2/index/${slug}`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const data = await res.json()
+  rawIndexCache.set(slug, data)
+  return data
+}
 
 const SERVICE_META = {
   // Ashkenaz — services are children of a "Weekday" wrapper node
@@ -247,6 +258,44 @@ function parseWeekdayServices(data, bookName) {
   return [makeBerajotService(), ...raw.map(filterService)]
 }
 
+const SHABBAT_SERVICE_META = {
+  'Kabbalat Shabbat':      { id: 'kabbalat',         heb: 'קַבָּלַת שַׁבָּת',  color: '#6366f1', name: 'Kabalat Shabat',    order: 1 },
+  'Maariv for Shabbat':    { id: 'arvit-shabat',     heb: 'עַרְבִית שַׁבָּת',  color: '#1e40af', name: 'Arvit de Shabat',   order: 2 },
+  'Shabbat Maariv':        { id: 'arvit-shabat',     heb: 'עַרְבִית שַׁבָּת',  color: '#1e40af', name: 'Arvit de Shabat',   order: 2 },
+  'Shacharit for Shabbat': { id: 'shacharit-shabat', heb: 'שַׁחֲרִית שַׁבָּת', color: '#f59e0b', name: 'Shajarit de Shabat', order: 3 },
+  'Shabbat Shacharit':     { id: 'shacharit-shabat', heb: 'שַׁחֲרִית שַׁבָּת', color: '#f59e0b', name: 'Shajarit de Shabat', order: 3 },
+  'Musaf for Shabbat':     { id: 'musaf-shabat',     heb: 'מוּסָף שַׁבָּת',    color: '#10b981', name: 'Musaf de Shabat',   order: 4 },
+  'Shabbat Musaf':         { id: 'musaf-shabat',     heb: 'מוּסָף שַׁבָּת',    color: '#10b981', name: 'Musaf de Shabat',   order: 4 },
+  'Mincha for Shabbat':    { id: 'mincha-shabat',    heb: 'מִנְחָה שַׁבָּת',   color: '#8b5cf6', name: 'Minjá de Shabat',   order: 5 },
+  'Shabbat Mincha':        { id: 'mincha-shabat',    heb: 'מִנְחָה שַׁבָּת',   color: '#8b5cf6', name: 'Minjá de Shabat',   order: 5 },
+  'Minchah for Shabbat':   { id: 'mincha-shabat',    heb: 'מִנְחָה שַׁבָּת',   color: '#8b5cf6', name: 'Minjá de Shabat',   order: 5 },
+}
+
+function parseShabbatServices(data, bookName) {
+  const schema = data.schema
+  if (!schema) return []
+  const rootNodes = schema.nodes || []
+
+  let raw = []
+
+  // Strategy 1: explicit "Shabbat" wrapper node (Ashkenaz)
+  const shabbatNode = rootNodes.find(n => n.title === 'Shabbat' || n.title === 'Shabbat Prayers')
+  if (shabbatNode?.nodes?.length) {
+    raw = shabbatNode.nodes
+      .filter(n => SHABBAT_SERVICE_META[n.title])
+      .map(srvNode => buildService(srvNode, ['Shabbat', srvNode.title], bookName))
+  } else {
+    // Strategy 2: root-level nodes with Shabbat title (Sefard)
+    raw = rootNodes
+      .filter(n => SHABBAT_SERVICE_META[n.title])
+      .map(srvNode => buildService(srvNode, [srvNode.title], bookName))
+  }
+
+  return raw
+    .map(filterService)
+    .sort((a, b) => (SHABBAT_SERVICE_META[a.name]?.order ?? 99) - (SHABBAT_SERVICE_META[b.name]?.order ?? 99))
+}
+
 export function useSiddurIndex(nusach) {
   const [state, setState] = useState({ services: null, loading: false, error: null })
 
@@ -262,11 +311,38 @@ export function useSiddurIndex(nusach) {
 
     setState(s => ({ ...s, loading: true, error: null }))
 
-    fetch(`https://www.sefaria.org/api/v2/index/${slug}`)
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
+    fetchSiddurRaw(slug)
       .then(data => {
         const services = parseWeekdayServices(data, bookName)
         siddurIndexCache.set(slug, services)
+        setState({ services, loading: false, error: null })
+      })
+      .catch(err => setState({ services: null, loading: false, error: err.message }))
+  }, [nusach])
+
+  return state
+}
+
+export function useSiddurShabbatIndex(nusach) {
+  const [state, setState] = useState({ services: null, loading: false, error: null })
+
+  useEffect(() => {
+    if (!nusach) return
+    const slug     = nusach === 'ashkenaz' ? 'Siddur_Ashkenaz' : 'Siddur_Sefard'
+    const bookName = nusach === 'ashkenaz' ? 'Siddur Ashkenaz' : 'Siddur Sefard'
+    const cacheKey = `${slug}:shabbat`
+
+    if (siddurShabbatIndexCache.has(cacheKey)) {
+      setState({ services: siddurShabbatIndexCache.get(cacheKey), loading: false, error: null })
+      return
+    }
+
+    setState(s => ({ ...s, loading: true, error: null }))
+
+    fetchSiddurRaw(slug)
+      .then(data => {
+        const services = parseShabbatServices(data, bookName)
+        siddurShabbatIndexCache.set(cacheKey, services)
         setState({ services, loading: false, error: null })
       })
       .catch(err => setState({ services: null, loading: false, error: err.message }))
