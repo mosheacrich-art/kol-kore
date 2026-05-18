@@ -54,7 +54,7 @@ html, body {
   overflow: hidden;
   background: var(--paper);
   color: var(--ink);
-  font-family: 'TaameyFrankCLM', 'KeterYG', serif;
+  font-family: 'ShlomosemiStam', 'KeterYG', serif;
   direction: rtl;
   -webkit-font-smoothing: antialiased;
 }
@@ -161,10 +161,9 @@ html, body {
   width: 100%;
   table-layout: fixed;
   border-collapse: collapse;
-  font-family: 'TaameyFrankCLM', 'KeterYG', serif;
+  font-family: 'ShlomosemiStam', 'KeterYG', serif;
   font-size: 1.3em;
   direction: rtl;
-  word-spacing: -0.4em;
 }
 
 .tikkun-cell {
