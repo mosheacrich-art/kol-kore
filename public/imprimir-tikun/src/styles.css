@@ -164,6 +164,7 @@ html, body {
   font-family: 'TaameyFrankCLM', 'KeterYG', serif;
   font-size: 1.3em;
   direction: rtl;
+  word-spacing: -0.2em;
 }
 
 .tikkun-cell {
