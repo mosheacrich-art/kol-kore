@@ -5,6 +5,7 @@ import { BOOK_COLORS, SEFARIM_LIST } from '../../data/parashot'
 import { MOADIM_LIST } from '../../data/moadim'
 import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
+import { useLang } from '../../context/LangContext'
 import ParashaReader from '../../components/ParashaReader'
 
 const HAFTARA_BOOKS = SEFARIM_LIST.map(s => s.id)
@@ -26,6 +27,7 @@ export default function HaftaraStudy({ basePath = '/student/haftara' }) {
 function ListView({ basePath }) {
   const navigate = useNavigate()
   const { isDark } = useTheme()
+  const { t } = useLang()
   const [search, setSearch] = useState('')
   const [openBook, setOpenBook] = useState('bereshit')
   const [openChag, setOpenChag] = useState(null)
@@ -71,13 +73,13 @@ function ListView({ basePath }) {
     <div className="p-4 sm:p-8 max-w-3xl">
       <div className="mb-10 fade-up-1">
         <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          הַפְטָרָה · Profetas
+          הַפְטָרָה · {t('nav_haftara')}
         </p>
         <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-          Estudiar Haftará
+          {t('nav_haftara')}
         </h1>
         <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-          Las 54 haftarot semanales y las lecturas de festividades
+          {t('haftara_subtitle')}
         </p>
       </div>
 
@@ -89,7 +91,7 @@ function ListView({ basePath }) {
           </svg>
         </div>
         <input value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Buscar haftará..."
+          placeholder={t('haftara_search')}
           className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }} />
       </div>
@@ -113,7 +115,7 @@ function ListView({ basePath }) {
                       <span className="hebrew text-sm" style={{ color }}>{book.heb}</span>
                     </div>
                     <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {book.haftarot.length} haftarot
+                      {book.haftarot.length} {t('haftara_count')}
                     </p>
                   </div>
                 </div>
@@ -165,7 +167,7 @@ function ListView({ basePath }) {
           <div className="flex items-center gap-3 mb-3 px-1">
             <div className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
             <p className="text-xs tracking-widest uppercase" style={{ color: 'var(--text-gold)' }}>
-              מוֹעֲדִים · Haftarot de festividades
+              מוֹעֲדִים · {t('haftara_holiday_section')}
             </p>
             <div className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
           </div>
@@ -186,7 +188,7 @@ function ListView({ basePath }) {
                           <span className="hebrew text-sm" style={{ color: chag.color }}>{chag.heb}</span>
                         </div>
                         <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          {chag.haftarot.length} haftarot
+                          {chag.haftarot.length} {t('haftara_count')}
                         </p>
                       </div>
                     </div>
@@ -239,6 +241,7 @@ function ListView({ basePath }) {
 
 function ReaderView({ haftara, basePath, guestMode, isSubscribed }) {
   const navigate = useNavigate()
+  const { t } = useLang()
   const [searchParams] = useSearchParams()
   const initialAliyah = Math.min(
     Math.max(0, parseInt(searchParams.get('aliyah') || '0', 10)),
@@ -256,11 +259,11 @@ function ReaderView({ haftara, basePath, guestMode, isSubscribed }) {
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M8 2L4 6l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          Todas las haftarot
+          {t('haftara_all')}
         </button>
         <div className="h-4 w-px" style={{ background: 'var(--border)' }} />
         <span className="text-xs" style={{ color: 'var(--text-3)' }}>
-          {haftara.chag ? 'Haftará de festividad · מוֹעֲדִים' : 'Haftará semanal · הַפְטָרָה'}
+          {haftara.chag ? `${t('haftara_holiday_label')} · מוֹעֲדִים` : `${t('haftara_weekly_label')} · הַפְטָרָה`}
         </span>
       </div>
 
