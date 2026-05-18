@@ -12,6 +12,18 @@
   font-display: swap;
 }
 @font-face {
+  font-family: 'TaameyFrankCLM';
+  src: url('../../fonts/TaameyFrankCLM-Medium.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'TaameyFrankCLM';
+  src: url('../../fonts/TaameyFrankCLM-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
   font-family: 'ShlomosemiStam';
   src: url('https://tikkun.io/assets/fonts/ShlomosemiStam.ttf') format('truetype');
   font-weight: 400;
@@ -42,7 +54,7 @@ html, body {
   overflow: hidden;
   background: var(--paper);
   color: var(--ink);
-  font-family: 'ShlomosemiStam', 'KeterYG', serif;
+  font-family: 'TaameyFrankCLM', 'KeterYG', serif;
   direction: rtl;
   -webkit-font-smoothing: antialiased;
 }
@@ -149,7 +161,7 @@ html, body {
   width: 100%;
   table-layout: fixed;
   border-collapse: collapse;
-  font-family: 'ShlomosemiStam', 'KeterYG', serif;
+  font-family: 'TaameyFrankCLM', 'KeterYG', serif;
   font-size: 1.3em;
   direction: rtl;
 }
