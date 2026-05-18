@@ -183,7 +183,8 @@ html, body {
   justify-content: space-between;
 }
 
-.fragment { width: 100%; }
+.fragment { width: 100%; transition: color 0.12s; }
+.fragment.w-active { color: #3b82f6 !important; }
 .fragment.mod-setuma { width: auto; }
 .fragment:after {
   content: '';

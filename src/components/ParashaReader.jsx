@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import useTikkunWords from '../hooks/useTikkunWords'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useAliyahText } from '../hooks/useSefaria'
@@ -809,7 +810,13 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
         {loading && <LoadingState bookColor={bookColor} />}
         {error && <ErrorState error={error} ref_={currentAliyah.ref} />}
         {mode === 'sefer'
-          ? <SeferView parasha={parasha} isDark={isDark} />
+          ? <SeferView
+              parasha={parasha}
+              isDark={isDark}
+              aliyahRef={currentAliyah.ref}
+              wordTimestamps={cursorEnabled ? (audio?.wordTimestamps ?? null) : null}
+              audioCurrentTime={cursorEnabled ? audioCurrentTime : null}
+            />
           : !loading && !error && verses.length > 0 && (
               mode === 'split'
                 ? <SplitView
@@ -1151,10 +1158,89 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
 
 const BASE_URL = import.meta.env.BASE_URL
 
-function SeferView({ parasha, isDark }) {
+function _parseAliyahRef(ref) {
+  const m = String(ref || '').match(/^(\w+)\s+(\d+):(\d+)-(\d+):(\d+)$/)
+  if (!m) return null
+  return { startCh: parseInt(m[2]), startV: parseInt(m[3]), endCh: parseInt(m[4]), endV: parseInt(m[5]) }
+}
+
+function _inRange(word, range) {
+  if (!range) return true
+  if (word.c < range.startCh || word.c > range.endCh) return false
+  if (word.c === range.startCh && word.v < range.startV) return false
+  if (word.c === range.endCh   && word.v > range.endV)   return false
+  return true
+}
+
+function SeferView({ parasha, isDark, aliyahRef, wordTimestamps, audioCurrentTime }) {
   const iframeRef = useRef(null)
   const heb = parasha?.heb || ''
   const src = `${BASE_URL}imprimir-tikun/index.html?embed=1&theme=${isDark ? 'dark' : 'light'}#parasha=${encodeURIComponent(heb)}`
+
+  const { words: allWords } = useTikkunWords(parasha?.id, parasha?.combined ? parasha.parts : null)
+
+  const range = useMemo(() => _parseAliyahRef(aliyahRef), [aliyahRef])
+
+  const aliyahWordOffset = useMemo(() => {
+    if (!allWords || !range) return 0
+    let count = 0
+    for (const w of allWords) {
+      if (_inRange(w, range)) break
+      count++
+    }
+    return count
+  }, [allWords, range])
+
+  const aliyahWords = useMemo(() => {
+    if (!allWords) return []
+    return allWords.filter(w => _inRange(w, range))
+  }, [allWords, range])
+
+  const isV2Ts = useMemo(() => {
+    const first = wordTimestamps?.find(x => x != null)
+    return first != null && !('word' in first)
+  }, [wordTimestamps])
+
+  const aliyahWordIdx = useMemo(() => {
+    if (!wordTimestamps?.length || audioCurrentTime == null || !aliyahWords.length) return -1
+    if (isV2Ts) {
+      let best = -1
+      const limit = Math.min(wordTimestamps.length, aliyahWords.length)
+      for (let i = 0; i < limit; i++) {
+        const ts = wordTimestamps[i]
+        if (ts && ts.start <= audioCurrentTime) best = i
+        else if (ts && ts.start > audioCurrentTime) break
+      }
+      return best
+    }
+    let lo = 0, hi = wordTimestamps.length - 1, best = -1
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1
+      if (wordTimestamps[mid].start <= audioCurrentTime) { best = mid; lo = mid + 1 }
+      else hi = mid - 1
+    }
+    if (best < 0) return -1
+    const wLen = wordTimestamps.length, sLen = aliyahWords.length
+    return wLen === 1 ? 0 : Math.min(Math.round(best * (sLen - 1) / (wLen - 1)), sLen - 1)
+  }, [wordTimestamps, audioCurrentTime, aliyahWords, isV2Ts])
+
+  const globalWordIdx = aliyahWordIdx >= 0 ? aliyahWordOffset + aliyahWordIdx : -1
+
+  const globalWordIdxRef = useRef(-1)
+  useEffect(() => {
+    globalWordIdxRef.current = globalWordIdx
+    iframeRef.current?.contentWindow?.postMessage({ wordIdx: globalWordIdx }, '*')
+  }, [globalWordIdx])
+
+  useEffect(() => {
+    const iframe = iframeRef.current
+    if (!iframe) return
+    const onLoad = () => {
+      iframe.contentWindow?.postMessage({ wordIdx: globalWordIdxRef.current }, '*')
+    }
+    iframe.addEventListener('load', onLoad)
+    return () => iframe.removeEventListener('load', onLoad)
+  }, [])
 
   return (
     <iframe
