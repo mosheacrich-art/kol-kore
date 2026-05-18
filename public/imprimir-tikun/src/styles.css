@@ -185,6 +185,7 @@ html, body {
 
 .fragment { width: 100%; transition: color 0.12s; }
 .fragment.w-active { color: #3b82f6 !important; }
+body.embed .fragment:hover { color: #3b82f6; cursor: pointer; }
 .fragment.mod-setuma { width: auto; }
 .fragment:after {
   content: '';

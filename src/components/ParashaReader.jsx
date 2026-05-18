@@ -854,7 +854,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
       </div>
 
       {/* Audio bar */}
-      {!guestMode && mode !== 'sefer' && <div className="flex-shrink-0 px-4 py-2.5 flex items-center justify-end gap-2"
+      {!guestMode && <div className="flex-shrink-0 px-4 py-2.5 flex items-center justify-end gap-2"
         style={{ borderTop: '1px solid var(--border-subtle)', background: 'var(--overlay)' }}>
 
         {recState === 'recording' ? (
