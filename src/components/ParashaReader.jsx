@@ -15,15 +15,16 @@ function fmtSec(s) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
-const MODE_IDS = ['taamim', 'nikkud', 'plain', 'split']
-const MODE_HEB = ['טְעָמִים', 'נִקּוּד', 'כְּתָב', 'מְפוּצָּל']
-const MODE_TKEYS = ['mode_taamim', 'mode_nikkud', 'mode_plain', 'mode_split']
+const MODE_IDS = ['taamim', 'nikkud', 'plain', 'split', 'sefer']
+const MODE_HEB = ['טְעָמִים', 'נִקּוּד', 'כְּתָב', 'מְפוּצָּל', 'סֵפֶר']
+const MODE_TKEYS = ['mode_taamim', 'mode_nikkud', 'mode_plain', 'mode_split', 'mode_sefer']
 
 const MIN_FONT = 14
 const MAX_FONT = 56
 
 export default function ParashaReader({ parasha, guestMode = false, isSubscribed = true, initialAliyah = 0, availableModes = null }) {
   const { t } = useLang()
+  const { isDark } = useTheme()
   const navigate = useNavigate()
   const ALL_MODES = MODE_IDS.map((id, i) => ({ id, heb: MODE_HEB[i], label: t(MODE_TKEYS[i]) }))
   const MODES = availableModes ? ALL_MODES.filter(m => availableModes.includes(m.id)) : ALL_MODES
@@ -388,7 +389,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
 
         {/* Row 2: Controls + Aliyah nav in same row */}
         <div className="no-scrollbar flex items-center gap-2 px-4 sm:px-6 pb-2 overflow-x-auto">
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div className="flex items-center gap-1 flex-shrink-0" style={{ display: mode === 'sefer' ? 'none' : undefined }}>
               <button onClick={() => setFontSize(f => Math.max(MIN_FONT, f - 2))}
                 title="Reducir fuente"
                 className="w-8 h-8 rounded flex items-center justify-center text-xs font-bold transition-all"
@@ -807,34 +808,37 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         {loading && <LoadingState bookColor={bookColor} />}
         {error && <ErrorState error={error} ref_={currentAliyah.ref} />}
-        {!loading && !error && verses.length > 0 && (
-          mode === 'split'
-            ? <SplitView
-                verses={verses}
-                bookColor={bookColor}
-                fontSize={fontSize}
-                wordTimestamps={cursorEnabled && !evalMode ? (audio?.wordTimestamps ?? null) : null}
-                audioCurrentTime={cursorEnabled && !evalMode ? audioCurrentTime : null}
-                audioPlaying={audioPlaying}
-                audioDuration={audioDuration}
-                onWordClick={cursorEnabled && audio && !evalMode ? handleSeek : null}
-                onWordMark={evalMode ? handleWordMark : null}
-                markedWordIndices={evalMode ? new Set(evalErrors.map(e => e.wordIdx)) : null}
-              />
-            : <SingleView
-                verses={verses}
-                mode={mode}
-                bookColor={bookColor}
-                fontSize={fontSize}
-                wordTimestamps={cursorEnabled && !evalMode ? (audio?.wordTimestamps ?? null) : null}
-                audioCurrentTime={cursorEnabled && !evalMode ? audioCurrentTime : null}
-                audioPlaying={audioPlaying}
-                audioDuration={audioDuration}
-                onWordClick={cursorEnabled && audio && !evalMode ? handleSeek : null}
-                onWordMark={evalMode ? handleWordMark : null}
-                markedWordIndices={evalMode ? new Set(evalErrors.map(e => e.wordIdx)) : null}
-              />
-        )}
+        {mode === 'sefer'
+          ? <SeferView parasha={parasha} isDark={isDark} />
+          : !loading && !error && verses.length > 0 && (
+              mode === 'split'
+                ? <SplitView
+                    verses={verses}
+                    bookColor={bookColor}
+                    fontSize={fontSize}
+                    wordTimestamps={cursorEnabled && !evalMode ? (audio?.wordTimestamps ?? null) : null}
+                    audioCurrentTime={cursorEnabled && !evalMode ? audioCurrentTime : null}
+                    audioPlaying={audioPlaying}
+                    audioDuration={audioDuration}
+                    onWordClick={cursorEnabled && audio && !evalMode ? handleSeek : null}
+                    onWordMark={evalMode ? handleWordMark : null}
+                    markedWordIndices={evalMode ? new Set(evalErrors.map(e => e.wordIdx)) : null}
+                  />
+                : <SingleView
+                    verses={verses}
+                    mode={mode}
+                    bookColor={bookColor}
+                    fontSize={fontSize}
+                    wordTimestamps={cursorEnabled && !evalMode ? (audio?.wordTimestamps ?? null) : null}
+                    audioCurrentTime={cursorEnabled && !evalMode ? audioCurrentTime : null}
+                    audioPlaying={audioPlaying}
+                    audioDuration={audioDuration}
+                    onWordClick={cursorEnabled && audio && !evalMode ? handleSeek : null}
+                    onWordMark={evalMode ? handleWordMark : null}
+                    markedWordIndices={evalMode ? new Set(evalErrors.map(e => e.wordIdx)) : null}
+                  />
+            )
+        }
         {!loading && !error && verses.length === 0 && (
           <div className="flex-1 flex items-center justify-center">
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('loading')}</p>
@@ -843,7 +847,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
       </div>
 
       {/* Audio bar */}
-      {!guestMode && <div className="flex-shrink-0 px-4 py-2.5 flex items-center justify-end gap-2"
+      {!guestMode && mode !== 'sefer' && <div className="flex-shrink-0 px-4 py-2.5 flex items-center justify-end gap-2"
         style={{ borderTop: '1px solid var(--border-subtle)', background: 'var(--overlay)' }}>
 
         {recState === 'recording' ? (
@@ -1142,6 +1146,34 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
         </div>
       </div>
     </div>
+  )
+}
+
+const BASE_URL = import.meta.env.BASE_URL
+
+function SeferView({ parasha, isDark }) {
+  const iframeRef = useRef(null)
+  const src = `${BASE_URL}imprimir-tikun/index.html?embed=1&theme=${isDark ? 'dark' : 'light'}`
+
+  useEffect(() => {
+    const iframe = iframeRef.current
+    if (!iframe || !parasha?.heb) return
+    const send = () => iframe.contentWindow?.postMessage({ scrollToParasha: parasha.heb }, '*')
+    if (iframe.contentDocument?.readyState === 'complete') {
+      send()
+    } else {
+      iframe.addEventListener('load', send, { once: true })
+    }
+  }, [parasha?.heb])
+
+  return (
+    <iframe
+      ref={iframeRef}
+      key={isDark ? 'dark' : 'light'}
+      src={src}
+      style={{ flex: 1, width: '100%', border: 'none', display: 'block' }}
+      title="תיקון קוראים"
+    />
   )
 }
 
