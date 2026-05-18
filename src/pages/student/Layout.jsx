@@ -239,12 +239,6 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
                 <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
                   style={{ background: '#ef4444', color: '#fff' }}>{unreadEvals > 9 ? '9+' : unreadEvals}</span>
               )}
-              {lockedItem && (
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0, opacity: 0.5 }}>
-                  <rect x="2" y="5.5" width="8" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.2"/>
-                  <path d="M4 5.5V4a2 2 0 014 0v1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                </svg>
-              )}
             </button>
           )
         })}
