@@ -5,10 +5,32 @@ import { useLang } from '../context/LangContext'
 import { supabase } from '../lib/supabase'
 
 export default function AccountSettings() {
-  const { profile, signOut } = useAuth()
+  const { profile, setProfile, signOut } = useAuth()
   const { t } = useLang()
   const navigate = useNavigate()
   const isTeacher = profile?.role === 'teacher'
+
+  // ── Change display name ──────────────────────────────────────────────────
+  const [displayName, setDisplayName]     = useState(profile?.name || '')
+  const [nameLoading, setNameLoading]     = useState(false)
+  const [nameMsg, setNameMsg]             = useState(null) // { ok: bool, text: string }
+
+  const handleSaveName = async (e) => {
+    e.preventDefault()
+    const trimmed = displayName.trim()
+    if (!trimmed) { setNameMsg({ ok: false, text: 'El nombre no puede estar vacío' }); return }
+    if (trimmed === profile?.name) { setNameMsg({ ok: false, text: 'Es el mismo nombre actual' }); return }
+    setNameLoading(true)
+    setNameMsg(null)
+    const { error } = await supabase.from('profiles').update({ name: trimmed }).eq('id', profile.id)
+    setNameLoading(false)
+    if (error) {
+      setNameMsg({ ok: false, text: error.message })
+    } else {
+      setProfile(p => ({ ...p, name: trimmed }))
+      setNameMsg({ ok: true, text: 'Nombre actualizado' })
+    }
+  }
 
   // ── Reset password ───────────────────────────────────────────────────────
   const [newPwd, setNewPwd]         = useState('')
@@ -78,6 +100,46 @@ export default function AccountSettings() {
       <h1 className="text-lg font-semibold mb-6" style={{ color: 'var(--text)' }}>
         {t('nav_account')}
       </h1>
+
+      {/* ── Change display name ─────────────────────────────────────────── */}
+      <section className="rounded-2xl p-5 mb-4"
+        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+        <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--text)' }}>
+          Nombre en pantalla
+        </h2>
+
+        <form onSubmit={handleSaveName} className="flex flex-col gap-3">
+          <input
+            type="text"
+            placeholder="Tu nombre"
+            value={displayName}
+            onChange={e => { setDisplayName(e.target.value); setNameMsg(null) }}
+            className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+            style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
+          />
+
+          {nameMsg && (
+            <p className="text-xs px-3 py-2 rounded-lg"
+              style={{
+                color: nameMsg.ok ? '#22c55e' : '#ef4444',
+                background: nameMsg.ok ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.08)',
+                border: `1px solid ${nameMsg.ok ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.15)'}`,
+              }}>
+              {nameMsg.text}
+            </p>
+          )}
+
+          <button type="submit" disabled={nameLoading || !displayName.trim()}
+            className="py-2.5 rounded-xl text-sm font-semibold transition-all"
+            style={{
+              background: nameLoading || !displayName.trim() ? 'var(--bg)' : `linear-gradient(135deg, ${accent}, ${accent}cc)`,
+              color: nameLoading || !displayName.trim() ? 'var(--text-3)' : isTeacher ? '#0d0b1e' : '#fff',
+              border: `1px solid ${nameLoading || !displayName.trim() ? 'var(--border)' : accent}`,
+            }}>
+            {nameLoading ? '…' : 'Guardar nombre'}
+          </button>
+        </form>
+      </section>
 
       {/* ── Change password ─────────────────────────────────────────────── */}
       <section className="rounded-2xl p-5 mb-4"
