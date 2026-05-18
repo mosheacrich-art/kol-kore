@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import ParashaReader from '../../components/ParashaReader'
 import { useSiddurIndex, useSiddurShabbatIndex, BERAJOT_INLINE } from '../../hooks/useSefaria'
+import HomeworkQuickModal from '../../components/HomeworkQuickModal'
 import { tSef } from '../../data/sefariaTitles'
 
 export default function TefilaStudy({ basePath = '/student/tefila' }) {
@@ -33,6 +34,7 @@ export default function TefilaStudy({ basePath = '/student/tefila' }) {
     <SiddurReaderView
       nusach={nusach} day={day} sefRef={sefRef}
       guestMode={guestMode} isSubscribed={isSubscribed}
+      isTeacher={isTeacher}
       onBack={backToList}
       onNavigate={r => setSearchParams({ n: nusach, d: day, r })}
     />
@@ -491,8 +493,9 @@ function SiddurShabbatListView({ nusach, onSelectRef, onChangeNusach, onChangeDa
 
 // ── Siddur Reader View ────────────────────────────────────────────────────
 
-function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack, onNavigate }) {
+function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack, onNavigate, isTeacher }) {
   const { t, lang } = useLang()
+  const [hwOpen, setHwOpen] = useState(false)
   const { services: weekdayServices } = useSiddurIndex(nusach)
   const { services: shabbatServices } = useSiddurShabbatIndex(nusach)
   const services = day === 'shabat' ? shabbatServices : weekdayServices
@@ -545,7 +548,18 @@ function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack
           <span className="hebrew" style={{ color }}>{displayHeb || displayName}</span>
         </span>
 
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex gap-2 items-center">
+          {isTeacher && !isBerajot && (
+            <button onClick={() => setHwOpen(true)}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
+              style={{ background: 'rgba(108,51,230,0.12)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.3)' }}>
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                <path d="M1 10l1.5-3.5L9 2 9.5 2.5 3 9.5 1 10z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
+                <path d="M7 2.5l1.5 1.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+              </svg>
+              Deber
+            </button>
+          )}
           {prev && (
             <button onClick={() => onNavigate(prev.ref)}
               className="text-xs px-3 py-1.5 rounded-lg transition-all"
@@ -572,6 +586,16 @@ function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack
           availableModes={['nikkud']}
         />
       </div>
+
+      {hwOpen && (
+        <HomeworkQuickModal
+          onClose={() => setHwOpen(false)}
+          preType="tefila"
+          preRef={sefRef}
+          preName={`${service?.name ? service.name + ' · ' : ''}${displayName}`}
+          preHeb={displayHeb || service?.heb || ''}
+        />
+      )}
     </div>
   )
 }

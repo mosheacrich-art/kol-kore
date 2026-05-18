@@ -294,6 +294,7 @@ export default function TeacherHomework() {
             ? (parasha.aliyot[item.aliyah_idx]?.n === 8 ? 'Maftir' : `${parasha.aliyot[item.aliyah_idx]?.n}ª Aliyá`)
             : null
           const haftara = item.haftara_id ? ALL_HAFTAROT.find(h => h.id === item.haftara_id) : null
+          const tefilaSectionName = hwType === 'tefila' && item.subject ? item.subject : null
           const typeColors = { parasha: '#f59e0b', haftara: '#10b981', tefila: '#8b5cf6' }
           const typeLabels = { parasha: t('nav_study'), haftara: t('nav_haftara'), tefila: t('nav_tefila') }
           const typeColor = typeColors[hwType] || '#f59e0b'
@@ -359,6 +360,12 @@ export default function TeacherHomework() {
                     <span className="text-xs px-2 py-0.5 rounded-md flex items-center gap-1"
                       style={{ background: `${typeColor}10`, color: typeColor, border: `1px solid ${typeColor}20` }}>
                       <span className="hebrew">{haftara.heb}</span>
+                    </span>
+                  )}
+                  {tefilaSectionName && (
+                    <span className="text-xs px-2 py-0.5 rounded-md flex items-center gap-1"
+                      style={{ background: `${typeColor}10`, color: typeColor, border: `1px solid ${typeColor}20` }}>
+                      {tefilaSectionName}
                     </span>
                   )}
                   {item.require_audio && (
