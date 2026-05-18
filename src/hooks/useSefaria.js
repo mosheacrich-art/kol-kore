@@ -294,16 +294,14 @@ function parseShabbatSefard(data) {
 }
 
 // ── Shabbat Ashkenaz (extracted from Siddur Ashkenaz) ────────────────────
-// Structure: root → Shabbat → {Shabbat Evening, Shabbat Morning, Shabbat Afternoon?, ...}
+// Structure: root → Shabbat → direct service nodes
 
 const SHABBAT_ASHKENAZ_META = {
-  'Shabbat Evening':   { id: 'arvit-shabat',     heb: 'לֵיל שַׁבָּת',      color: '#1e40af', name: 'Arvit de Shabat',    order: 1 },
-  'Shabbat Morning':   { id: 'shacharit-shabat', heb: 'שַׁחֲרִית שַׁבָּת',  color: '#f59e0b', name: 'Shajarit de Shabat',  order: 2 },
-  'Musaf':             { id: 'musaf-shabat',     heb: 'מוּסָף שַׁבָּת',     color: '#10b981', name: 'Musaf de Shabat',     order: 3 },
-  'Shabbat Musaf':     { id: 'musaf-shabat',     heb: 'מוּסָף שַׁבָּת',     color: '#10b981', name: 'Musaf de Shabat',     order: 3 },
-  'Shabbat Afternoon': { id: 'mincha-shabat',    heb: 'מִנְחָה שַׁבָּת',    color: '#8b5cf6', name: 'Minjá de Shabat',     order: 4 },
-  'Mincha':            { id: 'mincha-shabat',    heb: 'מִנְחָה שַׁבָּת',    color: '#8b5cf6', name: 'Minjá de Shabat',     order: 4 },
-  'Shabbat Mincha':    { id: 'mincha-shabat',    heb: 'מִנְחָה שַׁבָּת',    color: '#8b5cf6', name: 'Minjá de Shabat',     order: 4 },
+  'Kabbalat Shabbat': { id: 'kabbalat',         heb: 'קַבָּלַת שַׁבָּת',  color: '#6366f1', name: 'Kabalat Shabat',    order: 1 },
+  'Maariv Arvit':     { id: 'arvit-shabat',     heb: 'עַרְבִית שַׁבָּת',  color: '#1e40af', name: 'Arvit de Shabat',   order: 2 },
+  'Shacharit':        { id: 'shacharit-shabat', heb: 'שַׁחֲרִית שַׁבָּת', color: '#f59e0b', name: 'Shajarit de Shabat', order: 3 },
+  'Musaf LeShabbat':  { id: 'musaf-shabat',     heb: 'מוּסָף לְשַׁבָּת',  color: '#10b981', name: 'Musaf leShabbat',   order: 4 },
+  'Minchah':          { id: 'mincha-shabat',    heb: 'מִנְחָה שַׁבָּת',   color: '#8b5cf6', name: 'Minjá de Shabat',   order: 5 },
 }
 
 function parseShabbatAshkenaz(data, bookName) {
