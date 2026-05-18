@@ -366,6 +366,16 @@ window.addEventListener('message', function(e) {
   if (typeof e.data.wordIdx === 'number') {
     highlightWord(e.data.wordIdx);
   }
+  /* Scroll to aliyah start (no highlight) */
+  if (typeof e.data.scrollToWord === 'number') {
+    var n = e.data.scrollToWord;
+    var fi = wordFragMap[n];
+    if (fi == null && wordFragMap.length) fi = wordFragMap[0];
+    if (fi != null) {
+      var el = canvas.querySelector('[data-fi="' + fi + '"]');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
 });
 
 /* ── Async data load ────────────────────────────────────────────────── */

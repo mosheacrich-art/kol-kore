@@ -1227,16 +1227,28 @@ function SeferView({ parasha, isDark, aliyahRef, wordTimestamps, audioCurrentTim
   const globalWordIdx = aliyahWordIdx >= 0 ? aliyahWordOffset + aliyahWordIdx : -1
 
   const globalWordIdxRef = useRef(-1)
+  const aliyahWordOffsetRef = useRef(0)
+
   useEffect(() => {
     globalWordIdxRef.current = globalWordIdx
     iframeRef.current?.contentWindow?.postMessage({ wordIdx: globalWordIdx }, '*')
   }, [globalWordIdx])
 
+  // Scroll iframe to aliyah start whenever aliyah or data changes
+  useEffect(() => {
+    if (!allWords) return
+    aliyahWordOffsetRef.current = aliyahWordOffset
+    iframeRef.current?.contentWindow?.postMessage({ scrollToWord: aliyahWordOffset }, '*')
+  }, [aliyahWordOffset, allWords])
+
   useEffect(() => {
     const iframe = iframeRef.current
     if (!iframe) return
     const onLoad = () => {
-      iframe.contentWindow?.postMessage({ wordIdx: globalWordIdxRef.current }, '*')
+      const win = iframe.contentWindow
+      if (!win) return
+      win.postMessage({ scrollToWord: aliyahWordOffsetRef.current }, '*')
+      win.postMessage({ wordIdx: globalWordIdxRef.current }, '*')
     }
     iframe.addEventListener('load', onLoad)
     return () => iframe.removeEventListener('load', onLoad)
