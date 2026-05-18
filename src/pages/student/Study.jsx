@@ -9,10 +9,10 @@ import { useAuth } from '../../context/AuthContext'
 import ParashaReader from '../../components/ParashaReader'
 import { BERAJOT_INLINE } from '../../hooks/useSefaria'
 
-const SIMANIM = {
-  id: 'simanim',
-  name: 'Simanim',
-  heb: 'סִימָנִים',
+const TAAMIM = {
+  id: 'taamim',
+  name: 'Taamim',
+  heb: 'טַעֲמֵי הַמִּקְרָא',
   color: '#6c33e6',
   availableModes: ['taamim'],
   aliyot: [{
@@ -32,8 +32,8 @@ const SIMANIM = {
 export default function StudentStudy({ basePath = '/student/study' }) {
   const { parashaId } = useParams()
   const { profile } = useAuth()
-  const parasha = parashaId === 'simanim'
-    ? SIMANIM
+  const parasha = parashaId === 'taamim'
+    ? TAAMIM
     : parashaId?.startsWith('berajot--')
       ? (() => {
           const key = parashaId.replace('berajot--', 'berajot:')
@@ -95,6 +95,7 @@ function ListView({ basePath, guestMode }) {
   }, [filteredMoadim])
 
   const [openChag, setOpenChag] = useState(null)
+  const [openBerajot, setOpenBerajot] = useState(false)
 
   const cardDefault = isDark
     ? { bg: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.05)' }
@@ -134,10 +135,11 @@ function ListView({ basePath, guestMode }) {
       <div className="flex flex-col gap-2.5 fade-up-3">
         {/* ── Berajot ── */}
         {!search && (
-          <div className="rounded-2xl overflow-hidden mb-1"
-            style={{ border: '1px solid rgba(16,185,129,0.2)' }}>
-            <div className="flex items-center justify-between px-5 py-4"
-              style={{ background: 'rgba(16,185,129,0.06)' }}>
+          <div className="rounded-2xl overflow-hidden mb-1 transition-all"
+            style={{ border: `1px solid ${openBerajot ? 'rgba(16,185,129,0.3)' : 'var(--border)'}` }}>
+            <button onClick={() => setOpenBerajot(o => !o)}
+              className="w-full flex items-center justify-between px-5 py-4 text-left"
+              style={{ background: openBerajot ? 'rgba(16,185,129,0.06)' : 'var(--bg-card)' }}>
               <div className="flex items-center gap-3">
                 <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ background: '#10b981' }} />
                 <div>
@@ -145,39 +147,51 @@ function ListView({ basePath, guestMode }) {
                     <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>Berajot</span>
                     <span className="hebrew text-sm" style={{ color: '#10b981' }}>בְּרָכוֹת</span>
                   </div>
-                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Bendiciones · 2 secciones</p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Bendiciones · {Object.keys(BERAJOT_INLINE).length} secciones</p>
                 </div>
               </div>
-            </div>
-            <div className="px-4 pb-3 pt-1" style={{ background: 'var(--bg-card)' }}>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mt-2">
-                {Object.entries(BERAJOT_INLINE).map(([key, data]) => {
-                  const studyId = key.replace('berajot:', 'berajot--')
-                  return (
-                    <button key={key} onClick={() => navigate(`${basePath}/${studyId}`)}
-                      className="text-left p-3 rounded-xl transition-all duration-200"
-                      style={{ background: 'rgba(16,185,129,0.04)', border: '1px solid rgba(16,185,129,0.12)' }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.1)'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.28)' }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.04)'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.12)' }}>
-                      <div className="hebrew text-sm mb-1 leading-tight" style={{ color: '#10b981' }}>{data.heTitle}</div>
-                      <div className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{data.name}</div>
-                      <div className="text-xs mt-0.5 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
-                        <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                          <path d="M1 4h6M4 1l3 3-3 3" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        {data.aliyot.length} secciones
-                      </div>
-                    </button>
-                  )
-                })}
+              <div className="flex items-center gap-2">
+                <span className="text-xs px-2 py-0.5 rounded-full"
+                  style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)' }}>
+                  {Object.keys(BERAJOT_INLINE).length}
+                </span>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+                  style={{ transform: openBerajot ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s', color: 'var(--text-muted)' }}>
+                  <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </div>
-            </div>
+            </button>
+            {openBerajot && (
+              <div className="px-4 pb-3 pt-1" style={{ background: 'var(--bg-card)' }}>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mt-2">
+                  {Object.entries(BERAJOT_INLINE).map(([key, data]) => {
+                    const studyId = key.replace('berajot:', 'berajot--')
+                    return (
+                      <button key={key} onClick={() => navigate(`${basePath}/${studyId}`)}
+                        className="text-left p-3 rounded-xl transition-all duration-200"
+                        style={{ background: 'rgba(16,185,129,0.04)', border: '1px solid rgba(16,185,129,0.12)' }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.1)'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.28)' }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.04)'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.12)' }}>
+                        <div className="hebrew text-sm mb-1 leading-tight" style={{ color: '#10b981' }}>{data.heTitle}</div>
+                        <div className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{data.name}</div>
+                        <div className="text-xs mt-0.5 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+                          <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                            <path d="M1 4h6M4 1l3 3-3 3" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          {data.aliyot.length} secciones
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Simanim card — before Bereshit */}
+        {/* Taamim card — before Bereshit */}
         {!search && (
-          <button onClick={() => navigate(`${basePath}/simanim`)}
+          <button onClick={() => navigate(`${basePath}/taamim`)}
             className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left transition-all duration-200 mb-1"
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(108,51,230,0.3)'; e.currentTarget.style.background = 'rgba(108,51,230,0.05)' }}
@@ -185,10 +199,10 @@ function ListView({ basePath, guestMode }) {
             <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ background: '#6c33e6' }} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
-                <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>Simanim</span>
-                <span className="hebrew text-sm" style={{ color: '#6c33e6' }}>סִימָנִים</span>
+                <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>Taamim</span>
+                <span className="hebrew text-sm" style={{ color: '#6c33e6' }}>טַעֲמֵי הַמִּקְרָא</span>
               </div>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>טַעֲמֵי הַמִּקְרָא · Todos los trop de la Torá</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>סִימָנִים · Todos los trop de la Torá</p>
             </div>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ color: 'var(--text-muted)', flexShrink: 0 }}>
               <path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -382,7 +396,7 @@ function ReaderView({ parasha, basePath, guestMode, isSubscribed }) {
         </button>
         <div className="h-4 w-px" style={{ background: 'var(--border)' }} />
         <span className="text-xs" style={{ color: 'var(--text-3)' }}>
-          {parasha.id === 'simanim' ? 'Simanim · סִימָנִים' : parasha.combined ? 'Perashá doble' : parasha.num ? `Perashá ${parasha.num} de 54` : 'Lectura especial · מוֹעֲדִים'}
+          {parasha.id === 'taamim' ? 'Taamim · טַעֲמֵי הַמִּקְרָא' : parasha.combined ? 'Perashá doble' : parasha.num ? `Perashá ${parasha.num} de 54` : 'Lectura especial · מוֹעֲדִים'}
         </span>
 
         <div className="ml-auto flex gap-2">
