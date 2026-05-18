@@ -12,7 +12,10 @@ export default function GuestLayout() {
   const isRTL = lang === 'he'
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const active = location.pathname === '/guest/study' || location.pathname.startsWith('/guest/study/')
+  const activeStudy   = location.pathname === '/guest/study'   || location.pathname.startsWith('/guest/study/')
+  const activeHaftara = location.pathname === '/guest/haftara' || location.pathname.startsWith('/guest/haftara/')
+  const activeTefila  = location.pathname === '/guest/tefila'  || location.pathname.startsWith('/guest/tefila/')
+  const active = activeStudy
   const go = (path) => { navigate(path); setSidebarOpen(false) }
 
   const SidebarInner = ({ showClose }) => (
@@ -50,14 +53,42 @@ export default function GuestLayout() {
         <button onClick={() => go('/guest/study')}
           className="sidebar-item flex items-center gap-3 px-3 py-3 rounded-xl text-left"
           style={{
-            background: active ? 'rgba(45,212,191,0.1)' : 'transparent',
-            borderInlineStart: active ? '2px solid #2dd4bf' : '2px solid transparent',
-            color: active ? '#0d9488' : 'var(--text-3)',
+            background: activeStudy ? 'rgba(45,212,191,0.1)' : 'transparent',
+            borderInlineStart: activeStudy ? '2px solid #2dd4bf' : '2px solid transparent',
+            color: activeStudy ? '#0d9488' : 'var(--text-3)',
           }}>
-          <StudyIcon active={active} />
+          <StudyIcon active={activeStudy} />
           <div>
             <div className="text-xs font-medium">{t('nav_study')}</div>
-            <div className="text-xs hebrew" style={{ color: active ? 'var(--text-gold)' : 'var(--text-muted)' }}>לִמּוּד</div>
+            <div className="text-xs hebrew" style={{ color: activeStudy ? 'var(--text-gold)' : 'var(--text-muted)' }}>לִמּוּד</div>
+          </div>
+        </button>
+
+        <button onClick={() => go('/guest/haftara')}
+          className="sidebar-item flex items-center gap-3 px-3 py-3 rounded-xl text-left"
+          style={{
+            background: activeHaftara ? 'rgba(16,185,129,0.1)' : 'transparent',
+            borderInlineStart: activeHaftara ? '2px solid #10b981' : '2px solid transparent',
+            color: activeHaftara ? '#10b981' : 'var(--text-3)',
+          }}>
+          <HaftaraIcon active={activeHaftara} />
+          <div>
+            <div className="text-xs font-medium">{t('nav_haftara')}</div>
+            <div className="text-xs hebrew" style={{ color: activeHaftara ? 'var(--text-gold)' : 'var(--text-muted)' }}>הַפְטָרָה</div>
+          </div>
+        </button>
+
+        <button onClick={() => go('/guest/tefila')}
+          className="sidebar-item flex items-center gap-3 px-3 py-3 rounded-xl text-left"
+          style={{
+            background: activeTefila ? 'rgba(139,92,246,0.1)' : 'transparent',
+            borderInlineStart: activeTefila ? '2px solid #8b5cf6' : '2px solid transparent',
+            color: activeTefila ? '#8b5cf6' : 'var(--text-3)',
+          }}>
+          <TefilaIcon active={activeTefila} />
+          <div>
+            <div className="text-xs font-medium">{t('nav_tefila')}</div>
+            <div className="text-xs hebrew" style={{ color: activeTefila ? 'var(--text-gold)' : 'var(--text-muted)' }}>תְּפִלָּה</div>
           </div>
         </button>
       </nav>
@@ -162,6 +193,26 @@ function StudyIcon({ active }) {
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <path d="M3 3h5l3 3h4v9H3V3z" stroke={c} strokeWidth="1.3" strokeLinejoin="round"/>
       <path d="M6 9h6M6 12h4" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+function HaftaraIcon({ active }) {
+  const c = active ? '#10b981' : 'var(--text-3)'
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M4 14V4l5 2.5L14 4v10l-5-2.5L4 14z" stroke={c} strokeWidth="1.3" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
+function TefilaIcon({ active }) {
+  const c = active ? '#8b5cf6' : 'var(--text-3)'
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <rect x="3" y="4" width="12" height="10" rx="1.5" stroke={c} strokeWidth="1.3"/>
+      <path d="M6 8h6M6 11h4" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
+      <path d="M9 1v3" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
     </svg>
   )
 }
