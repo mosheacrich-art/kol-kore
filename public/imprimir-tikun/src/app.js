@@ -6,6 +6,15 @@ const book = document.getElementById('book');
 const printBtn = document.getElementById('printBtn');
 const parashaSelect = document.getElementById('parashaSelect');
 
+/* ── Theme (dark/light) from URL param ─────────────────────────────── */
+;(function() {
+  var params = new URLSearchParams(location.search);
+  if (params.get('theme') === 'dark') {
+    document.documentElement.classList.add('dark-mode');
+    document.body.classList.add('dark-mode');
+  }
+})();
+
 const NUN_HAFUCHA = '׆';
 
 /* ── Text filters (exact copy of tikkun.io text-filter.ts) ─────────── */

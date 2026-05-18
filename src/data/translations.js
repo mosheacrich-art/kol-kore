@@ -5,6 +5,7 @@ export const translations = {
     nav_study: 'Estudiar Perashá',
     nav_haftara: 'Estudiar Haftará',
     nav_tefila: 'Tefilá',
+    nav_tikun: 'Tikún Korim',
     nav_print: 'Imprimir Tikún',
     nav_subscription: 'Suscripción',
     // Nav — teacher
@@ -15,6 +16,7 @@ export const translations = {
     nav_audio: 'Audios',
     nav_parashot: 'Perashiot',
     nav_notifications: 'Notificaciones',
+    nav_tikun_teacher: 'Tikún Korim',
     nav_print_tikun: 'Imprimir Tikún',
     nav_account: 'Cuenta',
     // Common
@@ -423,6 +425,7 @@ export const translations = {
     nav_study: 'Study Torah',
     nav_haftara: 'Study Haftarah',
     nav_tefila: 'Tefila',
+    nav_tikun: 'Tikkun Korim',
     nav_print: 'Print Tikkun',
     nav_subscription: 'Subscription',
     // Nav — teacher
@@ -433,6 +436,7 @@ export const translations = {
     nav_audio: 'Audio',
     nav_parashot: 'Parashot',
     nav_notifications: 'Notifications',
+    nav_tikun_teacher: 'Tikkun Korim',
     nav_print_tikun: 'Print Tikkun',
     nav_account: 'Account',
     // Common
@@ -841,6 +845,7 @@ export const translations = {
     nav_study: 'Étudier la Paracha',
     nav_haftara: 'Étudier la Haftara',
     nav_tefila: 'Téfila',
+    nav_tikun: 'Tikoun Korim',
     nav_print: 'Imprimer le Tikoun',
     nav_subscription: 'Abonnement',
     // Nav — teacher
@@ -851,6 +856,7 @@ export const translations = {
     nav_audio: 'Audio',
     nav_parashot: 'Parachiot',
     nav_notifications: 'Notifications',
+    nav_tikun_teacher: 'Tikoun Korim',
     nav_print_tikun: 'Imprimer le Tikoun',
     nav_account: 'Compte',
     // Common
@@ -1259,6 +1265,7 @@ export const translations = {
     nav_study: 'Studiare la Parashah',
     nav_haftara: 'Studiare la Haftarah',
     nav_tefila: 'Tefillà',
+    nav_tikun: 'Tikkun Korim',
     nav_print: 'Stampa Tikkun',
     nav_subscription: 'Abbonamento',
     // Nav — teacher
@@ -1269,6 +1276,7 @@ export const translations = {
     nav_audio: 'Audio',
     nav_parashot: 'Parashiot',
     nav_notifications: 'Notifiche',
+    nav_tikun_teacher: 'Tikkun Korim',
     nav_print_tikun: 'Stampa Tikkun',
     nav_account: 'Account',
     // Common
@@ -1677,6 +1685,7 @@ export const translations = {
     nav_study: 'לימוד פרשה',
     nav_haftara: 'לימוד הפטרה',
     nav_tefila: 'תְּפִלָּה',
+    nav_tikun: 'תִּקּוּן קוֹרִים',
     nav_print: 'הדפסת תיקון',
     nav_subscription: 'מנוי',
     // Nav — teacher
@@ -1687,6 +1696,7 @@ export const translations = {
     nav_audio: 'אודיו',
     nav_parashot: 'פרשיות',
     nav_notifications: 'התראות',
+    nav_tikun_teacher: 'תִּקּוּן קוֹרִים',
     nav_print_tikun: 'הדפסת תיקון',
     nav_account: 'חשבון',
     // Common

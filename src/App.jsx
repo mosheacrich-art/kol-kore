@@ -40,6 +40,7 @@ const TeacherTefila       = lazy(() => import('./pages/teacher/TefilaStudy'))
 const TeacherNotifications = lazy(() => import('./pages/teacher/Notifications'))
 const AccountSettings      = lazy(() => import('./pages/AccountSettings'))
 const AdminPage            = lazy(() => import('./pages/admin/AdminPage'))
+const ImprimirTikun        = lazy(() => import('./pages/ImprimirTikun'))
 
 function Spinner() {
   return (
@@ -102,6 +103,7 @@ function AppRoutes() {
             <Route path="haftara/:haftaraId" element={<StudentHaftara />} />
             <Route path="tefila" element={<StudentTefila />} />
             <Route path="tefila/:tefilaId" element={<StudentTefila />} />
+            <Route path="tikun" element={<ImprimirTikun />} />
             <Route path="account" element={<AccountSettings />} />
           </Route>
 
@@ -131,6 +133,7 @@ function AppRoutes() {
             <Route path="haftara/:haftaraId" element={<TeacherHaftara />} />
             <Route path="tefila" element={<TeacherTefila />} />
             <Route path="tefila/:tefilaId" element={<TeacherTefila />} />
+            <Route path="tikun" element={<ImprimirTikun />} />
             <Route path="notifications" element={<TeacherNotifications />} />
             <Route path="account" element={<AccountSettings />} />
           </Route>

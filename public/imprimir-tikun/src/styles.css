@@ -1,4 +1,16 @@
-/* ── Font ───────────────────────────────────────────────────────────── */
+/* ── Fonts ──────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'KeterYG';
+  src: url('../../fonts/KeterYG-Medium.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'KeterYG';
+  src: url('../../fonts/KeterYG-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
 @font-face {
   font-family: 'ShlomosemiStam';
   src: url('https://tikkun.io/assets/fonts/ShlomosemiStam.ttf') format('truetype');
@@ -17,6 +29,12 @@
   --toolbar-bg:  #1e1600;
   --toolbar-h:   48px;
 }
+.dark-mode {
+  --paper:       #0f0d1a;
+  --ink:         rgba(240, 235, 210, 0.88);
+  --col-border:  rgba(255, 255, 255, 0.15);
+  --toolbar-bg:  #0a0800;
+}
 
 /* ── Body ───────────────────────────────────────────────────────────── */
 html, body {
@@ -24,7 +42,7 @@ html, body {
   overflow: hidden;
   background: var(--paper);
   color: var(--ink);
-  font-family: 'ShlomosemiStam', serif;
+  font-family: 'ShlomosemiStam', 'KeterYG', serif;
   direction: rtl;
   -webkit-font-smoothing: antialiased;
 }
@@ -131,7 +149,7 @@ html, body {
   width: 100%;
   table-layout: fixed;
   border-collapse: collapse;
-  font-family: 'ShlomosemiStam', serif;
+  font-family: 'ShlomosemiStam', 'KeterYG', serif;
   font-size: 1.3em;
   direction: rtl;
 }
@@ -190,8 +208,14 @@ body.embed #book {
   cursor: default;
   user-select: text;
   touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 body.embed #book.dragging { cursor: default; }
+body.embed #book-canvas {
+  transform: none !important;
+  /* fitWidth() will set CSS zoom via JS */
+  padding: 16px 8px 60px;
+}
 
 /* ── Error ──────────────────────────────────────────────────────────── */
 .err {
@@ -199,6 +223,38 @@ body.embed #book.dragging { cursor: default; }
   text-align: center;
   color: #888;
   font-size: 18px;
+}
+
+/* ── Shirot: Az Yashir & Haazinu (multi-fragment lines) ─────────────── */
+/* Lines with mod-setuma fragments = shirah layout: fragments spread across line */
+.line .column {
+  width: 100%;
+}
+/* Each fragment in a shirah line gets equal space */
+.fragment.mod-setuma {
+  width: auto;
+  flex: 1;
+  text-align: center;
+}
+/* First fragment in shirah: align right (as in sefer torah) */
+.fragment.mod-setuma:first-child { text-align: right; }
+/* Last fragment in shirah: align left */
+.fragment.mod-setuma:last-child  { text-align: left; }
+/* Middle fragments: centered */
+
+/* Thin vertical rule between shirah columns */
+.fragment.mod-setuma + .fragment.mod-setuma {
+  border-right: 1px dotted var(--col-border);
+  padding-right: 6px;
+  margin-right: 2px;
+}
+
+/* ── Dark mode body/background ───────────────────────────────────────── */
+.dark-mode body {
+  background: var(--paper);
+}
+.dark-mode #book {
+  background: var(--paper);
 }
 
 /* ── Print ──────────────────────────────────────────────────────────── */

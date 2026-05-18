@@ -15,6 +15,7 @@ const NAV_KEYS = [
   { path: '/student/study',          key: 'nav_study',          shortKey: 'nav_study',          heb: 'לִמּוּד',     icon: StudyIcon },
   { path: '/student/haftara',        key: 'nav_haftara',        shortKey: 'nav_haftara',        heb: 'הַפְטָרָה',   icon: HaftaraIcon },
   { path: '/student/tefila',         key: 'nav_tefila',         shortKey: 'nav_tefila',         heb: 'תְּפִלָּה',    icon: TefilaIcon },
+  { path: '/student/tikun',          key: 'nav_tikun',          shortKey: 'nav_tikun',          heb: 'תִּקּוּן',    icon: TikunIcon },
   { path: '/student/notifications',  key: 'nav_notifications',  shortKey: 'nav_notifications',  heb: 'הֲעָרוֹת',   icon: NotifIcon, badge: true },
   { path: '/student/subscription',   key: 'nav_subscription',   shortKey: 'nav_subscription',   heb: 'הַרְשָׁמָה',  icon: SubscriptionIcon },
   { path: '/student/account',        key: 'nav_account',        shortKey: 'nav_account',        heb: 'חֶשְׁבּוֹן',   icon: AccountIcon },
@@ -485,6 +486,18 @@ function StudyIcon({ active }) {
     <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
       <path d="M3 3h5l3 3h4v9H3V3z" stroke={c} strokeWidth="1.3" strokeLinejoin="round"/>
       <path d="M6 9h6M6 12h4" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+function TikunIcon({ active }) {
+  const c = active ? '#8b5cf6' : 'var(--text-3)'
+  return (
+    <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
+      <rect x="1.5" y="1.5" width="15" height="15" rx="1.5" stroke={c} strokeWidth="1.3"/>
+      <line x1="9" y1="1.5" x2="9" y2="16.5" stroke={c} strokeWidth="1" strokeDasharray="1.5 1"/>
+      <path d="M3 5h4.5M3 8h4.5M3 11h3" stroke={c} strokeWidth="1.2" strokeLinecap="round"/>
+      <path d="M9.5 5H14M9.5 8H14M9.5 11h3" stroke={c} strokeWidth="1.2" strokeLinecap="round"/>
     </svg>
   )
 }
