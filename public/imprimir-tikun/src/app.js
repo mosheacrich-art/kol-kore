@@ -1,35 +1,43 @@
-/* Tikkun Korim — zoom/pan viewer + tikkun.io rendering (MIT license) */
+/* Tikkun Korim — async loader + per-parasha rendering */
 
-const PAGES = window.TIKKUN_PAGES || [];
-const PARASHA_INDEX = window.PARASHA_INDEX || [];
-
-/* ── Apply Haazinu two-column patch ─────────────────────────────────── */
-;(function() {
-  var patch = window.HAAZINU_PATCH;
-  if (!patch) return;
-  Object.keys(patch).forEach(function(pi) {
-    if (!PAGES[pi]) return;
-    Object.keys(patch[pi]).forEach(function(li) {
-      PAGES[pi][li] = patch[pi][li];
-    });
-  });
-})();
-const book = document.getElementById('book');
-const printBtn = document.getElementById('printBtn');
+const book          = document.getElementById('book');
+const printBtn      = document.getElementById('printBtn');
 const parashaSelect = document.getElementById('parashaSelect');
 
-/* ── Theme (dark/light) from URL param ─────────────────────────────── */
+/* ── Theme ──────────────────────────────────────────────────────────── */
 ;(function() {
-  var params = new URLSearchParams(location.search);
-  if (params.get('theme') === 'dark') {
+  if (new URLSearchParams(location.search).get('theme') === 'dark') {
     document.documentElement.classList.add('dark-mode');
     document.body.classList.add('dark-mode');
   }
 })();
 
-const NUN_HAFUCHA = '׆';
+/* ── Embed mode ─────────────────────────────────────────────────────── */
+var isEmbed = new URLSearchParams(location.search).get('embed') === '1';
+if (isEmbed) document.body.classList.add('embed');
 
-/* ── Text filters (exact copy of tikkun.io text-filter.ts) ─────────── */
+/* ── Canvas ─────────────────────────────────────────────────────────── */
+var canvas = document.createElement('div');
+canvas.id = 'book-canvas';
+book.appendChild(canvas);
+
+/* ── Loading state ──────────────────────────────────────────────────── */
+function showLoading() {
+  canvas.innerHTML = '<div class="err" style="padding-top:80px">טוֹעֵן…</div>';
+}
+function showError() {
+  canvas.innerHTML = '<div class="err">שגיאה בטעינת הנתונים.</div>';
+}
+showLoading();
+
+/* ── State ──────────────────────────────────────────────────────────── */
+var PAGES         = [];
+var PARASHA_INDEX = window.PARASHA_INDEX || [];
+var currentPage   = 1;   /* first page of currently rendered parasha */
+
+/* ── Text filters ───────────────────────────────────────────────────── */
+var NUN_HAFUCHA = '׆';
+
 function ketiv(text) {
   return text
     .replace('#(פ)', '')
@@ -70,7 +78,7 @@ function annotate(text) {
   }).join('');
 }
 
-/* ── Render helpers ─────────────────────────────────────────────────── */
+/* ── Render ─────────────────────────────────────────────────────────── */
 function renderFrags(frags, annotated) {
   var setuma = frags.length > 1 ? ' mod-setuma' : '';
   return frags.map(function(f) {
@@ -79,25 +87,24 @@ function renderFrags(frags, annotated) {
   }).join('');
 }
 
-function renderCell(line, annotated, isPetucha) {
-  /* Multi-column line (Haazinu): cols = [["right frag"], ["left frag"]] */
+function renderCell(line, annotated) {
   if (line.cols) {
     var cols = line.cols.map(function(col) {
       return '<div class="haazinu-col">' + renderFrags(col, annotated) + '</div>';
     });
     return '<td class="tikkun-cell"><div class="haazinu-row">' + cols.join('') + '</div></td>';
   }
-  /* Normal line */
   var frags = line.f || (line.t ? [line.t] : []);
-  var petucha = isPetucha ? ' mod-petucha' : '';
+  var petucha = line.p ? ' mod-petucha' : '';
   if (!frags.length)
     return '<td class="tikkun-cell"><div class="line empty-line"></div></td>';
-  return '<td class="tikkun-cell"><div class="line' + petucha + '"><div class="column">' + renderFrags(frags, annotated) + '</div></div></td>';
+  return '<td class="tikkun-cell"><div class="line' + petucha + '"><div class="column">' +
+    renderFrags(frags, annotated) + '</div></div></td>';
 }
 
 function renderAmud(lines, pageNum) {
   var rows = lines.map(function(line) {
-    return '<tr>' + renderCell(line, true, line.p) + renderCell(line, false, line.p) + '</tr>';
+    return '<tr>' + renderCell(line, true) + renderCell(line, false) + '</tr>';
   }).join('');
   return '<section class="amud" data-page="' + pageNum + '">' +
     '<div class="amud-header no-print">' +
@@ -109,27 +116,33 @@ function renderAmud(lines, pageNum) {
   '</section>';
 }
 
-/* ── Render into canvas ─────────────────────────────────────────────── */
-var canvas = document.createElement('div');
-canvas.id = 'book-canvas';
-book.appendChild(canvas);
-
-if (!PAGES.length) {
-  canvas.innerHTML = '<div class="err">לא נמצא קובץ הנתונים.</div>';
-} else {
-  canvas.innerHTML = PAGES.map(function(lines, i) { return renderAmud(lines, i+1); }).join('');
+/* ── Parasha page ranges ────────────────────────────────────────────── */
+function getParashaRange(startPage) {
+  var idx = PARASHA_INDEX.findIndex(function(p) { return p.page === startPage; });
+  var end = (idx >= 0 && idx + 1 < PARASHA_INDEX.length)
+    ? PARASHA_INDEX[idx + 1].page - 1
+    : PAGES.length;
+  return { start: startPage, end: end };
 }
 
-/* ── Parasha select ─────────────────────────────────────────────────── */
-PARASHA_INDEX.forEach(function(p) {
-  var opt = document.createElement('option');
-  opt.value = p.page; opt.textContent = p.name;
-  parashaSelect.appendChild(opt);
-});
+/* ── Render a parasha (by its first page number, 1-indexed) ─────────── */
+function renderParasha(startPage) {
+  if (!PAGES.length) return;
+  currentPage = startPage;
+  var range = getParashaRange(startPage);
+  var html = '';
+  for (var i = range.start - 1; i < range.end && i < PAGES.length; i++) {
+    html += renderAmud(PAGES[i], i + 1);
+  }
+  canvas.innerHTML = html;
 
-/* ── Embed mode detection ───────────────────────────────────────────── */
-var isEmbed = new URLSearchParams(location.search).get('embed') === '1';
-if (isEmbed) document.body.classList.add('embed');
+  if (isEmbed) {
+    requestAnimationFrame(function() { requestAnimationFrame(fitWidth); });
+  } else {
+    z = { scale: 1, tx: 0, ty: 0 };
+    requestAnimationFrame(function() { requestAnimationFrame(fitToScreen); });
+  }
+}
 
 /* ── Zoom / Pan state ───────────────────────────────────────────────── */
 var z = { scale: 1, tx: 0, ty: 0 };
@@ -139,11 +152,10 @@ function applyZoom() {
     'translate(' + z.tx + 'px,' + z.ty + 'px) scale(' + z.scale + ')';
 }
 
-/* Fit the first amud fully in the viewport on load */
 function fitToScreen() {
   var bw = book.clientWidth;
   var bh = book.clientHeight;
-  var cw = canvas.offsetWidth;   /* natural canvas width (1280px) */
+  var cw = canvas.offsetWidth;
   var firstAmud = canvas.querySelector('.amud');
   var ch = firstAmud ? firstAmud.offsetHeight : canvas.offsetHeight;
   var pad = 48;
@@ -154,21 +166,13 @@ function fitToScreen() {
   applyZoom();
 }
 
-/* Embed: fit canvas width to viewport using zoom (preserves scroll layout) */
 function fitWidth() {
   var s = book.clientWidth / canvas.offsetWidth;
   canvas.style.zoom = s;
   canvas.style.transform = 'none';
 }
 
-if (isEmbed) {
-  requestAnimationFrame(function() { requestAnimationFrame(fitWidth); });
-  window.addEventListener('resize', fitWidth);
-} else {
-  /* Run after two frames (fonts + layout settled) */
-  requestAnimationFrame(function() { requestAnimationFrame(fitToScreen); });
-
-  /* ── Wheel zoom (toward cursor) ─────────────────────────────────────── */
+if (!isEmbed) {
   book.addEventListener('wheel', function(e) {
     e.preventDefault();
     var factor = e.deltaY < 0 ? 1.12 : 1/1.12;
@@ -181,9 +185,7 @@ if (isEmbed) {
     applyZoom();
   }, { passive: false });
 
-  /* ── Drag to pan ────────────────────────────────────────────────────── */
   var drag = { on: false, sx: 0, sy: 0 };
-
   book.addEventListener('mousedown', function(e) {
     drag.on = true; drag.sx = e.clientX - z.tx; drag.sy = e.clientY - z.ty;
     book.classList.add('dragging');
@@ -197,9 +199,7 @@ if (isEmbed) {
     drag.on = false; book.classList.remove('dragging');
   });
 
-  /* ── Touch: pinch-zoom + single-finger pan ──────────────────────────── */
   var pinch = { active: false, lastDist: 0, mx: 0, my: 0 };
-
   book.addEventListener('touchstart', function(e) {
     if (e.touches.length === 2) {
       pinch.active = true;
@@ -239,31 +239,27 @@ if (isEmbed) {
   });
 }
 
-/* ── Navigate to page ───────────────────────────────────────────────── */
-function scrollToPage(pageNum) {
-  var el = canvas.querySelector('[data-page="' + pageNum + '"]');
-  if (!el) return;
-  if (isEmbed) {
-    /* getBoundingClientRect accounts for CSS zoom, scroll accordingly */
-    var eRect = el.getBoundingClientRect();
-    var bRect = book.getBoundingClientRect();
-    book.scrollTop += eRect.top - bRect.top;
-    return;
+if (isEmbed) {
+  window.addEventListener('resize', fitWidth);
+}
+
+/* ── Navigate to parasha (find the parasha that contains this page) ──── */
+function showParashaContaining(pageNum) {
+  var owner = PARASHA_INDEX[0];
+  for (var i = 0; i < PARASHA_INDEX.length; i++) {
+    if (PARASHA_INDEX[i].page <= pageNum) owner = PARASHA_INDEX[i];
+    else break;
   }
-  /* Convert element's screen y to canvas-natural y, then set ty to put it at top */
-  var bRect = book.getBoundingClientRect();
-  var eRect = el.getBoundingClientRect();
-  var naturalY = (eRect.top - bRect.top - z.ty) / z.scale;
-  z.ty = -naturalY * z.scale + 24;
-  applyZoom();
+  parashaSelect.value = owner.page;
+  renderParasha(owner.page);
 }
 
 parashaSelect.addEventListener('change', function() {
   var v = parseInt(parashaSelect.value);
-  if (v) scrollToPage(v);
+  if (v) renderParasha(v);
 });
 
-/* Reset transform for print, restore after */
+/* ── Print ──────────────────────────────────────────────────────────── */
 if (!isEmbed) {
   window.addEventListener('beforeprint', function() {
     canvas.style.transform = 'none';
@@ -278,26 +274,82 @@ if (!isEmbed) {
   printBtn.addEventListener('click', function() { window.print(); });
 }
 
-/* ── Hash navigation ────────────────────────────────────────────────── */
+/* ── Hash / message navigation ──────────────────────────────────────── */
 function stripDiacritics(s) { return String(s).replace(/[֑-ׇ]/g, ''); }
 function findParasha(name) {
   var n = stripDiacritics(name);
   return PARASHA_INDEX.find(function(p) { return stripDiacritics(p.name) === n; });
 }
-function handleHash() {
-  var hash = decodeURIComponent(location.hash.replace(/^#/, ''));
+
+var pendingNav = null;   /* navigation requested before data loaded */
+
+function handleNav(hash) {
   if (!hash) return;
-  if (hash.indexOf('page=') === 0) scrollToPage(parseInt(hash.slice(5)));
+  if (!PAGES.length) { pendingNav = hash; return; }
+  if (hash.indexOf('page=') === 0) showParashaContaining(parseInt(hash.slice(5)));
   else if (hash.indexOf('parasha=') === 0) {
     var e = findParasha(hash.slice(8));
-    if (e) scrollToPage(e.page);
+    if (e) renderParasha(e.page);
   }
 }
-requestAnimationFrame(function() { requestAnimationFrame(handleHash); });
+
+function handleHash() {
+  handleNav(decodeURIComponent(location.hash.replace(/^#/, '')));
+}
+
 window.addEventListener('hashchange', handleHash);
 window.addEventListener('message', function(e) {
   if (e.data && e.data.scrollToParasha) {
     var entry = findParasha(e.data.scrollToParasha);
-    if (entry) scrollToPage(entry.page);
+    if (entry) {
+      if (!PAGES.length) { pendingNav = 'parasha=' + e.data.scrollToParasha; return; }
+      renderParasha(entry.page);
+    }
   }
+});
+
+/* ── Async data load ────────────────────────────────────────────────── */
+var base = (function() {
+  var s = document.currentScript;
+  if (!s) return '../data/';
+  return s.src.replace(/src\/app\.js.*$/, 'data/');
+})();
+
+Promise.all([
+  fetch(base + 'tikkun-pages.json').then(function(r) { return r.json(); }),
+  fetch(base + 'haazinu-patch.json').then(function(r) { return r.json(); })
+]).then(function(results) {
+  PAGES = results[0];
+  var patch = results[1];
+
+  /* Apply Haazinu patch */
+  Object.keys(patch).forEach(function(pi) {
+    if (!PAGES[pi]) return;
+    Object.keys(patch[pi]).forEach(function(li) {
+      PAGES[pi][li] = patch[pi][li];
+    });
+  });
+
+  /* Populate parasha select */
+  PARASHA_INDEX.forEach(function(p) {
+    var opt = document.createElement('option');
+    opt.value = p.page; opt.textContent = p.name;
+    parashaSelect.appendChild(opt);
+  });
+
+  /* Handle any pending navigation from hash/message */
+  var hash = decodeURIComponent(location.hash.replace(/^#/, ''));
+  if (pendingNav) {
+    handleNav(pendingNav);
+    pendingNav = null;
+  } else if (hash) {
+    handleHash();
+  } else {
+    /* Default: show first parasha */
+    var firstPage = PARASHA_INDEX.length ? PARASHA_INDEX[0].page : 1;
+    parashaSelect.value = firstPage;
+    renderParasha(firstPage);
+  }
+}).catch(function() {
+  showError();
 });
