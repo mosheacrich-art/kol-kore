@@ -258,7 +258,44 @@ function parseWeekdayServices(data, bookName) {
   return [makeBerajotService(), ...raw.map(filterService)]
 }
 
-const SHABBAT_SERVICE_META = {
+// ── Siddur Sefard Shabbat (dedicated linear book) ────────────────────────
+
+const SHABBAT_SEFARD_SLUG     = 'Shabbat_Siddur_Sefard_Linear'
+const SHABBAT_SEFARD_BOOKNAME = 'Shabbat Siddur Sefard Linear'
+
+// Node titles in Shabbat_Siddur_Sefard_Linear → service metadata
+const SHABBAT_SEFARD_META = {
+  'Kabbalas Shabbos':                        { id: 'kabbalat',         heb: 'קַבָּלַת שַׁבָּת',  color: '#6366f1', name: 'Kabalat Shabat',    order: 1 },
+  'Maariv Service for Shabbos and Yom Tov': { id: 'arvit-shabat',     heb: 'עַרְבִית שַׁבָּת',  color: '#1e40af', name: 'Arvit de Shabat',   order: 2 },
+  'The Morning Prayers':                     { id: 'shacharit-shabat', heb: 'שַׁחֲרִית שַׁבָּת', color: '#f59e0b', name: 'Shajarit de Shabat', order: 3 },
+  'Reading of the Torah':                    { id: 'kriat-tora',       heb: 'קְרִיאַת הַתּוֹרָה', color: '#d97706', name: 'Kriat HaTorá',      order: 4 },
+  'Musaf Service':                           { id: 'musaf-shabat',     heb: 'מוּסָף שַׁבָּת',    color: '#10b981', name: 'Musaf de Shabat',   order: 5 },
+  'Mincha Service for Shabbos and Yom Tov': { id: 'mincha-shabat',    heb: 'מִנְחָה שַׁבָּת',   color: '#8b5cf6', name: 'Minjá de Shabat',   order: 6 },
+}
+
+function buildServiceFromMeta(srvNode, pathPrefix, bookName, meta) {
+  const sections = extractSections(srvNode, pathPrefix, bookName)
+  const subsections = []
+  for (const s of sections) {
+    let group = subsections.find(g => g.name === s.subGroup)
+    if (!group) { group = { name: s.subGroup, items: [] }; subsections.push(group) }
+    group.items.push({ title: s.title, heTitle: s.heTitle, ref: s.ref })
+  }
+  return { ...meta, total: sections.length, subsections, allSections: sections }
+}
+
+function parseShabbatSefard(data) {
+  const rootNodes = data.schema?.nodes || []
+  return rootNodes
+    .filter(n => SHABBAT_SEFARD_META[n.title])
+    .map(n => buildServiceFromMeta(n, [n.title], SHABBAT_SEFARD_BOOKNAME, SHABBAT_SEFARD_META[n.title]))
+    .map(filterService)
+    .sort((a, b) => (a.order ?? 99) - (b.order ?? 99))
+}
+
+// ── Shabbat Ashkenaz (extracted from Siddur Ashkenaz) ────────────────────
+
+const SHABBAT_ASHKENAZ_META = {
   'Kabbalat Shabbat':      { id: 'kabbalat',         heb: 'קַבָּלַת שַׁבָּת',  color: '#6366f1', name: 'Kabalat Shabat',    order: 1 },
   'Maariv for Shabbat':    { id: 'arvit-shabat',     heb: 'עַרְבִית שַׁבָּת',  color: '#1e40af', name: 'Arvit de Shabat',   order: 2 },
   'Shabbat Maariv':        { id: 'arvit-shabat',     heb: 'עַרְבִית שַׁבָּת',  color: '#1e40af', name: 'Arvit de Shabat',   order: 2 },
@@ -271,29 +308,20 @@ const SHABBAT_SERVICE_META = {
   'Minchah for Shabbat':   { id: 'mincha-shabat',    heb: 'מִנְחָה שַׁבָּת',   color: '#8b5cf6', name: 'Minjá de Shabat',   order: 5 },
 }
 
-function parseShabbatServices(data, bookName) {
-  const schema = data.schema
-  if (!schema) return []
-  const rootNodes = schema.nodes || []
-
-  let raw = []
-
-  // Strategy 1: explicit "Shabbat" wrapper node (Ashkenaz)
+function parseShabbatAshkenaz(data, bookName) {
+  const rootNodes = data.schema?.nodes || []
   const shabbatNode = rootNodes.find(n => n.title === 'Shabbat' || n.title === 'Shabbat Prayers')
-  if (shabbatNode?.nodes?.length) {
-    raw = shabbatNode.nodes
-      .filter(n => SHABBAT_SERVICE_META[n.title])
-      .map(srvNode => buildService(srvNode, ['Shabbat', srvNode.title], bookName))
-  } else {
-    // Strategy 2: root-level nodes with Shabbat title (Sefard)
-    raw = rootNodes
-      .filter(n => SHABBAT_SERVICE_META[n.title])
-      .map(srvNode => buildService(srvNode, [srvNode.title], bookName))
-  }
+  const candidates = shabbatNode?.nodes?.length ? shabbatNode.nodes : rootNodes
+  const pathBase = shabbatNode ? ['Shabbat'] : []
 
-  return raw
+  return candidates
+    .filter(n => SHABBAT_ASHKENAZ_META[n.title])
+    .map(n => {
+      const meta = SHABBAT_ASHKENAZ_META[n.title]
+      return buildServiceFromMeta(n, [...pathBase, n.title], bookName, meta)
+    })
     .map(filterService)
-    .sort((a, b) => (SHABBAT_SERVICE_META[a.name]?.order ?? 99) - (SHABBAT_SERVICE_META[b.name]?.order ?? 99))
+    .sort((a, b) => (a.order ?? 99) - (b.order ?? 99))
 }
 
 export function useSiddurIndex(nusach) {
@@ -328,9 +356,7 @@ export function useSiddurShabbatIndex(nusach) {
 
   useEffect(() => {
     if (!nusach) return
-    const slug     = nusach === 'ashkenaz' ? 'Siddur_Ashkenaz' : 'Siddur_Sefard'
-    const bookName = nusach === 'ashkenaz' ? 'Siddur Ashkenaz' : 'Siddur Sefard'
-    const cacheKey = `${slug}:shabbat`
+    const cacheKey = `${nusach}:shabbat`
 
     if (siddurShabbatIndexCache.has(cacheKey)) {
       setState({ services: siddurShabbatIndexCache.get(cacheKey), loading: false, error: null })
@@ -339,13 +365,24 @@ export function useSiddurShabbatIndex(nusach) {
 
     setState(s => ({ ...s, loading: true, error: null }))
 
-    fetchSiddurRaw(slug)
-      .then(data => {
-        const services = parseShabbatServices(data, bookName)
-        siddurShabbatIndexCache.set(cacheKey, services)
-        setState({ services, loading: false, error: null })
-      })
-      .catch(err => setState({ services: null, loading: false, error: err.message }))
+    if (nusach === 'sefard') {
+      fetchSiddurRaw(SHABBAT_SEFARD_SLUG)
+        .then(data => {
+          const services = parseShabbatSefard(data)
+          siddurShabbatIndexCache.set(cacheKey, services)
+          setState({ services, loading: false, error: null })
+        })
+        .catch(err => setState({ services: null, loading: false, error: err.message }))
+    } else {
+      const bookName = 'Siddur Ashkenaz'
+      fetchSiddurRaw('Siddur_Ashkenaz')
+        .then(data => {
+          const services = parseShabbatAshkenaz(data, bookName)
+          siddurShabbatIndexCache.set(cacheKey, services)
+          setState({ services, loading: false, error: null })
+        })
+        .catch(err => setState({ services: null, loading: false, error: err.message }))
+    }
   }, [nusach])
 
   return state
