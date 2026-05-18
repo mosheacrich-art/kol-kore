@@ -1153,23 +1153,13 @@ const BASE_URL = import.meta.env.BASE_URL
 
 function SeferView({ parasha, isDark }) {
   const iframeRef = useRef(null)
-  const src = `${BASE_URL}imprimir-tikun/index.html?embed=1&theme=${isDark ? 'dark' : 'light'}`
-
-  useEffect(() => {
-    const iframe = iframeRef.current
-    if (!iframe || !parasha?.heb) return
-    const send = () => iframe.contentWindow?.postMessage({ scrollToParasha: parasha.heb }, '*')
-    if (iframe.contentDocument?.readyState === 'complete') {
-      send()
-    } else {
-      iframe.addEventListener('load', send, { once: true })
-    }
-  }, [parasha?.heb])
+  const heb = parasha?.heb || ''
+  const src = `${BASE_URL}imprimir-tikun/index.html?embed=1&theme=${isDark ? 'dark' : 'light'}#parasha=${encodeURIComponent(heb)}`
 
   return (
     <iframe
       ref={iframeRef}
-      key={isDark ? 'dark' : 'light'}
+      key={`${isDark ? 'dark' : 'light'}-${parasha?.id ?? ''}`}
       src={src}
       style={{ flex: 1, width: '100%', border: 'none', display: 'block' }}
       title="תיקון קוראים"
