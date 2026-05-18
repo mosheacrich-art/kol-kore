@@ -225,6 +225,25 @@ body.embed #book-canvas {
   font-size: 18px;
 }
 
+/* ── Haazinu: two parallel columns within each tikkun/sefer cell ───── */
+.haazinu-row {
+  display: flex;
+  width: 100%;
+  gap: 0;
+}
+.haazinu-col {
+  flex: 1;
+  text-align: justify;
+  line-height: 100%;
+  min-height: 1em;
+  padding: 0 4px;
+}
+.haazinu-col:first-child { text-align: right; }
+.haazinu-col:last-child  { text-align: left; }
+.haazinu-col + .haazinu-col {
+  border-right: 1px dotted var(--col-border);
+}
+
 /* ── Shirot: Az Yashir & Haazinu (multi-fragment lines) ─────────────── */
 /* Lines with mod-setuma fragments = shirah layout: fragments spread across line */
 .line .column {

@@ -2,6 +2,18 @@
 
 const PAGES = window.TIKKUN_PAGES || [];
 const PARASHA_INDEX = window.PARASHA_INDEX || [];
+
+/* ── Apply Haazinu two-column patch ─────────────────────────────────── */
+;(function() {
+  var patch = window.HAAZINU_PATCH;
+  if (!patch) return;
+  Object.keys(patch).forEach(function(pi) {
+    if (!PAGES[pi]) return;
+    Object.keys(patch[pi]).forEach(function(li) {
+      PAGES[pi][li] = patch[pi][li];
+    });
+  });
+})();
 const book = document.getElementById('book');
 const printBtn = document.getElementById('printBtn');
 const parashaSelect = document.getElementById('parashaSelect');
@@ -59,22 +71,33 @@ function annotate(text) {
 }
 
 /* ── Render helpers ─────────────────────────────────────────────────── */
-function renderCell(frags, annotated, isPetucha) {
-  var petucha = isPetucha ? ' mod-petucha' : '';
-  if (!frags.length)
-    return '<td class="tikkun-cell"><div class="line empty-line"></div></td>';
+function renderFrags(frags, annotated) {
   var setuma = frags.length > 1 ? ' mod-setuma' : '';
-  var html = frags.map(function(f) {
+  return frags.map(function(f) {
     var inner = annotated ? annotate(ketiv(f)) : escapeHtml(kri(f));
     return '<span class="fragment' + setuma + '">' + inner + '</span>';
   }).join('');
-  return '<td class="tikkun-cell"><div class="line' + petucha + '"><div class="column">' + html + '</div></div></td>';
+}
+
+function renderCell(line, annotated, isPetucha) {
+  /* Multi-column line (Haazinu): cols = [["right frag"], ["left frag"]] */
+  if (line.cols) {
+    var cols = line.cols.map(function(col) {
+      return '<div class="haazinu-col">' + renderFrags(col, annotated) + '</div>';
+    });
+    return '<td class="tikkun-cell"><div class="haazinu-row">' + cols.join('') + '</div></td>';
+  }
+  /* Normal line */
+  var frags = line.f || (line.t ? [line.t] : []);
+  var petucha = isPetucha ? ' mod-petucha' : '';
+  if (!frags.length)
+    return '<td class="tikkun-cell"><div class="line empty-line"></div></td>';
+  return '<td class="tikkun-cell"><div class="line' + petucha + '"><div class="column">' + renderFrags(frags, annotated) + '</div></div></td>';
 }
 
 function renderAmud(lines, pageNum) {
   var rows = lines.map(function(line) {
-    var f = line.f || (line.t ? [line.t] : []);
-    return '<tr>' + renderCell(f, true, line.p) + renderCell(f, false, line.p) + '</tr>';
+    return '<tr>' + renderCell(line, true, line.p) + renderCell(line, false, line.p) + '</tr>';
   }).join('');
   return '<section class="amud" data-page="' + pageNum + '">' +
     '<div class="amud-header no-print">' +
