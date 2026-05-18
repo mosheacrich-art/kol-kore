@@ -156,12 +156,11 @@ export default function StudentLayout() {
         {navItems.map(item => {
           const Icon = item.icon
           const active = isActive(item.path)
-          const lockedMobile = !isSubscribed && item.path === '/student/imprimir'
           const showBadge = item.badge && unreadEvals > 0
           return (
-            <button key={item.path} onClick={() => lockedMobile ? go('/student/subscription') : go(item.path)}
+            <button key={item.path} onClick={() => go(item.path)}
               className="flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[56px] py-2 transition-colors relative"
-              style={{ color: active ? '#8b5cf6' : lockedMobile ? 'var(--text-muted)' : 'var(--text-3)' }}>
+              style={{ color: active ? '#8b5cf6' : 'var(--text-3)' }}>
               <Icon active={active} />
               {showBadge && (
                 <span className="absolute top-2 right-[calc(50%-14px)] w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
@@ -220,16 +219,14 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
         {navItems.map(item => {
           const Icon = item.icon
           const active = isActive(item.path)
-          const lockedItem = !isSubscribed && item.path === '/student/imprimir'
           const showBadge = item.badge && unreadEvals > 0
           return (
-            <button key={item.path} onClick={() => lockedItem ? go('/student/subscription') : go(item.path)}
+            <button key={item.path} onClick={() => go(item.path)}
               className="sidebar-item flex items-center gap-3 px-3 py-3 rounded-xl text-left"
               style={{
                 background: active ? 'rgba(108,51,230,0.13)' : 'transparent',
                 borderInlineStart: active ? '2px solid #8b5cf6' : '2px solid transparent',
-                color: active ? '#8b5cf6' : lockedItem ? 'var(--text-muted)' : 'var(--text-3)',
-                opacity: lockedItem ? 0.7 : 1,
+                color: active ? '#8b5cf6' : 'var(--text-3)',
               }}>
               <Icon active={active} />
               <div className="flex-1 min-w-0">

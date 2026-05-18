@@ -10,6 +10,7 @@ export const MOADIM_LIST = [
   { id: 'purim',         name: 'Purim',           heb: 'פּוּרִים',               en: 'Fiesta de Purim',          color: '#e879f9' },
   { id: 'pesaj',         name: 'Pesaj',           heb: 'פֶּסַח',                 en: 'Fiesta de la Liberación',  color: '#84cc16' },
   { id: 'shavuot',       name: 'Shavuot',         heb: 'שָׁבוּעוֹת',             en: 'Fiesta de las Semanas',    color: '#d97706' },
+  { id: 'taanit',       name: 'Taanit',          heb: 'תַּעֲנִית',              en: 'Días de ayuno',            color: '#78716c' },
 ]
 
 export const ALL_MOADIM = [
@@ -388,6 +389,44 @@ export const ALL_MOADIM = [
       { n: 4, label: '4ª Aliyá', ref: 'Deuteronomy 16:13-17' },
       { n: 5, label: '5ª Aliyá', ref: 'Deuteronomy 16:13-17' },
       { n: 8, label: 'Maftir',   ref: 'Numbers 28:26-31' },
+    ],
+  },
+
+  // ── TAANIT ─────────────────────────────────────────────────────────────────
+  {
+    id: 'taanit-shajarit', name: 'Taanit – Shajarit', heb: 'תַּעֲנִית שַׁחֲרִית',
+    chag: 'taanit', color: '#78716c',
+    aliyot: [
+      { n: 1, label: '1ª Aliyá', ref: 'Exodus 32:11-14' },
+      { n: 2, label: '2ª Aliyá', ref: 'Exodus 34:1-3' },
+      { n: 3, label: '3ª Aliyá', ref: 'Exodus 34:4-10' },
+    ],
+  },
+  {
+    id: 'taanit-minja', name: 'Taanit – Minjá', heb: 'תַּעֲנִית מִנְחָה',
+    chag: 'taanit', color: '#78716c',
+    aliyot: [
+      { n: 1, label: '1ª Aliyá', ref: 'Exodus 32:11-14' },
+      { n: 2, label: '2ª Aliyá', ref: 'Exodus 34:1-3' },
+      { n: 3, label: '3ª Aliyá', ref: 'Exodus 34:4-10' },
+    ],
+  },
+  {
+    id: 'tisha-beav-shajarit', name: "Tishá BeAv – Shajarit", heb: 'תִּשְׁעָה בְּאָב שַׁחֲרִית',
+    chag: 'taanit', color: '#78716c',
+    aliyot: [
+      { n: 1, label: '1ª Aliyá', ref: 'Deuteronomy 4:25-29' },
+      { n: 2, label: '2ª Aliyá', ref: 'Deuteronomy 4:30-35' },
+      { n: 3, label: '3ª Aliyá', ref: 'Deuteronomy 4:36-40' },
+    ],
+  },
+  {
+    id: 'tisha-beav-minja', name: "Tishá BeAv – Minjá", heb: 'תִּשְׁעָה בְּאָב מִנְחָה',
+    chag: 'taanit', color: '#78716c',
+    aliyot: [
+      { n: 1, label: '1ª Aliyá', ref: 'Exodus 32:11-14' },
+      { n: 2, label: '2ª Aliyá', ref: 'Exodus 34:1-3' },
+      { n: 3, label: '3ª Aliyá', ref: 'Exodus 34:4-10' },
     ],
   },
 ]

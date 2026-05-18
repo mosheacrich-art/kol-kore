@@ -15,7 +15,6 @@ const Login               = lazy(() => import('./pages/Login'))
 const ResetPassword       = lazy(() => import('./pages/ResetPassword'))
 const Privacy             = lazy(() => import('./pages/legal/Privacy'))
 const Terms               = lazy(() => import('./pages/legal/Terms'))
-const ImprimirTikun       = lazy(() => import('./pages/ImprimirTikun'))
 
 const StudentLayout        = lazy(() => import('./pages/student/Layout'))
 const StudentProfile       = lazy(() => import('./pages/student/Profile'))
@@ -101,7 +100,6 @@ function AppRoutes() {
             <Route path="haftara/:haftaraId" element={<StudentHaftara />} />
             <Route path="tefila" element={<StudentTefila />} />
             <Route path="tefila/:tefilaId" element={<StudentTefila />} />
-            <Route path="imprimir" element={<ImprimirTikun />} />
             <Route path="account" element={<AccountSettings />} />
           </Route>
 
@@ -129,7 +127,6 @@ function AppRoutes() {
             <Route path="tefila" element={<TeacherTefila />} />
             <Route path="tefila/:tefilaId" element={<TeacherTefila />} />
             <Route path="notifications" element={<TeacherNotifications />} />
-            <Route path="imprimir" element={<ImprimirTikun />} />
             <Route path="account" element={<AccountSettings />} />
           </Route>
         </Routes>

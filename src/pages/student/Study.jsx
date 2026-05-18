@@ -7,6 +7,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useLang } from '../../context/LangContext'
 import { useAuth } from '../../context/AuthContext'
 import ParashaReader from '../../components/ParashaReader'
+import { BERAJOT_INLINE } from '../../hooks/useSefaria'
 
 const SIMANIM = {
   id: 'simanim',
@@ -33,9 +34,16 @@ export default function StudentStudy({ basePath = '/student/study' }) {
   const { profile } = useAuth()
   const parasha = parashaId === 'simanim'
     ? SIMANIM
-    : parashaId
-      ? (ALL_PARASHOT.find(p => p.id === parashaId) || ALL_MOADIM.find(p => p.id === parashaId))
-      : null
+    : parashaId?.startsWith('berajot--')
+      ? (() => {
+          const key = parashaId.replace('berajot--', 'berajot:')
+          const data = BERAJOT_INLINE[key]
+          if (!data) return null
+          return { id: parashaId, name: data.name, heb: data.heTitle, color: '#10b981', aliyot: data.aliyot }
+        })()
+      : parashaId
+        ? (ALL_PARASHOT.find(p => p.id === parashaId) || ALL_MOADIM.find(p => p.id === parashaId))
+        : null
 
   const isGuest = basePath.startsWith('/guest')
   const isTeacher = profile?.role === 'teacher'
@@ -124,6 +132,49 @@ function ListView({ basePath, guestMode }) {
       </div>
 
       <div className="flex flex-col gap-2.5 fade-up-3">
+        {/* ── Berajot ── */}
+        {!search && (
+          <div className="rounded-2xl overflow-hidden mb-1"
+            style={{ border: '1px solid rgba(16,185,129,0.2)' }}>
+            <div className="flex items-center justify-between px-5 py-4"
+              style={{ background: 'rgba(16,185,129,0.06)' }}>
+              <div className="flex items-center gap-3">
+                <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ background: '#10b981' }} />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>Berajot</span>
+                    <span className="hebrew text-sm" style={{ color: '#10b981' }}>בְּרָכוֹת</span>
+                  </div>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Bendiciones · 2 secciones</p>
+                </div>
+              </div>
+            </div>
+            <div className="px-4 pb-3 pt-1" style={{ background: 'var(--bg-card)' }}>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mt-2">
+                {Object.entries(BERAJOT_INLINE).map(([key, data]) => {
+                  const studyId = key.replace('berajot:', 'berajot--')
+                  return (
+                    <button key={key} onClick={() => navigate(`${basePath}/${studyId}`)}
+                      className="text-left p-3 rounded-xl transition-all duration-200"
+                      style={{ background: 'rgba(16,185,129,0.04)', border: '1px solid rgba(16,185,129,0.12)' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.1)'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.28)' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.04)'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.12)' }}>
+                      <div className="hebrew text-sm mb-1 leading-tight" style={{ color: '#10b981' }}>{data.heTitle}</div>
+                      <div className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{data.name}</div>
+                      <div className="text-xs mt-0.5 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+                        <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                          <path d="M1 4h6M4 1l3 3-3 3" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        {data.aliyot.length} secciones
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Simanim card — before Bereshit */}
         {!search && (
           <button onClick={() => navigate(`${basePath}/simanim`)}
@@ -315,7 +366,7 @@ function ReaderView({ parasha, basePath, guestMode, isSubscribed }) {
     Math.max(0, parseInt(searchParams.get('aliyah') || '0', 10)),
     parasha.aliyot.length - 1
   )
-  const color = BOOK_COLORS[parasha.book] || '#6c33e6'
+  const color = parasha.color || BOOK_COLORS[parasha.book] || '#6c33e6'
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden" style={{ height: '100%' }}>

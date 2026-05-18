@@ -15,19 +15,12 @@ function fmtSec(s) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
-const MODE_IDS = ['taamim', 'nikkud', 'plain', 'split', 'sefer']
-const MODE_HEB = ['טְעָמִים', 'נִקּוּד', 'כְּתָב', 'מְפוּצָּל', 'סֵפֶר']
-const MODE_TKEYS = ['mode_taamim', 'mode_nikkud', 'mode_plain', 'mode_split', 'mode_sefer']
+const MODE_IDS = ['taamim', 'nikkud', 'plain', 'split']
+const MODE_HEB = ['טְעָמִים', 'נִקּוּד', 'כְּתָב', 'מְפוּצָּל']
+const MODE_TKEYS = ['mode_taamim', 'mode_nikkud', 'mode_plain', 'mode_split']
 
-const BOOK_TO_NUM = { Genesis: 1, Exodus: 2, Leviticus: 3, Numbers: 4, Deuteronomy: 5 }
 const MIN_FONT = 14
 const MAX_FONT = 56
-
-function tikkunHash(ref) {
-  const m = String(ref || '').match(/^(\w+)\s+(\d+):(\d+)/)
-  if (!m || !BOOK_TO_NUM[m[1]]) return '#/next'
-  return `#/r/${BOOK_TO_NUM[m[1]]}-${m[2]}-${m[3]}`
-}
 
 export default function ParashaReader({ parasha, guestMode = false, isSubscribed = true, initialAliyah = 0, availableModes = null }) {
   const { t } = useLang()
@@ -395,8 +388,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
 
         {/* Row 2: Controls + Aliyah nav in same row */}
         <div className="no-scrollbar flex items-center gap-2 px-4 sm:px-6 pb-2 overflow-x-auto">
-          {mode !== 'sefer' && (
-            <div className="flex items-center gap-1 flex-shrink-0">
+          <div className="flex items-center gap-1 flex-shrink-0">
               <button onClick={() => setFontSize(f => Math.max(MIN_FONT, f - 2))}
                 title="Reducir fuente"
                 className="w-8 h-8 rounded flex items-center justify-center text-xs font-bold transition-all"
@@ -411,10 +403,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
                 א+
               </button>
             </div>
-          )}
-          {mode !== 'sefer' && (
-            <div className="flex-shrink-0 w-px h-5" style={{ background: 'var(--border)' }} />
-          )}
+          <div className="flex-shrink-0 w-px h-5" style={{ background: 'var(--border)' }} />
           {!guestMode && (
             <button
               onClick={() => setCursorEnabled(c => !c)}
@@ -816,12 +805,9 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
 
       {/* Text area */}
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
-        {mode === 'sefer' && (
-          <SeferView parasha={parasha} aliyahIdx={aliyahIdx} />
-        )}
-        {mode !== 'sefer' && loading && <LoadingState bookColor={bookColor} />}
-        {mode !== 'sefer' && error && <ErrorState error={error} ref_={currentAliyah.ref} />}
-        {mode !== 'sefer' && !loading && !error && verses.length > 0 && (
+        {loading && <LoadingState bookColor={bookColor} />}
+        {error && <ErrorState error={error} ref_={currentAliyah.ref} />}
+        {!loading && !error && verses.length > 0 && (
           mode === 'split'
             ? <SplitView
                 verses={verses}
@@ -849,7 +835,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
                 markedWordIndices={evalMode ? new Set(evalErrors.map(e => e.wordIdx)) : null}
               />
         )}
-        {mode !== 'sefer' && !loading && !error && verses.length === 0 && (
+        {!loading && !error && verses.length === 0 && (
           <div className="flex-1 flex items-center justify-center">
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('loading')}</p>
           </div>
@@ -1401,39 +1387,6 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
   )
 }
 
-function SeferView({ parasha, aliyahIdx }) {
-  const iframeRef = useRef(null)
-  const BASE = import.meta.env.BASE_URL
-  const src = `${BASE}imprimir-tikun/index.html?embed=1`
-
-  const sendScroll = useCallback((heb) => {
-    if (heb && iframeRef.current?.contentWindow) {
-      iframeRef.current.contentWindow.postMessage({ scrollToParasha: heb }, '*')
-    }
-  }, [])
-
-  // Re-scroll whenever parasha or aliyah changes
-  const prevKey = useRef(null)
-  useEffect(() => {
-    const key = `${parasha?.heb}-${aliyahIdx}`
-    if (prevKey.current === key) return
-    prevKey.current = key
-    sendScroll(parasha?.heb)
-  }, [parasha?.heb, aliyahIdx, sendScroll])
-
-  return (
-    <div className="flex-1 min-h-0">
-      <iframe
-        ref={iframeRef}
-        src={src}
-        title="Modo Sefer"
-        style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-        loading="lazy"
-        onLoad={() => sendScroll(parasha?.heb)}
-      />
-    </div>
-  )
-}
 
 function LoadingState({ bookColor }) {
   const color = bookColor || '#6c33e6'
