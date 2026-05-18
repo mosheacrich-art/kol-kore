@@ -294,31 +294,28 @@ function parseShabbatSefard(data) {
 }
 
 // ── Shabbat Ashkenaz (extracted from Siddur Ashkenaz) ────────────────────
+// Structure: root → Shabbat → {Shabbat Evening, Shabbat Morning, Shabbat Afternoon?, ...}
 
 const SHABBAT_ASHKENAZ_META = {
-  'Kabbalat Shabbat':      { id: 'kabbalat',         heb: 'קַבָּלַת שַׁבָּת',  color: '#6366f1', name: 'Kabalat Shabat',    order: 1 },
-  'Maariv for Shabbat':    { id: 'arvit-shabat',     heb: 'עַרְבִית שַׁבָּת',  color: '#1e40af', name: 'Arvit de Shabat',   order: 2 },
-  'Shabbat Maariv':        { id: 'arvit-shabat',     heb: 'עַרְבִית שַׁבָּת',  color: '#1e40af', name: 'Arvit de Shabat',   order: 2 },
-  'Shacharit for Shabbat': { id: 'shacharit-shabat', heb: 'שַׁחֲרִית שַׁבָּת', color: '#f59e0b', name: 'Shajarit de Shabat', order: 3 },
-  'Shabbat Shacharit':     { id: 'shacharit-shabat', heb: 'שַׁחֲרִית שַׁבָּת', color: '#f59e0b', name: 'Shajarit de Shabat', order: 3 },
-  'Musaf for Shabbat':     { id: 'musaf-shabat',     heb: 'מוּסָף שַׁבָּת',    color: '#10b981', name: 'Musaf de Shabat',   order: 4 },
-  'Shabbat Musaf':         { id: 'musaf-shabat',     heb: 'מוּסָף שַׁבָּת',    color: '#10b981', name: 'Musaf de Shabat',   order: 4 },
-  'Mincha for Shabbat':    { id: 'mincha-shabat',    heb: 'מִנְחָה שַׁבָּת',   color: '#8b5cf6', name: 'Minjá de Shabat',   order: 5 },
-  'Shabbat Mincha':        { id: 'mincha-shabat',    heb: 'מִנְחָה שַׁבָּת',   color: '#8b5cf6', name: 'Minjá de Shabat',   order: 5 },
-  'Minchah for Shabbat':   { id: 'mincha-shabat',    heb: 'מִנְחָה שַׁבָּת',   color: '#8b5cf6', name: 'Minjá de Shabat',   order: 5 },
+  'Shabbat Evening':   { id: 'arvit-shabat',     heb: 'לֵיל שַׁבָּת',      color: '#1e40af', name: 'Arvit de Shabat',    order: 1 },
+  'Shabbat Morning':   { id: 'shacharit-shabat', heb: 'שַׁחֲרִית שַׁבָּת',  color: '#f59e0b', name: 'Shajarit de Shabat',  order: 2 },
+  'Musaf':             { id: 'musaf-shabat',     heb: 'מוּסָף שַׁבָּת',     color: '#10b981', name: 'Musaf de Shabat',     order: 3 },
+  'Shabbat Musaf':     { id: 'musaf-shabat',     heb: 'מוּסָף שַׁבָּת',     color: '#10b981', name: 'Musaf de Shabat',     order: 3 },
+  'Shabbat Afternoon': { id: 'mincha-shabat',    heb: 'מִנְחָה שַׁבָּת',    color: '#8b5cf6', name: 'Minjá de Shabat',     order: 4 },
+  'Mincha':            { id: 'mincha-shabat',    heb: 'מִנְחָה שַׁבָּת',    color: '#8b5cf6', name: 'Minjá de Shabat',     order: 4 },
+  'Shabbat Mincha':    { id: 'mincha-shabat',    heb: 'מִנְחָה שַׁבָּת',    color: '#8b5cf6', name: 'Minjá de Shabat',     order: 4 },
 }
 
 function parseShabbatAshkenaz(data, bookName) {
   const rootNodes = data.schema?.nodes || []
   const shabbatNode = rootNodes.find(n => n.title === 'Shabbat' || n.title === 'Shabbat Prayers')
-  const candidates = shabbatNode?.nodes?.length ? shabbatNode.nodes : rootNodes
-  const pathBase = shabbatNode ? ['Shabbat'] : []
+  if (!shabbatNode?.nodes?.length) return []
 
-  return candidates
+  return shabbatNode.nodes
     .filter(n => SHABBAT_ASHKENAZ_META[n.title])
     .map(n => {
       const meta = SHABBAT_ASHKENAZ_META[n.title]
-      return buildServiceFromMeta(n, [...pathBase, n.title], bookName, meta)
+      return buildServiceFromMeta(n, ['Shabbat', n.title], bookName, meta)
     })
     .map(filterService)
     .sort((a, b) => (a.order ?? 99) - (b.order ?? 99))
