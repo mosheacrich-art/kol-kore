@@ -281,7 +281,7 @@ function ListView({ basePath, guestMode }) {
                             <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
                               <path d="M1 4h6M4 1l3 3-3 3" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
-                            Leer
+                            {t('read_parasha')}
                           </div>
                         </button>
                       )
@@ -392,11 +392,11 @@ function ReaderView({ parasha, basePath, guestMode, isSubscribed }) {
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M8 2L4 6l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          Todas las perashiot
+          {t('all_parashot_btn')}
         </button>
         <div className="h-4 w-px" style={{ background: 'var(--border)' }} />
         <span className="text-xs" style={{ color: 'var(--text-3)' }}>
-          {parasha.id === 'taamim' ? 'Taamim · טַעֲמֵי הַמִּקְרָא' : parasha.combined ? 'Perashá doble' : parasha.num ? `Perashá ${parasha.num} de 54` : 'Lectura especial · מוֹעֲדִים'}
+          {parasha.id === 'taamim' ? 'Taamim · טַעֲמֵי הַמִּקְרָא' : parasha.combined ? t('parasha_double_label') : parasha.num ? t('parasha_n_of_54').replace('{n}', parasha.num) : t('special_reading')}
         </span>
 
         <div className="ml-auto flex gap-2">

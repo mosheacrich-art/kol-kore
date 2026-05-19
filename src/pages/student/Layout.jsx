@@ -256,13 +256,6 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
   )
 }
 
-const FEATURES = [
-  'Audio del profesor sincronizado palabra a palabra',
-  'Todas las parashas del año',
-  'Taamim, nikkud y modo sefer',
-  'Envío de grabaciones al profesor',
-  'Acceso desde cualquier dispositivo',
-]
 
 function Paywall({ user, profile, navigate }) {
   const [plan, setPlan] = useState('annual')
@@ -385,9 +378,9 @@ function Paywall({ user, profile, navigate }) {
         {/* Features included */}
         <div className="rounded-2xl p-4 mb-4"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <p className="text-xs font-semibold mb-2.5" style={{ color: 'var(--text-2)' }}>Incluye todo esto:</p>
+          <p className="text-xs font-semibold mb-2.5" style={{ color: 'var(--text-2)' }}>{t('includes')}:</p>
           <ul className="flex flex-col gap-1.5">
-            {FEATURES.map(f => (
+            {t('sub_features').map(f => (
               <li key={f} className="flex items-start gap-2">
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ flexShrink: 0, marginTop: '1px' }}>
                   <circle cx="6.5" cy="6.5" r="5.5" stroke="#22c55e" strokeWidth="1.1"/>

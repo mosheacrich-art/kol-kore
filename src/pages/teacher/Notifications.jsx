@@ -424,7 +424,7 @@ export default function TeacherNotifications() {
                         <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
                           <path d="M1.5 5.5h8M6 2l3.5 3.5L6 9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
-                        Leer perashá
+                        {t('read_parasha')}
                       </button>
                     )}
                   </div>
