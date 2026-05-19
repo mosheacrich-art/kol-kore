@@ -38,7 +38,7 @@ function adjustAdarMonth(hm, birthHY, bmHY) {
   return hm
 }
 
-async function calcBarMitzvah(birthDateStr) {
+async function calcBarMitzvah(birthDateStr, dateLocale = 'es-ES') {
   const [gy, gm, gd] = birthDateStr.split('-').map(Number)
 
   // Step 1: Gregorian birth date → Hebrew date
@@ -81,7 +81,7 @@ async function calcBarMitzvah(birthDateStr) {
     finalShabbat.setUTCDate(finalShabbat.getUTCDate() + 7)
   }
 
-  const fmt = (d) => d.toLocaleDateString('es-ES', {
+  const fmt = (d) => d.toLocaleDateString(dateLocale, {
     day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
   })
   const iso = (d) =>
@@ -113,7 +113,7 @@ function BarMitzvahCalc({ student, onAssign, onClose, t }) {
     setError(null)
     setResult(null)
     try {
-      const res = await calcBarMitzvah(birthDate)
+      const res = await calcBarMitzvah(birthDate, t('date_locale'))
       setResult(res)
     } catch {
       setError(t('bm_error'))

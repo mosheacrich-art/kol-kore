@@ -134,15 +134,15 @@ const priorityColors = {
 }
 
 const ACHIEVEMENTS = [
-  { id: 'first_listen',  icon: '🎧', label: 'Primera escucha',    desc: 'Escucha tu primera aliyá',      check: (s) => s.totalListens >= 1 },
-  { id: 'listen_10',    icon: '📻', label: '10 escuchas',         desc: 'Escucha 10 veces',              check: (s) => s.totalListens >= 10 },
-  { id: 'listen_50',    icon: '🎶', label: '50 escuchas',         desc: 'Escucha 50 veces',              check: (s) => s.totalListens >= 50 },
-  { id: 'first_hw',     icon: '✅', label: 'Primer deber',        desc: 'Completa tu primer deber',      check: (s) => s.homeworkDone >= 1 },
-  { id: 'hw_5',         icon: '📚', label: '5 deberes',           desc: 'Completa 5 deberes',            check: (s) => s.homeworkDone >= 5 },
-  { id: 'hw_20',        icon: '🏆', label: '20 deberes',          desc: 'Completa 20 deberes',           check: (s) => s.homeworkDone >= 20 },
-  { id: 'streak_3',     icon: '🔥', label: 'Racha de 3 días',     desc: 'Estudia 3 días seguidos',       check: (s) => s.streak >= 3 },
-  { id: 'streak_7',     icon: '⚡', label: 'Racha de 7 días',     desc: 'Estudia 7 días seguidos',       check: (s) => s.streak >= 7 },
-  { id: 'streak_30',    icon: '🌟', label: 'Racha de 30 días',    desc: 'Estudia 30 días seguidos',      check: (s) => s.streak >= 30 },
+  { id: 'first_listen', icon: '🎧', labelKey: 'ach_first_listen_label', descKey: 'ach_first_listen_desc', check: (s) => s.totalListens >= 1 },
+  { id: 'listen_10',   icon: '📻', labelKey: 'ach_listen_10_label',    descKey: 'ach_listen_10_desc',    check: (s) => s.totalListens >= 10 },
+  { id: 'listen_50',   icon: '🎶', labelKey: 'ach_listen_50_label',    descKey: 'ach_listen_50_desc',    check: (s) => s.totalListens >= 50 },
+  { id: 'first_hw',    icon: '✅', labelKey: 'ach_first_hw_label',     descKey: 'ach_first_hw_desc',     check: (s) => s.homeworkDone >= 1 },
+  { id: 'hw_5',        icon: '📚', labelKey: 'ach_hw_5_label',         descKey: 'ach_hw_5_desc',         check: (s) => s.homeworkDone >= 5 },
+  { id: 'hw_20',       icon: '🏆', labelKey: 'ach_hw_20_label',        descKey: 'ach_hw_20_desc',        check: (s) => s.homeworkDone >= 20 },
+  { id: 'streak_3',    icon: '🔥', labelKey: 'ach_streak_3_label',     descKey: 'ach_streak_3_desc',     check: (s) => s.streak >= 3 },
+  { id: 'streak_7',    icon: '⚡', labelKey: 'ach_streak_7_label',     descKey: 'ach_streak_7_desc',     check: (s) => s.streak >= 7 },
+  { id: 'streak_30',   icon: '🌟', labelKey: 'ach_streak_30_label',    descKey: 'ach_streak_30_desc',    check: (s) => s.streak >= 30 },
 ]
 
 export default function StudentProfile() {
@@ -251,7 +251,7 @@ export default function StudentProfile() {
             <div className="mt-3 pt-2.5" style={{ borderTop: '1px solid rgba(108,51,230,0.15)' }}>
               <p className="text-xs mb-0.5" style={{ color: 'rgba(108,51,230,0.5)' }}>{t('bar_mitzvah_date')}</p>
               <p className="text-sm font-semibold" style={{ color: '#8b5cf6' }}>
-                {new Date(profile.bar_mitzvah).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                {new Date(profile.bar_mitzvah).toLocaleDateString(t('date_locale'), { day: 'numeric', month: 'long', year: 'numeric' })}
               </p>
             </div>
           )}
@@ -383,7 +383,7 @@ export default function StudentProfile() {
                       )}
                       {deber.due && (
                         <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          Entrega: {new Date(deber.due).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                          {t('hw_due_short')}: {new Date(deber.due).toLocaleDateString(t('date_locale'), { day: 'numeric', month: 'short' })}
                         </span>
                       )}
                     </div>
@@ -400,7 +400,7 @@ export default function StudentProfile() {
             <div className="flex flex-col gap-0">
               {[
                 { label: t('name'), value: profile.name },
-                { label: t('bar_mitzvah'), value: profile.bar_mitzvah ? new Date(profile.bar_mitzvah).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : '—' },
+                { label: t('bar_mitzvah'), value: profile.bar_mitzvah ? new Date(profile.bar_mitzvah).toLocaleDateString(t('date_locale'), { day: 'numeric', month: 'long', year: 'numeric' }) : '—' },
                 { label: 'Perashá', value: profile.parasha_id || '—' },
                 { label: t('progress'), value: `${profile.progress || 0}%` },
                 { label: t('streak'), value: `${profile.streak || 0} ${t('days')} 🔥` },
@@ -483,7 +483,7 @@ export default function StudentProfile() {
               {ACHIEVEMENTS.map(a => {
                 const unlocked = a.check({ totalListens, homeworkDone: done, streak: profile.streak || 0 })
                 return (
-                  <div key={a.id} title={a.desc}
+                  <div key={a.id} title={t(a.descKey)}
                     className="flex flex-col items-center gap-1 p-2.5 rounded-xl transition-all"
                     style={{
                       background: unlocked ? 'rgba(108,51,230,0.1)' : 'var(--bg)',
@@ -492,7 +492,7 @@ export default function StudentProfile() {
                     }}>
                     <span style={{ fontSize: '20px', filter: unlocked ? 'none' : 'grayscale(1)' }}>{a.icon}</span>
                     <span className="text-center leading-tight" style={{ fontSize: '9px', color: unlocked ? 'var(--text-2)' : 'var(--text-muted)' }}>
-                      {a.label}
+                      {t(a.labelKey)}
                     </span>
                   </div>
                 )

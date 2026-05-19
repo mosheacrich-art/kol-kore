@@ -117,10 +117,10 @@ function ActiveView({ profile, justPaid, navigate, t }) {
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
           <div>
             <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-              {daysLeft > 0 ? 'Renueva el' : 'Venció el'}
+              {daysLeft > 0 ? t('sub_renews_on') : t('sub_expired_on')}
             </p>
             <p className="text-sm font-medium mt-0.5" style={{ color: 'var(--text)' }}>
-              {endDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+              {endDate.toLocaleDateString(t('date_locale'), { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
           </div>
           {daysLeft !== null && (

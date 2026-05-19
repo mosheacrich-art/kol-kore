@@ -6,6 +6,7 @@ const LANGS = [
   { code: 'fr', flag: '🇫🇷', label: 'FR' },
   { code: 'it', flag: '🇮🇹', label: 'IT' },
   { code: 'he', flag: '🇮🇱', label: 'HE' },
+  { code: 'de', flag: '🇩🇪', label: 'DE' },
 ]
 
 export default function LangToggle({ compact = false }) {

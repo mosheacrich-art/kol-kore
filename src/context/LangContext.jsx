@@ -11,6 +11,7 @@ function detectLang() {
   if (browser.startsWith('en')) return 'en'
   if (browser.startsWith('it')) return 'it'
   if (browser.startsWith('he')) return 'he'
+  if (browser.startsWith('de')) return 'de'
   return 'es'
 }
 

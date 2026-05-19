@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { useLang } from './LangContext'
 
 const AudioCtx = createContext(null)
 
@@ -23,6 +24,7 @@ async function callSyncApi(audioUrl, fileType, aliyahRef, prompt) {
 }
 
 export function AudioProvider({ children }) {
+  const { t } = useLang()
   const [audios, setAudios] = useState({})
   const [syncingKeys, setSyncingKeys] = useState(new Set())
   const [syncErrors, setSyncErrors] = useState({}) // key → error string
@@ -57,7 +59,7 @@ export function AudioProvider({ children }) {
           url: `${row.public_url}?v=${vParam}`,
           name: row.file_name,
           type: row.file_type || 'audio/webm',
-          uploadedAt: new Date(row.uploaded_at).toLocaleString('es-ES', {
+          uploadedAt: new Date(row.uploaded_at).toLocaleString(t('date_locale'), {
             day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
           }),
           wordTimestamps: row.word_timestamps ?? null,
@@ -128,7 +130,7 @@ export function AudioProvider({ children }) {
         url: cacheBustUrl,
         name: file.name,
         type: contentType,
-        uploadedAt: new Date(uploadedAt).toLocaleString('es-ES', {
+        uploadedAt: new Date(uploadedAt).toLocaleString(t('date_locale'), {
           day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
         }),
         wordTimestamps: null,

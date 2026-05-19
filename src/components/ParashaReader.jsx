@@ -92,7 +92,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
       studentId: profile.id,
       studentName: profile.name,
       parashaName: parasha.name,
-      aliyahLabel: currentAliyah.n === 8 ? 'Maftir' : `${currentAliyah.n}ª aliyá`,
+      aliyahLabel: currentAliyah.n === 8 ? 'Maftir' : t('aliyah_n_label').replace('{n}', currentAliyah.n),
     } : null
 
   const handlePlay = () => {
@@ -106,7 +106,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
 
     if (profile.teacher_id) {
       const notifKey = `${parasha.id}-${aliyahIdx}`
-      const aliyahLabel = currentAliyah.n === 8 ? 'Maftir' : `${currentAliyah.n}ª aliyá`
+      const aliyahLabel = currentAliyah.n === 8 ? 'Maftir' : t('aliyah_n_label').replace('{n}', currentAliyah.n)
       const notifBase = {
         teacher_id: profile.teacher_id,
         student_id: profile.id,
@@ -331,7 +331,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
   const handleSendEval = async () => {
     if (!evalTarget || !profile) return
     setEvalSending(true)
-    const aliyahLabel = currentAliyah.n === 8 ? 'Maftir' : `${currentAliyah.n}ª aliyá`
+    const aliyahLabel = currentAliyah.n === 8 ? 'Maftir' : t('aliyah_n_label').replace('{n}', currentAliyah.n)
     const sortedErrors = [...evalErrors].sort((a, b) => a.time - b.time)
     await supabase.from('notifications').insert({
       teacher_id: profile.id,
@@ -392,14 +392,14 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
         <div className="no-scrollbar flex items-center gap-2 px-4 sm:px-6 pb-2 overflow-x-auto">
           <div className="flex items-center gap-1 flex-shrink-0" style={{ display: mode === 'sefer' ? 'none' : undefined }}>
               <button onClick={() => setFontSize(f => Math.max(MIN_FONT, f - 2))}
-                title="Reducir fuente"
+                title={t('tooltip_reduce_font')}
                 className="w-8 h-8 rounded flex items-center justify-center text-xs font-bold transition-all"
                 style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}>
                 א−
               </button>
               <span className="text-xs w-6 text-center tabular-nums" style={{ color: 'var(--text-muted)' }}>{fontSize}</span>
               <button onClick={() => setFontSize(f => Math.min(MAX_FONT, f + 2))}
-                title="Aumentar fuente"
+                title={t('tooltip_increase_font')}
                 className="w-8 h-8 rounded flex items-center justify-center text-xs font-bold transition-all"
                 style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}>
                 א+
@@ -409,7 +409,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
           {!guestMode && (
             <button
               onClick={() => setCursorEnabled(c => !c)}
-              title={cursorEnabled ? 'Desactivar cursor de audio' : 'Activar cursor de audio'}
+              title={cursorEnabled ? t('tooltip_cursor_off') : t('tooltip_cursor_on')}
               className="flex-shrink-0 w-8 h-8 rounded flex items-center justify-center transition-all"
               style={{
                 background: cursorEnabled ? `${bookColor}18` : 'var(--bg-card)',
@@ -533,7 +533,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
                   )}
                   {aliyahAudio && !guestMode && (
                     <span
-                      title={aliyahAudio.wordTimestamps ? 'Audio con sincronización palabra a palabra' : 'Audio disponible'}
+                      title={aliyahAudio.wordTimestamps ? t('tooltip_audio_synced') : t('tooltip_audio_available')}
                       className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
                       style={{
                         background: aliyahAudio.wordTimestamps ? '#22c55e' : bookColor,
@@ -694,7 +694,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
               <path d="M1.5 5c0 2 1.5 3.5 3.5 3.5S8.5 7 8.5 5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
               <path d="M8 7l3 3M11 7l-3 3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
             </svg>
-            {evalMode ? `Evaluando a ${evalTarget?.student_name} — haz clic en las palabras del texto` : `Audios de alumnos · ${studentAudios.length}`}
+            {evalMode ? t('eval_evaluating').replace('{name}', evalTarget?.student_name) : t('eval_student_audios').replace('{n}', studentAudios.length)}
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="ml-auto"
               style={{ transform: studentAudiosOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
               <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -719,7 +719,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium truncate" style={{ color: 'var(--text-2)' }}>{sa.student_name}</p>
                       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {new Date(sa.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        {new Date(sa.created_at).toLocaleDateString(t('date_locale'), { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
                     <audio
@@ -741,14 +741,14 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
                           <path d="M1 7.5V9h1.5l4.5-4.5-1.5-1.5L1 7.5z" stroke="currentColor" strokeWidth="1" strokeLinejoin="round"/>
                           <path d="M6.5 2l1.5 1.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
                         </svg>
-                        Evaluar
+                        {t('eval_evaluate')}
                       </button>
                     ) : isEvalTarget ? (
                       <button
                         onClick={() => { setEvalMode(false); setEvalTarget(null); setEvalErrors([]); setEvalComment('') }}
                         className="px-2 py-1 rounded-lg text-xs font-medium flex-shrink-0"
                         style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-                        Cancelar
+                        {t('cancel')}
                       </button>
                     ) : null}
                   </div>
@@ -761,7 +761,11 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
                   style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.18)' }}>
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-semibold" style={{ color: '#ef4444' }}>
-                      {evalErrors.length > 0 ? `${evalErrors.length} error${evalErrors.length > 1 ? 'es' : ''} marcado${evalErrors.length > 1 ? 's' : ''}` : 'Haz clic en las palabras del texto para marcar errores'}
+                      {evalErrors.length === 0
+                        ? t('eval_errors_hint')
+                        : evalErrors.length === 1
+                          ? t('eval_one_error')
+                          : t('eval_n_errors').replace('{n}', evalErrors.length)}
                     </p>
                   </div>
                   {evalErrors.length > 0 && (
@@ -771,7 +775,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
                           onClick={() => setEvalErrors(prev => prev.filter(e => e.wordIdx !== err.wordIdx))}
                           className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg"
                           style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)' }}
-                          title="Click para quitar">
+                          title={t('eval_remove_error')}>
                           <span className="text-xs font-mono tabular-nums" style={{ color: 'var(--text-muted)' }}>{err.label}</span>
                           <span className="hebrew text-sm" style={{ color: '#ef4444' }}>{err.word}</span>
                           <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>×</span>
@@ -782,7 +786,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
                   <textarea
                     value={evalComment}
                     onChange={e => setEvalComment(e.target.value)}
-                    placeholder="Añade un comentario para el alumno (opcional)..."
+                    placeholder={t('eval_comment_placeholder')}
                     rows={2}
                     className="w-full px-3 py-2 rounded-xl text-xs resize-none outline-none"
                     style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }}
@@ -796,7 +800,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
                       color: evalErrors.length === 0 || evalSending ? 'var(--text-muted)' : '#ef4444',
                       border: `1px solid ${evalErrors.length === 0 || evalSending ? 'var(--border)' : 'rgba(239,68,68,0.3)'}`,
                     }}>
-                    {evalSending ? 'Enviando…' : evalErrors.length === 0 ? 'Marca al menos un error para enviar' : `Enviar evaluación a ${evalTarget?.student_name}`}
+                    {evalSending ? t('sending') : evalErrors.length === 0 ? t('eval_send_no_errors') : t('eval_send').replace('{name}', evalTarget?.student_name)}
                   </button>
                 </div>
               )}
@@ -888,7 +892,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
               />
             </div>
             {profile?.role === 'student' && (
-              <button onClick={startRec} title="Grabar y enviar al profesor"
+              <button onClick={startRec} title={t('tooltip_record_send')}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium flex-shrink-0 transition-all"
                 style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
                 <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
@@ -900,7 +904,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
               </button>
             )}
             {profile?.role !== 'student' && (
-              <button onClick={startRec} title="Grabar nuevo audio (reemplazará el actual)"
+              <button onClick={startRec} title={t('tooltip_record_replace')}
                 className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
                 style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -911,7 +915,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
               </button>
             )}
             {profile?.role !== 'student' && (
-              <button onClick={() => remove(parasha.id, aliyahIdx)} title="Eliminar audio"
+              <button onClick={() => remove(parasha.id, aliyahIdx)} title={t('tooltip_delete_audio')}
                 className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
                 style={{ background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.15)' }}>
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none">

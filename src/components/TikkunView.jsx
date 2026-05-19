@@ -1,5 +1,6 @@
 import { useRef, useMemo } from 'react'
 import useTikkunWords from '../hooks/useTikkunWords'
+import { useLang } from '../context/LangContext'
 
 function parseAliyahRef(ref) {
   const m = String(ref || '').match(/^(\w+)\s+(\d+):(\d+)-(\d+):(\d+)$/)
@@ -28,6 +29,7 @@ export default function TikkunView({
   audioCurrentTime,
   audioPlaying,
 }) {
+  const { t } = useLang()
   const { words: allWords, error } = useTikkunWords(
     parasha.id,
     parasha.combined ? parasha.parts : null
@@ -88,13 +90,13 @@ export default function TikkunView({
     <div className="flex-1 flex items-center justify-center gap-3">
       <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin"
         style={{ borderColor: `${bookColor}30`, borderTopColor: bookColor }} />
-      <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Cargando tikún…</p>
+      <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('loading')}</p>
     </div>
   )
 
   if (!words.length) return (
     <div className="flex-1 flex items-center justify-center">
-      <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin palabras para esta aliyá</p>
+      <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('no_words_aliyah')}</p>
     </div>
   )
 
