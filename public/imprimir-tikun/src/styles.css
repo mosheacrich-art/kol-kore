@@ -292,7 +292,7 @@ body.embed #book-canvas {
 
 /* ── Print ──────────────────────────────────────────────────────────── */
 @media print {
-  @page { size: A4 portrait; margin: 10mm 8mm; }
+  @page { size: A4 landscape; margin: 10mm; }
 
   html, body { height: auto !important; overflow: visible; margin: 0; }
 
@@ -311,9 +311,9 @@ body.embed #book-canvas {
   }
 
   #book-canvas {
-    /* canvas stays at natural 1280px; zoom scales it to fit A4 (194mm printable = ~733px) */
+    /* canvas at natural 1280px; zoom to fit A4 landscape (277mm printable = ~1047px) */
     width: 1280px !important;
-    zoom: 0.57;
+    zoom: 0.82;
     padding: 0;
   }
 
