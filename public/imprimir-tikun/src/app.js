@@ -315,13 +315,27 @@ parashaSelect.addEventListener('change', function() {
 /* ── Print ──────────────────────────────────────────────────────────── */
 // beforeprint/afterprint always registered: also fires when parent calls contentWindow.print()
 window.addEventListener('beforeprint', function() {
-  canvas.style.zoom = '';        // let print CSS apply zoom: 0.57
+  // Clear screen transforms so we can measure natural heights
+  canvas.style.zoom = '';
   canvas.style.transform = 'none';
-  canvas.style.width = '';       // let CSS keep canvas at 1280px
+  canvas.style.width = '';
   canvas.style.padding = '';
+
+  // Find the tallest amud at natural scale
+  var amudEls = canvas.querySelectorAll('.amud');
+  var maxH = 0;
+  amudEls.forEach(function(a) { if (a.offsetHeight > maxH) maxH = a.offsetHeight; });
+
+  // A4 landscape 10mm margins: printable ~277x190mm = 1047x719px at 96dpi
+  var printW = Math.round(277 / 25.4 * 96);
+  var printH = Math.round(190 / 25.4 * 96);
+  var zoomW = printW / 1280;
+  var zoomH = maxH > 0 ? (printH / maxH) * 0.97 : zoomW; // 3% safety
+  canvas.style.zoom = Math.min(zoomW, zoomH).toFixed(4);
 });
 window.addEventListener('afterprint', function() {
-  if (isEmbed) fitWidth(); else applyZoom();  // restore correct zoom for current mode
+  canvas.style.zoom = '';
+  if (isEmbed) fitWidth(); else applyZoom();
 });
 if (!isEmbed) {
   printBtn.addEventListener('click', function() { window.print(); });
