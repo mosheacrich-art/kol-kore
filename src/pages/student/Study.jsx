@@ -375,6 +375,7 @@ function ListView({ basePath, guestMode }) {
 
 function ReaderView({ parasha, basePath, guestMode, isSubscribed }) {
   const navigate = useNavigate()
+  const { t } = useLang()
   const [searchParams] = useSearchParams()
   const initialAliyah = Math.min(
     Math.max(0, parseInt(searchParams.get('aliyah') || '0', 10)),
