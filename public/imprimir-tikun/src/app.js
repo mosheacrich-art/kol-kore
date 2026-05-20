@@ -315,6 +315,7 @@ parashaSelect.addEventListener('change', function() {
 /* ── Print ──────────────────────────────────────────────────────────── */
 // beforeprint/afterprint always registered: also fires when parent calls contentWindow.print()
 window.addEventListener('beforeprint', function() {
+  canvas.style.zoom = '';        // reset fitWidth() CSS zoom so print sees natural 1280px
   canvas.style.transform = 'none';
   canvas.style.width = '100%';
   canvas.style.padding = '0';
@@ -322,7 +323,7 @@ window.addEventListener('beforeprint', function() {
 window.addEventListener('afterprint', function() {
   canvas.style.width = '';
   canvas.style.padding = '';
-  applyZoom();
+  if (isEmbed) fitWidth(); else applyZoom();  // restore correct zoom for current mode
 });
 if (!isEmbed) {
   printBtn.addEventListener('click', function() { window.print(); });
