@@ -294,15 +294,16 @@ body.embed #book-canvas {
 @media print {
   @page { size: A4 portrait; margin: 10mm 8mm; }
 
-  html, body { height: auto; overflow: visible; }
+  html, body { height: auto !important; overflow: visible; margin: 0; }
 
   .no-print { display: none !important; }
 
   body { background: white; }
 
   #book {
-    position: static;
+    position: static !important;
     overflow: visible;
+    height: auto !important;
     cursor: default;
     user-select: auto;
     touch-action: auto;

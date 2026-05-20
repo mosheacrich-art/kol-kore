@@ -17,9 +17,7 @@ export default function ImprimirTikun() {
   }
 
   const printTikun = () => {
-    const parashaHash = selected ? `#parasha=${encodeURIComponent(selected)}` : ''
-    const url = `${BASE}imprimir-tikun/index.html?autoprint=1${parashaHash}`
-    window.open(url, '_blank')
+    iframeRef.current?.contentWindow?.print()
   }
 
   const iframeSrc = `${BASE}imprimir-tikun/index.html?embed=1&theme=${isDark ? 'dark' : 'light'}`
