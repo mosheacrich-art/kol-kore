@@ -63,13 +63,24 @@ const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTi
     }
   }
 
+  // rAF loop: drives word cursor at ~60fps while playing (timeupdate fires only ~4fps)
+  useEffect(() => {
+    if (!playing) return
+    let id
+    const tick = () => {
+      if (audioRef.current) onTimeUpdate?.(audioRef.current.currentTime)
+      id = requestAnimationFrame(tick)
+    }
+    id = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(id)
+  }, [playing, onTimeUpdate])
+
   const handleTimeUpdate = () => {
     if (!audioRef.current) return
     const c = audioRef.current.currentTime
     const d = audioRef.current.duration || 1
     setCurrent(c)
     setProgress((c / d) * 100)
-    onTimeUpdate?.(c)
   }
 
   const handleLoaded = () => {
