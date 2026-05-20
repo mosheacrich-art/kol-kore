@@ -194,12 +194,11 @@ function align(whisperWords, sefariaWords) {
     }
   }
 
-  // Final guardrail: the client expects v2 starts to be monotonic by Sefaria
-  // word index. Do not clamp to the previous end; chanted words can have long
-  // end times, and using those as the next start makes the highlight stick.
-  let lastStart = 0
+  // Final guardrail: enforce strictly monotonic starts (min 1ms apart) so that
+  // the client cursor loop never sees two words at the same timestamp and skips one.
+  let lastStart = -0.001
   for (let i = 0; i < sLen; i++) {
-    const start = Math.max(out[i].start, lastStart)
+    const start = Math.max(out[i].start, lastStart + 0.001)
     const end = Math.max(out[i].end, start + 0.05)
     out[i] = { start: +start.toFixed(3), end: +end.toFixed(3) }
     lastStart = out[i].start
