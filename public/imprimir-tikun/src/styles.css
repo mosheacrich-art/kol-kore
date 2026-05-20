@@ -310,8 +310,9 @@ body.embed #book-canvas {
   }
 
   #book-canvas {
-    /* transform reset by beforeprint JS event */
-    width: 100%;
+    /* canvas stays at natural 1280px; zoom scales it to fit A4 (194mm printable = ~733px) */
+    width: 1280px !important;
+    zoom: 0.57;
     padding: 0;
   }
 
