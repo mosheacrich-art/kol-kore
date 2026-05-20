@@ -306,10 +306,28 @@ export default async function handler(req, res) {
       lastStart = redistributed[i].start
     }
 
-    // Diagnostics
-    const shortWords = redistributed.filter(w => (w.end - w.start) < 0.12)
-    if (shortWords.length > 0) {
-      console.warn(`Sync: ${shortWords.length} words still < 120ms after redistribution`)
+    // 7. Final pass: redistribute runs of short words over surrounding context gap.
+    // After the guardrail, words at ~50ms were originally compressed by Whisper.
+    // We spread each such run over the time between the surrounding normal-length words.
+    let wi = 0
+    while (wi < redistributed.length) {
+      if (redistributed[wi].end - redistributed[wi].start >= 0.12) { wi++; continue }
+      let wj = wi
+      while (wj < redistributed.length && redistributed[wj].end - redistributed[wj].start < 0.12) wj++
+      wj--
+      const prevEnd   = wi > 0 ? redistributed[wi - 1].end : 0
+      const nextStart = wj < redistributed.length - 1 ? redistributed[wj + 1].start : redistributed[wj].end + 2.0
+      const count  = wj - wi + 1
+      const span   = nextStart - prevEnd
+      if (span / count >= 0.15) {
+        console.log(`Sync: final-fix ${count} short words [${wi}-${wj}] over [${prevEnd.toFixed(2)}-${nextStart.toFixed(2)}] -> ${(span/count).toFixed(2)}s/word`)
+        for (let k = 0; k < count; k++) {
+          const t0 = prevEnd + (k / count) * span
+          const t1 = prevEnd + ((k + 1) / count) * span
+          redistributed[wi + k] = { start: +t0.toFixed(3), end: +t1.toFixed(3) }
+        }
+      }
+      wi = wj + 1
     }
 
     const needsReview = anchorPct < 0.4
