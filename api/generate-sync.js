@@ -178,62 +178,40 @@ function align(whisperWords, sefariaWords) {
 // Post-process aligned timestamps using Whisper segments.
 // Runs AFTER align() so we know exactly how many Sefaria words fall between each
 // whole block — anchors + interpolated — across the real segment time.
-// Groups consecutive compressed anchor pairs into a single redistribution zone
-// to avoid modifying already-modified values in the same pass.
-// Uses rangeStart=lStart (never shifts words backward) and extends forward
-// to seg.end to give the block more room.
+// Operates on the aligned Sefaria output (not raw Whisper words), so it knows
+// exactly how many Sefaria words map to each Whisper segment.
+// For each segment whose aligned words cover < 60% of the segment duration,
+// redistributes all those words evenly across the full segment time.
 function postRedistribute(aligned, anchorSet, segments) {
-  if (!segments?.length || !anchorSet.size) return aligned
+  if (!segments?.length) return aligned
   const out = aligned.map(x => ({ ...x }))
-  const anchors = [...anchorSet].sort((a, b) => a - b)
 
-  let i = 0
-  while (i < anchors.length - 1) {
-    // Extend the group as long as the cumulative block remains compressed.
-    // We read from 'out' using anchors[i] as the fixed left edge, so values
-    // not yet modified in this call are used for all compression checks.
-    let j = i + 1
-    while (j < anchors.length) {
-      const li = anchors[i], ri = anchors[j]
-      const blockLen = ri - li + 1
-      const lStart = out[li].start  // original value, anchors[i] not yet modified
-      const rEnd   = out[ri].end
-      if ((rEnd - lStart) / blockLen < 0.15) j++
-      else break
+  for (const seg of segments) {
+    const segDur = seg.end - seg.start
+    if (segDur < 0.3) continue
+
+    // Collect aligned-word indices whose start time falls in this segment
+    const idxs = []
+    for (let i = 0; i < out.length; i++) {
+      if (out[i] && out[i].start >= seg.start - 0.1 && out[i].start < seg.end) idxs.push(i)
     }
-    j--  // last j where the cumulative block was still compressed
+    if (idxs.length < 2) continue
 
-    if (j > i) {
-      const li = anchors[i], ri = anchors[j]
-      const blockLen = ri - li + 1
-      const lStart = out[li].start
-      const rEnd   = out[ri].end
+    const first = out[idxs[0]]
+    const last  = out[idxs[idxs.length - 1]]
+    const coverage = (last.end - first.start) / segDur
 
-      // Find the Whisper segment that contains lStart
-      const seg = segments.find(s => s.start <= lStart + 0.05 && s.end >= lStart - 0.05)
-        || segments.reduce((best, s) => {
-          const d = Math.abs((s.start + s.end) / 2 - (lStart + rEnd) / 2)
-          const bd = Math.abs((best.start + best.end) / 2 - (lStart + rEnd) / 2)
-          return d < bd ? s : best
-        }, segments[0])
+    // Only redistribute when words are compressed into < 60% of the segment
+    if (coverage >= 0.6) continue
 
-      // Extend forward to seg.end; never extend backward (would disturb prior words)
-      const rangeStart = lStart
-      const rangeEnd   = Math.max(seg.end, rEnd)
-      const rangeDur   = rangeEnd - rangeStart
+    console.log(`Sync: post-redistribute ${idxs.length} Sefaria words in segment [${seg.start.toFixed(2)}-${seg.end.toFixed(2)}] (coverage ${Math.round(coverage * 100)}%)`)
 
-      if (rangeDur / blockLen >= 0.1) {
-        console.log(`Sync: post-redistribute ${blockLen} words [${li}-${ri}] into [${rangeStart.toFixed(2)}-${rangeEnd.toFixed(2)}] (${((rEnd-lStart)/blockLen).toFixed(3)}s/word -> ${(rangeDur/blockLen).toFixed(3)}s/word)`)
-        for (let k = 0; k < blockLen; k++) {
-          const t0 = rangeStart + (k / blockLen) * rangeDur
-          const t1 = rangeStart + ((k + 1) / blockLen) * rangeDur
-          out[li + k] = { start: +t0.toFixed(3), end: +t1.toFixed(3) }
-        }
-      }
-      i = j + 1
-      continue
-    }
-    i++
+    const n = idxs.length
+    idxs.forEach((wi, pos) => {
+      const t0 = seg.start + (pos / n) * segDur
+      const t1 = seg.start + ((pos + 1) / n) * segDur
+      out[wi] = { start: +t0.toFixed(3), end: +t1.toFixed(3) }
+    })
   }
 
   return out
