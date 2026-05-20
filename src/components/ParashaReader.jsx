@@ -262,7 +262,9 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
   const startRec = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mr = new MediaRecorder(stream)
+      const preferredMime = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm']
+        .find(t => MediaRecorder.isTypeSupported(t)) || ''
+      const mr = preferredMime ? new MediaRecorder(stream, { mimeType: preferredMime }) : new MediaRecorder(stream)
       mediaRecorderRef.current = mr
       chunksRef.current = []
       mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data) }
