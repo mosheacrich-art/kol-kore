@@ -177,49 +177,63 @@ function align(whisperWords, sefariaWords) {
 
 // Post-process aligned timestamps using Whisper segments.
 // Runs AFTER align() so we know exactly how many Sefaria words fall between each
-// pair of anchors. For each block where time per Sefaria word < 0.15s, expands
-// the block to fill the enclosing Whisper segment duration.
-// This fixes the case where Whisper skips words between two recognized words:
-// align() interpolates the missing words into a tiny window; this redistributes
-// the whole block — anchors + interpolated — across the real segment time.
+// whole block — anchors + interpolated — across the real segment time.
+// Groups consecutive compressed anchor pairs into a single redistribution zone
+// to avoid modifying already-modified values in the same pass.
+// Uses rangeStart=lStart (never shifts words backward) and extends forward
+// to seg.end to give the block more room.
 function postRedistribute(aligned, anchorSet, segments) {
   if (!segments?.length || !anchorSet.size) return aligned
   const out = aligned.map(x => ({ ...x }))
   const anchors = [...anchorSet].sort((a, b) => a - b)
 
-  for (let ai = 0; ai < anchors.length - 1; ai++) {
-    const li = anchors[ai]
-    const ri = anchors[ai + 1]
-    const blockLen = ri - li + 1
-
-    const lStart = out[li].start
-    const rEnd   = out[ri].end
-    const secPerWord = (rEnd - lStart) / blockLen
-
-    if (secPerWord >= 0.15) continue
-
-    const blockMid = (lStart + rEnd) / 2
-    const candidates = segments.filter(s =>
-      s.start <= lStart + 0.3 && s.end >= rEnd - 0.3
-    )
-    candidates.sort((a, b) =>
-      Math.abs((a.start + a.end) / 2 - blockMid) - Math.abs((b.start + b.end) / 2 - blockMid)
-    )
-    const seg = candidates[0]
-
-    const rangeStart = seg ? Math.min(seg.start, lStart) : lStart
-    const rangeEnd   = seg ? Math.max(seg.end,   rEnd)   : rEnd
-    const rangeDur   = rangeEnd - rangeStart
-
-    if (rangeDur / blockLen < 0.1) continue
-
-    console.log(`Sync: post-redistribute ${blockLen} words [${li}-${ri}] into [${rangeStart.toFixed(2)}-${rangeEnd.toFixed(2)}] (${secPerWord.toFixed(3)}s/word -> ${(rangeDur/blockLen).toFixed(3)}s/word)`)
-
-    for (let k = 0; k < blockLen; k++) {
-      const t0 = rangeStart + (k / blockLen) * rangeDur
-      const t1 = rangeStart + ((k + 1) / blockLen) * rangeDur
-      out[li + k] = { start: +t0.toFixed(3), end: +t1.toFixed(3) }
+  let i = 0
+  while (i < anchors.length - 1) {
+    // Extend the group as long as the cumulative block remains compressed.
+    // We read from 'out' using anchors[i] as the fixed left edge, so values
+    // not yet modified in this call are used for all compression checks.
+    let j = i + 1
+    while (j < anchors.length) {
+      const li = anchors[i], ri = anchors[j]
+      const blockLen = ri - li + 1
+      const lStart = out[li].start  // original value, anchors[i] not yet modified
+      const rEnd   = out[ri].end
+      if ((rEnd - lStart) / blockLen < 0.15) j++
+      else break
     }
+    j--  // last j where the cumulative block was still compressed
+
+    if (j > i) {
+      const li = anchors[i], ri = anchors[j]
+      const blockLen = ri - li + 1
+      const lStart = out[li].start
+      const rEnd   = out[ri].end
+
+      // Find the Whisper segment that contains lStart
+      const seg = segments.find(s => s.start <= lStart + 0.05 && s.end >= lStart - 0.05)
+        || segments.reduce((best, s) => {
+          const d = Math.abs((s.start + s.end) / 2 - (lStart + rEnd) / 2)
+          const bd = Math.abs((best.start + best.end) / 2 - (lStart + rEnd) / 2)
+          return d < bd ? s : best
+        }, segments[0])
+
+      // Extend forward to seg.end; never extend backward (would disturb prior words)
+      const rangeStart = lStart
+      const rangeEnd   = Math.max(seg.end, rEnd)
+      const rangeDur   = rangeEnd - rangeStart
+
+      if (rangeDur / blockLen >= 0.1) {
+        console.log(`Sync: post-redistribute ${blockLen} words [${li}-${ri}] into [${rangeStart.toFixed(2)}-${rangeEnd.toFixed(2)}] (${((rEnd-lStart)/blockLen).toFixed(3)}s/word -> ${(rangeDur/blockLen).toFixed(3)}s/word)`)
+        for (let k = 0; k < blockLen; k++) {
+          const t0 = rangeStart + (k / blockLen) * rangeDur
+          const t1 = rangeStart + ((k + 1) / blockLen) * rangeDur
+          out[li + k] = { start: +t0.toFixed(3), end: +t1.toFixed(3) }
+        }
+      }
+      i = j + 1
+      continue
+    }
+    i++
   }
 
   return out
