@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+﻿import { useRef, useState } from 'react'
 import { PARASHOT } from '../data/parashot'
 import { useLang } from '../context/LangContext'
 import { useTheme } from '../context/ThemeContext'
@@ -17,7 +17,9 @@ export default function ImprimirTikun() {
   }
 
   const printTikun = () => {
-    iframeRef.current?.contentWindow?.print()
+    const parashaHash = selected ? `#parasha=${encodeURIComponent(selected)}` : ''
+    const url = `${BASE}imprimir-tikun/index.html?autoprint=1${parashaHash}`
+    window.open(url, '_blank')
   }
 
   const iframeSrc = `${BASE}imprimir-tikun/index.html?embed=1&theme=${isDark ? 'dark' : 'light'}`

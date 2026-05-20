@@ -415,6 +415,9 @@ Promise.all([
     parashaSelect.value = firstPage;
     renderParasha(firstPage);
   }
+  if (new URLSearchParams(location.search).get('autoprint') === '1') {
+    setTimeout(function() { window.print(); }, 800);
+  }
 }).catch(function() {
   canvas.innerHTML = '<div class="err">שגיאה בטעינת הנתונים.</div>';
 });
