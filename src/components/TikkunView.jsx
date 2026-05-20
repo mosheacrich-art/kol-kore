@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react'
+import { useRef, useMemo, useEffect } from 'react'
 import useTikkunWords from '../hooks/useTikkunWords'
 import { useLang } from '../context/LangContext'
 
@@ -56,8 +56,9 @@ export default function TikkunView({
       const limit = Math.min(wordTimestamps.length, words.length)
       for (let i = 0; i < limit; i++) {
         const ts = wordTimestamps[i]
-        if (ts && ts.start <= audioCurrentTime) best = i
-        else if (ts && ts.start > audioCurrentTime) break
+        if (ts.start > audioCurrentTime) break
+        if (ts.end > audioCurrentTime) { best = i; break }
+        best = i
       }
       return best
     }

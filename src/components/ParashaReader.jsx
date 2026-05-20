@@ -230,8 +230,11 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
     let activeIdx = -1
     if (v2) {
       for (let i = 0; i < wt.length; i++) {
-        if (wt[i] && wt[i].start <= audioCurrentTime) activeIdx = i
-        else if (wt[i] && wt[i].start > audioCurrentTime) break
+        const ts = wt[i]
+        if (!ts) continue
+        if (ts.start > audioCurrentTime) break
+        if (ts.end > audioCurrentTime) { activeIdx = i; break }
+        activeIdx = i
       }
     } else {
       let lo = 0, hi = wt.length - 1
@@ -1087,8 +1090,10 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
       const limit = Math.min(wordTimestamps.length, allWords.length)
       for (let i = 0; i < limit; i++) {
         const ts = wordTimestamps[i]
-        if (ts && ts.start <= audioCurrentTime) best = i
-        else if (ts && ts.start > audioCurrentTime) break
+        if (!ts) continue
+        if (ts.start > audioCurrentTime) break
+        if (ts.end > audioCurrentTime) return i
+        best = i
       }
       return best
     }
@@ -1211,8 +1216,10 @@ function SeferView({ parasha, isDark, aliyahRef, wordTimestamps, audioCurrentTim
       const limit = Math.min(wordTimestamps.length, aliyahWords.length)
       for (let i = 0; i < limit; i++) {
         const ts = wordTimestamps[i]
-        if (ts && ts.start <= audioCurrentTime) best = i
-        else if (ts && ts.start > audioCurrentTime) break
+        if (!ts) continue
+        if (ts.start > audioCurrentTime) break
+        if (ts.end > audioCurrentTime) return i
+        best = i
       }
       return best
     }
