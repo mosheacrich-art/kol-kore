@@ -65,6 +65,44 @@ function splitWords(text) {
   return text.split(/\s+/).filter(w => w.length > 0)
 }
 
+// Redistribute word timestamps within Whisper segments when compression is detected.
+// Whisper sometimes compresses repeated phrases (e.g. ארצה כנען ויבאו ארצה כנען)
+// into a small time window. Segment timestamps are more accurate than word timestamps,
+// so we use them to spread words proportionally when coverage < 60% of segment duration.
+function redistributeSegmentWords(words, segments) {
+  if (!segments?.length || !words.length) return words
+  const result = words.map(w => ({ word: w.word, start: w.start, end: w.end }))
+
+  for (const seg of segments) {
+    const segDur = seg.end - seg.start
+    if (segDur < 0.3) continue // too short to matter
+
+    // Collect indices of words in this segment (by start time)
+    const idxs = []
+    for (let i = 0; i < result.length; i++) {
+      if (result[i].start >= seg.start - 0.1 && result[i].start < seg.end) idxs.push(i)
+    }
+    if (idxs.length < 2) continue
+
+    const first = result[idxs[0]]
+    const last = result[idxs[idxs.length - 1]]
+    const coverage = (last.end - first.start) / segDur
+
+    // Only redistribute if words cover < 60% of segment duration
+    if (coverage >= 0.6) continue
+
+    console.log(`Sync: redistributing ${idxs.length} words in segment [${seg.start.toFixed(2)}-${seg.end.toFixed(2)}] (coverage ${Math.round(coverage*100)}%)`)
+    const n = idxs.length
+    idxs.forEach((wi, pos) => {
+      const t0 = seg.start + (pos / n) * segDur
+      const t1 = seg.start + ((pos + 1) / n) * segDur
+      result[wi] = { word: result[wi].word, start: +t0.toFixed(3), end: +t1.toFixed(3) }
+    })
+  }
+
+  return result
+}
+
 // Align whisper words to sefaria words using Needleman-Wunsch global alignment.
 // Handles insertions/deletions robustly — Whisper missing a section no longer
 // throws off all subsequent matches the way the old greedy search could.
@@ -194,11 +232,13 @@ function align(whisperWords, sefariaWords) {
     }
   }
 
-  // Final guardrail: enforce strictly monotonic starts (min 1ms apart) so that
-  // the client cursor loop never sees two words at the same timestamp and skips one.
-  let lastStart = -0.001
+  // Final guardrail: enforce monotonic starts with min 50ms step.
+  // Whisper sometimes assigns duplicate/near-duplicate timestamps to repeated phrases;
+  // 50ms spacing ensures each word is visible for at least 3 frames at 60fps.
+  // For normally-spaced words (200ms+ apart), this has zero effect.
+  let lastStart = -0.05
   for (let i = 0; i < sLen; i++) {
-    const start = Math.max(out[i].start, lastStart + 0.001)
+    const start = Math.max(out[i].start, lastStart + 0.05)
     const end = Math.max(out[i].end, start + 0.05)
     out[i] = { start: +start.toFixed(3), end: +end.toFixed(3) }
     lastStart = out[i].start
@@ -266,6 +306,7 @@ export default async function handler(req, res) {
     form.append('language', 'he')
     form.append('response_format', 'verbose_json')
     form.append('timestamp_granularities[]', 'word')
+    form.append('timestamp_granularities[]', 'segment')
     if (whisperPrompt) form.append('prompt', whisperPrompt)
 
     const whisperRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
@@ -279,8 +320,10 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: `Whisper ${whisperRes.status}: ${err}` })
     }
 
-    const { words: whisperWords } = await whisperRes.json()
-    if (!whisperWords?.length) return res.status(200).json({ words: [] })
+    const whisperData = await whisperRes.json()
+    const rawWords = whisperData.words
+    if (!rawWords?.length) return res.status(200).json({ words: [] })
+    const whisperWords = redistributeSegmentWords(rawWords, whisperData.segments)
 
     if (!sefariaWords.length) {
       // No Sefaria text — return raw Whisper (old format, client does alignment)

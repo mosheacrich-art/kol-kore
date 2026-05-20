@@ -1064,9 +1064,7 @@ function wordIdxToTime(wordIdx, wordTimestamps, s2w, duration) {
 function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCurrentTime, audioPlaying, audioDuration, onWordClick, onWordMark, markedWordIndices }) {
   const wordRefs = useRef([])
   const [hoverIdx, setHoverIdx] = useState(-1)
-  const [displayedWordIdx, setDisplayedWordIdx] = useState(-1)
-  const lastWordAdvanceRef = useRef(0)
-  const MIN_WORD_MS = 50
+
 
   const allWords = useMemo(() => {
     const result = []
@@ -1082,7 +1080,7 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
     [wordTimestamps, allWords]
   )
 
-  const rawActiveWordIdx = useMemo(() => {
+  const activeWordIdx = useMemo(() => {
     if (!wordTimestamps?.length || audioCurrentTime == null || !allWords.length) return -1
     if (isV2(wordTimestamps)) {
       let best = -1
@@ -1103,38 +1101,6 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
     if (best < 0) return -1
     return alignMap?.w2s[best] ?? 0
   }, [wordTimestamps, audioCurrentTime, allWords, alignMap])
-
-  // Smooth cursor: advance one word at a time, min MIN_WORD_MS per word.
-  // Prevents jumping over interpolated words with compressed/identical timestamps,
-  // while adding no lag for normal reading (elapsed >> MIN_WORD_MS when advancing naturally).
-  useEffect(() => {
-    if (!audioPlaying || rawActiveWordIdx < 0) {
-      setDisplayedWordIdx(rawActiveWordIdx)
-      lastWordAdvanceRef.current = performance.now()
-      return
-    }
-    if (rawActiveWordIdx < displayedWordIdx || rawActiveWordIdx - displayedWordIdx > 10) {
-      // Backward seek or large forward jump (user clicked progress bar) — snap immediately
-      setDisplayedWordIdx(rawActiveWordIdx)
-      lastWordAdvanceRef.current = performance.now()
-      return
-    }
-    if (rawActiveWordIdx === displayedWordIdx) return
-    const now = performance.now()
-    const elapsed = now - lastWordAdvanceRef.current
-    if (elapsed >= MIN_WORD_MS) {
-      setDisplayedWordIdx(prev => Math.min(prev + 1, rawActiveWordIdx))
-      lastWordAdvanceRef.current = now
-    } else {
-      const timer = setTimeout(() => {
-        lastWordAdvanceRef.current = performance.now()
-        setDisplayedWordIdx(prev => Math.min(prev + 1, rawActiveWordIdx))
-      }, MIN_WORD_MS - elapsed)
-      return () => clearTimeout(timer)
-    }
-  }, [rawActiveWordIdx, displayedWordIdx, audioPlaying])
-
-  const activeWordIdx = displayedWordIdx
 
   useEffect(() => {
     if (!audioPlaying || activeWordIdx < 0) return
@@ -1306,9 +1272,7 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
   const flexRef = useRef(null)
   const [leftPct, setLeftPct] = useState(50)
   const [hoverIdx, setHoverIdx] = useState(-1)
-  const [displayedWordIdx, setDisplayedWordIdx] = useState(-1)
-  const lastWordAdvanceRef = useRef(0)
-  const MIN_WORD_MS = 50
+
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640)
   const dragging = useRef(false)
   const wordRefsLeft = useRef([])
@@ -1356,7 +1320,7 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
     [wordTimestamps, allWordsTaamim]
   )
 
-  const rawActiveWordIdx = useMemo(() => {
+  const activeWordIdx = useMemo(() => {
     if (!wordTimestamps?.length || audioCurrentTime == null || !allWordsTaamim.length) return -1
     if (isV2(wordTimestamps)) {
       let best = -1
@@ -1377,34 +1341,6 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
     if (best < 0) return -1
     return alignMap?.w2s[best] ?? 0
   }, [wordTimestamps, audioCurrentTime, allWordsTaamim, alignMap])
-
-  useEffect(() => {
-    if (!audioPlaying || rawActiveWordIdx < 0) {
-      setDisplayedWordIdx(rawActiveWordIdx)
-      lastWordAdvanceRef.current = performance.now()
-      return
-    }
-    if (rawActiveWordIdx < displayedWordIdx || rawActiveWordIdx - displayedWordIdx > 10) {
-      setDisplayedWordIdx(rawActiveWordIdx)
-      lastWordAdvanceRef.current = performance.now()
-      return
-    }
-    if (rawActiveWordIdx === displayedWordIdx) return
-    const now = performance.now()
-    const elapsed = now - lastWordAdvanceRef.current
-    if (elapsed >= MIN_WORD_MS) {
-      setDisplayedWordIdx(prev => Math.min(prev + 1, rawActiveWordIdx))
-      lastWordAdvanceRef.current = now
-    } else {
-      const timer = setTimeout(() => {
-        lastWordAdvanceRef.current = performance.now()
-        setDisplayedWordIdx(prev => Math.min(prev + 1, rawActiveWordIdx))
-      }, MIN_WORD_MS - elapsed)
-      return () => clearTimeout(timer)
-    }
-  }, [rawActiveWordIdx, displayedWordIdx, audioPlaying])
-
-  const activeWordIdx = displayedWordIdx
 
   useEffect(() => {
     if (!audioPlaying || activeWordIdx < 0) return
