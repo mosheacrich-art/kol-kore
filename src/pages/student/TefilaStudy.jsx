@@ -583,7 +583,7 @@ function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack
           guestMode={guestMode}
           isSubscribed={isSubscribed}
           initialAliyah={0}
-          availableModes={['nikkud']}
+          availableModes={['nikkud', 'audio']}
         />
       </div>
 
