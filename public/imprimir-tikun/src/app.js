@@ -321,17 +321,24 @@ function injectAliyotMarkers(markers) {
   if (!markers || !markers.length) { pendingMarkers = null; return; }
   pendingMarkers = markers;
   markers.forEach(function(m) {
-    var fi = wordFragMap[m.wordIdx];
+    // Use last word of previous aliyah so the marker lands after that word
+    var prevIdx = m.wordIdx > 0 ? m.wordIdx - 1 : 0;
+    var fi = wordFragMap[prevIdx];
     if (fi == null) return;
+    // Find the row via the sefer column fragment
     var frag = canvas.querySelector('tr .tikkun-cell:last-child [data-fi="' + fi + '"]');
     if (!frag) return;
-    var td = frag.closest('td.tikkun-cell');
-    if (!td) return;
-    var span = document.createElement('span');
-    span.className = 'aliyah-marker';
-    span.textContent = m.label;
-    var lineDiv = td.querySelector('.line');
-    td.insertBefore(span, lineDiv || td.firstChild);
+    var row = frag.closest('tr');
+    if (!row) return;
+    // Insert in BOTH cells after their .line div
+    row.querySelectorAll('td.tikkun-cell').forEach(function(td) {
+      var marker = document.createElement('span');
+      marker.className = 'aliyah-marker';
+      marker.textContent = m.label;
+      var lineDiv = td.querySelector('.line');
+      if (lineDiv) lineDiv.after(marker);
+      else td.appendChild(marker);
+    });
   });
 }
 
