@@ -38,6 +38,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
   const [audioPlaying, setAudioPlaying] = useState(false)
   const [audioDuration, setAudioDuration] = useState(0)
   const [studyMode, setStudyMode] = useState('full') // 'full' | 'word' | 'phrase'
+  const [seferFont, setSeferFont] = useState(() => { try { return localStorage.getItem('seferFont') || 'stam' } catch { return 'stam' } })
   const [studyDropdownOpen, setStudyDropdownOpen] = useState(false)
   const [studyDropdownPos, setStudyDropdownPos] = useState({ top: 0, left: 0 })
   const studyBtnRef = useRef(null)
@@ -444,6 +445,24 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
             ))}
           </div>}
 
+          {/* Font toggle — only in sefer mode */}
+          {mode === 'sefer' && (
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {[{ id: 'stam', label: 'סטם' }, { id: 'keter', label: 'כתר' }, { id: 'frank', label: 'פרנק' }].map(({ id, label }) => (
+                <button key={id} onClick={() => { setSeferFont(id); try { localStorage.setItem('seferFont', id) } catch {} }}
+                  className="px-2 py-1 rounded text-xs transition-all"
+                  style={{
+                    fontFamily: '"KeterYG", serif',
+                    background: seferFont === id ? `${bookColor}20` : 'var(--bg-card)',
+                    color: seferFont === id ? bookColor : 'var(--text-3)',
+                    border: `1px solid ${seferFont === id ? bookColor + '35' : 'var(--border-subtle)'}`,
+                  }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Study mode dropdown — only when synced audio exists */}
           {!guestMode && audio?.wordTimestamps && (
             <div className="flex-shrink-0">
@@ -825,6 +844,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
               aliyahRef={currentAliyah.ref}
               wordTimestamps={cursorEnabled ? (audio?.wordTimestamps ?? null) : null}
               audioCurrentTime={cursorEnabled ? audioCurrentTime : null}
+              seferFont={seferFont}
             />
           : !loading && !error && verses.length > 0 && (
               mode === 'split'
@@ -1182,8 +1202,9 @@ function _inRange(word, range) {
   return true
 }
 
-function SeferView({ parasha, isDark, aliyahRef, wordTimestamps, audioCurrentTime }) {
+function SeferView({ parasha, isDark, aliyahRef, wordTimestamps, audioCurrentTime, seferFont = 'stam' }) {
   const iframeRef = useRef(null)
+  const seferFontRef = useRef(seferFont)
   const heb = parasha?.heb || ''
   const src = `${BASE_URL}imprimir-tikun/index.html?embed=1&theme=${isDark ? 'dark' : 'light'}#parasha=${encodeURIComponent(heb)}`
 
@@ -1261,10 +1282,16 @@ function SeferView({ parasha, isDark, aliyahRef, wordTimestamps, audioCurrentTim
       if (!win) return
       win.postMessage({ scrollToWord: aliyahWordOffsetRef.current }, '*')
       win.postMessage({ wordIdx: globalWordIdxRef.current }, '*')
+      win.postMessage({ setFont: seferFontRef.current }, '*')
     }
     iframe.addEventListener('load', onLoad)
     return () => iframe.removeEventListener('load', onLoad)
   }, [])
+
+  useEffect(() => {
+    seferFontRef.current = seferFont
+    iframeRef.current?.contentWindow?.postMessage({ setFont: seferFont }, '*')
+  }, [seferFont])
 
   return (
     <iframe

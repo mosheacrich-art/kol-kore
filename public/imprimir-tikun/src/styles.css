@@ -336,8 +336,8 @@ body.embed #book-canvas {
 }
 
 /* ?? Sefer-column font toggle ???????????????????????????????????????????? */
-#book-canvas.font-keter .tikkun-cell:last-child { font-family: 'KeterYG', serif !important; }
-#book-canvas.font-frank .tikkun-cell:last-child { font-family: 'TaameyFrankCLM', serif !important; }
+#book-canvas.font-keter .tikkun-cell { font-family: 'KeterYG', serif !important; }
+#book-canvas.font-frank .tikkun-cell { font-family: 'TaameyFrankCLM', serif !important; }
 
 .font-btns { display: flex; gap: 4px; }
 .font-btn {
