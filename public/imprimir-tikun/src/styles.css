@@ -339,6 +339,19 @@ body.embed #book-canvas {
 #book-canvas.font-keter .tikkun-cell { font-family: 'KeterYG', serif !important; }
 #book-canvas.font-frank .tikkun-cell { font-family: 'TaameyFrankCLM', serif !important; }
 
+/* ── Aliyah markers ────────────────────────────────────────────────────── */
+.aliyah-marker {
+  display: block;
+  font-size: 0.44em;
+  line-height: 1.3;
+  font-family: 'KeterYG', serif;
+  color: var(--ink);
+  opacity: 0.45;
+  text-align: end;
+  padding-inline-end: 3px;
+  pointer-events: none;
+}
+
 .font-btns { display: flex; gap: 4px; }
 .font-btn {
   font-size: 12px;

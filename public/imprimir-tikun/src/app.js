@@ -199,6 +199,7 @@ function renderParasha(startPage) {
 
   canvas.innerHTML = html || '<div class="err">לא נמצא תוכן לפרשה זו.</div>';
   buildWordMap();
+  if (pendingMarkers) injectAliyotMarkers(pendingMarkers);
 
   if (isEmbed) {
     requestAnimationFrame(function() { requestAnimationFrame(fitWidth); });
@@ -313,6 +314,27 @@ parashaSelect.addEventListener('change', function() {
 });
 
 /* ── Print ──────────────────────────────────────────────────────────── */
+/* Aliyah markers */
+var pendingMarkers = null;
+function injectAliyotMarkers(markers) {
+  canvas.querySelectorAll('.aliyah-marker').forEach(function(el) { el.remove(); });
+  if (!markers || !markers.length) { pendingMarkers = null; return; }
+  pendingMarkers = markers;
+  markers.forEach(function(m) {
+    var fi = wordFragMap[m.wordIdx];
+    if (fi == null) return;
+    var frag = canvas.querySelector('tr .tikkun-cell:last-child [data-fi="' + fi + '"]');
+    if (!frag) return;
+    var td = frag.closest('td.tikkun-cell');
+    if (!td) return;
+    var span = document.createElement('span');
+    span.className = 'aliyah-marker';
+    span.textContent = m.label;
+    var lineDiv = td.querySelector('.line');
+    td.insertBefore(span, lineDiv || td.firstChild);
+  });
+}
+
 /* Sefer font toggle */
 var currentFont = localStorage.getItem('seferFont') || 'stam';
 function applyFont(f) {
@@ -409,6 +431,7 @@ window.addEventListener('message', function(e) {
   }
   /* Word tracking */
   if (e.data.setFont) applyFont(e.data.setFont);
+  if (e.data.aliyotMarkers !== undefined) injectAliyotMarkers(e.data.aliyotMarkers);
   if (typeof e.data.wordIdx === 'number') {
     highlightWord(e.data.wordIdx);
   }

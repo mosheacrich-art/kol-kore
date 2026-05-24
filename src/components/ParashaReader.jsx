@@ -1210,6 +1210,19 @@ function SeferView({ parasha, isDark, aliyahRef, wordTimestamps, audioCurrentTim
 
   const { words: allWords } = useTikkunWords(parasha?.id, parasha?.combined ? parasha.parts : null)
 
+  const ALIYAH_LABELS = ['שני', 'שלישי', 'רביעי', 'חמישי', 'ששי', 'שביעי', 'מפטיר']
+  const aliyotMarkersRef = useRef([])
+  const aliyotMarkers = useMemo(() => {
+    if (!allWords?.length || !parasha?.aliyot?.length) return []
+    return parasha.aliyot.slice(1).map((aliyah, idx) => {
+      const r = _parseAliyahRef(aliyah.ref)
+      if (!r) return null
+      let count = 0
+      for (const w of allWords) { if (_inRange(w, r)) break; count++ }
+      return { wordIdx: count, label: ALIYAH_LABELS[idx] || String(aliyah.n) }
+    }).filter(Boolean)
+  }, [allWords, parasha?.aliyot])
+
   const range = useMemo(() => _parseAliyahRef(aliyahRef), [aliyahRef])
 
   const aliyahWordOffset = useMemo(() => {
@@ -1283,6 +1296,7 @@ function SeferView({ parasha, isDark, aliyahRef, wordTimestamps, audioCurrentTim
       win.postMessage({ scrollToWord: aliyahWordOffsetRef.current }, '*')
       win.postMessage({ wordIdx: globalWordIdxRef.current }, '*')
       win.postMessage({ setFont: seferFontRef.current }, '*')
+      win.postMessage({ aliyotMarkers: aliyotMarkersRef.current }, '*')
     }
     iframe.addEventListener('load', onLoad)
     return () => iframe.removeEventListener('load', onLoad)
@@ -1292,6 +1306,11 @@ function SeferView({ parasha, isDark, aliyahRef, wordTimestamps, audioCurrentTim
     seferFontRef.current = seferFont
     iframeRef.current?.contentWindow?.postMessage({ setFont: seferFont }, '*')
   }, [seferFont])
+
+  useEffect(() => {
+    aliyotMarkersRef.current = aliyotMarkers
+    iframeRef.current?.contentWindow?.postMessage({ aliyotMarkers }, '*')
+  }, [aliyotMarkers])
 
   return (
     <iframe
