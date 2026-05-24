@@ -17,7 +17,6 @@ export default function TeacherAudioPanel() {
 
   // ── Haftara state ─────────────────────────────────────────────────────────
   const [selectedHaftara, setSelectedHaftara] = useState(ALL_HAFTAROT[0])
-  const [selectedHaftaraAliyah, setSelectedHaftaraAliyah] = useState(0)
 
   // ── Tefila state ──────────────────────────────────────────────────────────
   const [tefilaNusach, setTefilaNusach] = useState('ashkenaz')
@@ -50,10 +49,10 @@ export default function TeacherAudioPanel() {
     if (sectionType === 'haftara') {
       return {
         id: selectedHaftara.id,
-        aliyahIdx: selectedHaftaraAliyah,
-        ref: selectedHaftara.aliyot[selectedHaftaraAliyah]?.ref,
+        aliyahIdx: 0,
+        ref: selectedHaftara.aliyot[0]?.ref,
         color: BOOK_COLORS[selectedHaftara.book] || '#8b5cf6',
-        aliyot: selectedHaftara.aliyot,
+        aliyot: [selectedHaftara.aliyot[0]],
         heb: selectedHaftara.heb,
         name: selectedHaftara.name,
       }
@@ -400,8 +399,8 @@ export default function TeacherAudioPanel() {
                   </div>
                 </div>
 
-                {/* Aliyah selector (not for tefila) */}
-                {sectionType !== 'tefila' && (
+                {/* Aliyah selector (parasha only) */}
+                {sectionType === 'parasha' && (
                   <div className="mb-5">
                     <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{t('select_aliyah')}</p>
                     <div className="flex gap-2 flex-wrap">
@@ -410,7 +409,7 @@ export default function TeacherAudioPanel() {
                         const key = `${entity.id}-${i}`
                         const syncing = syncingKeys.has(key)
                         const setAliyah = sectionType === 'parasha' ? setSelectedAliyah : setSelectedHaftaraAliyah
-                        const currentIdx = sectionType === 'parasha' ? selectedAliyah : selectedHaftaraAliyah
+                        const currentIdx = selectedAliyah
                         return (
                           <button key={i} onClick={() => setAliyah(i)}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
@@ -505,8 +504,8 @@ export default function TeacherAudioPanel() {
                   onChange={e => handleFile(e.target.files?.[0])} />
               </div>
 
-              {/* Summary of audios (not for tefila) */}
-              {sectionType !== 'tefila' && (() => {
+              {/* Summary of audios (parasha only) */}
+              {sectionType === 'parasha' && (() => {
                 const entityAudios = Object.keys(audios).filter(k => k.startsWith(`${entity.id}-`))
                 if (!entityAudios.length) return null
                 return (
