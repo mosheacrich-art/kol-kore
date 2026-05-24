@@ -315,25 +315,40 @@ parashaSelect.addEventListener('change', function() {
 /* ── Print ──────────────────────────────────────────────────────────── */
 // beforeprint/afterprint always registered: also fires when parent calls contentWindow.print()
 window.addEventListener('beforeprint', function() {
-  // Clear screen transforms so we can measure natural heights
+  // Clear screen transforms
   canvas.style.zoom = '';
   canvas.style.transform = 'none';
   canvas.style.width = '';
   canvas.style.padding = '';
 
-  // Find the tallest amud at natural scale
-  var amudEls = canvas.querySelectorAll('.amud');
-  var maxH = 0;
-  amudEls.forEach(function(a) { if (a.offsetHeight > maxH) maxH = a.offsetHeight; });
+  // A4 portrait: 10mm top/bottom, 8mm left/right margins
+  // Printable ~194x277mm = ~733x1047px at 96dpi
+  var printW = Math.round(194 / 25.4 * 96);
+  var printH = Math.round(277 / 25.4 * 96);
+  var scale  = printW / 1280;
+  canvas.style.zoom = scale.toFixed(4);
 
-  // A4 landscape 10mm margins: printable ~277x190mm = 1047x719px at 96dpi
-  var printW = Math.round(277 / 25.4 * 96);
-  var printH = Math.round(190 / 25.4 * 96);
-  var zoomW = printW / 1280;
-  var zoomH = maxH > 0 ? (printH / maxH) * 0.97 : zoomW; // 3% safety
-  canvas.style.zoom = Math.min(zoomW, zoomH).toFixed(4);
+  // Target page height in CSS coords (before zoom)
+  var pageHcss = Math.round(printH / scale);
+
+  canvas.querySelectorAll('.amud').forEach(function(amud) {
+    var header = amud.querySelector('.amud-header');
+    var headerH = header ? header.offsetHeight + 4 : 0;
+    var rows = amud.querySelectorAll('tr');
+    if (!rows.length) return;
+    var availH = pageHcss - headerH;
+    var lineH  = (availH / rows.length).toFixed(2);
+    amud.querySelectorAll('.line').forEach(function(line) {
+      line.style.height    = lineH + 'px';
+      line.style.minHeight = lineH + 'px';
+    });
+  });
 });
 window.addEventListener('afterprint', function() {
+  canvas.querySelectorAll('.line').forEach(function(line) {
+    line.style.height    = '';
+    line.style.minHeight = '';
+  });
   canvas.style.zoom = '';
   if (isEmbed) fitWidth(); else applyZoom();
 });
