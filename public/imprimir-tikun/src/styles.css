@@ -334,3 +334,21 @@ body.embed #book-canvas {
   .tikkun-table { font-size: 1.05em; }
   .tikkun-cell { padding: 0 10px; }
 }
+
+/* ?? Sefer-column font toggle ???????????????????????????????????????????? */
+#book-canvas.font-keter .tikkun-cell:last-child { font-family: 'KeterYG', serif !important; }
+#book-canvas.font-frank .tikkun-cell:last-child { font-family: 'TaameyFrankCLM', serif !important; }
+
+.font-btns { display: flex; gap: 4px; }
+.font-btn {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 5px;
+  border: 1px solid #7a6030;
+  background: #2e2300;
+  color: #c8a84e;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.font-btn.active,
+.font-btn:hover { background: #5a3c00; color: #f9d96a; }

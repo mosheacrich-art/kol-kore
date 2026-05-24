@@ -313,6 +313,22 @@ parashaSelect.addEventListener('change', function() {
 });
 
 /* ── Print ──────────────────────────────────────────────────────────── */
+/* Sefer font toggle */
+var currentFont = localStorage.getItem('seferFont') || 'stam';
+function applyFont(f) {
+  currentFont = f;
+  canvas.classList.remove('font-keter', 'font-frank');
+  if (f !== 'stam') canvas.classList.add('font-' + f);
+  document.querySelectorAll('.font-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.font === f);
+  });
+  try { localStorage.setItem('seferFont', f); } catch(e) {}
+}
+document.querySelectorAll('.font-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() { applyFont(btn.dataset.font); });
+});
+applyFont(currentFont);
+
 // beforeprint/afterprint always registered: also fires when parent calls contentWindow.print()
 window.addEventListener('beforeprint', function() {
   // Clear screen transforms
@@ -392,6 +408,7 @@ window.addEventListener('message', function(e) {
     }
   }
   /* Word tracking */
+  if (e.data.setFont) applyFont(e.data.setFont);
   if (typeof e.data.wordIdx === 'number') {
     highlightWord(e.data.wordIdx);
   }

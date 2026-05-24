@@ -10,6 +10,12 @@ export default function ImprimirTikun() {
   const [selected, setSelected] = useState('')
   const { t } = useLang()
   const { isDark } = useTheme()
+  const [seferFont, setSeferFont] = useState('stam')
+
+  const sendFont = (f) => {
+    setSeferFont(f)
+    iframeRef.current?.contentWindow?.postMessage({ setFont: f }, '*')
+  }
 
   const jumpTo = (heb) => {
     setSelected(heb)
@@ -61,6 +67,27 @@ export default function ImprimirTikun() {
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="flex items-center gap-1">
+          {[
+            { id: 'stam', label: '???' },
+            { id: 'keter', label: '???' },
+            { id: 'frank', label: '????' },
+          ].map(({ id, label }) => (
+            <button
+              key={id}
+              onClick={() => sendFont(id)}
+              className="px-2 py-1 rounded text-xs transition-all"
+              style={{
+                background: seferFont === id ? 'var(--accent)' : 'var(--bg-card)',
+                color: seferFont === id ? '#fff' : 'var(--text-3)',
+                border: '1px solid var(--border)',
+                fontFamily: '"KeterYG", serif',
+              }}>
+              {label}
+            </button>
+          ))}
         </div>
 
         <div className="ml-auto flex items-center gap-2">
