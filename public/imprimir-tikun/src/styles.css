@@ -336,8 +336,8 @@ body.embed #book-canvas {
 }
 
 /* ?? Sefer-column font toggle ???????????????????????????????????????????? */
-#book-canvas.font-keter .tikkun-cell { font-family: 'KeterYG', serif !important; }
-#book-canvas.font-frank .tikkun-cell { font-family: 'TaameyFrankCLM', serif !important; }
+#book-canvas.font-keter .tikkun-cell { font-family: 'KeterYG', 'ShlomosemiStam', serif !important; font-weight: 700 !important; }
+#book-canvas.font-frank .tikkun-cell { font-family: 'TaameyFrankCLM', 'ShlomosemiStam', serif !important; font-weight: 700 !important; }
 
 /* ── Aliyah markers ────────────────────────────────────────────────────── */
 .aliyah-marker {
