@@ -32,12 +32,6 @@ const ROLES_META = [
   { heb: 'מוֹרֶה',   color: '#f9b800', bg: 'rgba(249,184,0,0.08)',  border: 'rgba(249,184,0,0.2)',  labelKey: 'role_teacher_label', itemsKey: 'role_teacher_items', ctaKey: 'role_teacher_cta' },
 ]
 
-const PARASHOT_TICKER = [
-  'בְּרֵאשִׁית', 'נֹחַ', 'לֶךְ לְךָ', 'וַיֵּרָא', 'חַיֵּי שָׂרָה',
-  'תּוֹלְדוֹת', 'וַיֵּצֵא', 'וַיִּשְׁלַח', 'וַיֵּשֶׁב', 'מִקֵּץ',
-  'וַיִּגַּשׁ', 'וַיְחִי', 'שְׁמוֹת', 'וָאֵרָא', 'בֹּא', 'בְּשַׁלַּח',
-  'יִתְרוֹ', 'מִשְׁפָּטִים', 'תְּרוּמָה', 'תְּצַוֶּה', 'כִּי תִשָּׂא',
-]
 
 function FadeIn({ children, delay = 0, direction = 'up', className = '' }) {
   const ref = useRef(null)
@@ -181,7 +175,7 @@ export default function Landing() {
             transition={{ delay: 0.25, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             className="font-serif leading-none mb-3"
             style={{ fontSize: 'clamp(64px, 12vw, 120px)', color: t.text, letterSpacing: '-3px', transition: 'color 0.4s' }}>
-            Parashá
+            Parashapp
           </motion.h1>
 
           <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -207,20 +201,6 @@ export default function Landing() {
             </button>
           </motion.div>
 
-          {/* Ticker */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
-            className="mt-16 flex flex-wrap justify-center gap-2 max-w-2xl">
-            {PARASHOT_TICKER.map((p, i) => (
-              <span key={i} className="hebrew text-xs px-3 py-1.5 rounded-full"
-                style={{
-                  color: t.goldSubtle,
-                  background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(140,95,0,0.07)',
-                  border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(140,95,0,0.12)'}`,
-                }}>
-                {p}
-              </span>
-            ))}
-          </motion.div>
         </div>
 
         <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
@@ -390,7 +370,7 @@ export default function Landing() {
       <div className="py-6 px-6 flex items-center justify-between flex-wrap gap-3"
         style={{ borderTop: `1px solid ${t.border}`, background: t.sectionBg }}>
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold" style={{ color: t.text }}>Parashá</span>
+          <span className="text-sm font-semibold" style={{ color: t.text }}>Parashapp</span>
           <span className="hebrew text-sm" style={{ color: t.goldSubtle }}>פָּרָשָׁה</span>
         </div>
         <div className="flex items-center gap-4 flex-wrap">
