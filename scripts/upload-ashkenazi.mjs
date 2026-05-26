@@ -76,7 +76,7 @@ const FOLDER_TO_ID = {
 
 // ── Whisper / alignment logic (ported from api/generate-sync.js) ──────────────
 
-const WHISPER_TO_TEXT = { 'אדוני': 'יהוה', 'ה': 'יהוה', 'לומר': 'לאמר', 'ואומר': 'ויאמר' }
+const WHISPER_TO_TEXT = { 'אדוני': 'יהוה', 'ה': 'יהוה', 'לומר': 'לאמר', 'ואומר': 'ויאמר', 'אומר': 'ויאמר', 'ויוא': 'וירא' }
 function stripHeb(s) { return s.replace(/[^א-ת]/g, '') }
 function normalizeWord(w) {
   const s = stripHeb(w)
@@ -175,10 +175,12 @@ function align(whisperWords, sefariaWords) {
     }
   }
   if (knownIdxs.length && knownIdxs[0] > 0) {
-    const first = out[knownIdxs[0]]
-    for (let i = knownIdxs[0] - 1; i >= 0; i--) {
-      const d = knownIdxs[0] - i
-      out[i] = { start: +(first.start - d * 0.15).toFixed(3), end: +(first.start - (d - 1) * 0.15).toFixed(3) }
+    const count = knownIdxs[0]
+    const span = out[knownIdxs[0]].start
+    for (let i = 0; i < count; i++) {
+      const t0 = (i / count) * span
+      const t1 = ((i + 1) / count) * span
+      out[i] = { start: +t0.toFixed(3), end: +t1.toFixed(3) }
     }
   }
   if (knownIdxs.length && knownIdxs[knownIdxs.length - 1] < sLen - 1) {
