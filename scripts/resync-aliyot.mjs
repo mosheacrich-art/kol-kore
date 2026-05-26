@@ -287,10 +287,16 @@ async function main() {
     }
   }
 
-  console.log(`\nStarting re-sync of ${targets.length} aliyot\n`)
-  for (const t of targets) {
-    await processAliyah(t.parashaId, t.aliyahIdx)
+  const CONCURRENCY = parseInt(process.env.CONCURRENCY || '4', 10)
+  console.log(`\nStarting re-sync of ${targets.length} aliyot (concurrency ${CONCURRENCY})\n`)
+  const queue = [...targets]
+  async function worker() {
+    while (queue.length) {
+      const t = queue.shift()
+      await processAliyah(t.parashaId, t.aliyahIdx)
+    }
   }
+  await Promise.all(Array.from({ length: CONCURRENCY }, worker))
   console.log('\n=== Done ===')
 }
 
