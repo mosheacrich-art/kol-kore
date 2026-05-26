@@ -174,10 +174,14 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
   ], [teacherAudio, genericAudios])
 
   const audio = useMemo(() => {
-    if (audioSourceKey === 'teacher' || !audioSourceKey) return teacherAudio
-    const g = genericAudios.find(a => a.id === audioSourceKey)
-    if (!g) return teacherAudio
-    return { url: g.public_url, name: g.label, type: g.file_type || 'audio/mp4', wordTimestamps: g.word_timestamps ?? null }
+    const makeGeneric = g => ({ url: g.public_url, name: g.label, type: g.file_type || 'audio/mp4', wordTimestamps: g.word_timestamps ?? null })
+    if (audioSourceKey && audioSourceKey !== 'teacher') {
+      const g = genericAudios.find(a => a.id === audioSourceKey)
+      if (g) return makeGeneric(g)
+    }
+    if (teacherAudio) return teacherAudio
+    if (genericAudios.length > 0) return makeGeneric(genericAudios[0])
+    return null
   }, [audioSourceKey, teacherAudio, genericAudios])
 
   // Fetch student audio recordings for this aliyah (teacher only)
