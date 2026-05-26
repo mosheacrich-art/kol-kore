@@ -439,8 +439,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
                   color: mode === m.id ? bookColor : 'var(--text-3)',
                   border: mode === m.id ? `1px solid ${bookColor}35` : '1px solid transparent',
                 }}>
-                <span className="hebrew text-xs">{m.heb}</span>
-                <span className="hidden sm:inline ml-1">{m.label}</span>
+                <span className="text-xs">{m.label}</span>
               </button>
             ))}
           </div>}
