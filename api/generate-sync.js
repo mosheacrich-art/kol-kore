@@ -273,7 +273,7 @@ export default async function handler(req, res) {
           .then(r => r.ok ? r.json() : null)
           .then(data => {
             if (!data) return []
-            return flattenVerses(data.he || []).flatMap(v => splitWords(stripHtml(v)))
+            return flattenVerses(data.he || []).flatMap(v => splitWords(stripHtml(v))).filter(w => /[א-ת]/.test(w))
           })
           .catch(() => [])
       : Promise.resolve([])

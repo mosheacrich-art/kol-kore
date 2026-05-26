@@ -16,8 +16,12 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 import { createClient } from '@supabase/supabase-js'
-import { execSync } from 'child_process'
+import { execSync, spawnSync } from 'child_process'
 import { PARASHOT } from '../src/data/parashot.js'
+
+const PYTHON = process.env.PYTHON_PATH || 'python'
+const FILL_GAPS_PY = path.join(import.meta.dirname, 'fill-gaps.py')
+const USE_CTC = process.env.USE_CTC !== '0'  // set USE_CTC=0 to disable
 
 const SUPABASE_URL  = process.env.SUPABASE_URL || ''
 const SUPABASE_KEY  = process.env.SUPABASE_SERVICE_KEY || ''
@@ -91,8 +95,130 @@ function align(whisperWords, sefariaWords) {
   for(let i=0;i<sLen;i++){if(out[i]===null){const t=(i/Math.max(1,sLen-1))*totalDuration;out[i]={start:+t.toFixed(3),end:+(t+0.3).toFixed(3)}}}
   return{aligned:out,anchorPct,anchorSet}
 }
-function postRedistribute(aligned,anchorSet,segments){if(!segments?.length)return aligned;const out=aligned.map(x=>({...x}));for(const seg of segments){const sd=seg.end-seg.start;if(sd<0.3)continue;const idxs=[];for(let i=0;i<out.length;i++)if(out[i]&&out[i].start>=seg.start-0.1&&out[i].start<seg.end)idxs.push(i);if(idxs.length<2)continue;const cov=(out[idxs[idxs.length-1]].end-out[idxs[0]].start)/sd;if(cov>=0.6)continue;const n=idxs.length;idxs.forEach((wi,pos)=>{out[wi]={start:+(seg.start+(pos/n)*sd).toFixed(3),end:+(seg.start+((pos+1)/n)*sd).toFixed(3)}})};return out}
-function finalGuardrail(r){let ls=-0.05;for(let i=0;i<r.length;i++){const s=Math.max(r[i].start,ls+0.05),e=Math.max(r[i].end,s+0.05);r[i]={start:+s.toFixed(3),end:+e.toFixed(3)};ls=r[i].start};let wi=0;while(wi<r.length){if(r[wi].end-r[wi].start>=0.12){wi++;continue};let wj=wi;while(wj<r.length&&r[wj].end-r[wj].start<0.12)wj++;wj--;const pe=wi>0?r[wi-1].end:0,ns=wj<r.length-1?r[wj+1].start:r[wj].end+2.0,cnt=wj-wi+1,sp=ns-pe;if(sp/cnt>=0.15)for(let k=0;k<cnt;k++)r[wi+k]={start:+(pe+(k/cnt)*sp).toFixed(3),end:+(pe+((k+1)/cnt)*sp).toFixed(3)};wi=wj+1};return r}
+// Segment-aware alignment: run global NW (preserves anchor quality), then use Whisper
+// segment boundaries to break up long interpolated stretches — no 30s dead zones.
+function alignWithSegments(whisperWords, sefariaWords, segments) {
+  // Step 1: global NW — same quality anchors as before
+  const { aligned: sparse, anchorPct, anchorSet } = align(whisperWords, sefariaWords)
+  if (!segments?.length) return { aligned: sparse, anchorPct, anchorSet }
+
+  const sLen = sefariaWords.length
+  const totalDur = whisperWords[whisperWords.length-1]?.end ?? 1
+  const knownIdxs = [...anchorSet].sort((a, b) => a - b)
+  const out = [...sparse]
+
+  // Step 2: re-interpolate gaps using segment boundaries as soft sub-anchors
+  function interpolateRange(li, ri, tStart, tEnd) {
+    if (ri - li <= 1) return
+    const wordSpan = ri - li, timeSpan = tEnd - tStart
+    // collect segment boundaries strictly inside this time window
+    const bounds = [{ wi: li, t: tStart }]
+    for (const seg of segments) {
+      if (seg.start > tStart + 0.05 && seg.start < tEnd - 0.05) {
+        const pct = (seg.start - tStart) / timeSpan
+        const wi = Math.round(li + pct * wordSpan)
+        if (wi > li && wi < ri) bounds.push({ wi, t: seg.start })
+      }
+    }
+    bounds.push({ wi: ri, t: tEnd })
+    bounds.sort((a, b) => a.wi - b.wi)
+    // deduplicate by wi
+    const uniq = [bounds[0]]
+    for (let k = 1; k < bounds.length; k++)
+      if (bounds[k].wi !== uniq[uniq.length-1].wi) uniq.push(bounds[k])
+    // interpolate within each sub-range
+    for (let si = 0; si < uniq.length - 1; si++) {
+      const { wi: wS, t: tS } = uniq[si], { wi: wE, t: tE } = uniq[si+1]
+      const sw = wE - wS, st = tE - tS
+      for (let idx = wS + 1; idx < wE; idx++) {
+        const pct = (idx - wS) / sw, t = tS + pct * st, d = Math.max(0.05, st / sw * 0.7)
+        out[idx] = { start: +t.toFixed(3), end: +(t+d).toFixed(3) }
+      }
+    }
+  }
+
+  // Between real anchors
+  for (let ki = 0; ki < knownIdxs.length - 1; ki++) {
+    const li = knownIdxs[ki], ri = knownIdxs[ki+1]
+    if (ri - li <= 1) continue
+    const tS = out[li].end < out[ri].start ? out[li].end : out[li].start
+    interpolateRange(li, ri, tS, out[ri].start)
+  }
+  // Leading nulls
+  if (knownIdxs.length && knownIdxs[0] > 0) {
+    const count = knownIdxs[0], tEnd = out[knownIdxs[0]].start
+    for (let i = 0; i < count; i++) { const t0=(i/count)*tEnd, t1=((i+1)/count)*tEnd; out[i]={start:+t0.toFixed(3),end:+t1.toFixed(3)} }
+  }
+  // Trailing nulls
+  if (knownIdxs.length && knownIdxs[knownIdxs.length-1] < sLen-1) {
+    const last = out[knownIdxs[knownIdxs.length-1]]
+    for (let i = knownIdxs[knownIdxs.length-1]+1; i < sLen; i++) { const d=i-knownIdxs[knownIdxs.length-1]; out[i]={start:+(last.end+(d-1)*0.15).toFixed(3),end:+(last.end+d*0.15).toFixed(3)} }
+  }
+  // Safety nulls
+  for (let i = 0; i < sLen; i++) {
+    if (!out[i]) { const t=(i/Math.max(1,sLen-1))*totalDur; out[i]={start:+t.toFixed(3),end:+(t+0.3).toFixed(3)} }
+  }
+  return { aligned: out, anchorPct, anchorSet }
+}
+const TIMESTAMP_SHIFT = parseFloat(process.env.TIMESTAMP_SHIFT || '0')
+function finalGuardrail(r){
+  // Apply perceptual delay: Whisper marks onset of first phoneme, but cantorial
+  // pronunciation is perceptually clear slightly later
+  if (TIMESTAMP_SHIFT) r = r.map(w => ({ start: +(w.start + TIMESTAMP_SHIFT).toFixed(3), end: +(w.end + TIMESTAMP_SHIFT).toFixed(3) }))
+  let ls=-0.05;for(let i=0;i<r.length;i++){const s=Math.max(r[i].start,ls+0.05),e=Math.max(r[i].end,s+0.05);r[i]={start:+s.toFixed(3),end:+e.toFixed(3)};ls=r[i].start};let wi=0;while(wi<r.length){if(r[wi].end-r[wi].start>=0.12){wi++;continue};let wj=wi;while(wj<r.length&&r[wj].end-r[wj].start<0.12)wj++;wj--;const pe=wi>0?r[wi-1].end:0,ns=wj<r.length-1?r[wj+1].start:r[wj].end+2.0,cnt=wj-wi+1,sp=ns-pe;if(sp/cnt>=0.15)for(let k=0;k<cnt;k++)r[wi+k]={start:+(pe+(k/cnt)*sp).toFixed(3),end:+(pe+((k+1)/cnt)*sp).toFixed(3)};wi=wj+1};return r}
+
+// ── CTC gap filling via Python ────────────────────────────────────────────────
+
+function fillGapsWithCTC(filePath, aligned, anchorSet, sefariaWords) {
+  if (!USE_CTC || !fs.existsSync(FILL_GAPS_PY)) return aligned
+
+  const sLen = sefariaWords.length
+  const knownIdxs = [...anchorSet].sort((a, b) => a - b)
+
+  // Collect gaps: sequences of non-anchor words between two anchors
+  // Only gaps with >= 3 words and >= 1s duration are worth CTC-filling
+  const gaps = []
+  for (let ki = 0; ki < knownIdxs.length - 1; ki++) {
+    const li = knownIdxs[ki], ri = knownIdxs[ki + 1]
+    const gapLen = ri - li - 1
+    if (gapLen < 3) continue
+    const tStart = aligned[li].end < aligned[ri].start ? aligned[li].end : aligned[li].start
+    const tEnd = aligned[ri].start
+    if (tEnd - tStart < 0.5) continue
+    gaps.push({ start: +tStart.toFixed(3), end: +tEnd.toFixed(3), words: sefariaWords.slice(li + 1, ri), li, ri })
+  }
+
+  if (!gaps.length) return aligned
+
+  const tmpIn  = path.join(os.tmpdir(), `gaps_in_${Date.now()}.json`)
+  const tmpOut = path.join(os.tmpdir(), `gaps_out_${Date.now()}.json`)
+  fs.writeFileSync(tmpIn, JSON.stringify(gaps.map(g => ({ start: g.start, end: g.end, words: g.words }))))
+
+  console.log(`  CTC fill: ${gaps.length} gaps (${gaps.reduce((s,g)=>s+g.words.length,0)} words)`)
+  const result = spawnSync(PYTHON, [FILL_GAPS_PY, filePath, tmpIn, tmpOut], {
+    timeout: 300000, env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
+  })
+  fs.unlinkSync(tmpIn)
+
+  if (result.status !== 0) {
+    console.warn(`  CTC fill failed (exit ${result.status}), keeping interpolation`)
+    if (result.stderr) console.warn(result.stderr.toString().slice(-500))
+    return aligned
+  }
+
+  const ctcResults = JSON.parse(fs.readFileSync(tmpOut, 'utf8'))
+  fs.unlinkSync(tmpOut)
+
+  const out = [...aligned]
+  gaps.forEach((gap, gi) => {
+    const ctcTs = ctcResults[gi]
+    if (!ctcTs?.length) return
+    for (let i = 0; i < gap.words.length && i < ctcTs.length; i++) {
+      out[gap.li + 1 + i] = ctcTs[i]
+    }
+  })
+  return out
+}
 
 // ── Sefaria fetch ─────────────────────────────────────────────────────────────
 
@@ -101,7 +227,7 @@ async function fetchSefariaWords(ref) {
     const r = await fetch(`https://www.sefaria.org/api/texts/${encodeURIComponent(ref)}?commentary=0&context=0&pad=0&wrapLinks=0`)
     if (!r.ok) return []
     const d = await r.json()
-    return flattenVerses(d.he || []).flatMap(v => splitWords(stripHtml(v)))
+    return flattenVerses(d.he || []).flatMap(v => splitWords(stripHtml(v))).filter(w => /[א-ת]/.test(w))
   } catch { return [] }
 }
 
@@ -138,10 +264,13 @@ function getAudioDuration(filePath) {
 async function transcribeChunked(filePath, sefariaWords, parashaId, aliyahIdx) {
   const duration = getAudioDuration(filePath)
   const STEP = CHUNK_SEC - OVERLAP_SEC
+  const fileSize = fs.statSync(filePath).size
 
-  if (!duration || duration <= CHUNK_SEC) {
+  // Under 24MB: send whole file without prompt — more words, no offset from prompt
+  if (!duration || duration <= CHUNK_SEC || fileSize < 24 * 1024 * 1024) {
+    console.log(`  Sending full file (${(fileSize/1024/1024).toFixed(1)}MB, ${Math.round(duration||0)}s)`)
     const buf = fs.readFileSync(filePath)
-    return whisperChunk(buf, `${parashaId}_${aliyahIdx}.m4a`, sefariaWords)
+    return whisperChunk(buf, `${parashaId}_${aliyahIdx}.m4a`, [])  // no prompt
   }
 
   const tmpDir = path.join(os.tmpdir(), `resync_${parashaId}_${aliyahIdx}`)
@@ -240,12 +369,14 @@ async function processAliyah(parashaId, aliyahIdx) {
   let wordTimestamps = null, needsReview = false, anchorPct = 0
   const rawWords = wd.words
   if (rawWords?.length && sefariaWords.length) {
-    const { aligned, anchorPct: ap, anchorSet } = align(rawWords, sefariaWords)
-    const redis = postRedistribute(aligned, anchorSet, wd.segments)
-    wordTimestamps = finalGuardrail(redis)
+    const { aligned, anchorPct: ap, anchorSet } = alignWithSegments(rawWords, sefariaWords, wd.segments)
+    console.log(`  aligned: ${Math.round(ap * 100)}% anchors  segments=${wd.segments?.length ?? 0}`)
+    const guarded = finalGuardrail(aligned)
+    // Each word stays highlighted until the next word starts (karaoke behavior)
+    for (let i = 0; i < guarded.length - 1; i++) guarded[i].end = guarded[i + 1].start
+    wordTimestamps = guarded
     needsReview = ap < 0.4
     anchorPct = ap
-    console.log(`  aligned: ${Math.round(ap * 100)}% anchors  needs_review=${needsReview}`)
   }
 
   const { error } = await supabase.from('public_audios')
@@ -262,16 +393,17 @@ async function main() {
   const args = process.argv.slice(2)
   let targets = []
 
-  if (args.includes('--all-below-threshold')) {
+  if (args.includes('--all-below-threshold') || args.includes('--all-above-threshold')) {
+    const above = args.includes('--all-above-threshold')
     const { data, error } = await supabase
       .from('public_audios')
       .select('parasha_id, aliyah_idx, anchor_pct')
       .eq('label', LABEL)
-      .lt('anchor_pct', MIN_ANCHOR)
-      .order('anchor_pct')
+      [above ? 'gte' : 'lt']('anchor_pct', MIN_ANCHOR)
+      .order('anchor_pct', { ascending: !above })
     if (error) { console.error(error.message); process.exit(1) }
     targets = data.map(r => ({ parashaId: r.parasha_id, aliyahIdx: r.aliyah_idx, anchor: r.anchor_pct }))
-    console.log(`\nRe-syncing ${targets.length} aliyot with anchor_pct < ${MIN_ANCHOR}`)
+    console.log(`\nRe-syncing ${targets.length} aliyot with anchor_pct ${above ? '>=' : '<'} ${MIN_ANCHOR}`)
     targets.forEach(t => console.log(`  ${t.parashaId} aliyah ${t.aliyahIdx + 1}  (${Math.round(t.anchor * 100)}%)`))
   } else {
     // Parse "parasha_id:aliyah_idx" args (0-based)
