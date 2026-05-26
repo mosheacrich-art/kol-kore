@@ -23,8 +23,8 @@ const SUPABASE_URL  = process.env.SUPABASE_URL || ''
 const SUPABASE_KEY  = process.env.SUPABASE_SERVICE_KEY || ''
 const OPENAI_KEY    = process.env.OPENAI_API_KEY || ''
 const AUDIO_DIR     = process.env.AUDIO_DIR || 'C:/Users/moshe/Desktop/audios perashiot'
-const CHUNK_SEC     = parseInt(process.env.CHUNK_SEC || '45', 10)
-const OVERLAP_SEC   = parseFloat(process.env.OVERLAP_SEC || '3')
+const CHUNK_SEC     = parseInt(process.env.CHUNK_SEC || '20', 10)
+const OVERLAP_SEC   = parseFloat(process.env.OVERLAP_SEC || '5')
 const BUCKET        = 'public-audios'
 const LABEL         = 'Ashkenazi'
 const MIN_ANCHOR    = parseFloat(process.env.MIN_ANCHOR || '0.25')
@@ -78,8 +78,8 @@ function align(whisperWords, sefariaWords) {
   const anchorPct=sLen>0?matched/sLen:0
   const knownIdxs=[...anchorSet].sort((a,b)=>a-b)
   const out=[...sparse]
-  // False anchor removal
-  {const td=whisperWords[whisperWords.length-1]?.end??1,gs=sLen/td,MS=Math.max(4.0,gs*3);let ch=true;while(ch){ch=false;for(let ki=1;ki<knownIdxs.length;ki++){const p=knownIdxs[ki-1],c=knownIdxs[ki],ts=out[c].start-out[p].start;if(ts<=0||(c-p)/ts>MS){anchorSet.delete(c);out[c]=null;knownIdxs.splice(ki,1);ch=true;break}}}}
+  // False anchor removal: only flag when >= 8 words span AND speed is physically impossible
+  {const td=whisperWords[whisperWords.length-1]?.end??1,gs=sLen/td,MS=Math.max(5.0,gs*3.5);let ch=true;while(ch){ch=false;for(let ki=1;ki<knownIdxs.length;ki++){const p=knownIdxs[ki-1],c=knownIdxs[ki],span=c-p,ts=out[c].start-out[p].start;if(span>=8&&(ts<=0||span/ts>MS)){anchorSet.delete(c);out[c]=null;knownIdxs.splice(ki,1);ch=true;break}}}}
   // Between anchors
   for(let ki=0;ki<knownIdxs.length-1;ki++){const li=knownIdxs[ki],ri=knownIdxs[ki+1];if(ri-li<=1)continue;const gap=ri-li,rStart=out[ri].start,lRef=(out[li].end<rStart)?out[li].end:out[li].start,span=Math.max(0.05*gap,rStart-lRef);for(let i=li+1;i<ri;i++){const t=(i-li)/gap,s=lRef+t*span,d=Math.max(0.05,span/gap*0.7);out[i]={start:+s.toFixed(3),end:+(s+d).toFixed(3)}}}
   // Leading nulls
@@ -137,8 +137,9 @@ function getAudioDuration(filePath) {
 
 async function transcribeChunked(filePath, sefariaWords, parashaId, aliyahIdx) {
   const duration = getAudioDuration(filePath)
-  if (!duration || duration <= CHUNK_SEC + OVERLAP_SEC) {
-    // Short audio — single Whisper call
+  const STEP = CHUNK_SEC - OVERLAP_SEC
+
+  if (!duration || duration <= CHUNK_SEC) {
     const buf = fs.readFileSync(filePath)
     return whisperChunk(buf, `${parashaId}_${aliyahIdx}.m4a`, sefariaWords)
   }
@@ -147,45 +148,55 @@ async function transcribeChunked(filePath, sefariaWords, parashaId, aliyahIdx) {
   fs.mkdirSync(tmpDir, { recursive: true })
 
   const starts = []
-  for (let t = 0; t < duration; t += CHUNK_SEC - OVERLAP_SEC) starts.push(t)
+  for (let t = 0; t < duration; t += STEP) starts.push(t)
 
-  console.log(`  Chunking ${Math.round(duration)}s audio into ${starts.length} chunks of ${CHUNK_SEC}s`)
+  console.log(`  Chunking ${Math.round(duration)}s audio into ${starts.length} chunks of ${CHUNK_SEC}s (step ${STEP}s)`)
 
-  const allWords = []
-  const allSegments = []
-
+  // Transcribe each chunk, collecting results in order
+  // Give each chunk a context-aware prompt: only the words expected in that time window
+  const chunkResults = []
   for (let ci = 0; ci < starts.length; ci++) {
     const start = starts[ci]
+    const chunkDur = Math.min(CHUNK_SEC, duration - start)
+    if (chunkDur < 3) break
     const chunkPath = path.join(tmpDir, `chunk_${ci}.m4a`)
-    execSync(
-      `"${FFMPEG}" -y -i "${filePath}" -ss ${start} -t ${CHUNK_SEC} -c copy "${chunkPath}"`,
-      { stdio: 'pipe' }
-    )
-    if (!fs.existsSync(chunkPath) || fs.statSync(chunkPath).size < 1000) {
-      console.log(`  chunk ${ci} empty, skipping`)
-      continue
-    }
+    execSync(`"${FFMPEG}" -y -i "${filePath}" -ss ${start} -t ${chunkDur} -c copy "${chunkPath}"`, { stdio: 'pipe' })
+    if (!fs.existsSync(chunkPath) || fs.statSync(chunkPath).size < 1000) { console.log(`  chunk ${ci} empty, skip`); continue }
     const buf = fs.readFileSync(chunkPath)
-    const wd = await whisperChunk(buf, `chunk_${ci}.m4a`, sefariaWords)
-    const words = (wd.words || []).map(w => ({ ...w, start: w.start + start, end: w.end + start }))
-    const segs  = (wd.segments || []).map(s => ({ ...s, start: s.start + start, end: s.end + start }))
-    allWords.push(...words)
-    allSegments.push(...segs)
-    console.log(`  chunk ${ci}/${starts.length-1} (t=${Math.round(start)}s): ${words.length} words`)
+    // Context-aware prompt: words expected in this time window + padding
+    const startPct = start / duration
+    const endPct = (start + chunkDur) / duration
+    const sLen = sefariaWords.length
+    const wi0 = Math.max(0, Math.floor(startPct * sLen) - 20)
+    const wi1 = Math.min(sLen, Math.ceil(endPct * sLen) + 20)
+    const chunkPrompt = sefariaWords.slice(wi0, wi1)
+    const wd = await whisperChunk(buf, `chunk_${ci}.m4a`, chunkPrompt)
+    chunkResults.push({ words: wd.words || [], segments: wd.segments || [], start })
+    console.log(`  chunk ${ci}/${starts.length-1} (t=${Math.round(start)}s, ${Math.round(chunkDur)}s): ${wd.words?.length ?? 0} words  [prompt words ${wi0}-${wi1}]`)
   }
 
-  // Dedup words in overlap zones: keep the one with lower start uncertainty
-  // Simple approach: sort by start, remove words with start within 0.3s of the previous
+  // Merge: each chunk contributes ONLY words in its exclusive zone [starts[ci], starts[ci+1])
+  // Words in the overlap zone come from the NEXT chunk (where they appear at the start, not end)
+  const allWords = []
+  const allSegments = []
+  for (let ci = 0; ci < chunkResults.length; ci++) {
+    const { words, segments, start } = chunkResults[ci]
+    const cutoff = ci < chunkResults.length - 1 ? chunkResults[ci + 1].start : Infinity
+    for (const w of words) {
+      const adj = { ...w, start: +(w.start + start).toFixed(3), end: +(w.end + start).toFixed(3) }
+      if (adj.start < cutoff) allWords.push(adj)
+    }
+    for (const s of segments) {
+      const adj = { ...s, start: +(s.start + start).toFixed(3), end: +(s.end + start).toFixed(3) }
+      if (adj.start < cutoff) allSegments.push(adj)
+    }
+  }
   allWords.sort((a, b) => a.start - b.start)
-  const deduped = []
-  for (const w of allWords) {
-    if (!deduped.length || w.start - deduped[deduped.length-1].start > 0.3) deduped.push(w)
-  }
+  allSegments.sort((a, b) => a.start - b.start)
 
-  // Clean up temp files
   fs.rmSync(tmpDir, { recursive: true, force: true })
 
-  return { words: deduped, segments: allSegments }
+  return { words: allWords, segments: allSegments }
 }
 
 // ── Find audio file for a parasha/aliyah ─────────────────────────────────────

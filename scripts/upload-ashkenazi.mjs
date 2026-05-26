@@ -150,14 +150,15 @@ function align(whisperWords, sefariaWords) {
   {
     const totalDur = whisperWords[whisperWords.length - 1]?.end ?? 1
     const globalSpeed = sLen / totalDur
-    const MAX_SPEED = Math.max(4.0, globalSpeed * 3)
+    const MAX_SPEED = Math.max(5.0, globalSpeed * 3.5)
     let changed = true
     while (changed) {
       changed = false
       for (let ki = 1; ki < knownIdxs.length; ki++) {
         const prev = knownIdxs[ki - 1], curr = knownIdxs[ki]
+        const wordSpan = curr - prev
         const timeSpan = out[curr].start - out[prev].start
-        if (timeSpan <= 0 || (curr - prev) / timeSpan > MAX_SPEED) {
+        if (wordSpan >= 8 && (timeSpan <= 0 || wordSpan / timeSpan > MAX_SPEED)) {
           anchorSet.delete(curr); out[curr] = null; knownIdxs.splice(ki, 1); changed = true; break
         }
       }
