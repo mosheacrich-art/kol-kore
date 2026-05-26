@@ -276,10 +276,15 @@ function buildJobs() {
       .filter(f => f.endsWith('.m4a'))
       .sort()
 
+    const seenAliyot = new Set()
     for (const file of files) {
-      const match = file.match(/^(\d+)/)
-      if (!match) continue
-      const aliyahIdx = parseInt(match[1], 10) - 1 // 01 → 0, 02 → 1 …
+      // Parse aliyah index from Hebrew ordinal in filename (more reliable than file number)
+      const HEB_ORDINAL = { 'ראשון':0,'שני':1,'שלישי':2,'רביעי':3,'חמישי':4,'שישי':5,'שביעי':6,'מפטיר':7 }
+      let aliyahIdx = null
+      for (const [heb, idx] of Object.entries(HEB_ORDINAL)) { if (file.includes(heb)) { aliyahIdx = idx; break } }
+      if (aliyahIdx === null) { console.warn(`SKIP cannot parse ordinal: ${file}`); continue }
+      if (seenAliyot.has(aliyahIdx)) { console.warn(`SKIP duplicate aliyah ${aliyahIdx + 1}: ${file}`); continue }
+      seenAliyot.add(aliyahIdx)
       const aliyah = parasha.aliyot[aliyahIdx]
       if (!aliyah) { console.warn(`SKIP no aliyah[${aliyahIdx}] in ${parashaId}`); continue }
 
