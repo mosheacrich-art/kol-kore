@@ -147,6 +147,22 @@ function align(whisperWords, sefariaWords) {
   const anchorPct = sLen > 0 ? matched / sLen : 0
   const knownIdxs = [...anchorSet].sort((a, b) => a - b)
   const out = [...sparse]
+  {
+    const totalDur = whisperWords[whisperWords.length - 1]?.end ?? 1
+    const globalSpeed = sLen / totalDur
+    const MAX_SPEED = Math.max(4.0, globalSpeed * 3)
+    let changed = true
+    while (changed) {
+      changed = false
+      for (let ki = 1; ki < knownIdxs.length; ki++) {
+        const prev = knownIdxs[ki - 1], curr = knownIdxs[ki]
+        const timeSpan = out[curr].start - out[prev].start
+        if (timeSpan <= 0 || (curr - prev) / timeSpan > MAX_SPEED) {
+          anchorSet.delete(curr); out[curr] = null; knownIdxs.splice(ki, 1); changed = true; break
+        }
+      }
+    }
+  }
   for (let ki = 0; ki < knownIdxs.length - 1; ki++) {
     const li = knownIdxs[ki], ri = knownIdxs[ki + 1]
     if (ri - li <= 1) continue

@@ -131,6 +131,30 @@ function align(whisperWords, sefariaWords) {
   const knownIdxs = [...anchorSet].sort((a, b) => a - b)
   const out = [...sparse]
 
+  // False anchor removal: if consecutive anchors imply impossible reading speed,
+  // remove the later anchor. Torah reading is ~1-2 words/sec; anything over 3×
+  // the global average or 4 w/s absolute is almost certainly a misalignment.
+  {
+    const totalDur = whisperWords[whisperWords.length - 1]?.end ?? 1
+    const globalSpeed = sLen / totalDur
+    const MAX_SPEED = Math.max(4.0, globalSpeed * 3)
+    let changed = true
+    while (changed) {
+      changed = false
+      for (let ki = 1; ki < knownIdxs.length; ki++) {
+        const prev = knownIdxs[ki - 1], curr = knownIdxs[ki]
+        const timeSpan = out[curr].start - out[prev].start
+        if (timeSpan <= 0 || (curr - prev) / timeSpan > MAX_SPEED) {
+          anchorSet.delete(curr)
+          out[curr] = null
+          knownIdxs.splice(ki, 1)
+          changed = true
+          break
+        }
+      }
+    }
+  }
+
   // Between anchors
   for (let ki = 0; ki < knownIdxs.length - 1; ki++) {
     const li = knownIdxs[ki], ri = knownIdxs[ki + 1]
