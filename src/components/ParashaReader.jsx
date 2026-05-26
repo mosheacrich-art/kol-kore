@@ -138,7 +138,47 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
 
   const currentAliyah = parasha.aliyot[aliyahIdx]
   const bookColor = parasha.color || BOOK_COLORS[parasha.book] || '#6c33e6'
-  const audio = get(parasha.id, aliyahIdx)
+  const teacherAudio = get(parasha.id, aliyahIdx)
+
+  // Generic public audios for this parasha/aliyah
+  const [genericAudios, setGenericAudios] = useState([])
+  useEffect(() => {
+    supabase
+      .from('public_audios')
+      .select('*')
+      .eq('parasha_id', parasha.id)
+      .eq('aliyah_idx', aliyahIdx)
+      .order('label')
+      .then(({ data }) => setGenericAudios(data || []))
+  }, [parasha.id, aliyahIdx])
+
+  const [audioSourceKey, setAudioSourceKey] = useState('teacher')
+  const [audioSrcOpen, setAudioSrcOpen] = useState(false)
+  const [audioSrcPos, setAudioSrcPos] = useState({ top: 0, left: 0 })
+  const audioSrcBtnRef = useRef(null)
+
+  // Reset source when aliyah/parasha changes
+  useEffect(() => { setAudioSourceKey('teacher') }, [parasha.id, aliyahIdx])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!audioSrcOpen) return
+    const close = () => setAudioSrcOpen(false)
+    window.addEventListener('mousedown', close)
+    return () => window.removeEventListener('mousedown', close)
+  }, [audioSrcOpen])
+
+  const allAudioSources = useMemo(() => [
+    ...(teacherAudio ? [{ key: 'teacher', label: t('audio_teacher') || 'Profesor' }] : []),
+    ...genericAudios.map(g => ({ key: g.id, label: g.label })),
+  ], [teacherAudio, genericAudios])
+
+  const audio = useMemo(() => {
+    if (audioSourceKey === 'teacher' || !audioSourceKey) return teacherAudio
+    const g = genericAudios.find(a => a.id === audioSourceKey)
+    if (!g) return teacherAudio
+    return { url: g.public_url, name: g.label, type: g.file_type || 'audio/mp4', wordTimestamps: g.word_timestamps ?? null }
+  }, [audioSourceKey, teacherAudio, genericAudios])
 
   // Fetch student audio recordings for this aliyah (teacher only)
   useEffect(() => {
@@ -511,6 +551,62 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
                   <span style={{ fontSize: '11px' }}>{opt.icon}</span>
                   {t(opt.tkey)}
                   {studyMode === opt.id && (
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="ml-auto">
+                      <path d="M2 5l2.5 2.5L8 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>,
+            document.body
+          )}
+
+          {/* Audio source selector */}
+          {!guestMode && allAudioSources.length > 0 && (
+            <div className="flex-shrink-0" onMouseDown={e => e.stopPropagation()}>
+              <button
+                ref={audioSrcBtnRef}
+                onClick={() => {
+                  if (allAudioSources.length <= 1) return
+                  const rect = audioSrcBtnRef.current?.getBoundingClientRect()
+                  if (rect) setAudioSrcPos({ top: rect.bottom + 6, left: rect.left })
+                  setAudioSrcOpen(o => !o)
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all"
+                style={{
+                  background: audioSourceKey !== 'teacher' ? `${bookColor}18` : 'var(--bg-card)',
+                  border: `1px solid ${audioSourceKey !== 'teacher' ? bookColor + '40' : 'var(--border-subtle)'}`,
+                  color: audioSourceKey !== 'teacher' ? bookColor : 'var(--text-3)',
+                }}>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M2 4h2l2-2 2 2h2v5H2V4z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                  <circle cx="6" cy="7" r="1.2" stroke="currentColor" strokeWidth="1.1"/>
+                </svg>
+                {allAudioSources.find(s => s.key === audioSourceKey)?.label || allAudioSources[0]?.label}
+                {allAudioSources.length > 1 && (
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </button>
+            </div>
+          )}
+          {audioSrcOpen && allAudioSources.length > 1 && createPortal(
+            <div
+              style={{ position: 'fixed', top: audioSrcPos.top, left: audioSrcPos.left, zIndex: 9999,
+                background: 'var(--bg-deep)', border: '1px solid var(--border)', borderRadius: '12px',
+                overflow: 'hidden', minWidth: '160px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
+              onMouseDown={e => e.stopPropagation()}>
+              {allAudioSources.map(src => (
+                <button key={src.key}
+                  onClick={() => { setAudioSourceKey(src.key); setAudioSrcOpen(false) }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-left transition-all"
+                  style={{
+                    background: audioSourceKey === src.key ? `${bookColor}15` : 'transparent',
+                    color: audioSourceKey === src.key ? bookColor : 'var(--text-2)',
+                  }}>
+                  {src.label}
+                  {audioSourceKey === src.key && (
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="ml-auto">
                       <path d="M2 5l2.5 2.5L8 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
