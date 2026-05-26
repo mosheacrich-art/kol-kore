@@ -237,11 +237,9 @@ async function processAliyah(parashaId, aliyahIdx) {
     console.log(`  aligned: ${Math.round(ap * 100)}% anchors  needs_review=${needsReview}`)
   }
 
-  const { error } = await supabase.from('public_audios').upsert({
-    parasha_id: parashaId, aliyah_idx: aliyahIdx, label: LABEL,
-    word_timestamps: wordTimestamps, needs_review: needsReview,
-    anchor_pct: +anchorPct.toFixed(3),
-  }, { onConflict: 'parasha_id,aliyah_idx,label' })
+  const { error } = await supabase.from('public_audios')
+    .update({ word_timestamps: wordTimestamps, needs_review: needsReview, anchor_pct: +anchorPct.toFixed(3) })
+    .eq('parasha_id', parashaId).eq('aliyah_idx', aliyahIdx).eq('label', LABEL)
 
   if (error) { console.error(`${tag} DB error: ${error.message}`); return }
   console.log(`${tag} ✓ done`)
