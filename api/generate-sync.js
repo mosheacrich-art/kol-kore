@@ -20,6 +20,8 @@ const WHISPER_TO_TEXT = {
   'ה': 'יהוה',
   'לומר': 'לאמר',
   'ואומר': 'ויאמר',
+  'אומר': 'ויאמר',  // Ashkenazi: "ויאמר" heard as two words "ויוא" + "אומר"
+  'ויוא': 'וירא',   // Ashkenazi: "וירא" heard as "ויוא"
 }
 
 function stripHeb(s) {
@@ -145,12 +147,14 @@ function align(whisperWords, sefariaWords) {
     }
   }
 
-  // Leading nulls
+  // Leading nulls — spread evenly from t=0 to first anchor (avoids cursor rush at start)
   if (knownIdxs.length && knownIdxs[0] > 0) {
-    const first = out[knownIdxs[0]]
-    for (let i = knownIdxs[0] - 1; i >= 0; i--) {
-      const d = knownIdxs[0] - i
-      out[i] = { start: +(first.start - d * 0.15).toFixed(3), end: +(first.start - (d - 1) * 0.15).toFixed(3) }
+    const count = knownIdxs[0]
+    const span = out[knownIdxs[0]].start
+    for (let i = 0; i < count; i++) {
+      const t0 = (i / count) * span
+      const t1 = ((i + 1) / count) * span
+      out[i] = { start: +t0.toFixed(3), end: +t1.toFixed(3) }
     }
   }
 
