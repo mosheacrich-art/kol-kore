@@ -158,8 +158,8 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
 
   const isTeacher = profile?.role === 'teacher'
 
-  // Reset source when aliyah/parasha changes — teachers default to their own slot
-  useEffect(() => { setAudioSourceKey('teacher') }, [parasha.id, aliyahIdx, isTeacher])
+  // Reset source when aliyah/parasha changes — teachers default to their slot, students to auto
+  useEffect(() => { setAudioSourceKey(isTeacher ? 'teacher' : null) }, [parasha.id, aliyahIdx, isTeacher])
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -180,12 +180,14 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
   const audio = useMemo(() => {
     const makeGeneric = g => ({ url: g.public_url, name: g.label, type: g.file_type || 'audio/mp4', wordTimestamps: g.word_timestamps ?? null })
     if (audioSourceKey === 'teacher') {
-      // Never fall back to generic when teacher source is selected — show no-audio panel if no upload yet
+      // Teachers: show upload/record panel when no audio yet; never fall back to generic
       return teacherAudio || null
     }
-    const g = genericAudios.find(a => a.id === audioSourceKey)
-    if (g) return makeGeneric(g)
-    // Default fallback (e.g. after aliyah reset with no explicit selection)
+    if (audioSourceKey) {
+      const g = genericAudios.find(a => a.id === audioSourceKey)
+      if (g) return makeGeneric(g)
+    }
+    // null key (student default) or unresolved key → best available
     if (teacherAudio) return teacherAudio
     if (genericAudios.length > 0) return makeGeneric(genericAudios[0])
     return null
