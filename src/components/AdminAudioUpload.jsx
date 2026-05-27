@@ -5,6 +5,10 @@ function fmtSec(s) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
+async function safeJson(res) {
+  try { return await res.json() } catch { return {} }
+}
+
 async function submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onStatus }) {
   const { data: { session } } = await supabase.auth.getSession()
   const token = session?.access_token
@@ -14,40 +18,56 @@ async function submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onSta
   const ext = fileType.split('/')[1]?.split(';')[0] || 'webm'
 
   onStatus('uploading')
+
+  // Step 1: get signed upload URL
   const urlRes = await fetch('/api/admin-audio-upload-url', {
     method: 'POST', headers,
     body: JSON.stringify({ parashaId, aliyahIdx, label, ext }),
   })
-  if (!urlRes.ok) throw new Error((await urlRes.json()).error || 'Upload URL failed')
+  if (!urlRes.ok) {
+    const body = await safeJson(urlRes)
+    throw new Error(body.error || `Error ${urlRes.status} al obtener URL de subida`)
+  }
   const { token: uploadToken, storagePath, publicUrl } = await urlRes.json()
 
+  // Step 2: upload file to Supabase Storage
   const { error: uploadErr } = await supabase.storage
     .from('public-audios')
-    .uploadToSignedUrl(storagePath, uploadToken, file, { contentType: fileType, upsert: true })
+    .uploadToSignedUrl(storagePath, uploadToken, file, { contentType: fileType })
   if (uploadErr) throw new Error(uploadErr.message)
 
+  // Step 3: save metadata to DB
   const saveRes = await fetch('/api/admin-audio-save', {
     method: 'POST', headers,
     body: JSON.stringify({ parashaId, aliyahIdx, label, publicUrl, fileType }),
   })
-  if (!saveRes.ok) throw new Error((await saveRes.json()).error || 'Save failed')
+  if (!saveRes.ok) {
+    const body = await safeJson(saveRes)
+    throw new Error(body.error || `Error ${saveRes.status} al guardar`)
+  }
 
+  // Step 4: sync with Whisper (non-fatal — same as regular audio)
   onStatus('syncing')
-  const syncRes = await fetch('/api/generate-sync', {
-    method: 'POST', headers,
-    body: JSON.stringify({ audioUrl: publicUrl, fileType, aliyahRef }),
-  })
-  if (syncRes.ok) {
-    const syncData = await syncRes.json()
-    await fetch('/api/admin-audio-save', {
+  try {
+    const syncRes = await fetch('/api/generate-sync', {
       method: 'POST', headers,
-      body: JSON.stringify({
-        parashaId, aliyahIdx, label, publicUrl, fileType,
-        wordTimestamps: syncData.words ?? null,
-        anchorPct: syncData.anchor_pct ?? null,
-        needsReview: syncData.needs_review ?? false,
-      }),
+      body: JSON.stringify({ audioUrl: publicUrl, fileType, aliyahRef }),
     })
+    if (syncRes.ok) {
+      const syncData = await syncRes.json()
+      await fetch('/api/admin-audio-save', {
+        method: 'POST', headers,
+        body: JSON.stringify({
+          parashaId, aliyahIdx, label, publicUrl, fileType,
+          wordTimestamps: syncData.words ?? null,
+          anchorPct: syncData.anchor_pct ?? null,
+          needsReview: syncData.needs_review ?? false,
+        }),
+      })
+    }
+  } catch (syncErr) {
+    // Sync failure doesn't block the upload — audio is already saved
+    console.warn('Sync failed (non-fatal):', syncErr.message)
   }
 }
 
