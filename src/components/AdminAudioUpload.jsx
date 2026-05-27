@@ -16,20 +16,29 @@ async function submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onSta
 
   const fileType = file.type || 'audio/webm'
   const ext = fileType.split('/')[1]?.split(';')[0] || 'webm'
-  const labelSlug = label.toLowerCase().replace(/\s+/g, '_')
-  const storagePath = `${labelSlug}/${parashaId}/${aliyahIdx}.${ext}`
 
   onStatus('uploading')
 
-  // Step 1: upload directly from browser — same as teacher audio, no server needed
-  const { error: uploadErr } = await supabase.storage
-    .from('public-audios')
-    .upload(storagePath, file, { contentType: fileType, upsert: true })
-  if (uploadErr) throw new Error(uploadErr.message)
+  // Step 1: get a signed upload URL from the server (bypasses storage RLS)
+  const urlRes = await fetch('/api/admin-audio-upload-url', {
+    method: 'POST', headers,
+    body: JSON.stringify({ parashaId, aliyahIdx, label, ext }),
+  })
+  if (!urlRes.ok) {
+    const body = await safeJson(urlRes)
+    throw new Error(body.error || `Error ${urlRes.status} al obtener URL`)
+  }
+  const { signedUrl, token: uploadToken, publicUrl } = await urlRes.json()
 
-  const { data: { publicUrl } } = supabase.storage.from('public-audios').getPublicUrl(storagePath)
+  // Step 2: upload directly to signed URL (no RLS check)
+  const uploadRes = await fetch(signedUrl, {
+    method: 'PUT',
+    headers: { 'Content-Type': fileType, 'x-upsert': 'true' },
+    body: file,
+  })
+  if (!uploadRes.ok) throw new Error(`Error ${uploadRes.status} al subir el archivo`)
 
-  // Step 2: save metadata to DB via server (needs service key for RLS bypass)
+  // Step 3: save metadata to DB via server (needs service key for RLS bypass)
   const saveRes = await fetch('/api/admin-audio-save', {
     method: 'POST', headers,
     body: JSON.stringify({ parashaId, aliyahIdx, label, publicUrl, fileType }),
