@@ -157,6 +157,8 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
   const [audioSrcPos, setAudioSrcPos] = useState({ top: 0, left: 0 })
   const audioSrcBtnRef = useRef(null)
 
+  const isTeacher = profile?.role === 'teacher'
+
   // Reset source when aliyah/parasha changes — teachers default to their own slot
   useEffect(() => { setAudioSourceKey('teacher') }, [parasha.id, aliyahIdx, isTeacher])
 
@@ -167,8 +169,6 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
     window.addEventListener('mousedown', close)
     return () => window.removeEventListener('mousedown', close)
   }, [audioSrcOpen])
-
-  const isTeacher = profile?.role === 'teacher'
 
   const allAudioSources = useMemo(() => [
     // Teachers always see "Mi audio"; students only see it if teacher has uploaded
