@@ -7,7 +7,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import ParashaReader from '../../components/ParashaReader'
-import { AdminUploadModal, AdminRecordModal } from '../../components/AdminAudioUpload'
+import { AdminUploadButton, AdminRecordButton } from '../../components/AdminAudioUpload'
 
 const ADMIN_USER_ID = '1f4d0329-ddf5-48a4-965f-5f37d7416447'
 
@@ -243,8 +243,6 @@ function ReaderView({ haftara, basePath }) {
   const { user } = useAuth()
   const isAdmin = user?.id === ADMIN_USER_ID
   const [searchParams] = useSearchParams()
-  const [adminUploadOpen, setAdminUploadOpen] = useState(false)
-  const [adminRecordOpen, setAdminRecordOpen] = useState(false)
   const initialAliyah = Math.min(
     Math.max(0, parseInt(searchParams.get('aliyah') || '0', 10)),
     haftara.aliyot.length - 1
@@ -268,25 +266,10 @@ function ReaderView({ haftara, basePath }) {
           {haftara.chag ? `${t('haftara_holiday_label')} · מוֹעֲדִים` : `${t('haftara_weekly_label')} · הַפְטָרָה`}
         </span>
         {isAdmin && (<>
-          <button onClick={() => setAdminUploadOpen(true)}
-            className="ml-auto flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
-            style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)' }}>
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-              <path d="M5.5 1v6M2.5 4l3-3 3 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M1 9h9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-            </svg>
-            Subir admin
-          </button>
-          <button onClick={() => setAdminRecordOpen(true)}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
-            style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.25)' }}>
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-              <rect x="3" y="0.5" width="5" height="7" rx="2.5" fill="currentColor"/>
-              <path d="M1.5 6a4 4 0 008 0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-              <path d="M5.5 10v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-            </svg>
-            Grabar admin
-          </button>
+          <AdminUploadButton parashaId={haftara.id} aliyahIdx={0}
+            aliyahRef={haftara.aliyot[0]?.ref || haftara.id} onSaved={() => {}} />
+          <AdminRecordButton parashaId={haftara.id} aliyahIdx={0}
+            aliyahRef={haftara.aliyot[0]?.ref || haftara.id} onSaved={() => {}} />
         </>)}
       </div>
 
@@ -294,14 +277,6 @@ function ReaderView({ haftara, basePath }) {
         <ParashaReader parasha={haftara} initialAliyah={initialAliyah} availableModes={['nikkud', 'audio']} />
       </div>
 
-      {adminUploadOpen && (
-        <AdminUploadModal parashaId={haftara.id} aliyahIdx={0} aliyahRef={haftara.aliyot[0]?.ref || haftara.id}
-          onClose={() => setAdminUploadOpen(false)} onSaved={() => setAdminUploadOpen(false)} />
-      )}
-      {adminRecordOpen && (
-        <AdminRecordModal parashaId={haftara.id} aliyahIdx={0} aliyahRef={haftara.aliyot[0]?.ref || haftara.id}
-          onClose={() => setAdminRecordOpen(false)} onSaved={() => setAdminRecordOpen(false)} />
-      )}
     </div>
   )
 }

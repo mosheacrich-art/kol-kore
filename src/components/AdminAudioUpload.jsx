@@ -51,33 +51,91 @@ async function submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onSta
   }
 }
 
-function ModalShell({ onClose, children }) {
+// Minimal popup that only asks for a name (+ optional audio preview)
+function NameModal({ file, status, errorMsg, onSubmit, onCancel }) {
+  const [label, setLabel] = useState('')
+  const previewUrl = useRef(file ? URL.createObjectURL(file) : null).current
+  const busy = status === 'uploading' || status === 'syncing'
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.6)' }}
-      onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-md rounded-2xl p-6 flex flex-col gap-4"
-        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        {children}
+      style={{ background: 'rgba(0,0,0,0.55)' }}
+      onClick={e => e.target === e.currentTarget && !busy && status !== 'done' && onCancel()}>
+      <div className="w-full max-w-sm rounded-2xl p-5 flex flex-col gap-4"
+        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: '0 20px 50px rgba(0,0,0,0.4)' }}>
+
+        <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Nombre del audio</h2>
+
+        {previewUrl && (
+          <audio src={previewUrl} controls className="w-full rounded-xl" style={{ height: 36 }} />
+        )}
+
+        <input
+          value={label}
+          onChange={e => setLabel(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && label.trim() && !busy && status !== 'done' && onSubmit(label.trim())}
+          placeholder="ej. Ashkenazi, Sefardí, Beit Knesset…"
+          autoFocus
+          disabled={busy || status === 'done'}
+          className="px-3 py-2 rounded-xl text-sm outline-none"
+          style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
+        />
+
+        {errorMsg && (
+          <p className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444' }}>
+            {errorMsg}
+          </p>
+        )}
+        {status === 'done' && (
+          <p className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e' }}>
+            Subido y sincronizado.
+          </p>
+        )}
+
+        <div className="flex gap-2 justify-end">
+          <button onClick={onCancel} disabled={busy}
+            className="px-4 py-2 rounded-xl text-sm"
+            style={{ background: 'var(--bg)', color: 'var(--text-3)', border: '1px solid var(--border)', opacity: busy ? 0.5 : 1 }}>
+            {status === 'done' ? 'Cerrar' : 'Cancelar'}
+          </button>
+          {status !== 'done' && (
+            <button onClick={() => onSubmit(label.trim())} disabled={!label.trim() || busy}
+              className="px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2"
+              style={{
+                background: 'rgba(245,158,11,0.15)', color: '#f59e0b',
+                border: '1px solid rgba(245,158,11,0.3)',
+                opacity: (!label.trim() || busy) ? 0.45 : 1,
+              }}>
+              {busy && (
+                <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin"
+                  style={{ borderColor: 'rgba(245,158,11,0.3)', borderTopColor: '#f59e0b' }} />
+              )}
+              {status === 'uploading' ? 'Subiendo…' : status === 'syncing' ? 'Sincronizando…' : 'Subir'}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )
 }
 
-// ── Upload modal ──────────────────────────────────────────────────────────────
-
-export function AdminUploadModal({ parashaId, aliyahIdx, aliyahRef, onClose, onSaved }) {
-  const [label, setLabel] = useState('')
+// Upload button: file picker → naming modal → upload
+export function AdminUploadButton({ parashaId, aliyahIdx, aliyahRef, onSaved }) {
   const [file, setFile] = useState(null)
   const [status, setStatus] = useState('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const fileRef = useRef()
 
-  const run = async () => {
-    if (!label.trim() || !file) return
+  const handleFile = (e) => {
+    const f = e.target.files?.[0]
+    if (f) { setFile(f); setStatus('idle'); setErrorMsg('') }
+    e.target.value = ''
+  }
+
+  const submit = async (label) => {
     setErrorMsg('')
     try {
-      await submitAudio({ parashaId, aliyahIdx, aliyahRef, label: label.trim(), file, onStatus: setStatus })
+      await submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onStatus: setStatus })
       setStatus('done')
       onSaved?.()
     } catch (e) {
@@ -86,88 +144,49 @@ export function AdminUploadModal({ parashaId, aliyahIdx, aliyahRef, onClose, onS
     }
   }
 
-  const busy = status === 'uploading' || status === 'syncing'
+  const reset = () => { setFile(null); setStatus('idle'); setErrorMsg('') }
 
   return (
-    <ModalShell onClose={onClose}>
-      <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-base" style={{ color: 'var(--text)' }}>Subir audio (admin)</h2>
-        <button onClick={onClose} style={{ color: 'var(--text-muted)' }}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
-        </button>
-      </div>
-
-      <div className="text-xs font-mono opacity-50" style={{ color: 'var(--text-3)' }}>{aliyahRef}</div>
-
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>Nombre del audio</label>
-        <input value={label} onChange={e => setLabel(e.target.value)}
-          placeholder="ej. Ashkenazi, Sefardí, Beit Knesset…"
-          disabled={busy || status === 'done'}
-          className="px-3 py-2 rounded-xl text-sm outline-none"
-          style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }} />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>Archivo de audio</label>
-        <button onClick={() => fileRef.current?.click()} disabled={busy || status === 'done'}
-          className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-left"
-          style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: file ? '#10b981' : 'var(--text-3)' }}>
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-            <path d="M6.5 1v8M3.5 4l3-3 3 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M1 10h11" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-          </svg>
-          {file ? file.name : 'Elegir archivo…'}
-        </button>
-        <input ref={fileRef} type="file" accept="audio/*,.m4a" className="hidden" onChange={e => setFile(e.target.files?.[0] ?? null)} />
-      </div>
-
-      {errorMsg && <p className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444' }}>{errorMsg}</p>}
-      {status === 'done' && <p className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e' }}>Subido y sincronizado.</p>}
-
-      <div className="flex gap-2 justify-end">
-        <button onClick={onClose} className="px-4 py-2 rounded-xl text-sm"
-          style={{ background: 'var(--bg)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-          {status === 'done' ? 'Cerrar' : 'Cancelar'}
-        </button>
-        {status !== 'done' && (
-          <button onClick={run} disabled={!label.trim() || !file || busy}
-            className="px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2"
-            style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)',
-              opacity: (!label.trim() || !file || busy) ? 0.45 : 1 }}>
-            {busy && <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin"
-              style={{ borderColor: 'rgba(245,158,11,0.3)', borderTopColor: '#f59e0b' }} />}
-            {status === 'uploading' ? 'Subiendo…' : status === 'syncing' ? 'Sincronizando…' : 'Subir y sincronizar'}
-          </button>
-        )}
-      </div>
-    </ModalShell>
+    <>
+      <button
+        onClick={() => fileRef.current?.click()}
+        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
+        style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)' }}>
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+          <path d="M5.5 1v6M2.5 4l3-3 3 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M1 9h9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+        </svg>
+        Subir admin
+      </button>
+      <input ref={fileRef} type="file" accept="audio/*,.m4a" className="hidden" onChange={handleFile} />
+      {file && (
+        <NameModal file={null} status={status} errorMsg={errorMsg} onSubmit={submit} onCancel={reset} />
+      )}
+    </>
   )
 }
 
-// ── Record modal ──────────────────────────────────────────────────────────────
-
-export function AdminRecordModal({ parashaId, aliyahIdx, aliyahRef, onClose, onSaved }) {
-  const [recState, setRecState] = useState('idle')   // idle | recording | done
+// Record button: inline recording (no popup) → naming modal after stop
+export function AdminRecordButton({ parashaId, aliyahIdx, aliyahRef, onSaved }) {
+  const [recState, setRecState] = useState('idle')  // idle | recording | naming
   const [recSeconds, setRecSeconds] = useState(0)
   const [file, setFile] = useState(null)
-  const [label, setLabel] = useState('')
   const [status, setStatus] = useState('idle')
   const [errorMsg, setErrorMsg] = useState('')
-
+  const [micError, setMicError] = useState('')
   const mediaRecorderRef = useRef(null)
   const chunksRef = useRef([])
   const timerRef = useRef(null)
-  const previewRef = useRef(null)
 
   const startRec = async () => {
+    setMicError('')
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const preferredMime = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm']
         .find(t => MediaRecorder.isTypeSupported(t)) || ''
-      const mr = preferredMime ? new MediaRecorder(stream, { mimeType: preferredMime }) : new MediaRecorder(stream)
+      const mr = preferredMime
+        ? new MediaRecorder(stream, { mimeType: preferredMime })
+        : new MediaRecorder(stream)
       mediaRecorderRef.current = mr
       chunksRef.current = []
       mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data) }
@@ -175,19 +194,17 @@ export function AdminRecordModal({ parashaId, aliyahIdx, aliyahRef, onClose, onS
         const mimeType = mr.mimeType || 'audio/webm'
         const ext = mimeType.split('/')[1]?.split(';')[0] || 'webm'
         const blob = new Blob(chunksRef.current, { type: mimeType })
-        const f = new File([blob], `grabacion-admin.${ext}`, { type: mimeType })
-        setFile(f)
-        if (previewRef.current) previewRef.current.src = URL.createObjectURL(blob)
+        setFile(new File([blob], `admin.${ext}`, { type: mimeType }))
         stream.getTracks().forEach(t => t.stop())
         clearInterval(timerRef.current)
-        setRecState('done')
+        setRecState('naming')
       }
       mr.start()
       setRecState('recording')
       setRecSeconds(0)
       timerRef.current = setInterval(() => setRecSeconds(s => s + 1), 1000)
     } catch (err) {
-      setErrorMsg(err.message || 'Error al acceder al micrófono')
+      setMicError(err.message || 'No se pudo acceder al micrófono')
     }
   }
 
@@ -196,11 +213,10 @@ export function AdminRecordModal({ parashaId, aliyahIdx, aliyahRef, onClose, onS
     mediaRecorderRef.current?.stop()
   }
 
-  const run = async () => {
-    if (!label.trim() || !file) return
+  const submit = async (label) => {
     setErrorMsg('')
     try {
-      await submitAudio({ parashaId, aliyahIdx, aliyahRef, label: label.trim(), file, onStatus: setStatus })
+      await submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onStatus: setStatus })
       setStatus('done')
       onSaved?.()
     } catch (e) {
@@ -209,98 +225,51 @@ export function AdminRecordModal({ parashaId, aliyahIdx, aliyahRef, onClose, onS
     }
   }
 
-  const busy = status === 'uploading' || status === 'syncing'
+  const reset = () => { setRecState('idle'); setFile(null); setStatus('idle'); setErrorMsg(''); setMicError('') }
 
-  return (
-    <ModalShell onClose={onClose}>
-      <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-base" style={{ color: 'var(--text)' }}>Grabar audio (admin)</h2>
-        <button onClick={onClose} style={{ color: 'var(--text-muted)' }}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+  if (recState === 'recording') {
+    return (
+      <div className="flex items-center gap-2">
+        <div className="w-2 h-2 rounded-full animate-pulse flex-shrink-0" style={{ background: '#ef4444' }} />
+        <span className="text-xs font-mono tabular-nums font-medium" style={{ color: '#ef4444' }}>
+          {fmtSec(recSeconds)}
+        </span>
+        <button
+          onClick={stopRec}
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
+          style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}>
+          <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+            <rect x="1" y="1" width="7" height="7" rx="1" fill="#ef4444"/>
           </svg>
+          Parar
         </button>
       </div>
+    )
+  }
 
-      <div className="text-xs font-mono opacity-50" style={{ color: 'var(--text-3)' }}>{aliyahRef}</div>
-
-      {/* Step 1: record */}
-      {recState === 'idle' && (
-        <button onClick={startRec}
-          className="flex items-center justify-center gap-3 py-8 rounded-2xl text-base font-medium transition-all"
-          style={{ background: 'rgba(239,68,68,0.08)', border: '2px dashed rgba(239,68,68,0.3)', color: '#ef4444' }}>
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-            <rect x="7" y="1" width="8" height="13" rx="4" fill="currentColor" opacity=".9"/>
-            <path d="M3 11a8 8 0 0016 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-            <path d="M11 19v2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+  return (
+    <>
+      <div className="flex flex-col items-end gap-1">
+        <button
+          onClick={startRec}
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
+          style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.25)' }}>
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+            <rect x="3" y="0.5" width="5" height="7" rx="2.5" fill="currentColor"/>
+            <path d="M1.5 6a4 4 0 008 0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+            <path d="M5.5 10v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
           </svg>
-          Pulsa para grabar
+          Grabar admin
         </button>
+        {micError && (
+          <span className="text-[10px] px-2 py-1 rounded-lg" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444' }}>
+            {micError}
+          </span>
+        )}
+      </div>
+      {recState === 'naming' && file && (
+        <NameModal file={file} status={status} errorMsg={errorMsg} onSubmit={submit} onCancel={reset} />
       )}
-
-      {recState === 'recording' && (
-        <div className="flex flex-col items-center gap-4 py-6">
-          <div className="flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full animate-pulse" style={{ background: '#ef4444' }} />
-            <span className="text-2xl font-mono font-semibold" style={{ color: '#ef4444' }}>
-              {fmtSec(recSeconds)}
-            </span>
-          </div>
-          <button onClick={stopRec}
-            className="px-6 py-2.5 rounded-xl text-sm font-medium"
-            style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}>
-            Parar grabación
-          </button>
-        </div>
-      )}
-
-      {/* Step 2: name + submit */}
-      {recState === 'done' && (
-        <>
-          <div className="flex flex-col gap-1">
-            <audio ref={previewRef} controls className="w-full rounded-xl" style={{ height: 36 }} />
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>Nombre del audio</label>
-            <input value={label} onChange={e => setLabel(e.target.value)}
-              placeholder="ej. Ashkenazi, Sefardí, Beit Knesset…"
-              disabled={busy || status === 'done'}
-              autoFocus
-              className="px-3 py-2 rounded-xl text-sm outline-none"
-              style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }} />
-          </div>
-
-          {errorMsg && <p className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444' }}>{errorMsg}</p>}
-          {status === 'done' && <p className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e' }}>Subido y sincronizado.</p>}
-
-          <div className="flex gap-2 justify-end">
-            <button onClick={onClose} className="px-4 py-2 rounded-xl text-sm"
-              style={{ background: 'var(--bg)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-              {status === 'done' ? 'Cerrar' : 'Cancelar'}
-            </button>
-            {status !== 'done' && (
-              <button onClick={run} disabled={!label.trim() || busy}
-                className="px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2"
-                style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)',
-                  opacity: (!label.trim() || busy) ? 0.45 : 1 }}>
-                {busy && <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin"
-                  style={{ borderColor: 'rgba(245,158,11,0.3)', borderTopColor: '#f59e0b' }} />}
-                {status === 'uploading' ? 'Subiendo…' : status === 'syncing' ? 'Sincronizando…' : 'Subir y sincronizar'}
-              </button>
-            )}
-          </div>
-        </>
-      )}
-
-      {recState !== 'done' && (
-        <div className="flex justify-end">
-          <button onClick={onClose} className="px-4 py-2 rounded-xl text-sm"
-            style={{ background: 'var(--bg)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-            Cancelar
-          </button>
-        </div>
-      )}
-    </ModalShell>
+    </>
   )
 }
