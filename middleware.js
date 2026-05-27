@@ -11,5 +11,6 @@ export default function middleware(req) {
 }
 
 export const config = {
-  matcher: '/((?!api/webhook-dodo).*)',
+  // Only run on page-level routes, skip static assets
+  matcher: '/((?!api/|_next/|assets/|fonts/|icons/|favicon|manifest|robots|.*\\..*$).*)',
 }
