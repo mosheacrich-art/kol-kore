@@ -166,11 +166,6 @@ export default function Login() {
             expanded={false} onExpand={() => setModal('student')}
             t={t} tl={tl} isDark={isDark} />
 
-          {/* Guest */}
-          <RoleCard id="guest" label={tl('guest')} hebrew="אוֹרֵחַ"
-            description={tl('guest_desc')}
-            color="#2dd4bf" glow="rgba(45,212,191,0.2)" icon={GuestIcon}
-            expanded={false} onExpand={() => navigate('/guest/study')} t={t} tl={tl} isDark={isDark} />
         </div>
 
         <p className="text-center mt-10 text-xs fade-up-3" style={{ color: t.footer }}>
@@ -618,14 +613,6 @@ function TeacherIcon({ color }) {
   )
 }
 
-function GuestIcon({ color }) {
-  return (
-    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-      <circle cx="13" cy="9" r="4" stroke={color} strokeWidth="1.5"/>
-      <path d="M5 22c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-  )
-}
 
 function GoogleIcon() {
   return (
