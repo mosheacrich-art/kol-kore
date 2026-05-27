@@ -11,6 +11,7 @@ import { supabase } from '../lib/supabase'
 import AudioPlayer from './AudioPlayer'
 import { BOOK_COLORS } from '../data/parashot'
 import { useLang } from '../context/LangContext'
+import { AdminUploadButton, AdminRecordButton } from './AdminAudioUpload'
 
 function fmtSec(s) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
@@ -142,6 +143,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
 
   // Generic public audios for this parasha/aliyah
   const [genericAudios, setGenericAudios] = useState([])
+  const [audioRefreshKey, setAudioRefreshKey] = useState(0)
   useEffect(() => {
     supabase
       .from('public_audios')
@@ -150,7 +152,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
       .eq('aliyah_idx', aliyahIdx)
       .order('label')
       .then(({ data }) => setGenericAudios(data || []))
-  }, [parasha.id, aliyahIdx])
+  }, [parasha.id, aliyahIdx, audioRefreshKey])
 
   const deleteGenericAudio = useCallback(async (audioId) => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -1044,6 +1046,22 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
               {t('record')}
             </button>
           </>
+        )}
+        {isAdmin && (
+          <AdminUploadButton
+            parashaId={parasha.id}
+            aliyahIdx={aliyahIdx}
+            aliyahRef={currentAliyah?.ref || parasha.id}
+            onSaved={() => setAudioRefreshKey(k => k + 1)}
+          />
+        )}
+        {isAdmin && (
+          <AdminRecordButton
+            parashaId={parasha.id}
+            aliyahIdx={aliyahIdx}
+            aliyahRef={currentAliyah?.ref || parasha.id}
+            onSaved={() => setAudioRefreshKey(k => k + 1)}
+          />
         )}
       </div>}
     </div>

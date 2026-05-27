@@ -7,7 +7,6 @@ import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import ParashaReader from '../../components/ParashaReader'
-import { AdminUploadButton, AdminRecordButton } from '../../components/AdminAudioUpload'
 
 const ADMIN_USER_ID = '1f4d0329-ddf5-48a4-965f-5f37d7416447'
 
@@ -265,12 +264,6 @@ function ReaderView({ haftara, basePath }) {
         <span className="text-xs" style={{ color: 'var(--text-3)' }}>
           {haftara.chag ? `${t('haftara_holiday_label')} · מוֹעֲדִים` : `${t('haftara_weekly_label')} · הַפְטָרָה`}
         </span>
-        {isAdmin && (<>
-          <AdminUploadButton parashaId={haftara.id} aliyahIdx={0}
-            aliyahRef={haftara.aliyot[0]?.ref || haftara.id} onSaved={() => {}} />
-          <AdminRecordButton parashaId={haftara.id} aliyahIdx={0}
-            aliyahRef={haftara.aliyot[0]?.ref || haftara.id} onSaved={() => {}} />
-        </>)}
       </div>
 
       <div className="flex-1 overflow-hidden">

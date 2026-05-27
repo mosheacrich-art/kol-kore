@@ -4,7 +4,6 @@ import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import ParashaReader from '../../components/ParashaReader'
-import { AdminUploadButton, AdminRecordButton } from '../../components/AdminAudioUpload'
 import { useSiddurIndex, useSiddurShabbatIndex, BERAJOT_INLINE, SHEMA_TITLES } from '../../hooks/useSefaria'
 import HomeworkQuickModal from '../../components/HomeworkQuickModal'
 import { tSef } from '../../data/sefariaTitles'
@@ -705,10 +704,6 @@ function SiddurReaderView({ nusach, day, sefRef, onBack, onNavigate, isTeacher }
         </span>
 
         <div className="ml-auto flex gap-2 items-center">
-          {isAdmin && (<>
-            <AdminUploadButton parashaId={sefRef} aliyahIdx={0} aliyahRef={sefRef} onSaved={() => {}} />
-            <AdminRecordButton parashaId={sefRef} aliyahIdx={0} aliyahRef={sefRef} onSaved={() => {}} />
-          </>)}
           {isTeacher && !isBerajot && (
             <button onClick={() => setHwOpen(true)}
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
