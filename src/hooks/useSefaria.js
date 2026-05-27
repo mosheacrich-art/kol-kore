@@ -160,13 +160,33 @@ function buildService(srvNode, pathPrefix, bookName) {
 }
 
 // Titles to exclude from all services
-const EXCLUDED_SECTIONS = new Set(['Avinu Malkeinu'])
+const EXCLUDED_SECTIONS = new Set(['Avinu Malkeinu', "El Melech Ne'eman"])
+
+// Shema titles Sefaria uses (Ashkenaz vs Sefard differ)
+const SHEMA_TITLES = new Set(['Sovereignty of Heaven', 'The Shema'])
+
+const SHEMA_PARAGRAPHS = [
+  { title: "Ve'ahavta", heTitle: 'וְאָהַבְתָּ', ref: 'Deuteronomy 6:5-9'    },
+  { title: 'Vehaya',    heTitle: 'וְהָיָה',      ref: 'Deuteronomy 11:13-21' },
+  { title: 'Vayomer',   heTitle: 'וַיֹּאמֶר',    ref: 'Numbers 15:37-41'     },
+]
 
 function filterService(srv) {
-  const allSections = srv.allSections.filter(s => !EXCLUDED_SECTIONS.has(s.title))
-  const subsections = srv.subsections
-    .map(sub => ({ ...sub, items: sub.items.filter(i => !EXCLUDED_SECTIONS.has(i.title)) }))
-    .filter(sub => sub.items.length > 0)
+  const allSections = srv.allSections
+    .filter(s => !EXCLUDED_SECTIONS.has(s.title))
+    .flatMap(s => SHEMA_TITLES.has(s.title)
+      ? SHEMA_PARAGRAPHS.map(p => ({ ...s, title: p.title, heTitle: p.heTitle, ref: p.ref }))
+      : [s]
+    )
+
+  // Rebuild subsections from allSections (handles insertions from flatMap above)
+  const subsections = []
+  for (const s of allSections) {
+    let group = subsections.find(g => g.name === s.subGroup)
+    if (!group) { group = { name: s.subGroup, items: [] }; subsections.push(group) }
+    group.items.push({ title: s.title, heTitle: s.heTitle, ref: s.ref })
+  }
+
   return { ...srv, allSections, subsections, total: allSections.length }
 }
 
