@@ -12,7 +12,7 @@ import { tSef } from '../../data/sefariaTitles'
 const ADMIN_USER_ID = '1f4d0329-ddf5-48a4-965f-5f37d7416447'
 
 const IMPRESCINDIBLES = [
-  { ref: 'Deuteronomy 6:4-9',    name: "Ve'ahavta", heTitle: 'וְאָהַבְתָּ', color: '#10b981' },
+  { ref: 'Deuteronomy 6:5-9',    name: "Ve'ahavta", heTitle: 'וְאָהַבְתָּ', color: '#10b981' },
   { ref: 'Deuteronomy 11:13-21', name: 'Vehaya',    heTitle: 'וְהָיָה',      color: '#10b981' },
   { ref: 'Numbers 15:37-41',     name: 'Vayomer',   heTitle: 'וַיֹּאמֶר',    color: '#10b981' },
   { ref: 'Exodus 15:1-19',       name: 'Az Yashir', heTitle: 'אָז יָשִׁיר',  color: '#d97706' },
@@ -670,7 +670,7 @@ function SiddurReaderView({ nusach, day, sefRef, onBack, onNavigate, isTeacher }
   const aliyot = useMemo(() => {
     if (berajotData) return berajotData.aliyot
     if (isShema) return [
-      { n: 1, label: "Ve'ahavta", ref: 'Deuteronomy 6:4-9'    },
+      { n: 1, label: "Ve'ahavta", ref: 'Deuteronomy 6:5-9'    },
       { n: 2, label: 'Vehaya',    ref: 'Deuteronomy 11:13-21' },
       { n: 3, label: 'Vayomer',   ref: 'Numbers 15:37-41'     },
     ]

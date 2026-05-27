@@ -82,7 +82,8 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
   const [evalSending, setEvalSending] = useState(false)
   const evalAudioRef = useRef(null)
   const { get, upload, uploadStudentRecording, remove } = useAudio()
-  const { profile } = useAuth()
+  const { profile, user } = useAuth()
+  const isAdmin = user?.id === '1f4d0329-ddf5-48a4-965f-5f37d7416447'
   const notifiedRef = useRef(new Set())    // aliyot ya notificadas en esta sesión
   const aliyahStartRef = useRef(Date.now()) // para medir tiempo por aliyá
 
@@ -150,6 +151,18 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
       .order('label')
       .then(({ data }) => setGenericAudios(data || []))
   }, [parasha.id, aliyahIdx])
+
+  const deleteGenericAudio = useCallback(async (audioId) => {
+    const { data: { session } } = await supabase.auth.getSession()
+    const token = session?.access_token
+    await fetch('/api/admin-audio-delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ audioId }),
+    })
+    setGenericAudios(prev => prev.filter(a => a.id !== audioId))
+    setAudioSourceKey(null)
+  }, [])
 
   const [audioSourceKey, setAudioSourceKey] = useState('teacher')
   const [audioSrcOpen, setAudioSrcOpen] = useState(false)
@@ -610,22 +623,37 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
                 background: 'var(--bg-deep)', border: '1px solid var(--border)', borderRadius: '12px',
                 overflow: 'hidden', minWidth: '160px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
               onMouseDown={e => e.stopPropagation()}>
-              {allAudioSources.map(src => (
-                <button key={src.key}
-                  onClick={() => { setAudioSourceKey(src.key); setAudioSrcOpen(false) }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-left transition-all"
-                  style={{
-                    background: audioSourceKey === src.key ? `${bookColor}15` : 'transparent',
-                    color: audioSourceKey === src.key ? bookColor : 'var(--text-2)',
-                  }}>
-                  {src.label}
-                  {audioSourceKey === src.key && (
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="ml-auto">
-                      <path d="M2 5l2.5 2.5L8 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  )}
-                </button>
-              ))}
+              {allAudioSources.map(src => {
+                const isGeneric = src.key !== 'teacher'
+                return (
+                  <div key={src.key} className="flex items-center"
+                    style={{ background: audioSourceKey === src.key ? `${bookColor}15` : 'transparent' }}>
+                    <button
+                      onClick={() => { setAudioSourceKey(src.key); setAudioSrcOpen(false) }}
+                      className="flex-1 flex items-center gap-2.5 px-3 py-2.5 text-xs text-left transition-all"
+                      style={{ color: audioSourceKey === src.key ? bookColor : 'var(--text-2)' }}>
+                      {src.label}
+                      {audioSourceKey === src.key && (
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="ml-auto">
+                          <path d="M2 5l2.5 2.5L8 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </button>
+                    {isAdmin && isGeneric && (
+                      <button
+                        onClick={e => { e.stopPropagation(); deleteGenericAudio(src.key) }}
+                        className="px-2.5 py-2.5 flex-shrink-0 transition-all"
+                        style={{ color: 'rgba(239,68,68,0.5)' }}
+                        onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                        onMouseLeave={e => e.currentTarget.style.color = 'rgba(239,68,68,0.5)'}>
+                        <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                          <path d="M2 3h7M4.5 3V2h2v1M4 3l.5 6M7 3l-.5 6" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
             </div>,
             document.body
           )}
