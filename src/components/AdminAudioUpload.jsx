@@ -16,27 +16,20 @@ async function submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onSta
 
   const fileType = file.type || 'audio/webm'
   const ext = fileType.split('/')[1]?.split(';')[0] || 'webm'
+  const labelSlug = label.toLowerCase().replace(/\s+/g, '_')
+  const storagePath = `${labelSlug}/${parashaId}/${aliyahIdx}.${ext}`
 
   onStatus('uploading')
 
-  // Step 1: get signed upload URL
-  const urlRes = await fetch('/api/admin-audio-upload-url', {
-    method: 'POST', headers,
-    body: JSON.stringify({ parashaId, aliyahIdx, label, ext }),
-  })
-  if (!urlRes.ok) {
-    const body = await safeJson(urlRes)
-    throw new Error(body.error || `Error ${urlRes.status} al obtener URL de subida`)
-  }
-  const { token: uploadToken, storagePath, publicUrl } = await urlRes.json()
-
-  // Step 2: upload file to Supabase Storage
+  // Step 1: upload directly from browser — same as teacher audio, no server needed
   const { error: uploadErr } = await supabase.storage
     .from('public-audios')
-    .uploadToSignedUrl(storagePath, uploadToken, file, { contentType: fileType })
+    .upload(storagePath, file, { contentType: fileType, upsert: true })
   if (uploadErr) throw new Error(uploadErr.message)
 
-  // Step 3: save metadata to DB
+  const { data: { publicUrl } } = supabase.storage.from('public-audios').getPublicUrl(storagePath)
+
+  // Step 2: save metadata to DB via server (needs service key for RLS bypass)
   const saveRes = await fetch('/api/admin-audio-save', {
     method: 'POST', headers,
     body: JSON.stringify({ parashaId, aliyahIdx, label, publicUrl, fileType }),
@@ -46,7 +39,7 @@ async function submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onSta
     throw new Error(body.error || `Error ${saveRes.status} al guardar`)
   }
 
-  // Step 4: sync with Whisper (non-fatal — same as regular audio)
+  // Step 3: sync with Whisper — same endpoint as regular audio, non-fatal
   onStatus('syncing')
   try {
     const syncRes = await fetch('/api/generate-sync', {
@@ -66,7 +59,6 @@ async function submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onSta
       })
     }
   } catch (syncErr) {
-    // Sync failure doesn't block the upload — audio is already saved
     console.warn('Sync failed (non-fatal):', syncErr.message)
   }
 }
