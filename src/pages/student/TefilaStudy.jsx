@@ -15,12 +15,14 @@ export default function TefilaStudy({ basePath = '/student/tefila' }) {
   const nusach = searchParams.get('n')  // 'ashkenaz' | 'sefard' | null
   const day    = searchParams.get('d')  // 'semana' | 'shabat' | null
   const sefRef = searchParams.get('r')  // full Sefaria ref | null
+  const q      = searchParams.get('q')  // global search pre-fill | null
 
   const isTeacher = profile?.role === 'teacher'
   const isSubscribed = isTeacher || profile?.subscription_status === 'active'
   const isGuest = basePath.startsWith('/guest')
   const guestMode = isGuest || !isSubscribed
 
+  const searchGlobal  = useCallback(query => setSearchParams({ n: 'ashkenaz', d: 'semana', q: query }), [setSearchParams])
   const selectNusach  = useCallback(n => setSearchParams({ n }), [setSearchParams])
   const selectDay     = useCallback(d => setSearchParams({ n: nusach, d }), [setSearchParams, nusach])
   const selectSection = useCallback(r => setSearchParams({ n: nusach, d: day, r }), [setSearchParams, nusach, day])
@@ -28,7 +30,7 @@ export default function TefilaStudy({ basePath = '/student/tefila' }) {
   const changeNusach  = useCallback(() => setSearchParams({}), [setSearchParams])
   const changeDay     = useCallback(() => setSearchParams({ n: nusach }), [setSearchParams, nusach])
 
-  if (!nusach) return <NusachPicker onSelect={selectNusach} />
+  if (!nusach) return <NusachPicker onSelect={selectNusach} onSearch={searchGlobal} />
   if (!day)    return <DayPicker nusach={nusach} onSelect={selectDay} onBack={changeNusach} />
   if (sefRef) return (
     <SiddurReaderView
@@ -40,8 +42,8 @@ export default function TefilaStudy({ basePath = '/student/tefila' }) {
     />
   )
   if (day === 'shabat')
-    return <SiddurShabbatListView nusach={nusach} onSelectRef={selectSection} onChangeNusach={changeNusach} onChangeDay={changeDay} />
-  return <SiddurListView nusach={nusach} onSelectRef={selectSection} onChangeNusach={changeNusach} onChangeDay={changeDay} />
+    return <SiddurShabbatListView nusach={nusach} onSelectRef={selectSection} onChangeNusach={changeNusach} onChangeDay={changeDay} initialSearch={q || ''} />
+  return <SiddurListView nusach={nusach} onSelectRef={selectSection} onChangeNusach={changeNusach} onChangeDay={changeDay} initialSearch={q || ''} />
 }
 
 // ── Nusach Picker ─────────────────────────────────────────────────────────
@@ -71,18 +73,45 @@ function NusachCard({ title, heb, subtitle, desc, color, onClick }) {
   )
 }
 
-function NusachPicker({ onSelect }) {
+function NusachPicker({ onSelect, onSearch }) {
   const { t } = useLang()
+  const [searchQ, setSearchQ] = useState('')
+  const handleSearch = (e) => {
+    e.preventDefault()
+    if (searchQ.trim()) onSearch(searchQ.trim())
+  }
   return (
     <div className="p-4 sm:p-8 max-w-2xl">
-      <div className="mb-10 fade-up-1">
+      <div className="mb-8 fade-up-1">
         <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
           סִדּוּר · Siddur
         </p>
         <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>{t('nav_tefila')}</h1>
         <p className="text-sm" style={{ color: 'var(--text-3)' }}>{t('siddur_pick_subtitle')}</p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 fade-up-2">
+
+      {/* Global search */}
+      <form onSubmit={handleSearch} className="relative mb-8 fade-up-2">
+        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+            <circle cx="6.5" cy="6.5" r="4" stroke="var(--text-3)" strokeWidth="1.3"/>
+            <path d="M9.5 9.5L12 12" stroke="var(--text-3)" strokeWidth="1.3" strokeLinecap="round"/>
+          </svg>
+        </div>
+        <input value={searchQ} onChange={e => setSearchQ(e.target.value)}
+          placeholder={t('siddur_search')}
+          className="w-full pl-10 pr-24 py-2.5 rounded-xl text-sm outline-none"
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }} />
+        {searchQ && (
+          <button type="submit"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
+            style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)' }}>
+            Buscar →
+          </button>
+        )}
+      </form>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 fade-up-3">
         <NusachCard
           title="Ashkenaz" heb="נוּסַח אַשְׁכְּנַז" subtitle="Siddur Ashkenaz"
           desc={t('siddur_ashkenaz_desc')}
@@ -141,10 +170,10 @@ function DayPicker({ nusach, onSelect, onBack }) {
 
 // ── Siddur List View ──────────────────────────────────────────────────────
 
-function SiddurListView({ nusach, onSelectRef, onChangeNusach, onChangeDay }) {
+function SiddurListView({ nusach, onSelectRef, onChangeNusach, onChangeDay, initialSearch = '' }) {
   const { isDark } = useTheme()
   const { t, lang } = useLang()
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(initialSearch)
   const [openService, setOpenService] = useState('shacharit')
   const [openSub, setOpenSub] = useState(null)
 
@@ -334,13 +363,32 @@ function SiddurListView({ nusach, onSelectRef, onChangeNusach, onChangeDay }) {
 
 // ── Siddur Shabbat List View ──────────────────────────────────────────────
 
-function SiddurShabbatListView({ nusach, onSelectRef, onChangeNusach, onChangeDay }) {
+function SiddurShabbatListView({ nusach, onSelectRef, onChangeNusach, onChangeDay, initialSearch = '' }) {
   const { isDark } = useTheme()
   const { t, lang } = useLang()
+  const [search, setSearch] = useState(initialSearch)
   const [openService, setOpenService] = useState(null)
   const [openSub, setOpenSub] = useState(null)
 
   const { services, loading, error } = useSiddurShabbatIndex(nusach)
+
+  const filteredServices = useMemo(() => {
+    if (!services) return []
+    if (!search) return services
+    const q = search.toLowerCase()
+    return services.map(srv => {
+      const filteredSubs = srv.subsections
+        .map(sub => ({
+          ...sub,
+          items: sub.items.filter(item =>
+            item.title.toLowerCase().includes(q) || item.heTitle.includes(search)
+          ),
+        }))
+        .filter(sub => sub.items.length > 0)
+      const total = filteredSubs.reduce((n, s) => n + s.items.length, 0)
+      return { ...srv, subsections: filteredSubs, total }
+    }).filter(srv => srv.total > 0)
+  }, [services, search])
 
   const cardDefault = isDark
     ? { bg: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.05)' }
@@ -376,6 +424,20 @@ function SiddurShabbatListView({ nusach, onSelectRef, onChangeNusach, onChangeDa
         </p>
       </div>
 
+      {/* Search */}
+      <div className="relative mb-7 fade-up-2">
+        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+            <circle cx="6.5" cy="6.5" r="4" stroke="var(--text-3)" strokeWidth="1.3"/>
+            <path d="M9.5 9.5L12 12" stroke="var(--text-3)" strokeWidth="1.3" strokeLinecap="round"/>
+          </svg>
+        </div>
+        <input value={search} onChange={e => setSearch(e.target.value)}
+          placeholder={t('siddur_search')}
+          className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }} />
+      </div>
+
       {loading && (
         <div className="flex flex-col items-center gap-3 py-16 fade-up-3">
           <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin"
@@ -391,16 +453,16 @@ function SiddurShabbatListView({ nusach, onSelectRef, onChangeNusach, onChangeDa
         </div>
       )}
 
-      {!loading && !error && services && services.length === 0 && (
+      {!loading && !error && filteredServices.length === 0 && (
         <div className="py-10 text-center fade-up-3">
-          <p className="text-sm" style={{ color: 'var(--text-3)' }}>No se encontraron tefilot de Shabat en este siddur.</p>
+          <p className="text-sm" style={{ color: 'var(--text-3)' }}>{search ? t('siddur_no_results') || 'Sin resultados' : 'No se encontraron tefilot de Shabat en este siddur.'}</p>
         </div>
       )}
 
-      {!loading && !error && services && services.length > 0 && (
+      {!loading && !error && filteredServices.length > 0 && (
         <div className="flex flex-col gap-2.5 fade-up-3">
-          {services.map(srv => {
-            const isOpen = openService === srv.id
+          {filteredServices.map(srv => {
+            const isOpen = openService === srv.id || !!search
             return (
               <div key={srv.id} className="rounded-2xl overflow-hidden transition-all"
                 style={{ border: `1px solid ${isOpen ? srv.color + '30' : 'var(--border)'}` }}>
