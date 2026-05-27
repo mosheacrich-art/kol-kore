@@ -11,6 +11,14 @@ import { tSef } from '../../data/sefariaTitles'
 
 const ADMIN_USER_ID = '1f4d0329-ddf5-48a4-965f-5f37d7416447'
 
+const IMPRESCINDIBLES = [
+  { ref: 'Deuteronomy 6:4-9',    name: "Ve'ahavta", heTitle: 'וְאָהַבְתָּ', color: '#10b981' },
+  { ref: 'Deuteronomy 11:13-21', name: 'Vehaya',    heTitle: 'וְהָיָה',      color: '#10b981' },
+  { ref: 'Numbers 15:37-41',     name: 'Vayomer',   heTitle: 'וַיֹּאמֶר',    color: '#10b981' },
+  { ref: 'Exodus 15:1-19',       name: 'Az Yashir', heTitle: 'אָז יָשִׁיר',  color: '#d97706' },
+]
+const IMPRESCINDIBLES_MAP = Object.fromEntries(IMPRESCINDIBLES.map(s => [s.ref, s]))
+
 export default function TefilaStudy({ basePath = '/student/tefila' }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const { profile } = useAuth()
@@ -34,6 +42,20 @@ export default function TefilaStudy({ basePath = '/student/tefila' }) {
   const changeDay     = useCallback(() => setSearchParams({ n: nusach }), [setSearchParams, nusach])
 
   if (!nusach) return <NusachPicker onSelect={selectNusach} onSearch={searchGlobal} />
+
+  if (nusach === 'imprescindibles') {
+    if (sefRef) return (
+      <SiddurReaderView
+        nusach={null} day={null} sefRef={sefRef}
+        guestMode={guestMode} isSubscribed={isSubscribed}
+        isTeacher={isTeacher}
+        onBack={() => setSearchParams({ n: 'imprescindibles' })}
+        onNavigate={r => setSearchParams({ n: 'imprescindibles', r })}
+      />
+    )
+    return <ImprescindiblesListView onSelectRef={r => setSearchParams({ n: 'imprescindibles', r })} onChangeNusach={changeNusach} />
+  }
+
   if (!day)    return <DayPicker nusach={nusach} onSelect={selectDay} onBack={changeNusach} />
   if (sefRef) return (
     <SiddurReaderView
@@ -124,6 +146,13 @@ function NusachPicker({ onSelect, onSearch }) {
           title="Sefard" heb="נוּסַח סְפָרַד" subtitle="Siddur Sefard"
           desc={t('siddur_sefard_desc')}
           color="#8b5cf6" onClick={() => onSelect('sefard')}
+        />
+      </div>
+      <div className="mt-4 fade-up-3">
+        <NusachCard
+          title="Imprescindibles" heb="עִקָּרִים" subtitle="Ve'ahavta · Vehaya · Vayomer · Az Yashir"
+          desc="Los textos bíblicos fundamentales con taamim: los tres párrafos del Shemá y la Canción del Mar."
+          color="#10b981" onClick={() => onSelect('imprescindibles')}
         />
       </div>
     </div>
@@ -556,6 +585,62 @@ function SiddurShabbatListView({ nusach, onSelectRef, onChangeNusach, onChangeDa
   )
 }
 
+// ── Imprescindibles List View ─────────────────────────────────────────────
+
+function ImprescindiblesListView({ onSelectRef, onChangeNusach }) {
+  const { t } = useLang()
+  const { isDark } = useTheme()
+  const cardDefault = isDark
+    ? { bg: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.05)' }
+    : { bg: 'rgba(0,0,0,0.03)', border: 'rgba(0,0,0,0.07)' }
+
+  return (
+    <div className="p-4 sm:p-8 max-w-2xl">
+      <div className="mb-8 fade-up-1">
+        <div className="flex items-center gap-2 mb-4">
+          <button onClick={onChangeNusach}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg"
+            style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <path d="M7 2L3 5l4 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            {t('siddur_change_nusach')}
+          </button>
+        </div>
+        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: '#10b981' }}>
+          עִקָּרִים · Imprescindibles
+        </p>
+        <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
+          Imprescindibles
+        </h1>
+        <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+          Textos bíblicos con טְעָמִים (taamim)
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 fade-up-2">
+        {IMPRESCINDIBLES.map(item => (
+          <button key={item.ref} onClick={() => onSelectRef(item.ref)}
+            className="text-left p-5 rounded-2xl transition-all duration-200"
+            style={{ background: cardDefault.bg, border: `1px solid ${cardDefault.border}` }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = `${item.color}12`
+              e.currentTarget.style.borderColor = `${item.color}35`
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = cardDefault.bg
+              e.currentTarget.style.borderColor = cardDefault.border
+            }}>
+            <div className="hebrew text-2xl mb-1 leading-snug" style={{ color: item.color }}>{item.heTitle}</div>
+            <div className="font-medium text-sm mb-0.5" style={{ color: 'var(--text)' }}>{item.name}</div>
+            <div className="text-xs font-mono opacity-50" style={{ color: 'var(--text-3)' }}>{item.ref}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── Siddur Reader View ────────────────────────────────────────────────────
 
 function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack, onNavigate, isTeacher }) {
@@ -564,8 +649,9 @@ function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack
   const isAdmin = user?.id === ADMIN_USER_ID
   const [hwOpen, setHwOpen] = useState(false)
   const [adminUploadOpen, setAdminUploadOpen] = useState(false)
-  const { services: weekdayServices } = useSiddurIndex(nusach)
-  const { services: shabbatServices } = useSiddurShabbatIndex(nusach)
+  const siddurNusach = (nusach === 'imprescindibles' || !nusach) ? null : nusach
+  const { services: weekdayServices } = useSiddurIndex(siddurNusach)
+  const { services: shabbatServices } = useSiddurShabbatIndex(siddurNusach)
   const services = day === 'shabat' ? shabbatServices : weekdayServices
 
   const { service, section, prev, next } = useMemo(() => {
@@ -580,10 +666,12 @@ function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack
 
   const isBerajot   = sefRef.startsWith('berajot:')
   const berajotData = isBerajot ? BERAJOT_INLINE[sefRef] : null
-  const isShema     = !isBerajot && SHEMA_TITLES.has(section?.title)
-  const displayName = berajotData?.name || tSef(section?.title, lang) || sefRef.split(', ').pop()
-  const displayHeb  = berajotData?.heTitle || section?.heTitle || ''
-  const color       = service?.color || '#10b981'
+  const impMeta     = IMPRESCINDIBLES_MAP[sefRef]
+  const isShema     = !isBerajot && !impMeta && SHEMA_TITLES.has(section?.title)
+  const hasTaamim   = isShema || !!impMeta
+  const displayName = berajotData?.name || impMeta?.name || tSef(section?.title, lang) || sefRef.split(', ').pop()
+  const displayHeb  = berajotData?.heTitle || impMeta?.heTitle || section?.heTitle || ''
+  const color       = impMeta?.color || service?.color || '#10b981'
 
   const aliyot = useMemo(() => {
     if (berajotData) return berajotData.aliyot
@@ -668,7 +756,7 @@ function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack
           guestMode={guestMode}
           isSubscribed={isSubscribed}
           initialAliyah={0}
-          availableModes={isShema ? ['taamim', 'nikkud', 'audio'] : ['nikkud', 'audio']}
+          availableModes={hasTaamim ? ['taamim', 'nikkud', 'audio'] : ['nikkud', 'audio']}
         />
       </div>
 
