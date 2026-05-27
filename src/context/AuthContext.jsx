@@ -53,6 +53,12 @@ export function AuthProvider({ children }) {
             .upsert({ id: userId, role, name, ...extra }, { onConflict: 'id' })
             .select()
           data = rows?.[0] ?? null
+          // If the upsert select returned empty (RLS blocks SELECT during token setup),
+          // do a plain read — the insert succeeded even if select didn't return it.
+          if (!data) {
+            const { data: fb } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+            data = fb
+          }
         } else if (data && effectiveRole && data.role !== effectiveRole) {
           // The user signed in from a card that doesn't match their existing role.
           if (intendedRole && isNewUser) {
@@ -112,6 +118,7 @@ export function AuthProvider({ children }) {
       if (event === 'PASSWORD_RECOVERY') { setRecoveryMode(true); return }
       setUser(session?.user ?? null)
       if (session?.user) {
+        setLoading(true)
         fetchProfile(session.user.id, session.user.user_metadata, session.user.created_at)
       } else {
         setProfile(null)
