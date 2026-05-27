@@ -4,9 +4,12 @@ import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import ParashaReader from '../../components/ParashaReader'
+import AdminAudioUpload from '../../components/AdminAudioUpload'
 import { useSiddurIndex, useSiddurShabbatIndex, BERAJOT_INLINE } from '../../hooks/useSefaria'
 import HomeworkQuickModal from '../../components/HomeworkQuickModal'
 import { tSef } from '../../data/sefariaTitles'
+
+const ADMIN_USER_ID = '1f4d0329-ddf5-48a4-965f-5f37d7416447'
 
 export default function TefilaStudy({ basePath = '/student/tefila' }) {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -557,7 +560,10 @@ function SiddurShabbatListView({ nusach, onSelectRef, onChangeNusach, onChangeDa
 
 function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack, onNavigate, isTeacher }) {
   const { t, lang } = useLang()
+  const { user } = useAuth()
+  const isAdmin = user?.id === ADMIN_USER_ID
   const [hwOpen, setHwOpen] = useState(false)
+  const [adminUploadOpen, setAdminUploadOpen] = useState(false)
   const { services: weekdayServices } = useSiddurIndex(nusach)
   const { services: shabbatServices } = useSiddurShabbatIndex(nusach)
   const services = day === 'shabat' ? shabbatServices : weekdayServices
@@ -611,6 +617,17 @@ function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack
         </span>
 
         <div className="ml-auto flex gap-2 items-center">
+          {isAdmin && (
+            <button onClick={() => setAdminUploadOpen(true)}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
+              style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)' }}>
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                <path d="M5.5 1v6M2.5 4l3-3 3 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M1 9h9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
+              Audio admin
+            </button>
+          )}
           {isTeacher && !isBerajot && (
             <button onClick={() => setHwOpen(true)}
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
@@ -656,6 +673,15 @@ function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack
           preRef={sefRef}
           preName={`${service?.name ? service.name + ' · ' : ''}${displayName}`}
           preHeb={displayHeb || service?.heb || ''}
+        />
+      )}
+      {adminUploadOpen && (
+        <AdminAudioUpload
+          parashaId={sefRef}
+          aliyahIdx={0}
+          aliyahRef={sefRef}
+          onClose={() => setAdminUploadOpen(false)}
+          onSaved={() => setAdminUploadOpen(false)}
         />
       )}
     </div>

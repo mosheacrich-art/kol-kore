@@ -16,19 +16,21 @@ export default async function handler(req, res) {
   const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token)
   if (authErr || !user || user.id !== ADMIN_USER_ID) return res.status(403).json({ error: 'Forbidden' })
 
-  const { parashaId, aliyahIdx, label, publicUrl } = req.body
+  const { parashaId, aliyahIdx, label, publicUrl, wordTimestamps, anchorPct, needsReview } = req.body
   if (!parashaId || aliyahIdx == null || !label || !publicUrl) return res.status(400).json({ error: 'Missing fields' })
 
-  const { error } = await supabaseAdmin.from('public_audios').upsert({
+  const row = {
     parasha_id: parashaId,
     aliyah_idx: aliyahIdx,
     label,
     public_url: publicUrl,
     file_type: 'audio/x-m4a',
-    needs_review: true,
-    word_timestamps: null,
-    anchor_pct: null,
-  }, { onConflict: 'parasha_id,aliyah_idx,label' })
+    needs_review: needsReview !== undefined ? needsReview : true,
+    word_timestamps: wordTimestamps !== undefined ? wordTimestamps : null,
+    anchor_pct: anchorPct !== undefined ? anchorPct : null,
+  }
+
+  const { error } = await supabaseAdmin.from('public_audios').upsert(row, { onConflict: 'parasha_id,aliyah_idx,label' })
 
   if (error) return res.status(500).json({ error: error.message })
   res.json({ ok: true })

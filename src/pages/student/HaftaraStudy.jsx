@@ -7,6 +7,9 @@ import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import ParashaReader from '../../components/ParashaReader'
+import AdminAudioUpload from '../../components/AdminAudioUpload'
+
+const ADMIN_USER_ID = '1f4d0329-ddf5-48a4-965f-5f37d7416447'
 
 const HAFTARA_BOOKS = SEFARIM_LIST.map(s => s.id)
 
@@ -242,7 +245,10 @@ function ListView({ basePath }) {
 function ReaderView({ haftara, basePath, guestMode, isSubscribed }) {
   const navigate = useNavigate()
   const { t } = useLang()
+  const { user } = useAuth()
+  const isAdmin = user?.id === ADMIN_USER_ID
   const [searchParams] = useSearchParams()
+  const [adminUploadOpen, setAdminUploadOpen] = useState(false)
   const initialAliyah = Math.min(
     Math.max(0, parseInt(searchParams.get('aliyah') || '0', 10)),
     haftara.aliyot.length - 1
@@ -251,7 +257,7 @@ function ReaderView({ haftara, basePath, guestMode, isSubscribed }) {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden" style={{ height: '100%' }}>
-      <div className="flex-shrink-0 flex items-center gap-3 px-6 py-3"
+      <div className="flex-shrink-0 flex items-center gap-3 px-6 py-3 flex-wrap"
         style={{ background: 'var(--overlay)', borderBottom: '1px solid var(--border-subtle)' }}>
         <button onClick={() => navigate(basePath)}
           className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg transition-all"
@@ -265,11 +271,32 @@ function ReaderView({ haftara, basePath, guestMode, isSubscribed }) {
         <span className="text-xs" style={{ color: 'var(--text-3)' }}>
           {haftara.chag ? `${t('haftara_holiday_label')} · מוֹעֲדִים` : `${t('haftara_weekly_label')} · הַפְטָרָה`}
         </span>
+        {isAdmin && (
+          <button onClick={() => setAdminUploadOpen(true)}
+            className="ml-auto flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
+            style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)' }}>
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+              <path d="M5.5 1v6M2.5 4l3-3 3 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M1 9h9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+            </svg>
+            Audio admin
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-hidden">
         <ParashaReader parasha={haftara} guestMode={guestMode} isSubscribed={isSubscribed} initialAliyah={initialAliyah} availableModes={['nikkud', 'audio']} />
       </div>
+
+      {adminUploadOpen && (
+        <AdminAudioUpload
+          parashaId={haftara.id}
+          aliyahIdx={0}
+          aliyahRef={haftara.aliyot[0]?.ref || haftara.id}
+          onClose={() => setAdminUploadOpen(false)}
+          onSaved={() => setAdminUploadOpen(false)}
+        />
+      )}
     </div>
   )
 }
