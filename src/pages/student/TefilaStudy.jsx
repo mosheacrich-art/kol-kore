@@ -4,7 +4,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import ParashaReader from '../../components/ParashaReader'
-import AdminAudioUpload from '../../components/AdminAudioUpload'
+import { AdminUploadModal, AdminRecordModal } from '../../components/AdminAudioUpload'
 import { useSiddurIndex, useSiddurShabbatIndex, BERAJOT_INLINE, SHEMA_TITLES } from '../../hooks/useSefaria'
 import HomeworkQuickModal from '../../components/HomeworkQuickModal'
 import { tSef } from '../../data/sefariaTitles'
@@ -649,6 +649,7 @@ function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack
   const isAdmin = user?.id === ADMIN_USER_ID
   const [hwOpen, setHwOpen] = useState(false)
   const [adminUploadOpen, setAdminUploadOpen] = useState(false)
+  const [adminRecordOpen, setAdminRecordOpen] = useState(false)
   const siddurNusach = (nusach === 'imprescindibles' || !nusach) ? null : nusach
   const { services: weekdayServices } = useSiddurIndex(siddurNusach)
   const { services: shabbatServices } = useSiddurShabbatIndex(siddurNusach)
@@ -711,7 +712,7 @@ function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack
         </span>
 
         <div className="ml-auto flex gap-2 items-center">
-          {isAdmin && (
+          {isAdmin && (<>
             <button onClick={() => setAdminUploadOpen(true)}
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
               style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)' }}>
@@ -719,9 +720,19 @@ function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack
                 <path d="M5.5 1v6M2.5 4l3-3 3 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M1 9h9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
               </svg>
-              Audio admin
+              Subir admin
             </button>
-          )}
+            <button onClick={() => setAdminRecordOpen(true)}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
+              style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.25)' }}>
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                <rect x="3" y="0.5" width="5" height="7" rx="2.5" fill="currentColor"/>
+                <path d="M1.5 6a4 4 0 008 0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                <path d="M5.5 10v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
+              Grabar admin
+            </button>
+          </>)}
           {isTeacher && !isBerajot && (
             <button onClick={() => setHwOpen(true)}
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
@@ -770,13 +781,12 @@ function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack
         />
       )}
       {adminUploadOpen && (
-        <AdminAudioUpload
-          parashaId={sefRef}
-          aliyahIdx={0}
-          aliyahRef={sefRef}
-          onClose={() => setAdminUploadOpen(false)}
-          onSaved={() => setAdminUploadOpen(false)}
-        />
+        <AdminUploadModal parashaId={sefRef} aliyahIdx={0} aliyahRef={sefRef}
+          onClose={() => setAdminUploadOpen(false)} onSaved={() => setAdminUploadOpen(false)} />
+      )}
+      {adminRecordOpen && (
+        <AdminRecordModal parashaId={sefRef} aliyahIdx={0} aliyahRef={sefRef}
+          onClose={() => setAdminRecordOpen(false)} onSaved={() => setAdminRecordOpen(false)} />
       )}
     </div>
   )
