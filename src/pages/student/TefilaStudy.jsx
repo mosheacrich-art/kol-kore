@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import ParashaReader from '../../components/ParashaReader'
 import AdminAudioUpload from '../../components/AdminAudioUpload'
-import { useSiddurIndex, useSiddurShabbatIndex, BERAJOT_INLINE } from '../../hooks/useSefaria'
+import { useSiddurIndex, useSiddurShabbatIndex, BERAJOT_INLINE, SHEMA_TITLES } from '../../hooks/useSefaria'
 import HomeworkQuickModal from '../../components/HomeworkQuickModal'
 import { tSef } from '../../data/sefariaTitles'
 
@@ -580,14 +580,20 @@ function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack
 
   const isBerajot   = sefRef.startsWith('berajot:')
   const berajotData = isBerajot ? BERAJOT_INLINE[sefRef] : null
+  const isShema     = !isBerajot && SHEMA_TITLES.has(section?.title)
   const displayName = berajotData?.name || tSef(section?.title, lang) || sefRef.split(', ').pop()
   const displayHeb  = berajotData?.heTitle || section?.heTitle || ''
   const color       = service?.color || '#10b981'
 
   const aliyot = useMemo(() => {
     if (berajotData) return berajotData.aliyot
+    if (isShema) return [
+      { n: 1, label: "Ve'ahavta", ref: 'Deuteronomy 6:4-9'    },
+      { n: 2, label: 'Vehaya',    ref: 'Deuteronomy 11:13-21' },
+      { n: 3, label: 'Vayomer',   ref: 'Numbers 15:37-41'     },
+    ]
     return [{ n: 1, label: displayName, ref: sefRef }]
-  }, [sefRef, displayName, berajotData])
+  }, [sefRef, displayName, berajotData, isShema])
 
   const parasha = useMemo(() => ({
     id: sefRef,
@@ -662,7 +668,7 @@ function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack
           guestMode={guestMode}
           isSubscribed={isSubscribed}
           initialAliyah={0}
-          availableModes={['nikkud', 'audio']}
+          availableModes={isShema ? ['taamim', 'nikkud', 'audio'] : ['nikkud', 'audio']}
         />
       </div>
 

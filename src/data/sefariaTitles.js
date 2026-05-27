@@ -4,6 +4,11 @@
 
 const TITLES = {
 
+  // ── Shema aliyah labels ───────────────────────────────────────────────────
+  "Ve'ahavta":               { es: 'Veavtá',   fr: 'Véahavta', it: "Ve'ahavta", he: 'וְאָהַבְתָּ' },
+  'Vehaya':                  { es: 'Vehayá',   fr: 'Vehaya',   it: 'Vehaya',    he: 'וְהָיָה'      },
+  'Vayomer':                 { es: 'Vayómer',  fr: 'Vayomer',  it: 'Vayomer',   he: 'וַיֹּאמֶר'    },
+
   // ── Ashkenaz & Sefard shared ──────────────────────────────────────────────
   'Modeh Ani':                { es: 'Modé Ani',                    fr: 'Modeh Ani',                          it: 'Modeh Ani',                        he: 'מוֹדֶה אֲנִי' },
   'Morning Blessings':        { es: 'Birjot HaShajar',             fr: 'Bénédictions du matin',              it: 'Benedizioni del mattino',          he: 'בִּרְכוֹת הַשַּׁחַר' },
@@ -60,9 +65,6 @@ const TITLES = {
   'Hodu':                     { es: 'Hodú',                         fr: 'Hodou',                              it: 'Hodu',                             he: 'הוֹדוּ' },
   'Yishtabach':               { es: 'Yishtabaj',                    fr: 'Yichtabach',                         it: 'Yishtabach',                       he: 'יִשְׁתַּבַּח' },
   'The Shema':                { es: 'El Shemá',                     fr: 'Le Chéma',                           it: 'Lo Shemà',                         he: 'שְׁמַע יִשְׂרָאֵל' },
-  "Ve'ahavta":               { es: 'Veavtá',                       fr: 'Véahavta',                           it: "Ve'ahavta",                        he: 'וְאָהַבְתָּ' },
-  'Vehaya':                  { es: 'Vehayá',                       fr: 'Vehaya',                             it: 'Vehaya',                           he: 'וְהָיָה' },
-  'Vayomer':                 { es: 'Vayómer',                      fr: 'Vayomer',                            it: 'Vayomer',                          he: 'וַיֹּאמֶר' },
   'Avinu Malkeinu':           { es: 'Avinu Malkeinu',               fr: 'Avinou Malkenou',                    it: 'Avinu Malkeinu',                   he: 'אָבִינוּ מַלְכֵּנוּ' },
   'For Monday & Thursday':    { es: 'Para Lunes y Jueves',          fr: 'Pour lundi et jeudi',                it: 'Per lunedì e giovedì',             he: 'לשני ולחמישי' },
   'Beit Yaakov':              { es: 'Beit Yaakov',                  fr: 'Beit Yaakov',                        it: 'Beit Yaakov',                      he: 'בֵּית יַעֲקֹב' },
