@@ -16,7 +16,7 @@ export default async function handler(req, res) {
   const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token)
   if (authErr || !user || user.id !== ADMIN_USER_ID) return res.status(403).json({ error: 'Forbidden' })
 
-  const { parashaId, aliyahIdx, label, publicUrl, wordTimestamps, anchorPct, needsReview } = req.body
+  const { parashaId, aliyahIdx, label, publicUrl, fileType, wordTimestamps, anchorPct, needsReview } = req.body
   if (!parashaId || aliyahIdx == null || !label || !publicUrl) return res.status(400).json({ error: 'Missing fields' })
 
   const row = {
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     aliyah_idx: aliyahIdx,
     label,
     public_url: publicUrl,
-    file_type: 'audio/x-m4a',
+    file_type: fileType || 'audio/x-m4a',
     needs_review: needsReview !== undefined ? needsReview : true,
     word_timestamps: wordTimestamps !== undefined ? wordTimestamps : null,
     anchor_pct: anchorPct !== undefined ? anchorPct : null,

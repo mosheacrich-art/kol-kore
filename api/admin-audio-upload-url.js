@@ -17,11 +17,12 @@ export default async function handler(req, res) {
   const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token)
   if (authErr || !user || user.id !== ADMIN_USER_ID) return res.status(403).json({ error: 'Forbidden' })
 
-  const { parashaId, aliyahIdx, label } = req.body
+  const { parashaId, aliyahIdx, label, ext = 'm4a' } = req.body
   if (!parashaId || aliyahIdx == null || !label) return res.status(400).json({ error: 'Missing fields' })
 
   const labelSlug = label.toLowerCase().replace(/\s+/g, '_')
-  const storagePath = `${labelSlug}/${parashaId}/${aliyahIdx}.m4a`
+  const safeExt = ext.replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'm4a'
+  const storagePath = `${labelSlug}/${parashaId}/${aliyahIdx}.${safeExt}`
 
   const { data, error } = await supabaseAdmin.storage.from(BUCKET).createSignedUploadUrl(storagePath)
   if (error) return res.status(500).json({ error: error.message })
