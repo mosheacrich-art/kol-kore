@@ -28,12 +28,9 @@ const HEB_ORDINAL = {
 
 // Folders that were scrambled and need re-processing
 const FIX_FOLDERS = {
-  'emor':     'emor',
   'kedoshim': 'kedoshim',
+  'emor':     'emor',
   'vayakhel': 'vayakhel',
-  'vaera':    'vaera',
-  'vayeji':   'vayechi',
-  'tetzave':  'tetzaveh',
 }
 
 // ── Alignment logic (same as upload-ashkenazi.mjs) ────────────────────────────
@@ -86,7 +83,7 @@ function finalGuardrail(r){
   let wi=0;while(wi<r.length){if(r[wi].end-r[wi].start>=0.12){wi++;continue};let wj=wi;while(wj<r.length&&r[wj].end-r[wj].start<0.12)wj++;wj--;const pe=wi>0?r[wi-1].end:0,ns=wj<r.length-1?r[wj+1].start:r[wj].end+2.0,cnt=wj-wi+1,sp=ns-pe;if(sp/cnt>=0.15)for(let k=0;k<cnt;k++)r[wi+k]={start:+(pe+(k/cnt)*sp).toFixed(3),end:+(pe+((k+1)/cnt)*sp).toFixed(3)};wi=wj+1};return r
 }
 async function fetchSefariaWords(ref){
-  try{const r=await fetch(`https://www.sefaria.org/api/texts/${encodeURIComponent(ref)}?commentary=0&context=0&pad=0&wrapLinks=0`);if(!r.ok)return[];const d=await r.json();return flattenVerses(d.he||[]).flatMap(v=>splitWords(stripHtml(v)))}catch{return[]}
+  try{const r=await fetch(`https://www.sefaria.org/api/texts/${encodeURIComponent(ref)}?commentary=0&context=0&pad=0&wrapLinks=0`);if(!r.ok)return[];const d=await r.json();return flattenVerses(d.he||[]).flatMap(v=>splitWords(stripHtml(v))).filter(w=>/[א-ת]/.test(w))}catch{return[]}
 }
 async function whisper(buffer, fileName, sefariaWords){
   const form=new FormData()
@@ -125,6 +122,7 @@ function buildJobs() {
     for (const file of files) {
       const aliyahIdx = parseAliyahIdx(file)
       if (aliyahIdx === null) { console.warn(`Cannot parse ordinal: ${file}`); continue }
+      if (aliyahIdx === 7) { console.log(`SKIP maftir: ${file}`); continue }
       if (seen.has(aliyahIdx)) { console.log(`SKIP duplicate ${file} (aliyah ${aliyahIdx + 1} already mapped)`); continue }
       seen.add(aliyahIdx)
 
