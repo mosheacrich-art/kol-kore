@@ -16,7 +16,7 @@ const NAV_KEYS = [
   { path: '/student/haftara',        key: 'nav_haftara',        shortKey: 'nav_haftara',        heb: 'הַפְטָרָה',   icon: HaftaraIcon },
   { path: '/student/tefila',         key: 'nav_tefila',         shortKey: 'nav_tefila',         heb: 'תְּפִלָּה',    icon: TefilaIcon },
   { path: '/student/tikun',          key: 'nav_tikun',          shortKey: 'nav_tikun',          heb: 'תִּקּוּן',    icon: TikunIcon },
-
+  { path: '/student/notifications',  key: 'nav_notifications',  shortKey: 'nav_notifications',  heb: 'הֲעָרוֹת',   icon: NotifIcon, badge: true, hidden: true },
   { path: '/student/subscription',   key: 'nav_subscription',   shortKey: 'nav_subscription',   heb: 'הַרְשָׁמָה',  icon: SubscriptionIcon },
   { path: '/student/account',        key: 'nav_account',        shortKey: 'nav_account',        heb: 'חֶשְׁבּוֹן',   icon: AccountIcon },
 ]
@@ -45,7 +45,7 @@ export default function StudentLayout() {
       .then(({ count }) => setUnreadEvals(count ?? 0))
   }, [profile?.id, location.pathname])
 
-  const navItems = NAV_KEYS.map(n => ({ ...n, label: t(n.key) ?? n.heb, shortLabel: t(n.shortKey) ?? n.heb }))
+  const navItems = NAV_KEYS.filter(n => !n.hidden).map(n => ({ ...n, label: t(n.key) ?? n.heb, shortLabel: t(n.shortKey) ?? n.heb }))
 
   const go = (path) => { navigate(path); setSidebarOpen(false) }
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')

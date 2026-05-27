@@ -16,7 +16,7 @@ const NAV_KEYS = [
   { path: '/teacher/haftara',        key: 'nav_haftara',        shortKey: 'nav_haftara',   heb: 'הַפְטָרָה' },
   { path: '/teacher/tefila',         key: 'nav_tefila',         shortKey: 'nav_tefila',    heb: 'תְּפִלָּה' },
   { path: '/teacher/tikun',          key: 'nav_tikun_teacher',  shortKey: 'nav_tikun_teacher', heb: 'תִּקּוּן' },
-  { path: '/teacher/notifications',  key: 'nav_notifications',  shortKey: 'nav_notifications', heb: 'הוֹדָעוֹת', badge: true },
+  { path: '/teacher/notifications',  key: 'nav_notifications',  shortKey: 'nav_notifications', heb: 'הוֹדָעוֹת', badge: true, hidden: true },
   { path: '/teacher/account',        key: 'nav_account',        shortKey: 'nav_account',   heb: 'חֶשְׁבּוֹן' },
 ]
 
@@ -34,7 +34,7 @@ export default function TeacherLayout() {
   const [moreOpen, setMoreOpen] = useState(false)
   const [contactOpen, setContactOpen] = useState(false)
 
-  const allNavItems = NAV_KEYS.map(n => ({ ...n, label: t(n.key), shortLabel: t(n.shortKey) }))
+  const allNavItems = NAV_KEYS.filter(n => !n.hidden).map(n => ({ ...n, label: t(n.key), shortLabel: t(n.shortKey) }))
   const bottomNavItems = BOTTOM_NAV_INDICES.map(i => allNavItems[i])
   const moreItems = allNavItems.filter((_, i) => !BOTTOM_NAV_INDICES.includes(i))
 
