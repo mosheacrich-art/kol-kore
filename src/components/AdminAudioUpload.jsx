@@ -9,7 +9,7 @@ async function safeJson(res) {
   try { return await res.json() } catch { return {} }
 }
 
-async function submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onStatus }) {
+async function submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onStatus, noSync }) {
   const { data: { session } } = await supabase.auth.getSession()
   const token = session?.access_token
   const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
@@ -48,27 +48,28 @@ async function submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onSta
     throw new Error(body.error || `Error ${saveRes.status} al guardar`)
   }
 
-  // Step 3: sync with Whisper — same endpoint as regular audio, non-fatal
-  onStatus('syncing')
-  try {
-    const syncRes = await fetch('/api/generate-sync', {
-      method: 'POST', headers,
-      body: JSON.stringify({ audioUrl: publicUrl, fileType, aliyahRef }),
-    })
-    if (syncRes.ok) {
-      const syncData = await syncRes.json()
-      await fetch('/api/admin-audio-save', {
+  if (!noSync) {
+    onStatus('syncing')
+    try {
+      const syncRes = await fetch('/api/generate-sync', {
         method: 'POST', headers,
-        body: JSON.stringify({
-          parashaId, aliyahIdx, label, publicUrl, fileType,
-          wordTimestamps: syncData.words ?? null,
-          anchorPct: syncData.anchor_pct ?? null,
-          needsReview: syncData.needs_review ?? false,
-        }),
+        body: JSON.stringify({ audioUrl: publicUrl, fileType, aliyahRef }),
       })
+      if (syncRes.ok) {
+        const syncData = await syncRes.json()
+        await fetch('/api/admin-audio-save', {
+          method: 'POST', headers,
+          body: JSON.stringify({
+            parashaId, aliyahIdx, label, publicUrl, fileType,
+            wordTimestamps: syncData.words ?? null,
+            anchorPct: syncData.anchor_pct ?? null,
+            needsReview: syncData.needs_review ?? false,
+          }),
+        })
+      }
+    } catch (syncErr) {
+      console.warn('Sync failed (non-fatal):', syncErr.message)
     }
-  } catch (syncErr) {
-    console.warn('Sync failed (non-fatal):', syncErr.message)
   }
 }
 
@@ -141,7 +142,7 @@ function NameModal({ file, status, errorMsg, onSubmit, onCancel }) {
 }
 
 // Upload button: file picker → naming modal → upload
-export function AdminUploadButton({ parashaId, aliyahIdx, aliyahRef, onSaved }) {
+export function AdminUploadButton({ parashaId, aliyahIdx, aliyahRef, onSaved, noSync = false }) {
   const [file, setFile] = useState(null)
   const [status, setStatus] = useState('idle')
   const [errorMsg, setErrorMsg] = useState('')
@@ -156,7 +157,7 @@ export function AdminUploadButton({ parashaId, aliyahIdx, aliyahRef, onSaved }) 
   const submit = async (label) => {
     setErrorMsg('')
     try {
-      await submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onStatus: setStatus })
+      await submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onStatus: setStatus, noSync })
       setStatus('done')
       onSaved?.()
     } catch (e) {
@@ -188,7 +189,7 @@ export function AdminUploadButton({ parashaId, aliyahIdx, aliyahRef, onSaved }) 
 }
 
 // Record button: inline recording (no popup) → naming modal after stop
-export function AdminRecordButton({ parashaId, aliyahIdx, aliyahRef, onSaved }) {
+export function AdminRecordButton({ parashaId, aliyahIdx, aliyahRef, onSaved, noSync = false }) {
   const [recState, setRecState] = useState('idle')  // idle | recording | naming
   const [recSeconds, setRecSeconds] = useState(0)
   const [file, setFile] = useState(null)
@@ -237,7 +238,7 @@ export function AdminRecordButton({ parashaId, aliyahIdx, aliyahRef, onSaved }) 
   const submit = async (label) => {
     setErrorMsg('')
     try {
-      await submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onStatus: setStatus })
+      await submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onStatus: setStatus, noSync })
       setStatus('done')
       onSaved?.()
     } catch (e) {

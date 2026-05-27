@@ -24,7 +24,7 @@ const MODE_TKEYS = ['mode_taamim', 'mode_nikkud', 'mode_plain', 'mode_split', 'm
 const MIN_FONT = 14
 const MAX_FONT = 56
 
-export default function ParashaReader({ parasha, initialAliyah = 0, availableModes = null }) {
+export default function ParashaReader({ parasha, initialAliyah = 0, availableModes = null, adminSync = true }) {
   const { t } = useLang()
   const { isDark } = useTheme()
   const navigate = useNavigate()
@@ -1052,6 +1052,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
             parashaId={parasha.id}
             aliyahIdx={aliyahIdx}
             aliyahRef={currentAliyah?.ref || parasha.id}
+            noSync={!adminSync}
             onSaved={() => setAudioRefreshKey(k => k + 1)}
           />
         )}
@@ -1060,6 +1061,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
             parashaId={parasha.id}
             aliyahIdx={aliyahIdx}
             aliyahRef={currentAliyah?.ref || parasha.id}
+            noSync={!adminSync}
             onSaved={() => setAudioRefreshKey(k => k + 1)}
           />
         )}

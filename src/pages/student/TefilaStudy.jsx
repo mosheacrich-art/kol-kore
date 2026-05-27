@@ -737,6 +737,7 @@ function SiddurReaderView({ nusach, day, sefRef, onBack, onNavigate, isTeacher }
           parasha={parasha}
           initialAliyah={0}
           availableModes={hasTaamim ? ['taamim', 'nikkud', 'audio'] : ['nikkud', 'audio']}
+          adminSync={false}
         />
       </div>
 
