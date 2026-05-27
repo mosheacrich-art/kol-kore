@@ -67,6 +67,8 @@ export const translations = {
     study_full: 'Aliyá completa',
     study_phrase: 'Pasuk a pasuk',
     // Reader misc
+    audio_teacher: 'Profesor',
+    audio_my: 'Mi audio',
     no_audio: 'Sin audio del profesor · graba y envíaselo',
     no_audio_teacher: 'Sin audio para esta aliyá · graba o sube uno abajo',
     audio_sent: 'Audio enviado al profesor',
@@ -538,6 +540,8 @@ export const translations = {
     study_full: 'Full aliyah',
     study_phrase: 'Pasuk by pasuk',
     // Reader misc
+    audio_teacher: 'Teacher',
+    audio_my: 'My audio',
     no_audio: 'No teacher audio · record and send it',
     no_audio_teacher: 'No audio for this aliyah · record or upload one below',
     audio_sent: 'Audio sent to teacher',
@@ -1009,6 +1013,8 @@ export const translations = {
     study_full: 'Aliyah complète',
     study_phrase: 'Pasuk par pasuk',
     // Reader misc
+    audio_teacher: 'Professeur',
+    audio_my: 'Mon audio',
     no_audio: 'Pas d\'audio du professeur · enregistrez et envoyez-le',
     no_audio_teacher: 'Pas d\'audio pour cette aliyah · enregistrez ou téléchargez ci-dessous',
     audio_sent: 'Audio envoyé au professeur',
@@ -1480,6 +1486,8 @@ export const translations = {
     study_full: 'Aliyah completa',
     study_phrase: 'Pasuk per pasuk',
     // Reader misc
+    audio_teacher: 'Professore',
+    audio_my: 'Il mio audio',
     no_audio: 'Nessun audio del professore · registra e inviagli',
     no_audio_teacher: 'Nessun audio per questa aliyah · registra o carica uno sotto',
     audio_sent: 'Audio inviato al professore',
@@ -1951,6 +1959,8 @@ export const translations = {
     study_full: 'עלייה שלמה',
     study_phrase: 'פסוק אחר פסוק',
     // Reader misc
+    audio_teacher: 'המורה',
+    audio_my: 'האודיו שלי',
     no_audio: 'אין אודיו ממורה · הקלט ושלח',
     no_audio_teacher: 'אין אודיו לעלייה זו · הקלט או העלה',
     audio_sent: 'אודיו נשלח למורה',
@@ -2422,6 +2432,8 @@ export const translations = {
     study_full: 'Vollständige Alija',
     study_phrase: 'Passuk für Passuk',
     // Reader misc
+    audio_teacher: 'Lehrer',
+    audio_my: 'Mein Audio',
     no_audio: 'Kein Lehrer-Audio · Aufnehmen und senden',
     no_audio_teacher: 'Kein Audio für diese Alija · Aufnehmen oder hochladen',
     audio_sent: 'Audio an den Lehrer gesendet',

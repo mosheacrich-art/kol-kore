@@ -157,8 +157,8 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
   const [audioSrcPos, setAudioSrcPos] = useState({ top: 0, left: 0 })
   const audioSrcBtnRef = useRef(null)
 
-  // Reset source when aliyah/parasha changes
-  useEffect(() => { setAudioSourceKey('teacher') }, [parasha.id, aliyahIdx])
+  // Reset source when aliyah/parasha changes — teachers default to their own slot
+  useEffect(() => { setAudioSourceKey('teacher') }, [parasha.id, aliyahIdx, isTeacher])
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -168,17 +168,25 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
     return () => window.removeEventListener('mousedown', close)
   }, [audioSrcOpen])
 
+  const isTeacher = profile?.role === 'teacher'
+
   const allAudioSources = useMemo(() => [
-    ...(teacherAudio ? [{ key: 'teacher', label: t('audio_teacher') || 'Profesor' }] : []),
+    // Teachers always see "Mi audio"; students only see it if teacher has uploaded
+    ...(isTeacher
+      ? [{ key: 'teacher', label: t('audio_my') || 'Mi audio' }]
+      : teacherAudio ? [{ key: 'teacher', label: t('audio_teacher') || 'Profesor' }] : []),
     ...genericAudios.map(g => ({ key: g.id, label: g.label })),
-  ], [teacherAudio, genericAudios])
+  ], [isTeacher, teacherAudio, genericAudios, t])
 
   const audio = useMemo(() => {
     const makeGeneric = g => ({ url: g.public_url, name: g.label, type: g.file_type || 'audio/mp4', wordTimestamps: g.word_timestamps ?? null })
-    if (audioSourceKey && audioSourceKey !== 'teacher') {
-      const g = genericAudios.find(a => a.id === audioSourceKey)
-      if (g) return makeGeneric(g)
+    if (audioSourceKey === 'teacher') {
+      // Never fall back to generic when teacher source is selected — show no-audio panel if no upload yet
+      return teacherAudio || null
     }
+    const g = genericAudios.find(a => a.id === audioSourceKey)
+    if (g) return makeGeneric(g)
+    // Default fallback (e.g. after aliyah reset with no explicit selection)
     if (teacherAudio) return teacherAudio
     if (genericAudios.length > 0) return makeGeneric(genericAudios[0])
     return null
