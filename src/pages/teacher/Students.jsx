@@ -43,7 +43,7 @@ async function calcBarMitzvah(birthDateStr, dateLocale = 'es-ES') {
 
   // Step 1: Gregorian birth date → Hebrew date
   const birthHeb = await fetch(
-    `https://www.hebcal.com/converter?cfg=json&gy=${gy}&gm=${gm}&gd=${gd}&g2h=1`
+    `/api/hebcal?endpoint=converter&cfg=json&gy=${gy}&gm=${gm}&gd=${gd}&g2h=1`
   ).then(r => r.json())
   if (birthHeb.error) throw new Error(birthHeb.error)
 
@@ -54,7 +54,7 @@ async function calcBarMitzvah(birthDateStr, dateLocale = 'es-ES') {
 
   // Step 3: Hebrew BM date → Gregorian
   const bmGreg = await fetch(
-    `https://www.hebcal.com/converter?cfg=json&hy=${bmHY}&hm=${encodeURIComponent(bmHM)}&hd=${bmHD}&h2g=1`
+    `/api/hebcal?endpoint=converter&cfg=json&hy=${bmHY}&hm=${encodeURIComponent(bmHM)}&hd=${bmHD}&h2g=1`
   ).then(r => r.json())
   if (bmGreg.error) throw new Error(bmGreg.error)
 
@@ -74,7 +74,7 @@ async function calcBarMitzvah(birthDateStr, dateLocale = 'es-ES') {
     const sgm = finalShabbat.getUTCMonth() + 1
     const sgd = finalShabbat.getUTCDate()
     const shabbatInfo = await fetch(
-      `https://www.hebcal.com/shabbat?cfg=json&gy=${sgy}&gm=${sgm}&gd=${sgd}&M=on`
+      `/api/hebcal?endpoint=shabbat&cfg=json&gy=${sgy}&gm=${sgm}&gd=${sgd}&M=on`
     ).then(r => r.json())
     parasha = shabbatInfo.items?.find(item => item.category === 'parashat')
     if (parasha) break

@@ -26,7 +26,7 @@ function processVerses(raw) {
 
 // Sefaria API: spaces → underscores, commas stay literal
 function refToUrl(ref) {
-  return `https://www.sefaria.org/api/texts/${ref.replace(/ /g, '_')}?commentary=0&context=0&pad=0&wrapLinks=0&transLangPref=en`
+  return `/api/sefaria?ref=${encodeURIComponent(ref)}`
 }
 
 async function fetchRef(ref) {
@@ -96,7 +96,7 @@ const rawIndexCache = new Map()
 
 async function fetchSiddurRaw(slug) {
   if (rawIndexCache.has(slug)) return rawIndexCache.get(slug)
-  const res = await fetch(`https://www.sefaria.org/api/v2/index/${slug}`)
+  const res = await fetch(`/api/sefaria?index=${encodeURIComponent(slug)}`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const data = await res.json()
   rawIndexCache.set(slug, data)
