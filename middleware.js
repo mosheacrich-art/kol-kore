@@ -8,7 +8,6 @@ export default function middleware(req) {
       { status: 403, headers: { 'Content-Type': 'text/html' } }
     )
   }
-  return new Response(null, { status: 200, headers: { 'x-middleware-next': '1' } })
 }
 
 export const config = {
