@@ -24,9 +24,6 @@ const StudentNotifications = lazy(() => import('./pages/student/Notifications'))
 const StudentHaftara       = lazy(() => import('./pages/student/HaftaraStudy'))
 const StudentTefila        = lazy(() => import('./pages/student/TefilaStudy'))
 
-const GuestLayout         = lazy(() => import('./pages/guest/Layout'))
-const GuestHaftara        = lazy(() => import('./pages/student/HaftaraStudy'))
-const GuestTefila         = lazy(() => import('./pages/student/TefilaStudy'))
 
 const TeacherLayout       = lazy(() => import('./pages/teacher/Layout'))
 const TeacherDashboard    = lazy(() => import('./pages/teacher/Dashboard'))
@@ -107,16 +104,7 @@ function AppRoutes() {
             <Route path="account" element={<AccountSettings />} />
           </Route>
 
-          <Route path="/guest" element={<GuestLayout />}>
-            <Route index element={<Navigate to="study" replace />} />
-            <Route path="study" element={<StudentStudy basePath="/guest/study" />} />
-            <Route path="study/:parashaId" element={<StudentStudy basePath="/guest/study" />} />
-            <Route path="haftara" element={<GuestHaftara basePath="/guest/haftara" />} />
-            <Route path="haftara/:haftaraId" element={<GuestHaftara basePath="/guest/haftara" />} />
-            <Route path="tefila" element={<GuestTefila basePath="/guest/tefila" />} />
-          </Route>
-
-          <Route path="/admin" element={<AdminPage />} />
+<Route path="/admin" element={<AdminPage />} />
 
           <Route path="/teacher" element={
             <ProtectedRoute role="teacher"><TeacherLayout /></ProtectedRoute>

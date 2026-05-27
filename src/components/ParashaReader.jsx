@@ -23,14 +23,13 @@ const MODE_TKEYS = ['mode_taamim', 'mode_nikkud', 'mode_plain', 'mode_split', 'm
 const MIN_FONT = 14
 const MAX_FONT = 56
 
-export default function ParashaReader({ parasha, guestMode = false, isSubscribed = true, initialAliyah = 0, availableModes = null }) {
+export default function ParashaReader({ parasha, initialAliyah = 0, availableModes = null }) {
   const { t } = useLang()
   const { isDark } = useTheme()
   const navigate = useNavigate()
   const ALL_MODES = MODE_IDS.map((id, i) => ({ id, heb: MODE_HEB[i], label: t(MODE_TKEYS[i]) }))
   const MODES = availableModes ? ALL_MODES.filter(m => availableModes.includes(m.id)) : ALL_MODES
   const [aliyahIdx, setAliyahIdx] = useState(initialAliyah)
-  const [showPaywall, setShowPaywall] = useState(false)
   const [mode, setMode] = useState(availableModes ? availableModes[0] : 'taamim')
   const [cursorEnabled, setCursorEnabled] = useState(true)
   const [fontSize, setFontSize] = useState(36)
@@ -464,7 +463,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
               </button>
             </div>
           <div className="flex-shrink-0 w-px h-5" style={{ background: 'var(--border)' }} />
-          {!guestMode && (
+          {(
             <button
               onClick={() => setCursorEnabled(c => !c)}
               title={cursorEnabled ? t('tooltip_cursor_off') : t('tooltip_cursor_on')}
@@ -515,7 +514,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
           )}
 
           {/* Study mode dropdown — only when synced audio exists */}
-          {!guestMode && audio?.wordTimestamps && (
+          {audio?.wordTimestamps && (
             <div className="flex-shrink-0">
               <button
                 ref={studyBtnRef}
@@ -574,7 +573,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
           )}
 
           {/* Audio source selector */}
-          {!guestMode && allAudioSources.length > 0 && (
+          {allAudioSources.length > 0 && (
             <div className="flex-shrink-0" onMouseDown={e => e.stopPropagation()}>
               <button
                 ref={audioSrcBtnRef}
@@ -642,27 +641,17 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
             </button>
             {parasha.aliyot.map((a, i) => {
               const aliyahAudio = get(parasha.id, i)
-              const locked = guestMode && i > 0
               return (
                 <button key={i}
-                  onClick={() => locked ? setShowPaywall(true) : setAliyahIdx(i)}
+                  onClick={() => setAliyahIdx(i)}
                   className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all relative"
                   style={{
                     background: aliyahIdx === i ? bookColor : 'var(--bg-card)',
-                    color: aliyahIdx === i ? '#fff' : locked ? 'var(--text-muted)' : 'var(--text-3)',
+                    color: aliyahIdx === i ? '#fff' : 'var(--text-3)',
                     border: `1px solid ${aliyahIdx === i ? 'transparent' : 'var(--border-subtle)'}`,
                   }}>
                   {a.n === 8 ? 'Maftir' : `${a.n}ª`}
-                  {locked && (
-                    <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center"
-                      style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)' }}>
-                      <svg width="7" height="7" viewBox="0 0 8 8" fill="none">
-                        <rect x="1.5" y="3.5" width="5" height="4" rx="0.8" stroke="var(--text-muted)" strokeWidth="1"/>
-                        <path d="M2.5 3.5V2.5a1.5 1.5 0 013 0v1" stroke="var(--text-muted)" strokeWidth="1" strokeLinecap="round"/>
-                      </svg>
-                    </span>
-                  )}
-                  {aliyahAudio && !guestMode && (
+                  {aliyahAudio && (
                     <span
                       title={aliyahAudio.wordTimestamps ? t('tooltip_audio_synced') : t('tooltip_audio_available')}
                       className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
@@ -677,7 +666,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
             })}
             <button
               disabled={aliyahIdx === parasha.aliyot.length - 1}
-              onClick={() => guestMode && aliyahIdx === 0 ? setShowPaywall(true) : setAliyahIdx(i => Math.min(parasha.aliyot.length - 1, i + 1))}
+              onClick={() => setAliyahIdx(i => Math.min(parasha.aliyot.length - 1, i + 1))}
               className="w-7 h-7 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
               style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -688,75 +677,12 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
         </div>
       </div>
 
-      {/* Paywall modal — subscription or guest */}
-      {showPaywall && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-          onClick={() => setShowPaywall(false)}>
-          <div className="w-full max-w-sm rounded-2xl p-6 flex flex-col gap-4"
-            style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)', boxShadow: '0 24px 60px rgba(0,0,0,0.5)' }}
-            onClick={e => e.stopPropagation()}>
-
-            <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto"
-              style={{ background: 'rgba(108,51,230,0.12)', border: '1px solid rgba(108,51,230,0.25)' }}>
-              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                <rect x="4" y="10" width="14" height="10" rx="2" stroke="#8b5cf6" strokeWidth="1.5"/>
-                <path d="M7 10V7a4 4 0 018 0v3" stroke="#8b5cf6" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </div>
-
-            {!isSubscribed && profile ? (
-              <>
-                <div className="text-center">
-                  <h3 className="text-base font-semibold mb-1" style={{ color: 'var(--text)' }}>
-                    {t('sub_locked_title')}
-                  </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-3)' }}>
-                    {t('sub_locked_msg')}
-                  </p>
-                </div>
-                <button onClick={() => navigate('/student/subscription')}
-                  className="w-full py-3 rounded-xl text-sm font-semibold transition-all"
-                  style={{ background: 'linear-gradient(135deg, #6c33e6, #8b5cf6)', color: '#fff', boxShadow: '0 4px 20px rgba(108,51,230,0.35)' }}>
-                  {t('sub_locked_cta')}
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="text-center">
-                  <h3 className="text-base font-semibold mb-1" style={{ color: 'var(--text)' }}>
-                    {t('guest_locked_title')}
-                  </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-3)' }}>
-                    {t('guest_locked_msg')}
-                  </p>
-                </div>
-                <button onClick={() => navigate('/login?tab=register')}
-                  className="w-full py-3 rounded-xl text-sm font-semibold transition-all"
-                  style={{ background: 'linear-gradient(135deg, #6c33e6, #8b5cf6)', color: '#fff', boxShadow: '0 4px 20px rgba(108,51,230,0.35)' }}>
-                  {t('guest_locked_cta')}
-                </button>
-                <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
-                  {t('guest_locked_already')}{' '}
-                  <button onClick={() => navigate('/login')}
-                    className="underline" style={{ color: '#8b5cf6' }}>
-                    {t('guest_locked_login')}
-                  </button>
-                </p>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Hidden file input — accessible from banner and audio bar */}
-      {!guestMode && (
-        <input ref={uploadInputRef} type="file" accept="audio/*,video/mp4,.mp4" className="hidden"
-          onChange={handleUploadFile} />
-      )}
+      <input ref={uploadInputRef} type="file" accept="audio/*,video/mp4,.mp4" className="hidden"
+        onChange={handleUploadFile} />
 
       {/* Homework banner */}
-      {pendingHomework && !guestMode && (
+      {pendingHomework && (
         <div className="flex-shrink-0 px-5 py-3 flex flex-col gap-2"
           style={{ background: 'rgba(108,51,230,0.1)', borderBottom: '1px solid rgba(108,51,230,0.2)' }}>
           <div className="flex items-center gap-3">
@@ -990,7 +916,7 @@ export default function ParashaReader({ parasha, guestMode = false, isSubscribed
       </div>
 
       {/* Audio bar */}
-      {!guestMode && <div className="flex-shrink-0 px-4 py-2.5 flex items-center justify-end gap-2"
+      {<div className="flex-shrink-0 px-4 py-2.5 flex items-center justify-end gap-2"
         style={{ borderTop: '1px solid var(--border-subtle)', background: 'var(--overlay)' }}>
 
         {recState === 'recording' ? (

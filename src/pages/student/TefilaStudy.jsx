@@ -29,9 +29,6 @@ export default function TefilaStudy({ basePath = '/student/tefila' }) {
   const q      = searchParams.get('q')  // global search pre-fill | null
 
   const isTeacher = profile?.role === 'teacher'
-  const isSubscribed = isTeacher || profile?.subscription_status === 'active'
-  const isGuest = basePath.startsWith('/guest')
-  const guestMode = isGuest || !isSubscribed
 
   const searchGlobal  = useCallback(query => setSearchParams({ n: 'ashkenaz', d: 'semana', q: query }), [setSearchParams])
   const selectNusach  = useCallback(n => setSearchParams({ n }), [setSearchParams])
@@ -47,7 +44,6 @@ export default function TefilaStudy({ basePath = '/student/tefila' }) {
     if (sefRef) return (
       <SiddurReaderView
         nusach={null} day={null} sefRef={sefRef}
-        guestMode={guestMode} isSubscribed={isSubscribed}
         isTeacher={isTeacher}
         onBack={() => setSearchParams({ n: 'imprescindibles' })}
         onNavigate={r => setSearchParams({ n: 'imprescindibles', r })}
@@ -60,7 +56,6 @@ export default function TefilaStudy({ basePath = '/student/tefila' }) {
   if (sefRef) return (
     <SiddurReaderView
       nusach={nusach} day={day} sefRef={sefRef}
-      guestMode={guestMode} isSubscribed={isSubscribed}
       isTeacher={isTeacher}
       onBack={backToList}
       onNavigate={r => setSearchParams({ n: nusach, d: day, r })}
@@ -643,7 +638,7 @@ function ImprescindiblesListView({ onSelectRef, onChangeNusach }) {
 
 // ── Siddur Reader View ────────────────────────────────────────────────────
 
-function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack, onNavigate, isTeacher }) {
+function SiddurReaderView({ nusach, day, sefRef, onBack, onNavigate, isTeacher }) {
   const { t, lang } = useLang()
   const { user } = useAuth()
   const isAdmin = user?.id === ADMIN_USER_ID
@@ -764,8 +759,6 @@ function SiddurReaderView({ nusach, day, sefRef, guestMode, isSubscribed, onBack
       <div className="flex-1 overflow-hidden">
         <ParashaReader
           parasha={parasha}
-          guestMode={guestMode}
-          isSubscribed={isSubscribed}
           initialAliyah={0}
           availableModes={hasTaamim ? ['taamim', 'nikkud', 'audio'] : ['nikkud', 'audio']}
         />

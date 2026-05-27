@@ -45,15 +45,11 @@ export default function StudentStudy({ basePath = '/student/study' }) {
         ? (ALL_PARASHOT.find(p => p.id === parashaId) || ALL_MOADIM.find(p => p.id === parashaId))
         : null
 
-  const isGuest = basePath.startsWith('/guest')
-  const isTeacher = profile?.role === 'teacher'
-  const isSubscribed = isTeacher || profile?.subscription_status === 'active'
-  const guestMode = isGuest || !isSubscribed
-  if (parasha) return <ReaderView parasha={parasha} basePath={basePath} guestMode={guestMode} isSubscribed={isSubscribed} />
-  return <ListView basePath={basePath} guestMode={guestMode} />
+  if (parasha) return <ReaderView parasha={parasha} basePath={basePath} />
+  return <ListView basePath={basePath} />
 }
 
-function ListView({ basePath, guestMode }) {
+function ListView({ basePath }) {
   const navigate = useNavigate()
   const { isDark } = useTheme()
   const { t } = useLang()
@@ -261,7 +257,7 @@ function ListView({ basePath, guestMode }) {
                           <div className="flex items-start justify-between gap-1 mb-1">
                             <span className="hebrew text-sm" style={{ color }}>{p.heb}</span>
                             <div className="flex items-center gap-1">
-                              {hasAudio && !guestMode && (
+                              {hasAudio && (
                                 <span title="Audio disponible">
                                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                                     <path d="M2 3.5v3L5 8V2L2 3.5z" fill="#6c33e6"/>
@@ -373,7 +369,7 @@ function ListView({ basePath, guestMode }) {
   )
 }
 
-function ReaderView({ parasha, basePath, guestMode, isSubscribed }) {
+function ReaderView({ parasha, basePath }) {
   const navigate = useNavigate()
   const { t } = useLang()
   const [searchParams] = useSearchParams()
@@ -421,7 +417,7 @@ function ReaderView({ parasha, basePath, guestMode, isSubscribed }) {
       </div>
 
       <div className="flex-1 overflow-hidden">
-        <ParashaReader parasha={parasha} guestMode={guestMode} isSubscribed={isSubscribed} initialAliyah={initialAliyah} availableModes={parasha.availableModes} />
+        <ParashaReader parasha={parasha} initialAliyah={initialAliyah} availableModes={parasha.availableModes} />
       </div>
     </div>
   )

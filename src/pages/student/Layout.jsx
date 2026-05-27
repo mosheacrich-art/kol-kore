@@ -50,9 +50,6 @@ export default function StudentLayout() {
   const go = (path) => { navigate(path); setSidebarOpen(false) }
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
 
-  const justPaid = searchParams.get('success') === '1'
-  const isSubscribed = profile?.subscription_status === 'active'
-
   return (
     <div className="flex h-screen" style={{ background: 'var(--bg)' }}>
 
@@ -131,22 +128,6 @@ export default function StudentLayout() {
           {contactOpen && <ContactModal onClose={() => setContactOpen(false)} />}
         </div>
 
-        {/* Warning banner for non-subscribed students */}
-        {profile && !isSubscribed && !justPaid && (
-          <div className="flex items-center gap-3 px-4 py-2.5 flex-shrink-0"
-            style={{ background: 'rgba(251,191,36,0.12)', borderBottom: '1px solid rgba(251,191,36,0.25)' }}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-              <path d="M8 2L14 13H2L8 2z" stroke="#f59e0b" strokeWidth="1.3" strokeLinejoin="round"/>
-              <path d="M8 6v3.5M8 11.5v.5" stroke="#f59e0b" strokeWidth="1.3" strokeLinecap="round"/>
-            </svg>
-            <p className="text-xs flex-1" style={{ color: '#f59e0b' }}>{t('not_subscribed_banner')}</p>
-            <button onClick={() => navigate('/student/subscription')}
-              className="text-xs font-semibold px-3 py-1 rounded-lg flex-shrink-0 transition-all"
-              style={{ background: 'rgba(251,191,36,0.15)', color: '#f59e0b', border: '1px solid rgba(251,191,36,0.3)' }}>
-              {t('not_subscribed_cta')}
-            </button>
-          </div>
-        )}
 
         <Outlet />
       </main>
@@ -179,7 +160,6 @@ export default function StudentLayout() {
 function SidebarContent({ profile, location, isDark, toggle, go, signOut, navigate, showClose, onClose, navItems, unreadEvals = 0 }) {
   const { t } = useLang()
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
-  const isSubscribed = profile?.subscription_status === 'active'
   return (
     <>
       <div className="px-3 mb-8 flex items-center justify-between">
@@ -208,7 +188,7 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
             {profile?.name ?? 'Alumno'}
           </div>
           <div className="text-xs" style={{ color: '#a78bfa' }}>
-            {isSubscribed ? t('subscribed_badge') : 'תַּלְמִיד'}
+            {'תַּלְמִיד'}
           </div>
         </div>
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0, color: 'rgba(139,92,246,0.5)' }}>

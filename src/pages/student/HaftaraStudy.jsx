@@ -18,13 +18,8 @@ export default function HaftaraStudy({ basePath = '/student/haftara' }) {
   const { profile } = useAuth()
   const haftara = haftaraId ? ALL_HAFTAROT.find(h => h.id === haftaraId) : null
 
-  const isTeacher = profile?.role === 'teacher'
-  const isSubscribed = isTeacher || profile?.subscription_status === 'active'
-  const isGuest = basePath.startsWith('/guest')
-  const guestMode = isGuest || !isSubscribed
-
-  if (haftara) return <ReaderView haftara={haftara} basePath={basePath} guestMode={guestMode} isSubscribed={isSubscribed} />
-  return <ListView basePath={basePath} guestMode={guestMode} />
+  if (haftara) return <ReaderView haftara={haftara} basePath={basePath} />
+  return <ListView basePath={basePath} />
 }
 
 function ListView({ basePath }) {
@@ -242,7 +237,7 @@ function ListView({ basePath }) {
   )
 }
 
-function ReaderView({ haftara, basePath, guestMode, isSubscribed }) {
+function ReaderView({ haftara, basePath }) {
   const navigate = useNavigate()
   const { t } = useLang()
   const { user } = useAuth()
@@ -296,7 +291,7 @@ function ReaderView({ haftara, basePath, guestMode, isSubscribed }) {
       </div>
 
       <div className="flex-1 overflow-hidden">
-        <ParashaReader parasha={haftara} guestMode={guestMode} isSubscribed={isSubscribed} initialAliyah={initialAliyah} availableModes={['nikkud', 'audio']} />
+        <ParashaReader parasha={haftara} initialAliyah={initialAliyah} availableModes={['nikkud', 'audio']} />
       </div>
 
       {adminUploadOpen && (
