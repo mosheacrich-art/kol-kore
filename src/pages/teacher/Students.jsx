@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { PARASHOT } from '../../data/parashot'
+import { ALL_MOADIM, MOADIM_LIST } from '../../data/moadim'
 import { useLang } from '../../context/LangContext'
 
 const COLORS = ['#6c33e6', '#f9b800', '#2dd4bf', '#f87171', '#a78bfa']
@@ -23,6 +24,39 @@ function findParasha(parashaId) {
     p.name.toLowerCase().replace(/[\s-]/g, '') === lower ||
     parashaId.toLowerCase() === p.id
   ) || null
+}
+
+function resolveParasha(idOrName) {
+  if (!idOrName) return null
+  const lower = idOrName.toLowerCase().replace(/[\s-]/g, '')
+  return PARASHOT.find(p =>
+    p.id === idOrName ||
+    p.name.toLowerCase() === idOrName.toLowerCase() ||
+    p.id.replace(/-/g, '') === lower
+  ) || ALL_MOADIM.find(m => m.id === idOrName || m.name === idOrName) || null
+}
+
+function displayParashaName(idOrName) {
+  return resolveParasha(idOrName)?.name || idOrName || ''
+}
+
+function detectSpecialBirthday(hm, hd) {
+  if (!hm || !hd) return null
+  // Rosh Chodesh: 1st of any month except Tishrei (= Rosh Hashana)
+  if (hd === 1 && hm !== 'Tishrei') {
+    return { type: 'rosh_jodesh', label: 'Rosh Jodesh', suggestedId: 'rosh-jodesh-semana' }
+  }
+  // Hol HaMoed Pesach (diaspora: Nisan 17-20)
+  const pesajMap = { 17: 'pesaj-jol-1', 18: 'pesaj-jol-2', 19: 'pesaj-jol-3', 20: 'pesaj-jol-4' }
+  if (hm === 'Nisan' && pesajMap[hd]) {
+    return { type: 'hol_hamoed', label: 'Hol HaMoed Pesaj', suggestedId: pesajMap[hd] }
+  }
+  // Hol HaMoed Sukkot (diaspora: Tishrei 17-20, 21=Hoshana Raba)
+  const sucotMap = { 17: 'sucot-jol-1', 18: 'sucot-jol-2', 19: 'sucot-jol-3', 21: 'sucot-hoshana-raba' }
+  if (hm === 'Tishrei' && sucotMap[hd]) {
+    return { type: 'hol_hamoed', label: 'Hol HaMoed Sucot', suggestedId: sucotMap[hd] }
+  }
+  return null
 }
 
 // Hebrew year is a leap year if ((7*year)+1) % 19 < 7
@@ -90,6 +124,8 @@ async function calcBarMitzvah(birthDateStr, dateLocale = 'es-ES') {
   return {
     birthHebrewScript: birthHeb.hebrew,
     birthHebrewLatin: `${birthHeb.hd} ${birthHeb.hm} ${birthHeb.hy}`,
+    birthHM: birthHeb.hm,
+    birthHD: birthHeb.hd,
     bmHebrewLatin: `${bmHD} ${bmHM} ${bmHY}`,
     bmGregDisplay: fmt(new Date(Date.UTC(bmGreg.gy, bmGreg.gm - 1, bmGreg.gd))),
     bmGregISO: iso(new Date(Date.UTC(bmGreg.gy, bmGreg.gm - 1, bmGreg.gd))),
@@ -106,15 +142,21 @@ function BarMitzvahCalc({ student, onAssign, onClose, t }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [specialDay, setSpecialDay] = useState(null)
+  const [includeExtra, setIncludeExtra] = useState(false)
 
   const calculate = async () => {
     if (!birthDate) return
     setLoading(true)
     setError(null)
     setResult(null)
+    setSpecialDay(null)
     try {
       const res = await calcBarMitzvah(birthDate, t('date_locale'))
       setResult(res)
+      const sp = detectSpecialBirthday(res.birthHM, res.birthHD)
+      setSpecialDay(sp)
+      setIncludeExtra(!!sp)
     } catch {
       setError(t('bm_error'))
     }
@@ -124,11 +166,13 @@ function BarMitzvahCalc({ student, onAssign, onClose, t }) {
   const assign = async () => {
     if (!result) return
     setSaving(true)
+    const extra = includeExtra && specialDay ? [specialDay.suggestedId] : []
     await supabase.from('profiles').update({
       bar_mitzvah: result.bmGregISO,
       parasha_id: result.parashaName,
+      extra_parasha_ids: extra.length ? extra : null,
     }).eq('id', student.id)
-    onAssign({ bar_mitzvah: result.bmGregISO, parasha_id: result.parashaName })
+    onAssign({ bar_mitzvah: result.bmGregISO, parasha_id: result.parashaName, extra_parasha_ids: extra.length ? extra : null })
     setSaving(false)
     onClose()
   }
@@ -233,6 +277,34 @@ function BarMitzvahCalc({ student, onAssign, onClose, t }) {
                 </div>
               )}
             </div>
+
+            {/* Special birthday banner */}
+            {specialDay && (
+              <div className="rounded-xl p-3.5"
+                style={{ background: 'rgba(249,184,0,0.06)', border: '1px solid rgba(249,184,0,0.28)' }}>
+                <p className="text-xs font-semibold mb-1" style={{ color: '#d97706' }}>
+                  ⚠️ Nació en {specialDay.label}
+                </p>
+                <p className="text-xs mb-2.5" style={{ color: 'var(--text-3)' }}>
+                  Se recomienda estudiar también la lectura especial de ese día.
+                </p>
+                <button type="button" onClick={() => setIncludeExtra(v => !v)}
+                  className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-lg"
+                  style={{ background: includeExtra ? 'rgba(249,184,0,0.1)' : 'var(--bg-card)', border: `1px solid ${includeExtra ? 'rgba(249,184,0,0.3)' : 'var(--border)'}` }}>
+                  <div className="w-4 h-4 rounded border flex items-center justify-center flex-shrink-0"
+                    style={{ borderColor: includeExtra ? '#d97706' : 'var(--border)', background: includeExtra ? '#d97706' : 'transparent' }}>
+                    {includeExtra && (
+                      <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                        <path d="M1.5 4l2 2L6.5 2" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </div>
+                  <span className="text-xs" style={{ color: includeExtra ? '#d97706' : 'var(--text-2)' }}>
+                    Incluir también: {resolveParasha(specialDay.suggestedId)?.name || specialDay.label}
+                  </span>
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -259,54 +331,176 @@ function AssignParashaModal({ student, onAssign, onClose, t }) {
   const [search, setSearch] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const assign = async (parasha) => {
+  const currentIds = [student.parasha_id, ...(student.extra_parasha_ids || [])]
+    .filter(Boolean)
+    .map(v => resolveParasha(v)?.id || v)
+  const [selectedIds, setSelectedIds] = useState(new Set(currentIds))
+
+  const toggle = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  const assign = async () => {
     setSaving(true)
-    await supabase.from('profiles').update({ parasha_id: parasha.name }).eq('id', student.id)
-    onAssign({ parasha_id: parasha.name })
+    const ids = [...selectedIds]
+    const [first, ...rest] = ids
+    await supabase.from('profiles').update({
+      parasha_id: first || null,
+      extra_parasha_ids: rest.length ? rest : null,
+    }).eq('id', student.id)
+    onAssign({ parasha_id: first || null, extra_parasha_ids: rest.length ? rest : null })
     setSaving(false)
     onClose()
   }
+
+  const s = search.toLowerCase()
+  const filteredParashot = s
+    ? PARASHOT.filter(p => p.name.toLowerCase().includes(s) || p.heb.includes(search))
+    : PARASHOT
+  const filteredMoadim = s
+    ? ALL_MOADIM.filter(m => m.name.toLowerCase().includes(s) || m.heb.includes(search))
+    : ALL_MOADIM
+
+  const moadimByChag = MOADIM_LIST.reduce((acc, chag) => {
+    const items = filteredMoadim.filter(m => m.chag === chag.id)
+    if (items.length) acc.push({ chag, items })
+    return acc
+  }, [])
+
+  const checkIcon = (color = 'white') => (
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+      <path d="M1.5 4l2 2L6.5 2" stroke={color} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(10px)' }}>
       <div className="w-full max-w-md rounded-2xl flex flex-col"
-        style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)', maxHeight: '80vh' }}>
+        style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)', maxHeight: '85vh' }}>
+
+        {/* Header */}
         <div className="flex items-start justify-between p-5 pb-3">
           <div>
-            <p className="text-xs mb-0.5" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה · Asignar</p>
-            <h2 className="text-base font-semibold" style={{ color: 'var(--text)' }}>Perashá de {student.name?.split(' ')[0]}</h2>
+            <p className="text-xs mb-0.5" style={{ color: 'var(--text-gold)' }}>פָּרָשִׁיּוֹת · Asignar</p>
+            <h2 className="text-base font-semibold" style={{ color: 'var(--text)' }}>Perashiot de {student.name?.split(' ')[0]}</h2>
           </div>
           <button onClick={onClose}
             className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
             style={{ background: 'var(--bg-card)', color: 'var(--text-3)' }}>✕</button>
         </div>
+
+        {/* Search */}
         <div className="px-5 pb-3">
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder={t('search_parasha_placeholder')}
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Buscar perashá o lectura especial…"
             autoFocus
             className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }}
-          />
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }} />
         </div>
-        <div className="overflow-y-auto flex-1 px-3 pb-4">
-          {PARASHOT.filter(p =>
-            !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.heb.includes(search)
-          ).map(p => (
-            <button key={p.id} onClick={() => assign(p)} disabled={saving}
-              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl mb-1 text-left transition-all"
-              style={{ background: student.parasha_id === p.name ? 'rgba(249,184,0,0.12)' : 'transparent', border: student.parasha_id === p.name ? '1px solid rgba(249,184,0,0.3)' : '1px solid transparent' }}
-              onMouseEnter={e => { if (student.parasha_id !== p.name) e.currentTarget.style.background = 'var(--bg-card)' }}
-              onMouseLeave={e => { if (student.parasha_id !== p.name) e.currentTarget.style.background = 'transparent' }}>
-              <div className="flex items-center gap-3">
-                <span className="text-xs w-5 text-right flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{p.num}</span>
-                <span className="text-sm" style={{ color: 'var(--text-2)' }}>{p.name}</span>
+
+        {/* List */}
+        <div className="overflow-y-auto flex-1 px-3 pb-2">
+
+          {/* Parashot */}
+          {filteredParashot.length > 0 && (
+            <>
+              <div className="px-2 py-1.5 mb-1">
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Torá</span>
               </div>
-              <span className="hebrew text-sm" style={{ color: student.parasha_id === p.name ? '#d97706' : 'var(--text-3)' }}>{p.heb}</span>
+              {filteredParashot.map(p => {
+                const sel = selectedIds.has(p.id)
+                return (
+                  <button key={p.id} onClick={() => toggle(p.id)} disabled={saving}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5 text-left transition-all"
+                    style={{ background: sel ? 'rgba(249,184,0,0.1)' : 'transparent', border: `1px solid ${sel ? 'rgba(249,184,0,0.3)' : 'transparent'}` }}
+                    onMouseEnter={e => { if (!sel) e.currentTarget.style.background = 'var(--bg-card)' }}
+                    onMouseLeave={e => { if (!sel) e.currentTarget.style.background = 'transparent' }}>
+                    <div className="w-4 h-4 rounded border flex items-center justify-center flex-shrink-0"
+                      style={{ borderColor: sel ? '#d97706' : 'var(--border-subtle)', background: sel ? '#d97706' : 'transparent' }}>
+                      {sel && checkIcon()}
+                    </div>
+                    <span className="text-xs w-5 text-right flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{p.num}</span>
+                    <span className="text-sm flex-1" style={{ color: 'var(--text-2)' }}>{p.name}</span>
+                    <span className="hebrew text-sm" style={{ color: sel ? '#d97706' : 'var(--text-3)' }}>{p.heb}</span>
+                  </button>
+                )
+              })}
+            </>
+          )}
+
+          {/* Moadim */}
+          {moadimByChag.length > 0 && (
+            <>
+              <div className="px-2 py-1.5 mt-2 mb-1">
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Lecturas especiales</span>
+              </div>
+              {moadimByChag.map(({ chag, items }) => (
+                <div key={chag.id} className="mb-2">
+                  <div className="px-3 py-1 flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: chag.color }} />
+                    <span className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>{chag.name}</span>
+                  </div>
+                  {items.map(m => {
+                    const sel = selectedIds.has(m.id)
+                    return (
+                      <button key={m.id} onClick={() => toggle(m.id)} disabled={saving}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5 text-left transition-all"
+                        style={{ background: sel ? `${chag.color}18` : 'transparent', border: `1px solid ${sel ? chag.color + '40' : 'transparent'}` }}
+                        onMouseEnter={e => { if (!sel) e.currentTarget.style.background = 'var(--bg-card)' }}
+                        onMouseLeave={e => { if (!sel) e.currentTarget.style.background = 'transparent' }}>
+                        <div className="w-4 h-4 rounded border flex items-center justify-center flex-shrink-0"
+                          style={{ borderColor: sel ? chag.color : 'var(--border-subtle)', background: sel ? chag.color : 'transparent' }}>
+                          {sel && checkIcon()}
+                        </div>
+                        <span className="text-sm flex-1" style={{ color: 'var(--text-2)' }}>{m.name}</span>
+                        <span className="hebrew text-sm" style={{ color: sel ? chag.color : 'var(--text-3)' }}>{m.heb}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              ))}
+            </>
+          )}
+
+          {filteredParashot.length === 0 && filteredMoadim.length === 0 && (
+            <p className="text-center text-xs py-8" style={{ color: 'var(--text-muted)' }}>Sin resultados</p>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 pt-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+          {selectedIds.size > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {[...selectedIds].map(id => (
+                <span key={id} className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
+                  style={{ background: 'rgba(249,184,0,0.1)', color: '#d97706', border: '1px solid rgba(249,184,0,0.25)' }}>
+                  {displayParashaName(id)}
+                  <button type="button" onClick={() => toggle(id)}
+                    className="opacity-60 hover:opacity-100 ml-0.5">✕</button>
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <button onClick={onClose}
+              className="flex-1 py-2.5 rounded-xl text-xs font-medium"
+              style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+              Cancelar
             </button>
-          ))}
+            <button onClick={assign} disabled={saving}
+              className="flex-1 btn-gold py-2.5 rounded-xl text-xs font-semibold"
+              style={{ opacity: saving ? 0.7 : 1 }}>
+              {saving ? 'Guardando…'
+                : selectedIds.size > 1 ? `Asignar ${selectedIds.size} perashiot`
+                : selectedIds.size === 1 ? 'Asignar perashá'
+                : 'Quitar asignación'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -545,10 +739,17 @@ export default function TeacherStudents() {
                         <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>{s.name}</span>
                         <span className="text-xs" style={{ color }}>{s.streak || 0}🔥</span>
                       </div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-xs" style={{ color: 'var(--text-3)' }}>
-                          {s.parasha_id || t('no_parasha')}
-                        </span>
+                      <div className="flex items-center gap-2 mb-3 flex-wrap">
+                        {(() => {
+                          const all = [s.parasha_id, ...(s.extra_parasha_ids || [])].filter(Boolean)
+                          if (!all.length) return <span className="text-xs" style={{ color: 'var(--text-3)' }}>{t('no_parasha')}</span>
+                          return all.map((id, idx) => (
+                            <span key={id} className="text-xs" style={{ color: idx === 0 ? 'var(--text-3)' : 'var(--text-muted)' }}>
+                              {idx > 0 && <span style={{ color: 'var(--border)' }}> + </span>}
+                              {displayParashaName(id)}
+                            </span>
+                          ))
+                        })()}
                         {!s.parasha_id && (
                           <span className="text-xs px-1.5 py-0.5 rounded-md"
                             style={{ background: 'rgba(249,184,0,0.1)', color: '#d97706', border: '1px solid rgba(249,184,0,0.2)' }}>
@@ -589,7 +790,7 @@ export default function TeacherStudents() {
                       <div>
                         <h2 className="text-lg font-medium" style={{ color: 'var(--text)' }}>{student.name}</h2>
                         <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
-                          {student.parasha_id || t('no_parasha')}
+                          {[student.parasha_id, ...(student.extra_parasha_ids || [])].filter(Boolean).map(displayParashaName).join(' · ') || t('no_parasha')}
                         </p>
                       </div>
                     </div>
@@ -617,7 +818,7 @@ export default function TeacherStudents() {
                   <div className="mb-6">
                     {[
                       { label: t('bar_mitzvah'), value: student.bar_mitzvah ? new Date(student.bar_mitzvah).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) : '—' },
-                      { label: t('my_parasha'), value: student.parasha_id || '—' },
+                      { label: t('my_parasha'), value: [student.parasha_id, ...(student.extra_parasha_ids || [])].filter(Boolean).map(displayParashaName).join(' + ') || '—' },
                       { label: t('next_class'), value: student.next_class || '—' },
                     ].map(item => (
                       <div key={item.label} className="flex justify-between items-center py-2"
