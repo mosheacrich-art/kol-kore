@@ -2,8 +2,9 @@ import { useState, useEffect, useMemo } from 'react'
 import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
-import { PARASHOT } from '../../data/parashot'
+import { PARASHOT, COMBINED_PARASHOT, ALL_PARASHOT } from '../../data/parashot'
 import { ALL_HAFTAROT } from '../../data/haftarot'
+import { ALL_MOADIM, MOADIM_LIST } from '../../data/moadim'
 import { useLang } from '../../context/LangContext'
 import { useAliyahText } from '../../hooks/useSefaria'
 import { processVerse, splitWords } from '../../utils/hebrew'
@@ -15,6 +16,21 @@ const statusStyle = {
 }
 
 const ALIYAH_LABELS = ['1ª Aliyá', '2ª Aliyá', '3ª Aliyá', '4ª Aliyá', '5ª Aliyá', '6ª Aliyá', '7ª Aliyá', 'Maftir']
+
+const IMPRESCINDIBLES = [
+  { id: 'hodu',       name: 'Hodu',       heb: 'הוֹדוּ' },
+  { id: 'ashrei',     name: 'Ashrei',     heb: 'אַשְׁרֵי' },
+  { id: 'halleluyah', name: 'Halleluyah', heb: 'הַלְלוּיָהּ' },
+  { id: 'az-yashir',  name: 'Az Yashir',  heb: 'אָז יָשִׁיר' },
+  { id: 'veahavta',   name: "Ve'ahavta",  heb: 'וְאָהַבְתָּ' },
+  { id: 'vehaya',     name: 'Vehaya',     heb: 'וְהָיָה' },
+  { id: 'vayomer',    name: 'Vayomer',    heb: 'וַיֹּאמֶר' },
+]
+
+const HAFTARA_CHAG_LABELS = {
+  'rosh-hashana': 'Rosh Hashaná', 'yom-kipur': 'Yom Kipur',
+  'sucot': 'Sucot', 'pesaj': 'Pesaj', 'shavuot': 'Shavuot',
+}
 
 function WordRangePicker({ aliyahRef, onConfirm, onClose }) {
   const { verses, loading } = useAliyahText(aliyahRef, true, null)
@@ -152,7 +168,7 @@ export default function TeacherHomework() {
       })
   }, [profile])
 
-  const selectedParasha = PARASHOT.find(p => p.id === form.parasha_id)
+  const selectedParasha = ALL_PARASHOT.find(p => p.id === form.parasha_id) || ALL_MOADIM.find(p => p.id === form.parasha_id)
 
   const sendHomework = async () => {
     if (!form.task) return
@@ -251,7 +267,7 @@ export default function TeacherHomework() {
                     { key: 'tefila',  label: t('nav_tefila'),  color: '#8b5cf6' },
                   ].map(opt => (
                     <button key={opt.key} type="button"
-                      onClick={() => setForm(f => ({ ...f, type: opt.key, parasha_id: '', aliyah_idx: 0, haftara_id: '', require_audio: false, word_start: null, word_end: null }))}
+                      onClick={() => setForm(f => ({ ...f, type: opt.key, parasha_id: '', aliyah_idx: 0, haftara_id: '', require_audio: false, word_start: null, word_end: null, subject: '' }))}
                       className="py-2 rounded-xl text-xs font-medium transition-all"
                       style={{
                         background: form.type === opt.key ? `${opt.color}18` : 'var(--bg-card)',
@@ -271,12 +287,30 @@ export default function TeacherHomework() {
                     {t('parasha_optional')}
                   </label>
                   <select value={form.parasha_id}
-                    onChange={e => setForm(f => ({ ...f, parasha_id: e.target.value, aliyah_idx: 0 }))}
+                    onChange={e => setForm(f => ({ ...f, parasha_id: e.target.value, aliyah_idx: 0, word_start: null, word_end: null }))}
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
                     <option value="">{t('no_parasha_opt')}</option>
-                    {PARASHOT.map(p => (
-                      <option key={p.id} value={p.id}>{p.name} · {p.heb}</option>
-                    ))}
+                    <optgroup label="── Parashot semanales ──">
+                      {PARASHOT.map(p => (
+                        <option key={p.id} value={p.id}>{p.name} · {p.heb}</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="── Parashot dobles ──">
+                      {COMBINED_PARASHOT.map(p => (
+                        <option key={p.id} value={p.id}>{p.name} · {p.heb}</option>
+                      ))}
+                    </optgroup>
+                    {MOADIM_LIST.map(m => {
+                      const items = ALL_MOADIM.filter(p => p.chag === m.id)
+                      if (!items.length) return null
+                      return (
+                        <optgroup key={m.id} label={`── ${m.name} · ${m.heb} ──`}>
+                          {items.map(p => (
+                            <option key={p.id} value={p.id}>{p.name} · {p.heb}</option>
+                          ))}
+                        </optgroup>
+                      )
+                    })}
                   </select>
                 </div>
               )}
@@ -338,9 +372,29 @@ export default function TeacherHomework() {
                     onChange={e => setForm(f => ({ ...f, haftara_id: e.target.value }))}
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
                     <option value="">{t('no_haftara_opt')}</option>
-                    {ALL_HAFTAROT.map(h => (
-                      <option key={h.id} value={h.id}>{h.name}</option>
-                    ))}
+                    <optgroup label="── Haftarot semanales ──">
+                      {ALL_HAFTAROT.filter(h => h.parasha).map(h => (
+                        <option key={h.id} value={h.id}>{h.name} · {h.heb}</option>
+                      ))}
+                    </optgroup>
+                    {Object.entries(HAFTARA_CHAG_LABELS).map(([chag, label]) => {
+                      const items = ALL_HAFTAROT.filter(h => h.chag === chag)
+                      if (!items.length) return null
+                      return (
+                        <optgroup key={chag} label={`── ${label} ──`}>
+                          {items.map(h => (
+                            <option key={h.id} value={h.id}>{h.name} · {h.heb}</option>
+                          ))}
+                        </optgroup>
+                      )
+                    })}
+                    {ALL_HAFTAROT.filter(h => h.chag && !HAFTARA_CHAG_LABELS[h.chag]).length > 0 && (
+                      <optgroup label="── Especiales ──">
+                        {ALL_HAFTAROT.filter(h => h.chag && !HAFTARA_CHAG_LABELS[h.chag]).map(h => (
+                          <option key={h.id} value={h.id}>{h.name} · {h.heb}</option>
+                        ))}
+                      </optgroup>
+                    )}
                   </select>
                 </div>
               )}
@@ -385,12 +439,26 @@ export default function TeacherHomework() {
               )}
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('subject_label')}</label>
-                  <input value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
-                    placeholder="Ej: Trop"
-                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
-                </div>
+                {form.type === 'tefila' ? (
+                  <div>
+                    <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>Sección</label>
+                    <select value={form.subject}
+                      onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
+                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
+                      <option value="">General</option>
+                      {IMPRESCINDIBLES.map(tf => (
+                        <option key={tf.id} value={`${tf.name} · ${tf.heb}`}>{tf.name} · {tf.heb}</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('subject_label')}</label>
+                    <input value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
+                      placeholder="Ej: Trop"
+                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
+                  </div>
+                )}
                 <div>
                   <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('due_label')}</label>
                   <input type="date" value={form.due} onChange={e => setForm(f => ({ ...f, due: e.target.value }))}
