@@ -46,7 +46,8 @@ export default function StudentNotifications() {
       const unreadReplies = (replyRes.data || []).filter(r => !r.read).map(r => r.id)
       const allUnread = [...unreadEvals, ...unreadReplies]
       if (allUnread.length) {
-        supabase.from('notifications').update({ read: true }).in('id', allUnread)
+        supabase.from('notifications').update({ read: true })
+          .in('id', allUnread).eq('student_id', profile.id)
       }
     })
   }, [profile?.id])

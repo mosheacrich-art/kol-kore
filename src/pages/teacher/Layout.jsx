@@ -16,7 +16,7 @@ const NAV_KEYS = [
   { path: '/teacher/haftara',        key: 'nav_haftara',        shortKey: 'nav_haftara',   heb: 'הַפְטָרָה' },
   { path: '/teacher/tefila',         key: 'nav_tefila',         shortKey: 'nav_tefila',    heb: 'תְּפִלָּה' },
   { path: '/teacher/tikun',          key: 'nav_tikun_teacher',  shortKey: 'nav_tikun_teacher', heb: 'תִּקּוּן' },
-  { path: '/teacher/notifications',  key: 'nav_notifications',  shortKey: 'nav_notifications', heb: 'הוֹדָעוֹת', badge: true, hidden: true },
+  { path: '/teacher/notifications',  key: 'nav_notifications',  shortKey: 'nav_notifications', heb: 'הוֹדָעוֹת', badge: true },
   { path: '/teacher/account',        key: 'nav_account',        shortKey: 'nav_account',   heb: 'חֶשְׁבּוֹן' },
 ]
 
@@ -40,15 +40,30 @@ export default function TeacherLayout() {
 
   useEffect(() => {
     if (!profile?.id) return
-    Promise.all([
-      supabase.from('notifications').select('id', { count: 'exact', head: true })
-        .eq('teacher_id', profile.id).eq('read', false),
-      supabase.from('contact_messages').select('id', { count: 'exact', head: true })
-        .eq('read', false),
-    ]).then(([notifRes, contactRes]) => {
-      setUnreadCount((notifRes.count || 0) + (contactRes.count || 0))
-    })
+    supabase.from('notifications').select('id', { count: 'exact', head: true })
+      .eq('teacher_id', profile.id).eq('read', false)
+      .then(({ count }) => setUnreadCount(count || 0))
   }, [profile?.id, location.pathname])
+
+  // Real-time badge update when a new notification arrives
+  useEffect(() => {
+    if (!profile?.id) return
+    const ch = supabase.channel(`teacher-badge-${profile.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'notifications',
+        filter: `teacher_id=eq.${profile.id}`,
+      }, () => setUnreadCount(n => n + 1))
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'notifications',
+        filter: `teacher_id=eq.${profile.id}`,
+      }, () => {
+        supabase.from('notifications').select('id', { count: 'exact', head: true })
+          .eq('teacher_id', profile.id).eq('read', false)
+          .then(({ count }) => setUnreadCount(count || 0))
+      })
+      .subscribe()
+    return () => supabase.removeChannel(ch)
+  }, [profile?.id])
 
   const go = (path) => { navigate(path); setSidebarOpen(false); setMoreOpen(false) }
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')

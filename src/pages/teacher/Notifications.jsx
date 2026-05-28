@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
@@ -23,6 +23,8 @@ export default function TeacherNotifications() {
   const [loading, setLoading] = useState(true)
   const [hoverItem, setHoverItem] = useState(null)
   const [deleting, setDeleting] = useState(null)
+  const [newArrivedId, setNewArrivedId] = useState(null)
+  const newArrivedTimer = useRef(null)
 
   // Contact messages state
   const [contacts, setContacts] = useState([])
@@ -45,6 +47,23 @@ export default function TeacherNotifications() {
         setLoading(false)
       })
   }, [profile])
+
+  // Real-time: incoming audio submissions from students
+  useEffect(() => {
+    if (!profile?.id) return
+    const ch = supabase.channel(`teacher-notifs-${profile.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'notifications',
+        filter: `teacher_id=eq.${profile.id}`,
+      }, ({ new: row }) => {
+        setNotifs(prev => [row, ...prev])
+        clearTimeout(newArrivedTimer.current)
+        setNewArrivedId(row.id)
+        newArrivedTimer.current = setTimeout(() => setNewArrivedId(null), 4000)
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(ch); clearTimeout(newArrivedTimer.current) }
+  }, [profile?.id])
 
   useEffect(() => {
     supabase
@@ -340,9 +359,12 @@ export default function TeacherNotifications() {
               onMouseLeave={() => setHoverItem(null)}
               className="relative group flex items-start gap-4 p-4 rounded-2xl transition-all duration-200"
               style={{
-                background: n.read ? 'var(--bg-card)' : 'rgba(108,51,230,0.07)',
-                border: `1px solid ${n.read ? 'var(--border-subtle)' : 'rgba(108,51,230,0.2)'}`,
+                background: newArrivedId === n.id
+                  ? 'rgba(108,51,230,0.14)'
+                  : n.read ? 'var(--bg-card)' : 'rgba(108,51,230,0.07)',
+                border: `1px solid ${newArrivedId === n.id ? 'rgba(108,51,230,0.4)' : n.read ? 'var(--border-subtle)' : 'rgba(108,51,230,0.2)'}`,
                 cursor: n.read ? 'default' : 'pointer',
+                boxShadow: newArrivedId === n.id ? '0 0 0 2px rgba(108,51,230,0.15)' : 'none',
               }}>
 
               {/* Delete button */}
