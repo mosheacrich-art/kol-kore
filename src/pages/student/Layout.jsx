@@ -16,7 +16,7 @@ const NAV_KEYS = [
   { path: '/student/haftara',        key: 'nav_haftara',        shortKey: 'nav_haftara',        heb: 'הַפְטָרָה',   icon: HaftaraIcon },
   { path: '/student/tefila',         key: 'nav_tefila',         shortKey: 'nav_tefila',         heb: 'תְּפִלָּה',    icon: TefilaIcon },
   { path: '/student/tikun',          key: 'nav_tikun',          shortKey: 'nav_tikun',          heb: 'תִּקּוּן',    icon: TikunIcon },
-  { path: '/student/notifications',  key: 'nav_notifications',  shortKey: 'nav_notifications',  heb: 'הֲעָרוֹת',   icon: NotifIcon, badge: true, hidden: true },
+  { path: '/student/notifications',  key: 'nav_notifications',  shortKey: 'nav_notifications',  heb: 'הֲעָרוֹת',   icon: NotifIcon, badge: true },
   { path: '/student/subscription',   key: 'nav_subscription',   shortKey: 'nav_subscription',   heb: 'הַרְשָׁמָה',  icon: SubscriptionIcon },
   { path: '/student/account',        key: 'nav_account',        shortKey: 'nav_account',        heb: 'חֶשְׁבּוֹן',   icon: AccountIcon },
 ]
@@ -40,10 +40,29 @@ export default function StudentLayout() {
       .from('notifications')
       .select('id', { count: 'exact', head: true })
       .eq('student_id', profile.id)
-      .eq('type', 'evaluation')
       .eq('read', false)
       .then(({ count }) => setUnreadEvals(count ?? 0))
   }, [profile?.id, location.pathname])
+
+  // Real-time badge update when teacher sends a correction
+  useEffect(() => {
+    if (!profile?.id) return
+    const ch = supabase.channel(`student-badge-${profile.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'notifications',
+        filter: `student_id=eq.${profile.id}`,
+      }, () => setUnreadEvals(n => n + 1))
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'notifications',
+        filter: `student_id=eq.${profile.id}`,
+      }, () => {
+        supabase.from('notifications').select('id', { count: 'exact', head: true })
+          .eq('student_id', profile.id).eq('read', false)
+          .then(({ count }) => setUnreadEvals(count ?? 0))
+      })
+      .subscribe()
+    return () => supabase.removeChannel(ch)
+  }, [profile?.id])
 
   const navItems = NAV_KEYS.filter(n => !n.hidden).map(n => ({ ...n, label: t(n.key) ?? n.heb, shortLabel: t(n.shortKey) ?? n.heb }))
 
