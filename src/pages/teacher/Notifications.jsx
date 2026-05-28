@@ -26,14 +26,6 @@ export default function TeacherNotifications() {
   const [newArrivedId, setNewArrivedId] = useState(null)
   const newArrivedTimer = useRef(null)
 
-  // Contact messages state
-  const [contacts, setContacts] = useState([])
-  const [contactsLoading, setContactsLoading] = useState(true)
-  const [replyingTo, setReplyingTo] = useState(null) // contact message id
-  const [replyText, setReplyText] = useState('')
-  const [sendingReply, setSendingReply] = useState(false)
-  const [hoverContact, setHoverContact] = useState(null)
-  const [deletingContact, setDeletingContact] = useState(null)
 
   useEffect(() => {
     if (!profile) return
@@ -65,16 +57,6 @@ export default function TeacherNotifications() {
     return () => { supabase.removeChannel(ch); clearTimeout(newArrivedTimer.current) }
   }, [profile?.id])
 
-  useEffect(() => {
-    supabase
-      .from('contact_messages')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .then(({ data }) => {
-        setContacts(data || [])
-        setContactsLoading(false)
-      })
-  }, [])
 
   const markRead = async (id) => {
     await supabase.from('notifications').update({ read: true })
@@ -97,39 +79,7 @@ export default function TeacherNotifications() {
     setDeleting(null)
   }
 
-  const markContactRead = async (id) => {
-    await supabase.from('contact_messages').update({ read: true }).eq('id', id)
-    setContacts(prev => prev.map(c => c.id === id ? { ...c, read: true } : c))
-  }
-
-  const deleteContact = async (id) => {
-    setDeletingContact(id)
-    await supabase.from('contact_messages').delete().eq('id', id)
-    setContacts(prev => prev.filter(c => c.id !== id))
-    setDeletingContact(null)
-  }
-
-  const sendReply = async (contact) => {
-    if (!replyText.trim() || !contact.user_id) return
-    setSendingReply(true)
-    await supabase.from('notifications').insert({
-      teacher_id: profile.id,
-      student_id: contact.user_id,
-      student_name: contact.name,
-      type: 'contact_reply',
-      message: replyText.trim(),
-      read: false,
-    })
-    // Mark contact as read after replying
-    await supabase.from('contact_messages').update({ read: true }).eq('id', contact.id)
-    setContacts(prev => prev.map(c => c.id === contact.id ? { ...c, read: true } : c))
-    setReplyText('')
-    setReplyingTo(null)
-    setSendingReply(false)
-  }
-
   const unreadCount = notifs.filter(n => !n.read).length
-  const unreadContacts = contacts.filter(c => !c.read).length
 
   return (
     <div className="p-8 max-w-3xl">
@@ -153,171 +103,6 @@ export default function TeacherNotifications() {
         <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
           {unreadCount > 0 ? `${unreadCount} ${t('unread_n')}` : t('up_to_date')}
         </p>
-      </div>
-
-      {/* ── Contact messages section ─────────────────────────────────────── */}
-      <div className="mb-8 fade-up-2">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
-          <div className="flex items-center gap-2">
-            <p className="text-xs tracking-widest uppercase" style={{ color: 'var(--text-gold)' }}>
-              {t('contact_msgs_title')}
-            </p>
-            {unreadContacts > 0 && (
-              <span className="text-xs px-1.5 py-0.5 rounded-full font-semibold"
-                style={{ background: '#10b981', color: '#fff', fontSize: '9px' }}>
-                {unreadContacts}
-              </span>
-            )}
-          </div>
-          <div className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
-        </div>
-
-        {contactsLoading && (
-          <div className="flex justify-center py-6">
-            <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
-              style={{ borderColor: 'rgba(16,185,129,0.2)', borderTopColor: '#10b981' }} />
-          </div>
-        )}
-
-        {!contactsLoading && contacts.length === 0 && (
-          <p className="text-sm text-center py-6" style={{ color: 'var(--text-muted)' }}>
-            {t('contact_no_msgs')}
-          </p>
-        )}
-
-        <div className="flex flex-col gap-2">
-          {contacts.map(c => (
-            <div key={c.id}
-              onMouseEnter={() => setHoverContact(c.id)}
-              onMouseLeave={() => setHoverContact(null)}
-              className="relative rounded-2xl p-4 transition-all duration-200"
-              style={{
-                background: c.read ? 'var(--bg-card)' : 'rgba(16,185,129,0.07)',
-                border: `1px solid ${c.read ? 'var(--border-subtle)' : 'rgba(16,185,129,0.25)'}`,
-              }}>
-
-              {/* Delete button */}
-              <button
-                onClick={() => deleteContact(c.id)}
-                disabled={deletingContact === c.id}
-                className="absolute top-3 right-3 w-7 h-7 rounded-lg flex items-center justify-center transition-all"
-                style={{
-                  opacity: hoverContact === c.id ? 1 : 0,
-                  pointerEvents: hoverContact === c.id ? 'auto' : 'none',
-                  background: 'rgba(239,68,68,0.08)',
-                  border: '1px solid rgba(239,68,68,0.15)',
-                  color: '#ef4444',
-                }}>
-                {deletingContact === c.id ? (
-                  <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin"
-                    style={{ borderColor: 'rgba(239,68,68,0.3)', borderTopColor: '#ef4444' }} />
-                ) : (
-                  <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                    <path d="M1.5 3h8M3.5 3V2h4v1M4 5v3M7 5v3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
-                    <path d="M2.5 3l.5 6h5l.5-6" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
-              </button>
-
-              <div className="flex items-start gap-3">
-                {/* Icon */}
-                <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background: c.read ? 'var(--bg-card)' : 'rgba(16,185,129,0.15)',
-                    border: `1px solid ${c.read ? 'var(--border-subtle)' : 'rgba(16,185,129,0.3)'}`,
-                  }}>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <rect x="1" y="2.5" width="12" height="9" rx="1.5" stroke={c.read ? 'var(--text-muted)' : '#10b981'} strokeWidth="1.2"/>
-                    <path d="M1 4.5l6 4.5 6-4.5" stroke={c.read ? 'var(--text-muted)' : '#10b981'} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-
-                <div className="flex-1 min-w-0 pr-8">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium" style={{ color: c.read ? 'var(--text-2)' : 'var(--text)' }}>
-                      {c.name}
-                    </span>
-                    <span className="text-xs flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
-                      {timeAgo(c.created_at)}
-                    </span>
-                    {!c.read && (
-                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: '#10b981' }} />
-                    )}
-                  </div>
-                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-3)', whiteSpace: 'pre-wrap' }}>
-                    {c.message}
-                  </p>
-
-                  {/* Reply area */}
-                  {replyingTo === c.id ? (
-                    <div className="mt-3 flex flex-col gap-2">
-                      <textarea
-                        value={replyText}
-                        onChange={e => setReplyText(e.target.value)}
-                        placeholder={t('contact_reply_placeholder')}
-                        rows={3}
-                        autoFocus
-                        className="w-full px-3 py-2 rounded-xl text-sm outline-none resize-none"
-                        style={{ background: 'var(--bg-deep)', border: '1px solid rgba(16,185,129,0.3)', color: 'var(--text)' }}
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => { setReplyingTo(null); setReplyText('') }}
-                          className="text-xs px-3 py-1.5 rounded-lg transition-all"
-                          style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}>
-                          {t('cancel')}
-                        </button>
-                        <button
-                          onClick={() => sendReply(c)}
-                          disabled={sendingReply || !replyText.trim() || !c.user_id}
-                          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
-                          style={{
-                            background: !replyText.trim() || sendingReply ? 'var(--bg-card)' : 'rgba(16,185,129,0.15)',
-                            color: !replyText.trim() || sendingReply ? 'var(--text-muted)' : '#10b981',
-                            border: `1px solid ${!replyText.trim() || sendingReply ? 'var(--border-subtle)' : 'rgba(16,185,129,0.3)'}`,
-                          }}>
-                          {sendingReply ? (
-                            <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin"
-                              style={{ borderColor: 'rgba(16,185,129,0.3)', borderTopColor: '#10b981' }} />
-                          ) : (
-                            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                              <path d="M1 5.5h9M6.5 2l4 3.5-4 3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          )}
-                          {t('contact_reply_send')}
-                        </button>
-                        {!c.user_id && (
-                          <span className="text-xs self-center" style={{ color: 'var(--text-muted)' }}>
-                            (usuario anónimo, no se puede responder)
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 mt-2">
-                      <button
-                        onClick={() => { setReplyingTo(c.id); setReplyText(''); if (!c.read) markContactRead(c.id) }}
-                        className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg transition-all"
-                        style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)' }}>
-                        <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                          <path d="M10 2H1v6h3l2 2 2-2h2V2z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
-                        </svg>
-                        {t('contact_reply')}
-                      </button>
-                      {!c.read && (
-                        <button onClick={() => markContactRead(c.id)}
-                          className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          Marcar leído
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* ── Student activity notifications ───────────────────────────────── */}
