@@ -221,35 +221,39 @@ function align(whisperWords, sefariaWords) {
 }
 
 // Post-process aligned timestamps using Whisper segments.
-// Runs AFTER align() so we know exactly how many Sefaria words fall between each
-// whole block — anchors + interpolated — across the real segment time.
-// Operates on the aligned Sefaria output (not raw Whisper words), so it knows
-// exactly how many Sefaria words map to each Whisper segment.
-// For each segment whose aligned words cover < 60% of the segment duration,
-// redistributes all those words evenly across the full segment time.
+// Only redistributes fully-interpolated sub-ranges (no anchors) that are compressed
+// into less than 40% of the surrounding anchor-to-anchor span.
+// Anchored words (direct Whisper matches) are never moved.
 function postRedistribute(aligned, anchorSet, segments) {
   if (!segments?.length) return aligned
   const out = aligned.map(x => ({ ...x }))
+  const sLen = out.length
 
   for (const seg of segments) {
     const segDur = seg.end - seg.start
-    if (segDur < 0.3) continue
+    if (segDur < 0.5) continue
 
-    // Collect aligned-word indices whose start time falls in this segment
+    // Collect word indices falling in this segment
     const idxs = []
-    for (let i = 0; i < out.length; i++) {
+    for (let i = 0; i < sLen; i++) {
       if (out[i] && out[i].start >= seg.start - 0.1 && out[i].start < seg.end) idxs.push(i)
     }
-    if (idxs.length < 2) continue
+    if (idxs.length < 3) continue
+
+    // Never touch segments that contain directly-anchored words.
+    // The anchor timestamps come straight from Whisper and are reliable;
+    // moving them (or the words interpolated around them) causes the
+    // "stuck cursor" bug seen in repetitive passages like Bereshit 5.
+    if (idxs.some(i => anchorSet.has(i))) continue
 
     const first = out[idxs[0]]
     const last  = out[idxs[idxs.length - 1]]
     const coverage = (last.end - first.start) / segDur
 
-    // Only redistribute when words are compressed into < 60% of the segment
-    if (coverage >= 0.6) continue
+    // Only redistribute when fully-interpolated words are very compressed (< 40%)
+    if (coverage >= 0.4) continue
 
-    console.log(`Sync: post-redistribute ${idxs.length} Sefaria words in segment [${seg.start.toFixed(2)}-${seg.end.toFixed(2)}] (coverage ${Math.round(coverage * 100)}%)`)
+    console.log(`Sync: post-redistribute ${idxs.length} interpolated words in segment [${seg.start.toFixed(2)}-${seg.end.toFixed(2)}] (coverage ${Math.round(coverage * 100)}%)`)
 
     const n = idxs.length
     idxs.forEach((wi, pos) => {
@@ -377,6 +381,17 @@ export default async function handler(req, res) {
 
     const needsReview = anchorPct < 0.4
     console.log(`Sync: ${rawWords.length} whisper / ${sefariaWords.length} sefaria / ${Math.round(anchorPct * 100)}% anchors / needs_review=${needsReview}`)
+
+    // Log unanchored runs ≥3 words so we can see where alignment fails
+    let runStart = -1
+    for (let i = 0; i <= sefariaWords.length; i++) {
+      const anch = i < sefariaWords.length && anchorSet.has(i)
+      if (!anch && runStart < 0) { runStart = i }
+      else if ((anch || i === sefariaWords.length) && runStart >= 0) {
+        if (i - runStart >= 3) console.log(`Sync: unanchored[${runStart}-${i-1}]: ${sefariaWords.slice(runStart, i).join(' ')}`)
+        runStart = -1
+      }
+    }
 
     return res.status(200).json({
       words: redistributed,
