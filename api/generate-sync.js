@@ -79,6 +79,12 @@ function align(whisperWords, sefariaWords) {
 
   function matchScore(wi, si) {
     if (!wn[wi] || !sn[si]) return -2
+    const wPct = wLen > 1 ? wi / (wLen - 1) : 0
+    const sPct = sLen > 1 ? si / (sLen - 1) : 0
+    const posDiff = Math.abs(wPct - sPct)
+    // Hard band: positions more than 35% apart are almost certainly wrong matches
+    // (a real reader drifts <15% even in repetitive passages like Bereshit 5)
+    if (posDiff > 0.35) return -4
     let textScore
     if (wn[wi] === sn[si]) {
       textScore = 4
@@ -90,9 +96,8 @@ function align(whisperWords, sefariaWords) {
       else if (maxLen >= 4 && sim >= 0.75) textScore = 1
       else return -3
     }
-    const wPct = wLen > 1 ? wi / (wLen - 1) : 0
-    const sPct = sLen > 1 ? si / (sLen - 1) : 0
-    return textScore + 0.5 * (1 - Math.abs(wPct - sPct))
+    // Stronger position weight (2.5 vs old 0.5) so repeated words disambiguate by position
+    return textScore + 2.5 * (1 - posDiff)
   }
 
   const GAP = -1
@@ -146,7 +151,7 @@ function align(whisperWords, sefariaWords) {
         const prev = knownIdxs[ki - 1], curr = knownIdxs[ki]
         const wordSpan = curr - prev
         const timeSpan = out[curr].start - out[prev].start
-        if (wordSpan >= 8 && (timeSpan <= 0 || wordSpan / timeSpan > MAX_SPEED)) {
+        if (wordSpan >= 4 && (timeSpan <= 0 || wordSpan / timeSpan > MAX_SPEED)) {
           anchorSet.delete(curr)
           out[curr] = null
           knownIdxs.splice(ki, 1)
