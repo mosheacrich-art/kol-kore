@@ -57,6 +57,7 @@ function stripHtml(str) {
   return str
     .replace(/<[^>]+>/g, ' ')
     .replace(/[{(\[][פספס][)}\]]/g, '')
+    .replace(/\([^)]*\)/g, ' ')           // remove Sefaria parenthetical variants
     .replace(/\s*\|\s*/g, ' ')
     .replace(/־/g, ' ')
     .replace(/[\s ]+/g, ' ')

@@ -29,11 +29,12 @@ export function plain(text) {
 
 export function processVerse(verse, mode) {
   if (!verse) return ''
+  const clean = verse.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim()
   switch (mode) {
-    case 'taamim': return withTaamim(verse)
-    case 'nikkud': return withNikkud(verse)
-    case 'plain':  return plain(verse)
-    default:       return verse
+    case 'taamim': return withTaamim(clean)
+    case 'nikkud': return withNikkud(clean)
+    case 'plain':  return plain(clean)
+    default:       return clean
   }
 }
 
@@ -61,6 +62,7 @@ export function stripHtml(str) {
   return str
     .replace(/<[^>]+>/g, ' ')          // HTML tags → space
     .replace(/[{(\[][פספס][)}\]]/g, '') // Sefaria paragraph markers {פ} [ס] etc.
+    .replace(/\([^)]*\)/g, ' ')         // Sefaria parenthetical variants
     .replace(/\s*\|\s*/g, ' ')          // Sefaria | separator
     .replace(/&[a-zA-Z]+;|&#\d+;/g, s => { _decodeEl && (_decodeEl.innerHTML = s); return _decodeEl ? _decodeEl.value : s })
     .replace(/־/g, ' ')            // maqaf → space (matches server word-split)
