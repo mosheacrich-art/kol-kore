@@ -17,39 +17,27 @@ export default function StudentNotifications() {
   const { profile } = useAuth()
   const { t } = useLang()
   const [evals, setEvals] = useState([])
-  const [replies, setReplies] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!profile?.id) return
 
-    Promise.all([
-      supabase
-        .from('notifications')
-        .select('*')
-        .eq('student_id', profile.id)
-        .eq('type', 'evaluation')
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('notifications')
-        .select('*')
-        .eq('student_id', profile.id)
-        .eq('type', 'contact_reply')
-        .order('created_at', { ascending: false }),
-    ]).then(([evalRes, replyRes]) => {
-      setEvals(evalRes.data || [])
-      setReplies(replyRes.data || [])
-      setLoading(false)
+    supabase
+      .from('notifications')
+      .select('*')
+      .eq('student_id', profile.id)
+      .eq('type', 'evaluation')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        setEvals(data || [])
+        setLoading(false)
 
-      // Mark all unread as read
-      const unreadEvals = (evalRes.data || []).filter(e => !e.read).map(e => e.id)
-      const unreadReplies = (replyRes.data || []).filter(r => !r.read).map(r => r.id)
-      const allUnread = [...unreadEvals, ...unreadReplies]
-      if (allUnread.length) {
-        supabase.from('notifications').update({ read: true })
-          .in('id', allUnread).eq('student_id', profile.id)
-      }
-    })
+        const unread = (data || []).filter(e => !e.read).map(e => e.id)
+        if (unread.length) {
+          supabase.from('notifications').update({ read: true })
+            .in('id', unread).eq('student_id', profile.id)
+        }
+      })
   }, [profile?.id])
 
   return (
@@ -73,45 +61,6 @@ export default function StudentNotifications() {
         </div>
       )}
 
-      {/* ── Team replies ─────────────────────────────────────────────────── */}
-      {!loading && replies.length > 0 && (
-        <div className="mb-8 fade-up-2">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
-            <p className="text-xs tracking-widest uppercase" style={{ color: 'var(--text-gold)' }}>
-              {t('contact_team_title')}
-            </p>
-            <div className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
-          </div>
-          <div className="flex flex-col gap-3">
-            {replies.map(r => (
-              <div key={r.id}
-                className="rounded-2xl p-4 flex items-start gap-3"
-                style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)' }}>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <rect x="1" y="2.5" width="12" height="9" rx="1.5" stroke="#10b981" strokeWidth="1.2"/>
-                    <path d="M1 4.5l6 4.5 6-4.5" stroke="#10b981" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="text-xs font-semibold" style={{ color: '#10b981' }}>
-                      {t('contact_team_title')}
-                    </span>
-                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{timeAgo(r.created_at)}</span>
-                  </div>
-                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-2)', whiteSpace: 'pre-wrap' }}>
-                    {r.message}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* ── Evaluations ──────────────────────────────────────────────────── */}
       {!loading && (
         <div className="fade-up-2">
@@ -125,7 +74,7 @@ export default function StudentNotifications() {
             </div>
           )}
 
-          {evals.length === 0 && replies.length === 0 && (
+          {evals.length === 0 && (
             <div className="text-center py-20">
               <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
                 style={{ background: 'rgba(108,51,230,0.08)', border: '1px solid rgba(108,51,230,0.15)' }}>
