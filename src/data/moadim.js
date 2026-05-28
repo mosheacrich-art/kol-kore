@@ -47,13 +47,20 @@ export const ALL_MOADIM = [
 
   // ── ROSH JODESH ────────────────────────────────────────────────────────────
   {
-    id: 'rosh-jodesh', name: 'Rosh Jodesh', heb: 'רֹאשׁ חֹדֶשׁ',
+    id: 'rosh-jodesh-semana', name: 'Rosh Jodesh – Semana', heb: 'רֹאשׁ חֹדֶשׁ · חוֹל',
     chag: 'rosh-jodesh', color: '#06b6d4',
     aliyot: [
       { n: 1, label: '1ª Aliyá', ref: 'Numbers 28:1-5' },
       { n: 2, label: '2ª Aliyá', ref: 'Numbers 28:6-10' },
       { n: 3, label: '3ª Aliyá', ref: 'Numbers 28:11-13' },
       { n: 4, label: '4ª Aliyá', ref: 'Numbers 28:14-15' },
+    ],
+  },
+  {
+    id: 'rosh-jodesh-shabat', name: 'Rosh Jodesh – Shabat', heb: 'רֹאשׁ חֹדֶשׁ · שַׁבָּת',
+    chag: 'rosh-jodesh', color: '#06b6d4',
+    aliyot: [
+      { n: 8, label: 'Maftir', ref: 'Numbers 28:9-15' },
     ],
   },
 
