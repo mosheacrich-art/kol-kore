@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { PARASHOT } from '../../data/parashot'
 import { ALL_HAFTAROT } from '../../data/haftarot'
 import { useLang } from '../../context/LangContext'
+import { useAliyahText } from '../../hooks/useSefaria'
+import { processVerse, splitWords } from '../../utils/hebrew'
 
 const statusStyle = {
   pending:   { bg: 'var(--bg-card)', color: 'var(--text-3)' },
@@ -13,6 +15,103 @@ const statusStyle = {
 }
 
 const ALIYAH_LABELS = ['1ª Aliyá', '2ª Aliyá', '3ª Aliyá', '4ª Aliyá', '5ª Aliyá', '6ª Aliyá', '7ª Aliyá', 'Maftir']
+
+function WordRangePicker({ aliyahRef, onConfirm, onClose }) {
+  const { verses, loading } = useAliyahText(aliyahRef, true, null)
+  const [step, setStep] = useState('start')
+  const [startIdx, setStartIdx] = useState(null)
+  const [hoverIdx, setHoverIdx] = useState(-1)
+
+  const allWords = useMemo(() => {
+    const result = []
+    verses.forEach(verse => splitWords(processVerse(verse, 'taamim')).forEach(w => result.push(w)))
+    return result
+  }, [verses])
+
+  const handleClick = (i) => {
+    if (step === 'start') { setStartIdx(i); setStep('end') }
+    else {
+      const s = Math.min(startIdx, i), e = Math.max(startIdx, i)
+      onConfirm(s, e)
+    }
+  }
+
+  const inRange = (i) => {
+    if (step !== 'end' || startIdx == null || hoverIdx < 0) return false
+    return i >= Math.min(startIdx, hoverIdx) && i <= Math.max(startIdx, hoverIdx)
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex flex-col"
+      style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(14px)' }}>
+      <div className="flex items-center justify-between px-5 py-4 flex-shrink-0"
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <div>
+          <p className="text-sm font-semibold text-white">
+            {step === 'start' ? 'Toca la primera palabra' : 'Toca la última palabra'}
+          </p>
+          <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
+            {step === 'start' ? 'Empieza seleccionando el inicio del fragmento' : 'Ahora selecciona el final del fragmento'}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {step === 'end' && (
+            <button onClick={() => { setStep('start'); setStartIdx(null) }}
+              className="px-3 py-1.5 rounded-lg text-xs"
+              style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}>
+              ← Inicio
+            </button>
+          )}
+          <button onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }}>✕</button>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 px-5 py-2 flex-shrink-0">
+        {[{ n: 1, label: 'Inicio', active: step === 'start' }, { n: 2, label: 'Fin', active: step === 'end' }].map((s, idx) => (
+          <div key={idx} className="flex items-center gap-1.5">
+            {idx > 0 && <div className="w-8 h-px" style={{ background: 'rgba(255,255,255,0.1)' }} />}
+            <div className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
+              style={{ background: s.active ? '#f59e0b' : 'rgba(249,184,0,0.15)', color: s.active ? '#000' : '#f59e0b' }}>
+              {s.n}
+            </div>
+            <span className="text-xs" style={{ color: s.active ? '#f59e0b' : 'rgba(255,255,255,0.3)' }}>{s.label}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-5 py-4">
+        {loading ? (
+          <p className="text-center text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>Cargando...</p>
+        ) : (
+          <div className="hebrew-reader" style={{ direction: 'rtl', textAlign: 'justify', fontSize: '26px', lineHeight: '2.4', color: 'rgba(255,255,255,0.88)' }}>
+            {allWords.map((word, i) => {
+              const highlighted = inRange(i)
+              const isStart = step === 'end' && i === startIdx
+              return (
+                <span key={i}
+                  onClick={() => handleClick(i)}
+                  onMouseEnter={() => setHoverIdx(i)}
+                  onMouseLeave={() => setHoverIdx(-1)}
+                  style={{
+                    cursor: 'pointer',
+                    borderRadius: '3px',
+                    padding: '1px 2px',
+                    background: highlighted ? 'rgba(249,184,0,0.3)' : isStart ? 'rgba(249,184,0,0.2)' : 'transparent',
+                    color: highlighted || isStart ? '#fbbf24' : 'rgba(255,255,255,0.88)',
+                    transition: 'background 0.07s, color 0.07s',
+                  }}>
+                  {word}{' '}
+                </span>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default function TeacherHomework() {
   const { isDark } = useTheme()
@@ -26,10 +125,12 @@ export default function TeacherHomework() {
     type: 'parasha',
     parasha_id: '', aliyah_idx: 0, require_audio: false,
     haftara_id: '',
+    word_start: null, word_end: null,
   })
   const [saving, setSaving] = useState(false)
   const [hoverItem, setHoverItem] = useState(null)
   const [deleting, setDeleting] = useState(null)
+  const [showRangePicker, setShowRangePicker] = useState(false)
 
   useEffect(() => {
     if (!profile) return
@@ -67,12 +168,14 @@ export default function TeacherHomework() {
       aliyah_idx: form.type === 'parasha' && form.parasha_id ? form.aliyah_idx : null,
       require_audio: form.type === 'parasha' && form.parasha_id ? form.require_audio : false,
       haftara_id: form.type === 'haftara' ? (form.haftara_id || null) : null,
+      word_start: form.type === 'parasha' && form.parasha_id && form.word_start != null ? form.word_start : null,
+      word_end: form.type === 'parasha' && form.parasha_id && form.word_end != null ? form.word_end : null,
       status: 'pending',
     }).select('*, student:student_id(name)').single()
 
     if (data) setSent(prev => [data, ...prev])
     setComposing(false)
-    setForm(f => ({ ...f, task: '', subject: '', due: '', type: 'parasha', parasha_id: '', aliyah_idx: 0, require_audio: false, haftara_id: '' }))
+    setForm(f => ({ ...f, task: '', subject: '', due: '', type: 'parasha', parasha_id: '', aliyah_idx: 0, require_audio: false, haftara_id: '', word_start: null, word_end: null }))
     setSaving(false)
   }
 
@@ -148,7 +251,7 @@ export default function TeacherHomework() {
                     { key: 'tefila',  label: t('nav_tefila'),  color: '#8b5cf6' },
                   ].map(opt => (
                     <button key={opt.key} type="button"
-                      onClick={() => setForm(f => ({ ...f, type: opt.key, parasha_id: '', aliyah_idx: 0, haftara_id: '', require_audio: false }))}
+                      onClick={() => setForm(f => ({ ...f, type: opt.key, parasha_id: '', aliyah_idx: 0, haftara_id: '', require_audio: false, word_start: null, word_end: null }))}
                       className="py-2 rounded-xl text-xs font-medium transition-all"
                       style={{
                         background: form.type === opt.key ? `${opt.color}18` : 'var(--bg-card)',
@@ -183,12 +286,47 @@ export default function TeacherHomework() {
                 <div>
                   <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('aliyah_label')}</label>
                   <select value={form.aliyah_idx}
-                    onChange={e => setForm(f => ({ ...f, aliyah_idx: Number(e.target.value) }))}
+                    onChange={e => setForm(f => ({ ...f, aliyah_idx: Number(e.target.value), word_start: null, word_end: null }))}
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
                     {(selectedParasha?.aliyot || []).map((a, i) => (
                       <option key={i} value={i}>{a.n === 8 ? 'Maftir' : `${a.n}ª Aliyá`} — {a.ref}</option>
                     ))}
                   </select>
+                </div>
+              )}
+
+              {/* Fragmento de aliyá */}
+              {form.type === 'parasha' && form.parasha_id && (
+                <div>
+                  <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>Fragmento</label>
+                  {form.word_start != null ? (
+                    <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm"
+                      style={{ background: 'rgba(249,184,0,0.1)', border: '1px solid rgba(249,184,0,0.3)' }}>
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <circle cx="6" cy="6" r="5" stroke="#d97706" strokeWidth="1.1"/>
+                        <path d="M3.5 6h5M6 3.5v5" stroke="#d97706" strokeWidth="1.1" strokeLinecap="round"/>
+                      </svg>
+                      <span style={{ color: '#d97706' }}>Palabras {form.word_start + 1}–{form.word_end + 1}</span>
+                      <button type="button"
+                        onClick={() => setForm(f => ({ ...f, word_start: null, word_end: null }))}
+                        className="ml-auto text-xs px-2 py-0.5 rounded-md"
+                        style={{ background: 'rgba(249,184,0,0.15)', color: '#92400e' }}>
+                        Aliyá completa
+                      </button>
+                    </div>
+                  ) : (
+                    <button type="button"
+                      onClick={() => setShowRangePicker(true)}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm transition-all"
+                      style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-3)' }}>
+                      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <rect x="1.5" y="1.5" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.1"/>
+                        <path d="M4.5 6.5h4M6.5 4.5v4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+                      </svg>
+                      Seleccionar fragmento
+                      <span className="ml-auto text-xs opacity-40">Aliyá completa por defecto</span>
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -278,6 +416,15 @@ export default function TeacherHomework() {
         </div>
       )}
 
+      {/* Word range picker overlay */}
+      {showRangePicker && selectedParasha && (
+        <WordRangePicker
+          aliyahRef={selectedParasha.aliyot[form.aliyah_idx]?.ref}
+          onConfirm={(s, e) => { setForm(f => ({ ...f, word_start: s, word_end: e })); setShowRangePicker(false) }}
+          onClose={() => setShowRangePicker(false)}
+        />
+      )}
+
       {/* List */}
       <div className="fade-up-3 flex flex-col gap-3">
         {sent.length === 0 && (
@@ -354,6 +501,12 @@ export default function TeacherHomework() {
                       <span className="hebrew">{parasha.heb}</span>
                       <span>·</span>
                       <span>{aliyahLabel}</span>
+                    </span>
+                  )}
+                  {item.word_start != null && (
+                    <span className="text-xs px-2 py-0.5 rounded-md flex items-center gap-1"
+                      style={{ background: 'rgba(249,184,0,0.1)', color: '#d97706', border: '1px solid rgba(249,184,0,0.25)' }}>
+                      Palabras {item.word_start + 1}–{item.word_end + 1}
                     </span>
                   )}
                   {haftara && (

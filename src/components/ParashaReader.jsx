@@ -233,7 +233,6 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
       .eq('student_id', profile.id)
       .eq('parasha_id', parasha.id)
       .eq('aliyah_idx', aliyahIdx)
-      .eq('require_audio', true)
       .eq('status', 'pending')
       .maybeSingle()
       .then(({ data }) => {
@@ -729,10 +728,15 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold" style={{ color: '#6c33e6' }}>{t('pending_hw')}</p>
               <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>{pendingHomework.task}</p>
+              {pendingHomework.word_start != null && (
+                <p className="text-xs mt-0.5" style={{ color: '#d97706' }}>
+                  📍 Palabras {pendingHomework.word_start + 1}–{pendingHomework.word_end + 1}
+                </p>
+              )}
             </div>
             <div className="w-2 h-2 rounded-full animate-pulse flex-shrink-0" style={{ background: '#6c33e6' }} />
           </div>
-          {recState === 'idle' && (
+          {recState === 'idle' && pendingHomework.require_audio && (
             <div className="flex gap-2 pl-10">
               <button onClick={startRec}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
@@ -937,6 +941,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
                     onWordClick={cursorEnabled && audio && !evalMode ? handleSeek : null}
                     onWordMark={evalMode ? handleWordMark : null}
                     markedWordIndices={evalMode ? new Set(evalErrors.map(e => e.wordIdx)) : null}
+                    homeworkRange={pendingHomework?.word_start != null ? { start: pendingHomework.word_start, end: pendingHomework.word_end } : null}
                   />
             )
         }
@@ -1169,7 +1174,7 @@ function wordIdxToTime(wordIdx, wordTimestamps, s2w, duration) {
   return wordTimestamps[wi].start
 }
 
-function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCurrentTime, audioPlaying, audioDuration, onWordClick, onWordMark, markedWordIndices }) {
+function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCurrentTime, audioPlaying, audioDuration, onWordClick, onWordMark, markedWordIndices, homeworkRange }) {
   const wordRefs = useRef([])
   const [hoverIdx, setHoverIdx] = useState(-1)
 
@@ -1241,6 +1246,7 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
             const isActive = activeWordIdx === i
             const isMarked = markedWordIndices?.has(i)
             const isHover = hoverIdx === i && !isActive && !isMarked
+            const inHwRange = homeworkRange != null && i >= homeworkRange.start && i <= homeworkRange.end
             let color = 'inherit'
             if (isMarked) color = '#ef4444'
             else if (isActive) color = '#3b82f6'
@@ -1257,6 +1263,9 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
                   cursor: canInteract ? 'pointer' : 'default',
                   transition: 'color 0.08s',
                   textDecoration: isMarked ? 'underline wavy #ef4444' : 'none',
+                  background: inHwRange ? 'rgba(249,184,0,0.22)' : 'transparent',
+                  borderRadius: inHwRange ? '3px' : '0',
+                  padding: inHwRange ? '2px 1px' : '0',
                 }}
               >
                 {colorWord(w.text, mode)}{' '}
