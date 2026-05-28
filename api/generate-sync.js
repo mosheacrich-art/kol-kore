@@ -24,6 +24,14 @@ const WHISPER_TO_TEXT = {
   'ויוא': 'וירא',   // Ashkenazi: "וירא" heard as "ויוא"
 }
 
+// Ashkenazi: word-final ת (tav without dagesh) sounds like ס/ש (sibilant).
+// Whisper transcribes e.g. "שת" (Seth) as "שש" (shesh=six) or "שס".
+// Normalize both sides so ת/ס/ש at word-end are treated as the same phoneme.
+function ashkenaziNorm(s) {
+  if (s.length <= 5) return s.replace(/[תס]$/, 'ש')
+  return s
+}
+
 function stripHeb(s) {
   return s.replace(/[^א-ת]/g, '')
 }
@@ -83,11 +91,13 @@ function align(whisperWords, sefariaWords) {
     const sPct = sLen > 1 ? si / (sLen - 1) : 0
     const posDiff = Math.abs(wPct - sPct)
     // Hard band: positions more than 35% apart are almost certainly wrong matches
-    // (a real reader drifts <15% even in repetitive passages like Bereshit 5)
     if (posDiff > 0.35) return -4
     let textScore
     if (wn[wi] === sn[si]) {
       textScore = 4
+    } else if (ashkenaziNorm(wn[wi]) === ashkenaziNorm(sn[si])) {
+      // Ashkenazi sibilant match: "שש" heard for "שת" (Shet→Shes), "קרית"→"קריש", etc.
+      textScore = 3
     } else {
       const maxLen = Math.max(wn[wi].length, sn[si].length)
       const sim = 1 - levenshtein(wn[wi], sn[si]) / maxLen
@@ -96,7 +106,7 @@ function align(whisperWords, sefariaWords) {
       else if (maxLen >= 4 && sim >= 0.75) textScore = 1
       else return -3
     }
-    // Stronger position weight (2.5 vs old 0.5) so repeated words disambiguate by position
+    // Strong position weight so repeated words (Bereshit 5 genealogy) anchor correctly
     return textScore + 2.5 * (1 - posDiff)
   }
 
