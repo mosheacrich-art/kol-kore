@@ -4,6 +4,17 @@ import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
 import { PARASHOT } from '../../data/parashot'
+import { ALL_MOADIM } from '../../data/moadim'
+
+function resolveAnyParasha(idOrName) {
+  if (!idOrName) return null
+  const lower = idOrName.toLowerCase().replace(/[\s-]/g, '')
+  return PARASHOT.find(p =>
+    p.id === idOrName ||
+    p.name.toLowerCase() === idOrName.toLowerCase() ||
+    p.id.replace(/-/g, '') === lower
+  ) || ALL_MOADIM.find(m => m.id === idOrName || m.name === idOrName) || null
+}
 
 function AccountSection({ user }) {
   const { t } = useLang()
@@ -229,7 +240,11 @@ export default function StudentProfile() {
           Shalom, {profile.name?.split(' ')[0] || 'Alumno'} 👋
         </h1>
         <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
-          Perashá <span className="hebrew" style={{ color: 'var(--text-gold)' }}>{profile.parasha_id || '—'}</span>
+          {[profile.parasha_id, ...(profile.extra_parasha_ids || [])].filter(Boolean).map((id, i) => {
+            const p = resolveAnyParasha(id)
+            return <span key={id}>{i > 0 && <span style={{ color: 'var(--border)' }}> · </span>}<span className="hebrew" style={{ color: 'var(--text-gold)' }}>{p?.name || id}</span></span>
+          })}
+          {!profile.parasha_id && <span className="hebrew" style={{ color: 'var(--text-gold)' }}>—</span>}
         </p>
       </div>
 
@@ -260,10 +275,20 @@ export default function StudentProfile() {
         <div className="rounded-2xl p-6 relative overflow-hidden"
           style={{ background: 'linear-gradient(135deg, rgba(249,184,0,0.12) 0%, rgba(249,184,0,0.04) 100%)', border: '1px solid rgba(249,184,0,0.2)' }}>
           <p className="text-xs mb-2" style={{ color: 'var(--text-gold)' }}>{t('my_parasha')}</p>
-          <div className="text-3xl font-light mb-1" style={{ color: '#d97706' }}>
-            {profile.parasha_id || '—'}
-          </div>
-          <p className="text-xs" style={{ color: 'var(--text-3)' }}>{t('assigned_parasha')}</p>
+          {(() => {
+            const all = [profile.parasha_id, ...(profile.extra_parasha_ids || [])].filter(Boolean)
+            if (!all.length) return <div className="text-3xl font-light mb-1" style={{ color: '#d97706' }}>—</div>
+            return all.map((id, i) => {
+              const p = resolveAnyParasha(id)
+              return (
+                <div key={id} className={i > 0 ? 'mt-1 pt-1' : ''} style={i > 0 ? { borderTop: '1px solid rgba(249,184,0,0.15)' } : {}}>
+                  <div className={`font-light`} style={{ color: '#d97706', fontSize: all.length > 1 ? '1.35rem' : '1.875rem' }}>{p?.name || id}</div>
+                  {p?.heb && <div className="hebrew text-xs mt-0.5" style={{ color: 'rgba(249,184,0,0.55)' }}>{p.heb}</div>}
+                </div>
+              )
+            })
+          })()}
+          <p className="text-xs mt-2" style={{ color: 'var(--text-3)' }}>{t('assigned_parasha')}</p>
         </div>
 
         <div className="rounded-2xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
@@ -279,43 +304,56 @@ export default function StudentProfile() {
         </div>
       </div>
 
-      {profile.parasha_id && (() => {
-        const myParasha = PARASHOT.find(p =>
-          p.id === profile.parasha_id?.toLowerCase() ||
-          p.name.toLowerCase() === profile.parasha_id?.toLowerCase() ||
-          p.id.replace(/-/g, '') === profile.parasha_id?.toLowerCase().replace(/[\s-]/g, '')
+      {(() => {
+        const allIds = [profile.parasha_id, ...(profile.extra_parasha_ids || [])].filter(Boolean)
+        const resolved = allIds.map(id => resolveAnyParasha(id)).filter(Boolean)
+        if (!resolved.length) return null
+
+        const arrowIcon = (color) => (
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+            <path d="M6 4l4 4-4 4" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         )
-        if (!myParasha) return null
+
+        // Colors cycle for extra parashiot
+        const PCOLS = [
+          { bg: 'rgba(108,51,230,0.18)', bgHover: 'rgba(108,51,230,0.28)', border: 'rgba(108,51,230,0.3)', icon: 'rgba(108,51,230,0.2)', iconBorder: 'rgba(108,51,230,0.3)', text: '#8b5cf6', stroke: '#8b5cf6' },
+          { bg: 'rgba(249,184,0,0.12)',   bgHover: 'rgba(249,184,0,0.22)',   border: 'rgba(249,184,0,0.3)',   icon: 'rgba(249,184,0,0.2)',  iconBorder: 'rgba(249,184,0,0.3)',  text: '#d97706', stroke: '#d97706' },
+          { bg: 'rgba(45,212,191,0.1)',   bgHover: 'rgba(45,212,191,0.18)',  border: 'rgba(45,212,191,0.28)', icon: 'rgba(45,212,191,0.2)', iconBorder: 'rgba(45,212,191,0.3)', text: '#0d9488', stroke: '#0d9488' },
+        ]
+
         return (
-        <div className="mb-6 fade-up-3">
-          <button
-            onClick={() => navigate(`/student/study/${myParasha.id}`)}
-            className="w-full flex items-center justify-between gap-4 p-4 rounded-2xl transition-all"
-            style={{
-              background: 'linear-gradient(135deg, rgba(108,51,230,0.18) 0%, rgba(45,212,191,0.08) 100%)',
-              border: '1px solid rgba(108,51,230,0.3)',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(108,51,230,0.28) 0%, rgba(45,212,191,0.14) 100%)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(108,51,230,0.18) 0%, rgba(45,212,191,0.08) 100%)' }}>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: 'rgba(108,51,230,0.2)', border: '1px solid rgba(108,51,230,0.3)' }}>
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path d="M3 9h12M9 3l6 6-6 6" stroke="#8b5cf6" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <div className="text-left">
-                <p className="text-xs font-semibold" style={{ color: '#8b5cf6' }}>{t('go_my_parasha')}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
-                  <span className="hebrew" style={{ color: 'var(--text-gold)' }}>{profile.parasha_id}</span>
-                </p>
-              </div>
-            </div>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-              <path d="M6 4l4 4-4 4" stroke="#8b5cf6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        </div>
+          <div className={`mb-6 fade-up-3 ${resolved.length > 1 ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : ''}`}>
+            {resolved.map((p, i) => {
+              const c = PCOLS[i % PCOLS.length]
+              const label = i === 0 ? t('go_my_parasha') : 'Ir a mi perashá'
+              return (
+                <button key={p.id}
+                  onClick={() => navigate(`/student/study/${p.id}`)}
+                  className="w-full flex items-center justify-between gap-4 p-4 rounded-2xl transition-all text-left"
+                  style={{ background: `linear-gradient(135deg, ${c.bg} 0%, rgba(0,0,0,0) 100%)`, border: `1px solid ${c.border}` }}
+                  onMouseEnter={e => { e.currentTarget.style.background = `linear-gradient(135deg, ${c.bgHover} 0%, rgba(0,0,0,0) 100%)` }}
+                  onMouseLeave={e => { e.currentTarget.style.background = `linear-gradient(135deg, ${c.bg} 0%, rgba(0,0,0,0) 100%)` }}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: c.icon, border: `1px solid ${c.iconBorder}` }}>
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M3 9h12M9 3l6 6-6 6" stroke={c.stroke} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-xs font-semibold" style={{ color: c.text }}>{label}</p>
+                      <p className="text-xs mt-0.5">
+                        <span className="hebrew" style={{ color: 'var(--text-gold)' }}>{p.name}</span>
+                      </p>
+                      {p.heb && <p className="hebrew text-xs" style={{ color: 'var(--text-muted)', fontSize: '10px' }}>{p.heb}</p>}
+                    </div>
+                  </div>
+                  {arrowIcon(c.stroke)}
+                </button>
+              )
+            })}
+          </div>
         )
       })()}
 
@@ -401,7 +439,7 @@ export default function StudentProfile() {
               {[
                 { label: t('name'), value: profile.name },
                 { label: t('bar_mitzvah'), value: profile.bar_mitzvah ? new Date(profile.bar_mitzvah).toLocaleDateString(t('date_locale'), { day: 'numeric', month: 'long', year: 'numeric' }) : '—' },
-                { label: 'Perashá', value: profile.parasha_id || '—' },
+                { label: 'Perashá', value: [profile.parasha_id, ...(profile.extra_parasha_ids || [])].filter(Boolean).map(id => resolveAnyParasha(id)?.name || id).join(' + ') || '—' },
                 { label: t('progress'), value: `${profile.progress || 0}%` },
                 { label: t('streak'), value: `${profile.streak || 0} ${t('days')} 🔥` },
               ].map(item => (
