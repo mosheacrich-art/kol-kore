@@ -11,10 +11,13 @@ import { tSef } from '../../data/sefariaTitles'
 const ADMIN_USER_ID = '1f4d0329-ddf5-48a4-965f-5f37d7416447'
 
 const IMPRESCINDIBLES = [
-  { ref: 'Deuteronomy 6:5-9',    name: "Ve'ahavta", heTitle: 'וְאָהַבְתָּ', color: '#10b981' },
-  { ref: 'Deuteronomy 11:13-21', name: 'Vehaya',    heTitle: 'וְהָיָה',      color: '#10b981' },
-  { ref: 'Numbers 15:37-41',     name: 'Vayomer',   heTitle: 'וַיֹּאמֶר',    color: '#10b981' },
-  { ref: 'Exodus 15:1-19',       name: 'Az Yashir', heTitle: 'אָז יָשִׁיר',  color: '#d97706' },
+  { ref: 'I Chronicles 16:8-36',  name: 'Hodu',      heTitle: 'הוֹדוּ',      color: '#d97706' },
+  { ref: 'Psalms 145',            name: 'Ashrei',     heTitle: 'אַשְׁרֵי',     color: '#d97706' },
+  { ref: 'Psalms 150',            name: 'Halleluyah', heTitle: 'הַלְלוּיָהּ', color: '#d97706' },
+  { ref: 'Exodus 15:1-19',        name: 'Az Yashir',  heTitle: 'אָז יָשִׁיר', color: '#d97706' },
+  { ref: 'Deuteronomy 6:5-9',     name: "Ve'ahavta",  heTitle: 'וְאָהַבְתָּ', color: '#10b981' },
+  { ref: 'Deuteronomy 11:13-21',  name: 'Vehaya',     heTitle: 'וְהָיָה',     color: '#10b981' },
+  { ref: 'Numbers 15:37-41',      name: 'Vayomer',    heTitle: 'וַיֹּאמֶר',   color: '#10b981' },
 ]
 const IMPRESCINDIBLES_MAP = Object.fromEntries(IMPRESCINDIBLES.map(s => [s.ref, s]))
 
@@ -37,7 +40,7 @@ export default function TefilaStudy({ basePath = '/student/tefila' }) {
   const changeNusach  = useCallback(() => setSearchParams({}), [setSearchParams])
   const changeDay     = useCallback(() => setSearchParams({ n: nusach }), [setSearchParams, nusach])
 
-  if (!nusach) return <NusachPicker onSelect={selectNusach} onSearch={searchGlobal} />
+  if (!nusach) return <ImprescindiblesListView onSelectRef={r => setSearchParams({ n: 'imprescindibles', r })} />
 
   if (nusach === 'imprescindibles') {
     if (sefRef) return (
@@ -48,7 +51,7 @@ export default function TefilaStudy({ basePath = '/student/tefila' }) {
         onNavigate={r => setSearchParams({ n: 'imprescindibles', r })}
       />
     )
-    return <ImprescindiblesListView onSelectRef={r => setSearchParams({ n: 'imprescindibles', r })} onChangeNusach={changeNusach} />
+    return <ImprescindiblesListView onSelectRef={r => setSearchParams({ n: 'imprescindibles', r })} />
   }
 
   if (!day)    return <DayPicker nusach={nusach} onSelect={selectDay} onBack={changeNusach} />
@@ -581,8 +584,7 @@ function SiddurShabbatListView({ nusach, onSelectRef, onChangeNusach, onChangeDa
 
 // ── Imprescindibles List View ─────────────────────────────────────────────
 
-function ImprescindiblesListView({ onSelectRef, onChangeNusach }) {
-  const { t } = useLang()
+function ImprescindiblesListView({ onSelectRef }) {
   const { isDark } = useTheme()
   const cardDefault = isDark
     ? { bg: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.05)' }
@@ -591,21 +593,11 @@ function ImprescindiblesListView({ onSelectRef, onChangeNusach }) {
   return (
     <div className="p-4 sm:p-8 max-w-2xl">
       <div className="mb-8 fade-up-1">
-        <div className="flex items-center gap-2 mb-4">
-          <button onClick={onChangeNusach}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg"
-            style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M7 2L3 5l4 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            {t('siddur_change_nusach')}
-          </button>
-        </div>
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: '#10b981' }}>
-          עִקָּרִים · Imprescindibles
+        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
+          סִדּוּר · Siddur
         </p>
         <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-          Imprescindibles
+          Tefilá
         </h1>
         <p className="text-sm" style={{ color: 'var(--text-3)' }}>
           Textos bíblicos con טְעָמִים (taamim)
