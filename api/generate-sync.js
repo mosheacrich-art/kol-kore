@@ -321,7 +321,7 @@ export default async function handler(req, res) {
     //     .text is used, as a high-quality guide for Whisper below.
     const gptForm = new FormData()
     gptForm.append('file', mkFile())
-    gptForm.append('model', 'gpt-4o-transcribe')
+    gptForm.append('model', 'gpt-4o-mini-transcribe')
     gptForm.append('language', 'he')
     gptForm.append('response_format', 'json')
     if (whisperPrompt) gptForm.append('prompt', whisperPrompt)
