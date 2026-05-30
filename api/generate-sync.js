@@ -305,6 +305,7 @@ export default async function handler(req, res) {
     sefariaWords = await sefariaPromise
     const whisperPrompt = prompt || sefariaWords.join(' ').slice(0, 900)
 
+    // 4. Transcribe — hybrid GPT-4o + Whisper (automatic, no model selector)
     const MIME_TO_EXT = {
       'audio/x-m4a': 'm4a', 'audio/m4a': 'm4a', 'audio/mp4': 'mp4',
       'audio/mpeg': 'mp3', 'audio/mp3': 'mp3', 'audio/ogg': 'ogg',
@@ -313,14 +314,43 @@ export default async function handler(req, res) {
     }
     const mime = (fileType || 'audio/webm').split(';')[0].trim().toLowerCase()
     const ext = MIME_TO_EXT[mime] || mime.split('/')[1]?.split(';')[0] || 'webm'
+    const mkFile = () => new File([blob], `audio.${ext}`, { type: fileType || 'audio/webm' })
+
+    // 4a. GPT-4o transcribe — far better Hebrew recognition across pronunciations
+    //     (ashkenazi/sephardi, chanting). It has no word timestamps, so only its
+    //     .text is used, as a high-quality guide for Whisper below.
+    const gptForm = new FormData()
+    gptForm.append('file', mkFile())
+    gptForm.append('model', 'gpt-4o-transcribe')
+    gptForm.append('language', 'he')
+    gptForm.append('response_format', 'json')
+    if (whisperPrompt) gptForm.append('prompt', whisperPrompt)
+
+    const gptRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}` },
+      body: gptForm,
+    })
+
+    if (!gptRes.ok) {
+      const err = await gptRes.text()
+      return res.status(500).json({ error: `GPT-4o transcribe ${gptRes.status}: ${err}` })
+    }
+
+    const gptText = (await gptRes.json())?.text || ''
+
+    // 4b. Whisper for word/segment timestamps — prompted with GPT-4o's transcription
+    //     instead of the raw Sefaria text, so the guide matches what was actually
+    //     spoken. rawWords/segments for alignment come from Whisper exactly as before.
+    const whisperGuide = (gptText || whisperPrompt || '').slice(0, 900)
     const form = new FormData()
-    form.append('file', new File([blob], `audio.${ext}`, { type: fileType || 'audio/webm' }))
+    form.append('file', mkFile())
     form.append('model', 'whisper-1')
     form.append('language', 'he')
     form.append('response_format', 'verbose_json')
     form.append('timestamp_granularities[]', 'word')
     form.append('timestamp_granularities[]', 'segment')
-    if (whisperPrompt) form.append('prompt', whisperPrompt)
+    if (whisperGuide) form.append('prompt', whisperGuide)
 
     const whisperRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
