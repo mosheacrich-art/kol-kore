@@ -129,6 +129,75 @@ function WordRangePicker({ aliyahRef, onConfirm, onClose }) {
   )
 }
 
+function RepeatDatesPanel({ dates, onAdd, onRemove, isDark }) {
+  const [newDate, setNewDate] = useState('')
+
+  const handleAdd = () => {
+    if (!newDate || dates.includes(newDate)) return
+    onAdd(newDate)
+    setNewDate('')
+  }
+
+  const fmtDate = (d) =>
+    new Date(d + 'T00:00').toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
+
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(108,51,230,0.25)' }}>
+      <div className="flex items-center gap-2 px-3 py-2"
+        style={{ background: 'rgba(108,51,230,0.1)', borderBottom: dates.length ? '1px solid rgba(108,51,230,0.15)' : 'none' }}>
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+          <rect x="1" y="2" width="9" height="8" rx="1.5" stroke="#8b5cf6" strokeWidth="1.1"/>
+          <path d="M3.5 1v2M7.5 1v2" stroke="#8b5cf6" strokeWidth="1.1" strokeLinecap="round"/>
+          <path d="M1 5h9" stroke="#8b5cf6" strokeWidth="1.1"/>
+        </svg>
+        <span className="text-xs font-medium" style={{ color: '#8b5cf6' }}>
+          Fechas de entrega{dates.length > 0 ? ` (${dates.length})` : ''}
+        </span>
+      </div>
+
+      {dates.length > 0 && (
+        <div className="px-3 pt-2 pb-1 flex flex-col gap-1" style={{ background: 'rgba(108,51,230,0.04)' }}>
+          {dates.map(d => (
+            <div key={d} className="flex items-center justify-between px-2.5 py-1.5 rounded-lg"
+              style={{ background: 'rgba(108,51,230,0.09)', border: '1px solid rgba(108,51,230,0.15)' }}>
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#8b5cf6' }} />
+                <span className="text-xs capitalize" style={{ color: 'var(--text-2)' }}>{fmtDate(d)}</span>
+              </div>
+              <button type="button" onClick={() => onRemove(d)}
+                className="w-5 h-5 rounded-full flex items-center justify-center"
+                style={{ background: 'rgba(239,68,68,0.08)', color: '#ef4444' }}>
+                <svg width="7" height="7" viewBox="0 0 8 8" fill="none">
+                  <path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex gap-2 px-3 py-2.5" style={{ background: 'rgba(108,51,230,0.04)' }}>
+        <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
+          className="flex-1 px-2.5 py-2 rounded-lg text-xs outline-none"
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)', colorScheme: isDark ? 'dark' : 'light' }} />
+        <button type="button" onClick={handleAdd}
+          disabled={!newDate || dates.includes(newDate)}
+          className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold transition-all flex-shrink-0"
+          style={{
+            background: newDate && !dates.includes(newDate) ? 'rgba(108,51,230,0.15)' : 'var(--bg-card)',
+            color: newDate && !dates.includes(newDate) ? '#8b5cf6' : 'var(--text-muted)',
+            border: `1px solid ${newDate && !dates.includes(newDate) ? 'rgba(108,51,230,0.3)' : 'var(--border)'}`,
+          }}>
+          <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+            <path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+          </svg>
+          Añadir
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function TeacherHomework() {
   const { isDark } = useTheme()
   const { profile } = useAuth()
@@ -147,6 +216,18 @@ export default function TeacherHomework() {
   const [hoverItem, setHoverItem] = useState(null)
   const [deleting, setDeleting] = useState(null)
   const [showRangePicker, setShowRangePicker] = useState(false)
+  const [repeatMode, setRepeatMode] = useState(false)
+  const [repeatDates, setRepeatDates] = useState([])
+
+  const toggleRepeat = () => {
+    setRepeatMode(v => {
+      if (!v && form.due) setRepeatDates([form.due])
+      else if (!v) setRepeatDates([])
+      return !v
+    })
+  }
+  const addRepeatDate = (d) => { if (d && !repeatDates.includes(d)) setRepeatDates(prev => [...prev, d].sort()) }
+  const removeRepeatDate = (d) => setRepeatDates(prev => prev.filter(x => x !== d))
 
   useEffect(() => {
     if (!profile) return
@@ -172,13 +253,14 @@ export default function TeacherHomework() {
 
   const sendHomework = async () => {
     if (!form.task) return
+    if (repeatMode && repeatDates.length === 0) return
     setSaving(true)
-    const { data } = await supabase.from('homework').insert({
+
+    const base = {
       teacher_id: profile.id,
       student_id: form.to || null,
       task: form.task,
       subject: form.subject || null,
-      due: form.due || null,
       type: form.type,
       parasha_id: form.type === 'parasha' ? (form.parasha_id || null) : null,
       aliyah_idx: form.type === 'parasha' && form.parasha_id ? form.aliyah_idx : null,
@@ -187,10 +269,20 @@ export default function TeacherHomework() {
       word_start: form.type === 'parasha' && form.parasha_id && form.word_start != null ? form.word_start : null,
       word_end: form.type === 'parasha' && form.parasha_id && form.word_end != null ? form.word_end : null,
       status: 'pending',
-    }).select('*, student:student_id(name)').single()
+    }
 
-    if (data) setSent(prev => [data, ...prev])
+    if (repeatMode && repeatDates.length > 0) {
+      const rows = repeatDates.map(d => ({ ...base, due: d }))
+      const { data } = await supabase.from('homework').insert(rows).select('*, student:student_id(name)')
+      if (data) setSent(prev => [...[...data].reverse(), ...prev])
+    } else {
+      const { data } = await supabase.from('homework').insert({ ...base, due: form.due || null }).select('*, student:student_id(name)').single()
+      if (data) setSent(prev => [data, ...prev])
+    }
+
     setComposing(false)
+    setRepeatMode(false)
+    setRepeatDates([])
     setForm(f => ({ ...f, task: '', subject: '', due: '', type: 'parasha', parasha_id: '', aliyah_idx: 0, require_audio: false, haftara_id: '', word_start: null, word_end: null }))
     setSaving(false)
   }
@@ -460,24 +552,57 @@ export default function TeacherHomework() {
                   </div>
                 )}
                 <div>
-                  <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('due_label')}</label>
-                  <input type="date" value={form.due} onChange={e => setForm(f => ({ ...f, due: e.target.value }))}
-                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ ...inputStyle, colorScheme: isDark ? 'dark' : 'light' }} />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs" style={{ color: 'var(--text-3)' }}>{t('due_label')}</label>
+                    <button type="button" onClick={toggleRepeat}
+                      className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-md transition-all"
+                      style={{
+                        background: repeatMode ? 'rgba(108,51,230,0.12)' : 'transparent',
+                        color: repeatMode ? '#8b5cf6' : 'var(--text-3)',
+                        border: `1px solid ${repeatMode ? 'rgba(108,51,230,0.3)' : 'var(--border-subtle)'}`,
+                      }}>
+                      <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+                        <path d="M1.5 5C1.5 3 3 1.5 5 1.5c1.2 0 2.2.5 3 1.3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+                        <path d="M8.5 5C8.5 7 7 8.5 5 8.5c-1.2 0-2.2-.5-3-1.3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+                        <path d="M7.2 1L8.5 2.3 7.2 3.6M2.8 9L1.5 7.7 2.8 6.4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      Repetir
+                    </button>
+                  </div>
+                  {!repeatMode ? (
+                    <input type="date" value={form.due} onChange={e => setForm(f => ({ ...f, due: e.target.value }))}
+                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                      style={{ ...inputStyle, colorScheme: isDark ? 'dark' : 'light' }} />
+                  ) : (
+                    <div className="px-3 py-2.5 rounded-xl text-xs text-center"
+                      style={{ background: 'rgba(108,51,230,0.08)', border: '1px solid rgba(108,51,230,0.2)', color: '#8b5cf6' }}>
+                      {repeatDates.length === 0 ? 'Sin fechas' : `${repeatDates.length} ${repeatDates.length === 1 ? 'fecha' : 'fechas'}`}
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {repeatMode && (
+                <RepeatDatesPanel
+                  dates={repeatDates}
+                  onAdd={addRepeatDate}
+                  onRemove={removeRepeatDate}
+                  isDark={isDark}
+                />
+              )}
             </div>
 
             <div className="flex gap-2 mt-5">
-              <button onClick={() => setComposing(false)}
+              <button onClick={() => { setComposing(false); setRepeatMode(false); setRepeatDates([]) }}
                 className="flex-1 py-2.5 rounded-xl text-xs font-medium"
                 style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
                 {t('cancel')}
               </button>
-              <button onClick={sendHomework} disabled={saving || !form.task}
+              <button onClick={sendHomework}
+                disabled={saving || !form.task || (repeatMode && repeatDates.length === 0)}
                 className="flex-1 btn-gold py-2.5 rounded-xl text-xs font-semibold"
-                style={{ opacity: saving || !form.task ? 0.6 : 1 }}>
-                {saving ? t('sending') : t('send_hw')}
+                style={{ opacity: (saving || !form.task || (repeatMode && repeatDates.length === 0)) ? 0.6 : 1 }}>
+                {saving ? t('sending') : repeatMode && repeatDates.length > 1 ? `Enviar ${repeatDates.length} deberes` : t('send_hw')}
               </button>
             </div>
           </div>
