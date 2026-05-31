@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { ALL_PARASHOT, BOOK_COLORS, SEFARIM_LIST } from '../../data/parashot'
 import { ALL_HAFTAROT } from '../../data/haftarot'
 import { useSiddurIndex, useSiddurShabbatIndex } from '../../hooks/useSefaria'
@@ -32,6 +33,17 @@ export default function TeacherAudioPanel() {
   const fileInputRef = useRef(null)
   const { upload, remove, get, audios, generateSync, syncingKeys, syncErrors } = useAudio()
   const { t } = useLang()
+
+  // Sync popup: 'idle' | 'syncing' | 'done'
+  const [syncPopup, setSyncPopup] = useState('idle')
+  const prevSyncingSize = useRef(0)
+  useEffect(() => {
+    const curr = syncingKeys.size
+    const prev = prevSyncingSize.current
+    prevSyncingSize.current = curr
+    if (curr > 0 && prev === 0) setSyncPopup('syncing')
+    if (curr === 0 && prev > 0) setSyncPopup('done')
+  }, [syncingKeys.size])
 
   // ── Entity abstraction ────────────────────────────────────────────────────
   function getEntity() {
@@ -577,5 +589,56 @@ export default function TeacherAudioPanel() {
         </div>
       </div>
     </div>
+
+    {/* ── Sync popup ─────────────────────────────────────────────────────── */}
+    {syncPopup !== 'idle' && createPortal(
+      <div className="fixed inset-0 z-[100] flex items-center justify-center px-4"
+        style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)' }}>
+        <div className="w-full max-w-sm rounded-2xl p-7 flex flex-col items-center text-center"
+          style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)', boxShadow: '0 24px 60px rgba(0,0,0,0.4)' }}>
+
+          {syncPopup === 'syncing' ? (
+            <>
+              <div className="w-14 h-14 rounded-full flex items-center justify-center mb-5"
+                style={{ background: 'rgba(108,51,230,0.12)', border: '1px solid rgba(108,51,230,0.25)' }}>
+                <svg className="animate-spin" width="26" height="26" viewBox="0 0 26 26" fill="none">
+                  <circle cx="13" cy="13" r="10" stroke="rgba(108,51,230,0.2)" strokeWidth="2.5"/>
+                  <path d="M13 3a10 10 0 0 1 10 10" stroke="#8b5cf6" strokeWidth="2.5" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <p className="text-base font-semibold mb-1.5" style={{ color: 'var(--text)' }}>
+                Sincronizando audio
+              </p>
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--text-3)' }}>
+                La IA está alineando el audio con el texto.<br/>
+                Puede tardar entre <span style={{ color: '#8b5cf6' }}>5 y 50 segundos</span>.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="w-14 h-14 rounded-full flex items-center justify-center mb-5"
+                style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)' }}>
+                <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+                  <circle cx="13" cy="13" r="10" stroke="#22c55e" strokeWidth="2"/>
+                  <path d="M8 13l3.5 3.5L18 9" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <p className="text-base font-semibold mb-1.5" style={{ color: 'var(--text)' }}>
+                Sincronización completada
+              </p>
+              <p className="text-sm mb-6" style={{ color: 'var(--text-3)' }}>
+                El audio ya está sincronizado con el texto.
+              </p>
+              <button onClick={() => setSyncPopup('idle')}
+                className="px-7 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                style={{ background: 'rgba(34,197,94,0.12)', color: '#16a34a', border: '1px solid rgba(34,197,94,0.3)' }}>
+                Cerrar
+              </button>
+            </>
+          )}
+        </div>
+      </div>,
+      document.body
+    )}
   )
 }
