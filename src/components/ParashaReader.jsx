@@ -1211,13 +1211,40 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
     [wordTimestamps, allWords]
   )
 
+  // Fill null gaps in v2 timestamps by interpolating between surrounding anchors
+  const filledTimestamps = useMemo(() => {
+    if (!wordTimestamps?.length || !isV2(wordTimestamps)) return wordTimestamps
+    const result = [...wordTimestamps]
+    let i = 0
+    while (i < result.length) {
+      if (result[i] !== null) { i++; continue }
+      const gapStart = i
+      while (i < result.length && result[i] === null) i++
+      const gapEnd = i
+      const prevTs = gapStart > 0 ? result[gapStart - 1] : null
+      const nextTs = gapEnd < result.length ? result[gapEnd] : null
+      const t0 = prevTs ? prevTs.end : nextTs ? nextTs.start : 0
+      const t1 = nextTs ? nextTs.start : prevTs ? prevTs.end : 0
+      const count = gapEnd - gapStart
+      const step = count > 0 ? (t1 - t0) / count : 0
+      for (let j = gapStart; j < gapEnd; j++) {
+        const s = t0 + step * (j - gapStart)
+        result[j] = { start: s, end: s + step }
+      }
+    }
+    return result
+  }, [wordTimestamps])
+
   const activeWordIdx = useMemo(() => {
-    if (!wordTimestamps?.length || audioCurrentTime == null || !allWords.length) return -1
-    if (isV2(wordTimestamps)) {
+    if (!filledTimestamps?.length || audioCurrentTime == null || !allWords.length) return -1
+    if (isV2(filledTimestamps)) {
+      const limit = Math.min(filledTimestamps.length, allWords.length)
+      // Highlight first word from the moment audio starts, before first timestamp
+      const firstTs = filledTimestamps.find(ts => ts != null)
+      if (firstTs && audioCurrentTime < firstTs.start) return 0
       let best = -1
-      const limit = Math.min(wordTimestamps.length, allWords.length)
       for (let i = 0; i < limit; i++) {
-        const ts = wordTimestamps[i]
+        const ts = filledTimestamps[i]
         if (!ts) continue
         if (ts.start > audioCurrentTime) break
         if (ts.end > audioCurrentTime) return i
@@ -1225,15 +1252,18 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
       }
       return best
     }
-    let lo = 0, hi = wordTimestamps.length - 1, best = -1
+    // v1 path
+    const firstTs = filledTimestamps[0]
+    if (firstTs && audioCurrentTime < firstTs.start) return alignMap?.w2s[0] ?? 0
+    let lo = 0, hi = filledTimestamps.length - 1, best = -1
     while (lo <= hi) {
       const mid = (lo + hi) >> 1
-      if (wordTimestamps[mid].start <= audioCurrentTime) { best = mid; lo = mid + 1 }
+      if (filledTimestamps[mid].start <= audioCurrentTime) { best = mid; lo = mid + 1 }
       else hi = mid - 1
     }
     if (best < 0) return -1
     return alignMap?.w2s[best] ?? 0
-  }, [wordTimestamps, audioCurrentTime, allWords, alignMap])
+  }, [filledTimestamps, audioCurrentTime, allWords, alignMap])
 
   useEffect(() => {
     if (!audioPlaying || activeWordIdx < 0) return
