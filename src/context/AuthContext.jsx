@@ -116,6 +116,9 @@ export function AuthProvider({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return
       if (event === 'PASSWORD_RECOVERY') { setRecoveryMode(true); return }
+      // TOKEN_REFRESHED fires every time the user returns to the tab — profile is
+      // already loaded so we just update the user object without triggering loading
+      if (event === 'TOKEN_REFRESHED') { setUser(session?.user ?? null); return }
       setUser(session?.user ?? null)
       if (session?.user) {
         setLoading(true)
