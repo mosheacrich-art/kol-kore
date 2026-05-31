@@ -62,9 +62,9 @@ export default function TeacherAudioPanel() {
     return {
       id: selectedTefila.id,
       aliyahIdx: 0,
-      ref: selectedTefila.id.startsWith('berajot:') ? null : selectedTefila.id,
+      ref: selectedTefila.aliyot[0]?.ref ?? null,
       color: selectedTefila.color || '#10b981',
-      aliyot: [{ n: 1, label: selectedTefila.name, ref: selectedTefila.id }],
+      aliyot: [{ ...selectedTefila.aliyot[0], ref: selectedTefila.aliyot[0]?.ref ?? null }],
       heb: selectedTefila.heb,
       name: selectedTefila.name,
     }
