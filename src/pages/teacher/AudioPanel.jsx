@@ -126,6 +126,7 @@ export default function TeacherAudioPanel() {
   ]
 
   return (
+    <>
     <div className="p-8">
       {/* Header */}
       <div className="mb-8 fade-up-1">
@@ -640,5 +641,6 @@ export default function TeacherAudioPanel() {
       </div>,
       document.body
     )}
+    </>
   )
 }
