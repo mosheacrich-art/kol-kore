@@ -34,16 +34,19 @@ export default function TeacherAudioPanel() {
   const { upload, remove, get, audios, generateSync, syncingKeys, syncErrors } = useAudio()
   const { t } = useLang()
 
-  // Sync popup: 'idle' | 'syncing' | 'done'
-  const [syncPopup, setSyncPopup] = useState('idle')
-  const prevSyncingSize = useRef(0)
+  // Sync popup
+  const [justFinished, setJustFinished] = useState(false)
+  const wasSync = useRef(false)
+  const anySyncing = syncingKeys.size > 0
   useEffect(() => {
-    const curr = syncingKeys.size
-    const prev = prevSyncingSize.current
-    prevSyncingSize.current = curr
-    if (curr > 0 && prev === 0) setSyncPopup('syncing')
-    if (curr === 0 && prev > 0) setSyncPopup('done')
-  }, [syncingKeys.size])
+    if (anySyncing) {
+      wasSync.current = true
+      setJustFinished(false)
+    } else if (wasSync.current) {
+      wasSync.current = false
+      setJustFinished(true)
+    }
+  }, [anySyncing])
 
   // ── Entity abstraction ────────────────────────────────────────────────────
   function getEntity() {
@@ -592,13 +595,13 @@ export default function TeacherAudioPanel() {
     </div>
 
     {/* ── Sync popup ─────────────────────────────────────────────────────── */}
-    {syncPopup !== 'idle' && createPortal(
+    {(anySyncing || justFinished) && createPortal(
       <div className="fixed inset-0 z-[100] flex items-center justify-center px-4"
         style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)' }}>
         <div className="w-full max-w-sm rounded-2xl p-7 flex flex-col items-center text-center"
           style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)', boxShadow: '0 24px 60px rgba(0,0,0,0.4)' }}>
 
-          {syncPopup === 'syncing' ? (
+          {anySyncing ? (
             <>
               <div className="w-14 h-14 rounded-full flex items-center justify-center mb-5"
                 style={{ background: 'rgba(108,51,230,0.12)', border: '1px solid rgba(108,51,230,0.25)' }}>
@@ -630,7 +633,7 @@ export default function TeacherAudioPanel() {
               <p className="text-sm mb-6" style={{ color: 'var(--text-3)' }}>
                 El audio ya está sincronizado con el texto.
               </p>
-              <button onClick={() => setSyncPopup('idle')}
+              <button onClick={() => setJustFinished(false)}
                 className="px-7 py-2.5 rounded-xl text-sm font-semibold transition-all"
                 style={{ background: 'rgba(34,197,94,0.12)', color: '#16a34a', border: '1px solid rgba(34,197,94,0.3)' }}>
                 Cerrar
