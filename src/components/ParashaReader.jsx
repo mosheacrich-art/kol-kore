@@ -30,7 +30,25 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
   const navigate = useNavigate()
   const ALL_MODES = MODE_IDS.map((id, i) => ({ id, heb: MODE_HEB[i], label: t(MODE_TKEYS[i]) }))
   const MODES = availableModes ? ALL_MODES.filter(m => availableModes.includes(m.id)) : ALL_MODES
-  const [aliyahIdx, setAliyahIdx] = useState(initialAliyah)
+  const ssKey = `aliyah_${parasha.id}`
+  const [aliyahIdx, setAliyahIdx] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem(ssKey)
+      if (saved !== null) {
+        const n = parseInt(saved, 10)
+        if (!isNaN(n) && n < parasha.aliyot.length) return n
+      }
+    } catch {}
+    return initialAliyah
+  })
+
+  const setAliyahIdxPersisted = (val) => {
+    setAliyahIdx(prev => {
+      const next = typeof val === 'function' ? val(prev) : val
+      try { sessionStorage.setItem(ssKey, String(next)) } catch {}
+      return next
+    })
+  }
   const [mode, setMode] = useState(availableModes ? availableModes[0] : 'taamim')
   const [cursorEnabled, setCursorEnabled] = useState(true)
   const [fontSize, setFontSize] = useState(36)
@@ -663,7 +681,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
           <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
             <button
               disabled={aliyahIdx === 0}
-              onClick={() => setAliyahIdx(i => Math.max(0, i - 1))}
+              onClick={() => setAliyahIdxPersisted(i => Math.max(0, i - 1))}
               className="w-7 h-7 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
               style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -674,7 +692,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
               const aliyahAudio = get(parasha.id, i)
               return (
                 <button key={i}
-                  onClick={() => setAliyahIdx(i)}
+                  onClick={() => setAliyahIdxPersisted(i)}
                   className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all relative"
                   style={{
                     background: aliyahIdx === i ? bookColor : 'var(--bg-card)',
@@ -697,7 +715,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
             })}
             <button
               disabled={aliyahIdx === parasha.aliyot.length - 1}
-              onClick={() => setAliyahIdx(i => Math.min(parasha.aliyot.length - 1, i + 1))}
+              onClick={() => setAliyahIdxPersisted(i => Math.min(parasha.aliyot.length - 1, i + 1))}
               className="w-7 h-7 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
               style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
