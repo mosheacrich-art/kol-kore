@@ -76,6 +76,21 @@ function splitWords(text) {
   return text.split(/\s+/).filter(w => w.length > 0)
 }
 
+// Hebrew morphological stem: strip common word-end suffixes so that different
+// grammatical forms of the same root compare as equal (אלופי = אלוף, ויאמרו = ויאמר).
+function stemHeb(w) {
+  if (w.length <= 3) return w
+  if (w.length > 4 && w.endsWith('ים')) return w.slice(0, -2)  // plural masc
+  if (w.length > 4 && w.endsWith('ות')) return w.slice(0, -2)  // plural fem
+  if (w.length > 4 && w.endsWith('י'))  return w.slice(0, -1)  // construct/possessive yod
+  if (w.length > 4 && w.endsWith('ו'))  return w.slice(0, -1)  // 3rd person masc suffix
+  if (w.length > 5 && w.endsWith('ה'))  return w.slice(0, -1)  // 3rd person fem / locative
+  if (w.length > 4 && w.endsWith('ך'))  return w.slice(0, -1)  // 2nd person suffix
+  if (w.length > 5 && w.endsWith('נו')) return w.slice(0, -2)  // 1st person plural
+  if (w.length > 5 && w.endsWith('הם')) return w.slice(0, -2)  // 3rd person plural
+  return w
+}
+
 // Clean NW alignment without position penalty.
 // Used for GPT-4o ↔ Sefaria and Whisper ↔ GPT-4o pairs where both sides
 // have similar spelling, so position band isn't needed to reject false matches.
@@ -88,6 +103,11 @@ function alignClean(srcNorm, dstNorm) {
     if (!sw || !dw) return -1
     if (sw === dw) return 4
     if (ashkenaziNorm(sw) === ashkenaziNorm(dw)) return 3
+    // Morphological stem match: same root, different grammatical suffix
+    // Score 3 beats GAP (-1) so the NW never skips a morphological variant
+    // to get a better exact match further ahead (which caused אלופי→אלוף confusion)
+    const ss = stemHeb(sw), ds = stemHeb(dw)
+    if (ss === ds && ss.length > 2) return 3
     const maxLen = Math.max(sw.length, dw.length)
     if (maxLen <= 2) return -2
     const sim = 1 - levenshtein(sw, dw) / maxLen
@@ -137,12 +157,17 @@ function align(whisperWords, sefariaWords) {
       // Ashkenazi sibilant match: "שש" heard for "שת" (Shet→Shes), "קרית"→"קריש", etc.
       textScore = 3
     } else {
-      const maxLen = Math.max(wn[wi].length, sn[si].length)
-      const sim = 1 - levenshtein(wn[wi], sn[si]) / maxLen
-      if (maxLen <= 3) return -3
-      if (sim >= 0.80) textScore = 2
-      else if (maxLen >= 4 && sim >= 0.75) textScore = 1
-      else return -3
+      // Morphological stem match (אלופי = אלוף, ויאמרו = ויאמר, etc.)
+      const ws = stemHeb(wn[wi]), ss2 = stemHeb(sn[si])
+      if (ws === ss2 && ws.length > 2) { textScore = 3 }
+      else {
+        const maxLen = Math.max(wn[wi].length, sn[si].length)
+        const sim = 1 - levenshtein(wn[wi], sn[si]) / maxLen
+        if (maxLen <= 3) return -3
+        if (sim >= 0.80) textScore = 2
+        else if (maxLen >= 4 && sim >= 0.75) textScore = 1
+        else return -3
+      }
     }
     // Strong position weight so repeated words (Bereshit 5 genealogy) anchor correctly
     return textScore + 2.5 * (1 - posDiff)
