@@ -84,7 +84,7 @@ export default function StudentLayout() {
       <aside className="hidden md:flex flex-shrink-0 flex-col py-8 px-4 w-64 sticky top-0 h-screen"
         style={{ background: 'var(--bg-deep)', borderInlineEnd: '1px solid var(--border-subtle)' }}>
         <SidebarContent profile={profile} location={location} isDark={isDark}
-          toggle={toggle} go={go} signOut={signOut} navigate={navigate} showClose={false} navItems={navItems} unreadEvals={unreadEvals} />
+          toggle={toggle} go={go} signOut={signOut} navigate={navigate} showClose={false} navItems={navItems} unreadEvals={unreadEvals} onContactOpen={() => setContactOpen(true)} />
       </aside>
 
       {/* ── Mobile sidebar drawer ─────────────────────────────────────────── */}
@@ -95,7 +95,7 @@ export default function StudentLayout() {
         style={{ background: 'var(--bg-deep)', borderInlineEnd: '1px solid var(--border-subtle)' }}>
         <SidebarContent profile={profile} location={location} isDark={isDark}
           toggle={toggle} go={go} signOut={signOut} navigate={navigate} showClose
-          onClose={() => setSidebarOpen(false)} navItems={navItems} unreadEvals={unreadEvals} />
+          onClose={() => setSidebarOpen(false)} navItems={navItems} unreadEvals={unreadEvals} onContactOpen={() => setContactOpen(true)} />
       </aside>
 
       {/* ── Main ─────────────────────────────────────────────────────────── */}
@@ -112,38 +112,32 @@ export default function StudentLayout() {
           <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</span>
           <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
           <div className="ml-auto flex items-center gap-2">
-            <LangToggle />
-            <button onClick={() => setContactOpen(true)}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
-              style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}
-              title={t('contact_us')}>
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                <rect x="1" y="2.5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
-                <path d="M1 4l5.5 4L12 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              {t('contact_us')}
-            </button>
-            <button onClick={() => setContactOpen(true)}
-              className="sm:hidden p-2 rounded-xl transition-all"
-              style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}
-              title={t('contact_us')}>
-              <svg width="15" height="15" viewBox="0 0 13 13" fill="none">
-                <rect x="1" y="2.5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
-                <path d="M1 4l5.5 4L12 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-            <button onClick={toggle}
-              className="p-2 rounded-xl text-xs transition-all"
-              style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
-              title={isDark ? t('light_mode') : t('dark_mode')}>
-              <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
-            </button>
-            <button onClick={async () => { await signOut(); navigate('/login') }}
-              className="p-2 rounded-xl transition-all"
-              title={t('logout')}
-              style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
-              <LogoutIcon />
-            </button>
+            {/* Desktop only — on mobile these live in the sidebar */}
+            <div className="hidden md:flex items-center gap-2">
+              <LangToggle />
+              <button onClick={() => setContactOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
+                style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}
+                title={t('contact_us')}>
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <rect x="1" y="2.5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                  <path d="M1 4l5.5 4L12 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                {t('contact_us')}
+              </button>
+              <button onClick={toggle}
+                className="p-2 rounded-xl text-xs transition-all"
+                style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+                title={isDark ? t('light_mode') : t('dark_mode')}>
+                <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
+              </button>
+              <button onClick={async () => { await signOut(); navigate('/login') }}
+                className="p-2 rounded-xl transition-all"
+                title={t('logout')}
+                style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
+                <LogoutIcon />
+              </button>
+            </div>
           </div>
           {contactOpen && <ContactModal onClose={() => setContactOpen(false)} />}
         </div>
@@ -207,7 +201,7 @@ export default function StudentLayout() {
   )
 }
 
-function SidebarContent({ profile, location, isDark, toggle, go, signOut, navigate, showClose, onClose, navItems, unreadEvals = 0 }) {
+function SidebarContent({ profile, location, isDark, toggle, go, signOut, navigate, showClose, onClose, navItems, unreadEvals = 0, onContactOpen }) {
   const { t } = useLang()
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
   return (
@@ -275,7 +269,31 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
         })}
       </nav>
 
-      <div className="mt-auto px-3">
+      <div className="mt-auto px-3 flex flex-col gap-2">
+        {/* Mobile-only: lang, dark mode, contact */}
+        <div className="md:hidden flex flex-col gap-2 pb-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{t ? t('language') ?? 'Idioma' : 'Idioma'}</span>
+            <LangToggle />
+          </div>
+          <button onClick={toggle}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs text-left transition-all"
+            style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
+            <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
+            {isDark ? (t ? t('light_mode') ?? 'Modo claro' : 'Modo claro') : (t ? t('dark_mode') ?? 'Modo oscuro' : 'Modo oscuro')}
+          </button>
+          {onContactOpen && (
+            <button onClick={() => { onContactOpen(); onClose?.() }}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs text-left transition-all"
+              style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ flexShrink: 0 }}>
+                <rect x="1" y="2.5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                <path d="M1 4l5.5 4L12 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              {t ? t('contact_us') ?? 'Contáctanos' : 'Contáctanos'}
+            </button>
+          )}
+        </div>
         <button onClick={async () => { await signOut(); navigate('/login') }}
           className="w-full text-xs py-2.5 px-3 rounded-xl text-left transition-all"
           style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>

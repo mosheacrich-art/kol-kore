@@ -485,7 +485,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
         </div>
 
         {/* Row 2: Controls + Aliyah nav in same row */}
-        <div className="flex items-center gap-2 px-4 sm:px-6 pb-2 overflow-x-hidden flex-wrap">
+        <div className="flex items-center gap-2 px-4 sm:px-6 pb-2 overflow-x-hidden flex-nowrap">
           <div className="flex items-center gap-1 flex-shrink-0" style={{ display: mode === 'sefer' ? 'none' : undefined }}>
               <button onClick={() => setFontSize(f => Math.max(MIN_FONT, f - 2))}
                 title={t('tooltip_reduce_font')}
