@@ -101,19 +101,27 @@ function alignClean(srcNorm, dstNorm) {
   function sc(si, di) {
     const sw = srcNorm[si], dw = dstNorm[di]
     if (!sw || !dw) return -1
-    if (sw === dw) return 4
-    if (ashkenaziNorm(sw) === ashkenaziNorm(dw)) return 3
-    // Morphological stem match: same root, different grammatical suffix
-    // Score 3 beats GAP (-1) so the NW never skips a morphological variant
-    // to get a better exact match further ahead (which caused אלופי→אלוף confusion)
-    const ss = stemHeb(sw), ds = stemHeb(dw)
-    if (ss === ds && ss.length > 2) return 3
-    const maxLen = Math.max(sw.length, dw.length)
-    if (maxLen <= 2) return -2
-    const sim = 1 - levenshtein(sw, dw) / maxLen
-    if (sim >= 0.80) return 2
-    if (sim >= 0.70) return 1
-    return -2
+    let base
+    if (sw === dw) base = 4
+    else if (ashkenaziNorm(sw) === ashkenaziNorm(dw)) base = 3
+    else {
+      const ss = stemHeb(sw), ds = stemHeb(dw)
+      if (ss === ds && ss.length > 2) base = 3
+      else {
+        const maxLen = Math.max(sw.length, dw.length)
+        if (maxLen <= 2) return -2
+        const sim = 1 - levenshtein(sw, dw) / maxLen
+        if (sim >= 0.80) base = 2
+        else if (sim >= 0.70) base = 1
+        else return -2
+      }
+    }
+    // Bigram context: neighbors matching in the original arrays confirms this is
+    // the correct pairing — critical for repeated words (אלוף x12, ויאמר xN).
+    // Left-context (+2) is reliable; right-context (+1) is a weaker hint.
+    if (si > 0 && di > 0 && srcNorm[si-1] === dstNorm[di-1]) base += 2
+    if (si < sLen-1 && di < dLen-1 && srcNorm[si+1] === dstNorm[di+1]) base += 1
+    return base
   }
   const dp = Array.from({ length: dLen + 1 }, (_, i) =>
     Array.from({ length: sLen + 1 }, (_, j) => (i === 0 ? j * GAP : j === 0 ? i * GAP : 0))
