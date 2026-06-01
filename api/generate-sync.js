@@ -24,14 +24,6 @@ const WHISPER_TO_TEXT = {
   'ויוא': 'וירא',   // Ashkenazi: "וירא" heard as "ויוא"
 }
 
-// Ashkenazi: word-final ת (tav without dagesh) sounds like ס/ש (sibilant).
-// Whisper transcribes e.g. "שת" (Seth) as "שש" (shesh=six) or "שס".
-// Normalize both sides so ת/ס/ש at word-end are treated as the same phoneme.
-function ashkenaziNorm(s) {
-  if (s.length <= 5) return s.replace(/[תס]$/, 'ש')
-  return s
-}
-
 function stripHeb(s) {
   return s.replace(/[^א-ת]/g, '')
 }
@@ -76,64 +68,6 @@ function splitWords(text) {
   return text.split(/\s+/).filter(w => w.length > 0)
 }
 
-// Hebrew morphological stem: strip common word-end suffixes so that different
-// grammatical forms of the same root compare as equal (אלופי = אלוף, ויאמרו = ויאמר).
-function stemHeb(w) {
-  if (w.length <= 3) return w
-  if (w.length > 4 && w.endsWith('ים')) return w.slice(0, -2)  // plural masc
-  if (w.length > 4 && w.endsWith('ות')) return w.slice(0, -2)  // plural fem
-  if (w.length > 4 && w.endsWith('י'))  return w.slice(0, -1)  // construct/possessive yod
-  if (w.length > 4 && w.endsWith('ו'))  return w.slice(0, -1)  // 3rd person masc suffix
-  if (w.length > 5 && w.endsWith('ה'))  return w.slice(0, -1)  // 3rd person fem / locative
-  if (w.length > 4 && w.endsWith('ך'))  return w.slice(0, -1)  // 2nd person suffix
-  if (w.length > 5 && w.endsWith('נו')) return w.slice(0, -2)  // 1st person plural
-  if (w.length > 5 && w.endsWith('הם')) return w.slice(0, -2)  // 3rd person plural
-  return w
-}
-
-// Clean NW alignment without position penalty.
-// Used for GPT-4o ↔ Sefaria and Whisper ↔ GPT-4o pairs where both sides
-// have similar spelling, so position band isn't needed to reject false matches.
-// Returns mapping[di] = si | null  (for each dst word, its src word index).
-function alignClean(srcNorm, dstNorm) {
-  const sLen = srcNorm.length, dLen = dstNorm.length
-  const GAP = -1
-  function sc(si, di) {
-    const sw = srcNorm[si], dw = dstNorm[di]
-    if (!sw || !dw) return -1
-    if (sw === dw) return 4
-    if (ashkenaziNorm(sw) === ashkenaziNorm(dw)) return 3
-    // Morphological stem match: same root, different grammatical suffix
-    // Score 3 beats GAP (-1) so the NW never skips a morphological variant
-    // to get a better exact match further ahead (which caused אלופי→אלוף confusion)
-    const ss = stemHeb(sw), ds = stemHeb(dw)
-    if (ss === ds && ss.length > 2) return 3
-    const maxLen = Math.max(sw.length, dw.length)
-    if (maxLen <= 2) return -2
-    const sim = 1 - levenshtein(sw, dw) / maxLen
-    if (sim >= 0.80) return 2
-    if (sim >= 0.70) return 1
-    return -2
-  }
-  const dp = Array.from({ length: dLen + 1 }, (_, i) =>
-    Array.from({ length: sLen + 1 }, (_, j) => (i === 0 ? j * GAP : j === 0 ? i * GAP : 0))
-  )
-  for (let i = 1; i <= dLen; i++)
-    for (let j = 1; j <= sLen; j++)
-      dp[i][j] = Math.max(dp[i-1][j-1] + sc(j-1, i-1), dp[i-1][j] + GAP, dp[i][j-1] + GAP)
-  const mapping = new Array(dLen).fill(null)
-  let i = dLen, j = sLen
-  while (i > 0 || j > 0) {
-    if (i > 0 && j > 0 && dp[i][j] === dp[i-1][j-1] + sc(j-1, i-1)) {
-      if (sc(j-1, i-1) > 0) mapping[i-1] = j-1
-      i--; j--
-    } else if (i > 0 && dp[i][j] === dp[i-1][j] + GAP) {
-      i--
-    } else { j-- }
-  }
-  return mapping
-}
-
 // Align whisper words to sefaria words using Needleman-Wunsch global alignment.
 // Returns { aligned, anchorPct, anchorSet } where anchorSet is the Set of Sefaria
 // indices directly matched to a Whisper word (not interpolated).
@@ -149,27 +83,20 @@ function align(whisperWords, sefariaWords) {
     const sPct = sLen > 1 ? si / (sLen - 1) : 0
     const posDiff = Math.abs(wPct - sPct)
     // Hard band: positions more than 35% apart are almost certainly wrong matches
+    // (a real reader drifts <15% even in repetitive passages like Bereshit 5)
     if (posDiff > 0.35) return -4
     let textScore
     if (wn[wi] === sn[si]) {
       textScore = 4
-    } else if (ashkenaziNorm(wn[wi]) === ashkenaziNorm(sn[si])) {
-      // Ashkenazi sibilant match: "שש" heard for "שת" (Shet→Shes), "קרית"→"קריש", etc.
-      textScore = 3
     } else {
-      // Morphological stem match (אלופי = אלוף, ויאמרו = ויאמר, etc.)
-      const ws = stemHeb(wn[wi]), ss2 = stemHeb(sn[si])
-      if (ws === ss2 && ws.length > 2) { textScore = 3 }
-      else {
-        const maxLen = Math.max(wn[wi].length, sn[si].length)
-        const sim = 1 - levenshtein(wn[wi], sn[si]) / maxLen
-        if (maxLen <= 3) return -3
-        if (sim >= 0.80) textScore = 2
-        else if (maxLen >= 4 && sim >= 0.75) textScore = 1
-        else return -3
-      }
+      const maxLen = Math.max(wn[wi].length, sn[si].length)
+      const sim = 1 - levenshtein(wn[wi], sn[si]) / maxLen
+      if (maxLen <= 3) return -3
+      if (sim >= 0.80) textScore = 2
+      else if (maxLen >= 4 && sim >= 0.75) textScore = 1
+      else return -3
     }
-    // Strong position weight so repeated words (Bereshit 5 genealogy) anchor correctly
+    // Stronger position weight (2.5 vs old 0.5) so repeated words disambiguate by position
     return textScore + 2.5 * (1 - posDiff)
   }
 
@@ -284,39 +211,35 @@ function align(whisperWords, sefariaWords) {
 }
 
 // Post-process aligned timestamps using Whisper segments.
-// Only redistributes fully-interpolated sub-ranges (no anchors) that are compressed
-// into less than 40% of the surrounding anchor-to-anchor span.
-// Anchored words (direct Whisper matches) are never moved.
+// Runs AFTER align() so we know exactly how many Sefaria words fall between each
+// whole block — anchors + interpolated — across the real segment time.
+// Operates on the aligned Sefaria output (not raw Whisper words), so it knows
+// exactly how many Sefaria words map to each Whisper segment.
+// For each segment whose aligned words cover < 60% of the segment duration,
+// redistributes all those words evenly across the full segment time.
 function postRedistribute(aligned, anchorSet, segments) {
   if (!segments?.length) return aligned
   const out = aligned.map(x => ({ ...x }))
-  const sLen = out.length
 
   for (const seg of segments) {
     const segDur = seg.end - seg.start
-    if (segDur < 0.5) continue
+    if (segDur < 0.3) continue
 
-    // Collect word indices falling in this segment
+    // Collect aligned-word indices whose start time falls in this segment
     const idxs = []
-    for (let i = 0; i < sLen; i++) {
+    for (let i = 0; i < out.length; i++) {
       if (out[i] && out[i].start >= seg.start - 0.1 && out[i].start < seg.end) idxs.push(i)
     }
-    if (idxs.length < 3) continue
-
-    // Never touch segments that contain directly-anchored words.
-    // The anchor timestamps come straight from Whisper and are reliable;
-    // moving them (or the words interpolated around them) causes the
-    // "stuck cursor" bug seen in repetitive passages like Bereshit 5.
-    if (idxs.some(i => anchorSet.has(i))) continue
+    if (idxs.length < 2) continue
 
     const first = out[idxs[0]]
     const last  = out[idxs[idxs.length - 1]]
     const coverage = (last.end - first.start) / segDur
 
-    // Only redistribute when fully-interpolated words are very compressed (< 40%)
-    if (coverage >= 0.4) continue
+    // Only redistribute when words are compressed into < 60% of the segment
+    if (coverage >= 0.6) continue
 
-    console.log(`Sync: post-redistribute ${idxs.length} interpolated words in segment [${seg.start.toFixed(2)}-${seg.end.toFixed(2)}] (coverage ${Math.round(coverage * 100)}%)`)
+    console.log(`Sync: post-redistribute ${idxs.length} Sefaria words in segment [${seg.start.toFixed(2)}-${seg.end.toFixed(2)}] (coverage ${Math.round(coverage * 100)}%)`)
 
     const n = idxs.length
     idxs.forEach((wi, pos) => {
@@ -368,7 +291,6 @@ export default async function handler(req, res) {
     sefariaWords = await sefariaPromise
     const whisperPrompt = prompt || sefariaWords.join(' ').slice(0, 900)
 
-    // 4. Transcribe — hybrid GPT-4o + Whisper (automatic, no model selector)
     const MIME_TO_EXT = {
       'audio/x-m4a': 'm4a', 'audio/m4a': 'm4a', 'audio/mp4': 'mp4',
       'audio/mpeg': 'mp3', 'audio/mp3': 'mp3', 'audio/ogg': 'ogg',
@@ -377,43 +299,14 @@ export default async function handler(req, res) {
     }
     const mime = (fileType || 'audio/webm').split(';')[0].trim().toLowerCase()
     const ext = MIME_TO_EXT[mime] || mime.split('/')[1]?.split(';')[0] || 'webm'
-    const mkFile = () => new File([blob], `audio.${ext}`, { type: fileType || 'audio/webm' })
-
-    // 4a. GPT-4o transcribe — far better Hebrew recognition across pronunciations
-    //     (ashkenazi/sephardi, chanting). It has no word timestamps, so only its
-    //     .text is used, as a high-quality guide for Whisper below.
-    const gptForm = new FormData()
-    gptForm.append('file', mkFile())
-    gptForm.append('model', 'gpt-4o-mini-transcribe')
-    gptForm.append('language', 'he')
-    gptForm.append('response_format', 'json')
-    if (whisperPrompt) gptForm.append('prompt', whisperPrompt)
-
-    const gptRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}` },
-      body: gptForm,
-    })
-
-    if (!gptRes.ok) {
-      const err = await gptRes.text()
-      return res.status(500).json({ error: `GPT-4o transcribe ${gptRes.status}: ${err}` })
-    }
-
-    const gptText = (await gptRes.json())?.text || ''
-
-    // 4b. Whisper for word/segment timestamps — prompted with GPT-4o's transcription
-    //     instead of the raw Sefaria text, so the guide matches what was actually
-    //     spoken. rawWords/segments for alignment come from Whisper exactly as before.
-    const whisperGuide = (gptText || whisperPrompt || '').slice(0, 900)
     const form = new FormData()
-    form.append('file', mkFile())
+    form.append('file', new File([blob], `audio.${ext}`, { type: fileType || 'audio/webm' }))
     form.append('model', 'whisper-1')
     form.append('language', 'he')
     form.append('response_format', 'verbose_json')
     form.append('timestamp_granularities[]', 'word')
     form.append('timestamp_granularities[]', 'segment')
-    if (whisperGuide) form.append('prompt', whisperGuide)
+    if (whisperPrompt) form.append('prompt', whisperPrompt)
 
     const whisperRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
@@ -435,83 +328,8 @@ export default async function handler(req, res) {
       return res.status(200).json({ words: rawWords.map(w => ({ word: w.word, start: w.start, end: w.end })) })
     }
 
-    // Three-way alignment: Sefaria ← GPT-4o ← Whisper
-    // Much more accurate for repeated words (אלוף ×12, ויאמר ×N, etc.)
-    // because GPT-4o correctly identifies all occurrences in order, even when
-    // Whisper timestamps are confused by phonetically identical repetitions.
-    let aligned, anchorPct, anchorSet
-    const gptNorm = gptText.split(/\s+/).filter(w => /[א-ת]/.test(w)).map(w => stripHeb(w))
-    if (gptNorm.length >= Math.floor(sefariaWords.length * 0.5)) {
-      const sefNorm  = sefariaWords.map(w => stripHeb(normalizeWord(w)))
-      const whisNorm = rawWords.map(w => stripHeb(normalizeWord(w.word)))
-
-      const sefToGpt  = alignClean(gptNorm, sefNorm)   // sefNorm[si] → gptNorm[gi]
-      const whisToGpt = alignClean(gptNorm, whisNorm)   // whisNorm[wi] → gptNorm[gi]
-
-      // First whisper timestamp for each gpt word
-      const gptToTs = {}
-      rawWords.forEach((w, wi) => {
-        const gi = whisToGpt[wi]
-        if (gi !== null && !(gi in gptToTs)) gptToTs[gi] = { start: w.start, end: w.end }
-      })
-
-      const sparse3 = sefariaWords.map((_, si) => {
-        const gi = sefToGpt[si]
-        return gi !== null ? (gptToTs[gi] ?? null) : null
-      })
-      anchorSet = new Set(
-        sparse3.map((ts, si) => ts !== null ? si : -1).filter(si => si >= 0)
-      )
-      anchorPct = anchorSet.size / sefariaWords.length
-
-      // Fill gaps (same interpolation logic as align())
-      const knownIdxs = [...anchorSet].sort((a, b) => a - b)
-      const out = [...sparse3]
-
-      // Between anchors
-      for (let ki = 0; ki < knownIdxs.length - 1; ki++) {
-        const li = knownIdxs[ki], ri = knownIdxs[ki + 1]
-        if (ri - li <= 1) continue
-        const gap = ri - li
-        const rStart = out[ri].start
-        const lRef = (out[li].end < rStart) ? out[li].end : out[li].start
-        const span = Math.max(0.05 * gap, rStart - lRef)
-        for (let i = li + 1; i < ri; i++) {
-          const t = (i - li) / gap
-          const start = lRef + t * span
-          const dur = Math.max(0.05, span / gap * 0.7)
-          out[i] = { start: +start.toFixed(3), end: +(start + dur).toFixed(3) }
-        }
-      }
-      // Leading nulls
-      if (knownIdxs.length && knownIdxs[0] > 0) {
-        const span = out[knownIdxs[0]].start
-        for (let i = 0; i < knownIdxs[0]; i++) {
-          const t0 = (i / knownIdxs[0]) * span
-          out[i] = { start: +t0.toFixed(3), end: +((i + 1) / knownIdxs[0] * span).toFixed(3) }
-        }
-      }
-      // Trailing nulls
-      if (knownIdxs.length && knownIdxs[knownIdxs.length - 1] < sefariaWords.length - 1) {
-        const last = out[knownIdxs[knownIdxs.length - 1]]
-        for (let i = knownIdxs[knownIdxs.length - 1] + 1; i < sefariaWords.length; i++) {
-          const d = i - knownIdxs[knownIdxs.length - 1]
-          out[i] = { start: +(last.end + (d - 1) * 0.15).toFixed(3), end: +(last.end + d * 0.15).toFixed(3) }
-        }
-      }
-      // Fallback
-      const totalDuration = rawWords[rawWords.length - 1]?.end ?? 1
-      for (let i = 0; i < sefariaWords.length; i++) {
-        if (!out[i]) {
-          const t = (i / Math.max(1, sefariaWords.length - 1)) * totalDuration
-          out[i] = { start: +t.toFixed(3), end: +(t + 0.3).toFixed(3) }
-        }
-      }
-      aligned = out
-    } else {
-      // Fallback: original direct Whisper→Sefaria alignment
-      ;({ aligned, anchorPct, anchorSet } = align(rawWords, sefariaWords))
-    }
+    // Align, then post-redistribute tight blocks over Whisper segment boundaries
+    const { aligned, anchorPct, anchorSet } = align(rawWords, sefariaWords)
     const redistributed = postRedistribute(aligned, anchorSet, whisperData.segments)
 
     // Final guardrail: monotonic starts, min 50ms step
@@ -549,17 +367,6 @@ export default async function handler(req, res) {
 
     const needsReview = anchorPct < 0.4
     console.log(`Sync: ${rawWords.length} whisper / ${sefariaWords.length} sefaria / ${Math.round(anchorPct * 100)}% anchors / needs_review=${needsReview}`)
-
-    // Log unanchored runs ≥3 words so we can see where alignment fails
-    let runStart = -1
-    for (let i = 0; i <= sefariaWords.length; i++) {
-      const anch = i < sefariaWords.length && anchorSet.has(i)
-      if (!anch && runStart < 0) { runStart = i }
-      else if ((anch || i === sefariaWords.length) && runStart >= 0) {
-        if (i - runStart >= 3) console.log(`Sync: unanchored[${runStart}-${i-1}]: ${sefariaWords.slice(runStart, i).join(' ')}`)
-        runStart = -1
-      }
-    }
 
     return res.status(200).json({
       words: redistributed,
