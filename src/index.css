@@ -264,10 +264,10 @@ body {
   padding-bottom: max(env(safe-area-inset-bottom, 0px), 1rem);
 }
 
-/* Main content clears bottom nav on mobile */
+/* Main content clears FAB on mobile */
 @media (max-width: 767px) {
   .main-with-bottom-nav {
-    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   }
 }
 

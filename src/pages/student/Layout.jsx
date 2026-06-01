@@ -30,6 +30,7 @@ export default function StudentLayout() {
   const { t, lang } = useLang()
   const isRTL = lang === 'he'
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [navOpen, setNavOpen] = useState(false)
   const [contactOpen, setContactOpen] = useState(false)
   const [unreadEvals, setUnreadEvals] = useState(0)
   useStudyTimer(profile?.id)
@@ -151,27 +152,57 @@ export default function StudentLayout() {
         <Outlet />
       </main>
 
-      {/* ── Mobile bottom nav ─────────────────────────────────────────────── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex mobile-bottom-nav"
-        style={{ background: 'var(--bg-deep)', borderTop: '1px solid var(--border-subtle)' }}>
-        {navItems.map(item => {
-          const Icon = item.icon
-          const active = isActive(item.path)
-          const showBadge = item.badge && unreadEvals > 0
-          return (
-            <button key={item.path} onClick={() => go(item.path)}
-              className="flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[56px] py-2 transition-colors relative"
-              style={{ color: active ? '#8b5cf6' : 'var(--text-3)' }}>
-              <Icon active={active} />
-              {showBadge && (
-                <span className="absolute top-2 right-[calc(50%-14px)] w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
-                  style={{ background: '#ef4444', color: '#fff' }}>{unreadEvals > 9 ? '9+' : unreadEvals}</span>
-              )}
-              <span className="text-[10px] font-medium leading-none">{item.shortLabel}</span>
-            </button>
-          )
-        })}
-      </nav>
+      {/* ── Mobile FAB ───────────────────────────────────────────────────── */}
+      <button
+        className="md:hidden fixed z-30 w-14 h-14 rounded-full flex items-center justify-center"
+        style={{
+          bottom: 'max(16px, calc(16px + env(safe-area-inset-bottom, 0px)))',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'var(--bg-deep)',
+          border: '1.5px solid var(--border)',
+          color: navOpen ? '#8b5cf6' : 'var(--text-2)',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.28)',
+        }}
+        onClick={() => setNavOpen(o => !o)}>
+        {navOpen ? <FabXIcon /> : <FabGridIcon />}
+      </button>
+
+      {/* ── Mobile nav sheet ─────────────────────────────────────────────── */}
+      {navOpen && (
+        <>
+          <div className="md:hidden fixed inset-0 z-40"
+            style={{ background: 'rgba(0,0,0,0.5)' }}
+            onClick={() => setNavOpen(false)} />
+          <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl mobile-bottom-nav"
+            style={{ background: 'var(--bg-deep)', borderTop: '1px solid var(--border-subtle)' }}>
+            <div className="w-10 h-1 rounded-full mx-auto mt-3 mb-4" style={{ background: 'var(--border)' }} />
+            <div className="px-4 pb-2 grid grid-cols-3 gap-2">
+              {navItems.map(item => {
+                const Icon = item.icon
+                const active = isActive(item.path)
+                const showBadge = item.badge && unreadEvals > 0
+                return (
+                  <button key={item.path} onClick={() => { go(item.path); setNavOpen(false) }}
+                    className="relative flex flex-col items-center gap-2 py-3 rounded-xl transition-all"
+                    style={{
+                      background: active ? 'rgba(139,92,246,0.1)' : 'var(--bg-card)',
+                      border: `1px solid ${active ? 'rgba(139,92,246,0.25)' : 'var(--border-subtle)'}`,
+                      color: active ? '#8b5cf6' : 'var(--text-2)',
+                    }}>
+                    <Icon active={active} />
+                    <span className="text-[11px] font-medium leading-none text-center leading-tight">{item.shortLabel}</span>
+                    {showBadge && (
+                      <span className="absolute top-1.5 right-2 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
+                        style={{ background: '#ef4444', color: '#fff' }}>{unreadEvals > 9 ? '9+' : unreadEvals}</span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -422,6 +453,30 @@ function Paywall({ user, profile, navigate }) {
         </div>
       </div>
     </div>
+  )
+}
+
+function FabGridIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <circle cx="5" cy="5" r="1.5" fill="currentColor"/>
+      <circle cx="10" cy="5" r="1.5" fill="currentColor"/>
+      <circle cx="15" cy="5" r="1.5" fill="currentColor"/>
+      <circle cx="5" cy="10" r="1.5" fill="currentColor"/>
+      <circle cx="10" cy="10" r="1.5" fill="currentColor"/>
+      <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
+      <circle cx="5" cy="15" r="1.5" fill="currentColor"/>
+      <circle cx="10" cy="15" r="1.5" fill="currentColor"/>
+      <circle cx="15" cy="15" r="1.5" fill="currentColor"/>
+    </svg>
+  )
+}
+
+function FabXIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M4 4l10 10M14 4L4 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
   )
 }
 

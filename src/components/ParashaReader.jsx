@@ -61,6 +61,11 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
   const [studyDropdownPos, setStudyDropdownPos] = useState({ top: 0, left: 0 })
   const studyBtnRef = useRef(null)
   const studyPauseRef = useRef(-1)
+  const [modePickerOpen, setModePickerOpen] = useState(false)
+  const [modeBtnPos, setModeBtnPos] = useState({ top: 0, left: 0 })
+  const modeBtnRef = useRef(null)
+  const [aliyahPickerOpen, setAliyahPickerOpen] = useState(false)
+  const aliyahBtnRef = useRef(null)
   const phraseBoundariesRef = useRef(new Set())
   const audioPlayerRef = useRef(null)
 
@@ -480,7 +485,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
         </div>
 
         {/* Row 2: Controls + Aliyah nav in same row */}
-        <div className="no-scrollbar flex items-center gap-2 px-4 sm:px-6 pb-2 overflow-x-auto">
+        <div className="flex items-center gap-2 px-4 sm:px-6 pb-2 overflow-x-hidden flex-wrap">
           <div className="flex items-center gap-1 flex-shrink-0" style={{ display: mode === 'sefer' ? 'none' : undefined }}>
               <button onClick={() => setFontSize(f => Math.max(MIN_FONT, f - 2))}
                 title={t('tooltip_reduce_font')}
@@ -513,21 +518,53 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
             </button>
           )}
 
-          {MODES.length > 1 && <div className="flex items-center gap-1 p-1 rounded-xl flex-shrink-0"
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
-            {MODES.map(m => (
-              <button key={m.id} onClick={() => setMode(m.id)}
-                title={m.desc}
-                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex-shrink-0"
-                style={{
-                  background: mode === m.id ? `${bookColor}20` : 'transparent',
-                  color: mode === m.id ? bookColor : 'var(--text-3)',
-                  border: mode === m.id ? `1px solid ${bookColor}35` : '1px solid transparent',
-                }}>
-                <span className="text-xs">{m.label}</span>
-              </button>
-            ))}
-          </div>}
+          {MODES.length > 1 && (
+            <button
+              ref={modeBtnRef}
+              onClick={() => {
+                const rect = modeBtnRef.current?.getBoundingClientRect()
+                if (rect) setModeBtnPos({ top: rect.bottom + 6, left: rect.left })
+                setModePickerOpen(o => !o)
+              }}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all flex-shrink-0"
+              style={{
+                background: 'var(--bg-card)',
+                border: `1px solid ${bookColor}40`,
+                color: bookColor,
+              }}>
+              <span className="hebrew text-sm">{MODES.find(m => m.id === mode)?.heb ?? mode}</span>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          )}
+          {modePickerOpen && createPortal(
+            <>
+              <div style={{ position: 'fixed', inset: 0, zIndex: 9997 }} onClick={() => setModePickerOpen(false)} />
+              <div style={{ position: 'fixed', top: modeBtnPos.top, left: modeBtnPos.left, zIndex: 9999,
+                background: 'var(--bg-deep)', border: '1px solid var(--border)', borderRadius: '12px',
+                overflow: 'hidden', minWidth: '150px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
+                onMouseDown={e => e.stopPropagation()}>
+                {MODES.map(m => (
+                  <button key={m.id} onClick={() => { setMode(m.id); setModePickerOpen(false) }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-left transition-all"
+                    style={{
+                      background: mode === m.id ? `${bookColor}15` : 'transparent',
+                      color: mode === m.id ? bookColor : 'var(--text-2)',
+                    }}>
+                    <span className="hebrew text-sm">{m.heb}</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>{m.label}</span>
+                    {mode === m.id && (
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="ml-auto flex-shrink-0">
+                        <path d="M2 5l2.5 2.5L8 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </>,
+            document.body
+          )}
 
           {/* Font toggle — only in sefer mode */}
           {mode === 'sefer' && (
@@ -677,7 +714,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
             document.body
           )}
 
-          {/* Aliyah nav — right side of same row */}
+          {/* Aliyah nav — compact: arrows + current aliyah button opens picker */}
           <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
             <button
               disabled={aliyahIdx === 0}
@@ -688,31 +725,54 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
                 <path d="M8 2L4 6l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
-            {parasha.aliyot.map((a, i) => {
-              const aliyahAudio = get(parasha.id, i)
-              return (
-                <button key={i}
-                  onClick={() => setAliyahIdxPersisted(i)}
-                  className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all relative"
-                  style={{
-                    background: aliyahIdx === i ? bookColor : 'var(--bg-card)',
-                    color: aliyahIdx === i ? '#fff' : 'var(--text-3)',
-                    border: `1px solid ${aliyahIdx === i ? 'transparent' : 'var(--border-subtle)'}`,
-                  }}>
-                  {a.n === 8 ? 'Maftir' : `${a.n}ª`}
-                  {aliyahAudio && (
-                    <span
-                      title={aliyahAudio.wordTimestamps ? t('tooltip_audio_synced') : t('tooltip_audio_available')}
-                      className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
-                      style={{
-                        background: aliyahAudio.wordTimestamps ? '#22c55e' : bookColor,
-                        border: '1px solid var(--bg)',
-                      }}
-                    />
-                  )}
-                </button>
-              )
-            })}
+            <button
+              ref={aliyahBtnRef}
+              onClick={() => setAliyahPickerOpen(o => !o)}
+              className="relative px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex-shrink-0"
+              style={{ background: bookColor, color: '#fff', minWidth: '48px' }}>
+              {currentAliyah.n === 8 ? 'Maf.' : `${currentAliyah.n}ª`}
+              {audio && (
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full"
+                  style={{ background: audio.wordTimestamps ? '#22c55e' : '#fff', border: `1.5px solid ${bookColor}` }} />
+              )}
+            </button>
+            {aliyahPickerOpen && createPortal(
+              <>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 9997 }} onClick={() => setAliyahPickerOpen(false)} />
+                <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999,
+                  background: 'var(--bg-deep)', borderTop: '1px solid var(--border)',
+                  borderRadius: '20px 20px 0 0',
+                  padding: '0 16px',
+                  paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))',
+                  boxShadow: '0 -8px 32px rgba(0,0,0,0.2)' }}>
+                  <div className="w-10 h-1 rounded-full mx-auto mt-3 mb-4" style={{ background: 'var(--border)' }} />
+                  <div className="flex gap-2 flex-wrap justify-center pb-1">
+                    {parasha.aliyot.map((a, i) => {
+                      const aliyahAudio = get(parasha.id, i)
+                      const active = aliyahIdx === i
+                      return (
+                        <button key={i}
+                          onClick={() => { setAliyahIdxPersisted(i); setAliyahPickerOpen(false) }}
+                          className="relative flex-shrink-0 px-5 py-2.5 rounded-xl text-sm font-medium transition-all"
+                          style={{
+                            background: active ? bookColor : 'var(--bg-card)',
+                            color: active ? '#fff' : 'var(--text-2)',
+                            border: `1px solid ${active ? 'transparent' : 'var(--border-subtle)'}`,
+                            minWidth: '60px',
+                          }}>
+                          {a.n === 8 ? 'Maftir' : `${a.n}ª`}
+                          {aliyahAudio && (
+                            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full"
+                              style={{ background: aliyahAudio.wordTimestamps ? '#22c55e' : bookColor, border: '2px solid var(--bg-deep)' }} />
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </>,
+              document.body
+            )}
             <button
               disabled={aliyahIdx === parasha.aliyot.length - 1}
               onClick={() => setAliyahIdxPersisted(i => Math.min(parasha.aliyot.length - 1, i + 1))}
