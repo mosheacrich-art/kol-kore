@@ -95,18 +95,25 @@ function stemHeb(w) {
 // Used for GPT-4o ↔ Sefaria and Whisper ↔ GPT-4o pairs where both sides
 // have similar spelling, so position band isn't needed to reject false matches.
 // Returns mapping[di] = si | null  (for each dst word, its src word index).
-function alignClean(srcNorm, dstNorm) {
+// Returns 1-based occurrence index per word across the array.
+function numberOccurrences(words) {
+  const count = {}
+  return words.map(w => { count[w] = (count[w] || 0) + 1; return count[w] })
+}
+
+// srcOcc/dstOcc: parallel occurrence-count arrays (from numberOccurrences).
+function alignClean(srcNorm, dstNorm, srcOcc, dstOcc) {
   const sLen = srcNorm.length, dLen = dstNorm.length
   const GAP = -1
   function sc(si, di) {
     const sw = srcNorm[si], dw = dstNorm[di]
     if (!sw || !dw) return -1
-    let base
-    if (sw === dw) base = 4
-    else if (ashkenaziNorm(sw) === ashkenaziNorm(dw)) base = 3
+    let base, sameBase = false
+    if (sw === dw) { base = 4; sameBase = true }
+    else if (ashkenaziNorm(sw) === ashkenaziNorm(dw)) { base = 3; sameBase = true }
     else {
       const ss = stemHeb(sw), ds = stemHeb(dw)
-      if (ss === ds && ss.length > 2) base = 3
+      if (ss === ds && ss.length > 2) { base = 3; sameBase = true }
       else {
         const maxLen = Math.max(sw.length, dw.length)
         if (maxLen <= 2) return -2
@@ -116,11 +123,11 @@ function alignClean(srcNorm, dstNorm) {
         else return -2
       }
     }
-    // Bigram context: neighbors matching in the original arrays confirms this is
-    // the correct pairing — critical for repeated words (אלוף x12, ויאמר xN).
-    // Left-context (+2) is reliable; right-context (+1) is a weaker hint.
-    if (si > 0 && di > 0 && srcNorm[si-1] === dstNorm[di-1]) base += 2
-    if (si < sLen-1 && di < dLen-1 && srcNorm[si+1] === dstNorm[di+1]) base += 1
+    // Occurrence matching: same base word but wrong occurrence scores -2 (below GAP=-1)
+    // so NW always skips a wrong occurrence rather than accepting it.
+    if (sameBase && srcOcc && dstOcc) {
+      return srcOcc[si] === dstOcc[di] ? base : -2
+    }
     return base
   }
   const dp = Array.from({ length: dLen + 1 }, (_, i) =>
@@ -453,8 +460,11 @@ export default async function handler(req, res) {
       const sefNorm  = sefariaWords.map(w => stripHeb(normalizeWord(w)))
       const whisNorm = rawWords.map(w => stripHeb(normalizeWord(w.word)))
 
-      const sefToGpt  = alignClean(gptNorm, sefNorm)   // sefNorm[si] → gptNorm[gi]
-      const whisToGpt = alignClean(gptNorm, whisNorm)   // whisNorm[wi] → gptNorm[gi]
+      const gptOcc  = numberOccurrences(gptNorm)
+      const sefOcc  = numberOccurrences(sefNorm)
+      const whisOcc = numberOccurrences(whisNorm)
+      const sefToGpt  = alignClean(gptNorm, sefNorm, gptOcc, sefOcc)   // sefNorm[si] → gptNorm[gi]
+      const whisToGpt = alignClean(gptNorm, whisNorm, gptOcc, whisOcc)  // whisNorm[wi] → gptNorm[gi]
 
       // First whisper timestamp for each gpt word
       const gptToTs = {}
