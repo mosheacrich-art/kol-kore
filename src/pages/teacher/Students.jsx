@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
-import { PARASHOT } from '../../data/parashot'
+import { PARASHOT, ALL_PARASHOT, COMBINED_PARASHOT } from '../../data/parashot'
 import { ALL_MOADIM, MOADIM_LIST } from '../../data/moadim'
 import { useLang } from '../../context/LangContext'
+import WordRangePicker from '../../components/WordRangePicker'
 
 const COLORS = ['#6c33e6', '#f9b800', '#2dd4bf', '#f87171', '#a78bfa']
 
@@ -509,10 +510,11 @@ function AssignParashaModal({ student, onAssign, onClose, t }) {
 
 function SendHomeworkModal({ student, teacherId, onClose, t }) {
   const { isDark } = useTheme()
-  const [form, setForm] = useState({ task: '', subject: '', due: '', parasha_id: '', aliyah_idx: 0, require_audio: false })
+  const [form, setForm] = useState({ task: '', subject: '', due: '', parasha_id: '', aliyah_idx: 0, require_audio: false, word_start: null, word_end: null })
   const [saving, setSaving] = useState(false)
+  const [showRangePicker, setShowRangePicker] = useState(false)
   const inputStyle = { background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }
-  const selectedParasha = PARASHOT.find(p => p.id === form.parasha_id)
+  const selectedParasha = ALL_PARASHOT.find(p => p.id === form.parasha_id) || ALL_MOADIM.find(p => p.id === form.parasha_id)
 
   const send = async () => {
     if (!form.task) return
@@ -526,6 +528,8 @@ function SendHomeworkModal({ student, teacherId, onClose, t }) {
       parasha_id: form.parasha_id || null,
       aliyah_idx: form.parasha_id ? form.aliyah_idx : null,
       require_audio: form.parasha_id ? form.require_audio : false,
+      word_start: form.parasha_id && form.word_start != null ? form.word_start : null,
+      word_end: form.parasha_id && form.word_end != null ? form.word_end : null,
       status: 'pending',
     })
     setSaving(false)
@@ -559,10 +563,24 @@ function SendHomeworkModal({ student, teacherId, onClose, t }) {
           <div>
             <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('parasha_optional')}</label>
             <select value={form.parasha_id}
-              onChange={e => setForm(f => ({ ...f, parasha_id: e.target.value, aliyah_idx: 0 }))}
+              onChange={e => setForm(f => ({ ...f, parasha_id: e.target.value, aliyah_idx: 0, word_start: null, word_end: null }))}
               className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
               <option value="">{t('no_parasha_opt')}</option>
-              {PARASHOT.map(p => <option key={p.id} value={p.id}>{p.name} · {p.heb}</option>)}
+              <optgroup label="── Parashot semanales ──">
+                {PARASHOT.map(p => <option key={p.id} value={p.id}>{p.name} · {p.heb}</option>)}
+              </optgroup>
+              <optgroup label="── Parashot dobles ──">
+                {COMBINED_PARASHOT.map(p => <option key={p.id} value={p.id}>{p.name} · {p.heb}</option>)}
+              </optgroup>
+              {MOADIM_LIST.map(m => {
+                const items = ALL_MOADIM.filter(p => p.chag === m.id)
+                if (!items.length) return null
+                return (
+                  <optgroup key={m.id} label={`── ${m.name} · ${m.heb} ──`}>
+                    {items.map(p => <option key={p.id} value={p.id}>{p.name} · {p.heb}</option>)}
+                  </optgroup>
+                )
+              })}
             </select>
           </div>
 
@@ -570,12 +588,42 @@ function SendHomeworkModal({ student, teacherId, onClose, t }) {
             <div>
               <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('aliyah_label')}</label>
               <select value={form.aliyah_idx}
-                onChange={e => setForm(f => ({ ...f, aliyah_idx: Number(e.target.value) }))}
+                onChange={e => setForm(f => ({ ...f, aliyah_idx: Number(e.target.value), word_start: null, word_end: null }))}
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
                 {(selectedParasha?.aliyot || []).map((a, i) => (
                   <option key={i} value={i}>{a.n === 8 ? 'Maftir' : `${a.n}ª Aliyá`} — {a.ref}</option>
                 ))}
               </select>
+            </div>
+          )}
+
+          {form.parasha_id && (
+            <div>
+              <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>Fragmento</label>
+              {form.word_start != null ? (
+                <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm"
+                  style={{ background: 'rgba(249,184,0,0.1)', border: '1px solid rgba(249,184,0,0.3)' }}>
+                  <span style={{ color: '#d97706' }}>Palabras {form.word_start + 1}–{form.word_end + 1}</span>
+                  <button type="button"
+                    onClick={() => setForm(f => ({ ...f, word_start: null, word_end: null }))}
+                    className="ml-auto text-xs px-2 py-0.5 rounded-md"
+                    style={{ background: 'rgba(249,184,0,0.15)', color: '#92400e' }}>
+                    Aliyá completa
+                  </button>
+                </div>
+              ) : (
+                <button type="button"
+                  onClick={() => setShowRangePicker(true)}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm transition-all"
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-3)' }}>
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                    <rect x="1.5" y="1.5" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.1"/>
+                    <path d="M4.5 6.5h4M6.5 4.5v4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+                  </svg>
+                  Seleccionar fragmento
+                  <span className="ml-auto text-xs opacity-40">Aliyá completa por defecto</span>
+                </button>
+              )}
             </div>
           )}
 
@@ -643,6 +691,14 @@ function SendHomeworkModal({ student, teacherId, onClose, t }) {
           </button>
         </div>
       </div>
+
+      {showRangePicker && selectedParasha && (
+        <WordRangePicker
+          aliyahRef={selectedParasha.aliyot[form.aliyah_idx]?.ref}
+          onConfirm={(s, e) => { setForm(f => ({ ...f, word_start: s, word_end: e })); setShowRangePicker(false) }}
+          onClose={() => setShowRangePicker(false)}
+        />
+      )}
     </div>
   )
 }
