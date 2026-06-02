@@ -5,6 +5,12 @@ import App from './App.jsx'
 import { Capacitor } from '@capacitor/core'
 import { StatusBar, Style } from '@capacitor/status-bar'
 
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(r => r.unregister())
+  })
+}
+
 if (Capacitor.isNativePlatform()) {
   StatusBar.setStyle({ style: Style.Dark })
   if (Capacitor.getPlatform() === 'android') {
