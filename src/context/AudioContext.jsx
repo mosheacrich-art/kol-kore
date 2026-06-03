@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { sendPushToUser } from '../lib/sendPush'
 import { useLang } from './LangContext'
 
 const AudioCtx = createContext(null)
@@ -194,6 +195,11 @@ export function AudioProvider({ children }) {
       message: `${studentName} ha subido audio de ${parashaName} · ${aliyahLabel}`,
       type: 'audio',
       recording_url: publicUrl,
+    })
+
+    sendPushToUser(teacherId, {
+      title: '🎙️ Nuevo audio de alumno',
+      body: `${studentName} ha grabado ${parashaName} · ${aliyahLabel}`,
     })
 
     return publicUrl

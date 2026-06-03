@@ -234,7 +234,7 @@ function CheckoutView({ user, profile, t }) {
             <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{t('annual_plan')}</span>
           </div>
           <div className="mb-0.5">
-            <span className="text-3xl font-light" style={{ color: 'var(--text)' }}>$99,99</span>
+            <span className="text-3xl font-light" style={{ color: 'var(--text)' }}>$100</span>
             <span className="text-sm ml-1" style={{ color: 'var(--text-3)' }}>{t('year_unit')}</span>
           </div>
           <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{t('annual_desc')}</p>
@@ -272,7 +272,7 @@ function CheckoutView({ user, profile, t }) {
             </span>
           </div>
           <div className="mb-0.5">
-            <span className="text-3xl font-light" style={{ color: 'var(--text)' }}>$9,99</span>
+            <span className="text-3xl font-light" style={{ color: 'var(--text)' }}>$10</span>
             <span className="text-sm ml-1" style={{ color: 'var(--text-3)' }}>{t('month_unit')}</span>
           </div>
           <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{t('monthly_desc')}</p>

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLang } from '../context/LangContext'
 import { useAuth } from '../context/AuthContext'
 
-const CONTACT_EMAIL = 'mosheacrich@gmail.com'
+const CONTACT_EMAIL = 'contact.perashapp@gmail.com'
 
 export default function ContactModal({ onClose }) {
   const { t } = useLang()

@@ -48,9 +48,15 @@ export default function TeacherLayout() {
   useEffect(() => {
     if (!profile?.id) return
     supabase.from('notifications').select('id', { count: 'exact', head: true })
-      .eq('teacher_id', profile.id).eq('read', false)
+      .eq('teacher_id', profile.id).eq('read', false).in('type', ['audio', 'listen'])
       .then(({ count }) => setUnreadCount(count || 0))
   }, [profile?.id, location.pathname])
+
+  const refetchTeacherCount = () => {
+    supabase.from('notifications').select('id', { count: 'exact', head: true })
+      .eq('teacher_id', profile.id).eq('read', false).in('type', ['audio', 'listen'])
+      .then(({ count }) => setUnreadCount(count || 0))
+  }
 
   // Real-time badge update when a new notification arrives
   useEffect(() => {
@@ -59,14 +65,14 @@ export default function TeacherLayout() {
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'notifications',
         filter: `teacher_id=eq.${profile.id}`,
-      }, () => setUnreadCount(n => n + 1))
+      }, ({ new: row }) => {
+        if (['audio', 'listen'].includes(row.type)) refetchTeacherCount()
+      })
       .on('postgres_changes', {
         event: 'UPDATE', schema: 'public', table: 'notifications',
         filter: `teacher_id=eq.${profile.id}`,
       }, () => {
-        supabase.from('notifications').select('id', { count: 'exact', head: true })
-          .eq('teacher_id', profile.id).eq('read', false)
-          .then(({ count }) => setUnreadCount(count || 0))
+        refetchTeacherCount()
       })
       .subscribe()
     return () => supabase.removeChannel(ch)

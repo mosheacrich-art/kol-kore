@@ -33,6 +33,7 @@ export default function TeacherNotifications() {
       .from('notifications')
       .select('*')
       .eq('teacher_id', profile.id)
+      .in('type', ['audio', 'listen'])
       .order('created_at', { ascending: false })
       .then(({ data }) => {
         setNotifs(data || [])
@@ -48,6 +49,7 @@ export default function TeacherNotifications() {
         event: 'INSERT', schema: 'public', table: 'notifications',
         filter: `teacher_id=eq.${profile.id}`,
       }, ({ new: row }) => {
+        if (!['audio', 'listen'].includes(row.type)) return
         setNotifs(prev => [row, ...prev])
         clearTimeout(newArrivedTimer.current)
         setNewArrivedId(row.id)

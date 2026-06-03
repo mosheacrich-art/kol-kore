@@ -427,7 +427,7 @@ function Paywall({ user, profile, navigate }) {
               <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>{t('annual_plan')}</span>
             </div>
             <div>
-              <span className="text-xl font-light" style={{ color: 'var(--text)' }}>X$</span>
+              <span className="text-xl font-light" style={{ color: 'var(--text)' }}>$100</span>
               <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>/año</span>
             </div>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-gold)' }}>{t('most_affordable')}</p>
@@ -448,7 +448,7 @@ function Paywall({ user, profile, navigate }) {
               <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>{t('monthly_plan')}</span>
             </div>
             <div>
-              <span className="text-xl font-light" style={{ color: 'var(--text)' }}>X$</span>
+              <span className="text-xl font-light" style={{ color: 'var(--text)' }}>$10</span>
               <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>/mes</span>
             </div>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{t('cancel_anytime')}</p>
