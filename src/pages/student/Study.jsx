@@ -381,7 +381,7 @@ function ReaderView({ parasha, basePath }) {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden" style={{ height: '100%' }}>
-      <div className="flex-shrink-0 flex items-center gap-3 px-6 py-3"
+      <div className="hidden md:flex flex-shrink-0 items-center gap-3 px-6 py-3"
         style={{ background: 'var(--overlay)', borderBottom: '1px solid var(--border-subtle)' }}>
         <button onClick={() => navigate(basePath)}
           className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg transition-all"

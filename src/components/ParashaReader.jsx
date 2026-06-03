@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import useTikkunWords from '../hooks/useTikkunWords'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
+import { Capacitor } from '@capacitor/core'
 import { useAliyahText } from '../hooks/useSefaria'
 import { processVerse, splitWords } from '../utils/hebrew'
 import { useAudio } from '../context/AudioContext'
@@ -60,6 +61,9 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
   const [studyDropdownOpen, setStudyDropdownOpen] = useState(false)
   const [studyDropdownPos, setStudyDropdownPos] = useState({ top: 0, left: 0 })
   const studyBtnRef = useRef(null)
+  const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false)
+  const [mobileAliyahOpen, setMobileAliyahOpen] = useState(false)
+  const [isMobileUI, setIsMobileUI] = useState(Capacitor.isNativePlatform())
   const studyPauseRef = useRef(-1)
   const phraseBoundariesRef = useRef(new Set())
   const audioPlayerRef = useRef(null)
@@ -67,6 +71,15 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
   const handleSeek = useCallback((time) => {
     studyPauseRef.current = -1  // reset so study mode resumes correctly after manual seek
     audioPlayerRef.current?.seekTo(time)
+  }, [])
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) {
+      const check = () => setIsMobileUI(window.innerWidth < 768)
+      check()
+      window.addEventListener('resize', check)
+      return () => window.removeEventListener('resize', check)
+    }
   }, [])
 
   // Spacebar toggles play/pause (skip when typing in inputs)
@@ -479,252 +492,421 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
           </div>
         </div>
 
-        {/* Row 2: Controls + Aliyah nav in same row */}
-        <div className="no-scrollbar flex items-center gap-2 px-4 sm:px-6 pb-2 overflow-x-auto">
-          <div className="flex items-center gap-1 flex-shrink-0" style={{ display: mode === 'sefer' ? 'none' : undefined }}>
-              <button onClick={() => setFontSize(f => Math.max(MIN_FONT, f - 2))}
-                title={t('tooltip_reduce_font')}
-                className="w-8 h-8 rounded flex items-center justify-center text-xs font-bold transition-all"
-                style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}>
-                א−
-              </button>
-              <span className="text-xs w-6 text-center tabular-nums" style={{ color: 'var(--text-muted)' }}>{fontSize}</span>
-              <button onClick={() => setFontSize(f => Math.min(MAX_FONT, f + 2))}
-                title={t('tooltip_increase_font')}
-                className="w-8 h-8 rounded flex items-center justify-center text-xs font-bold transition-all"
-                style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}>
-                א+
-              </button>
-            </div>
-          <div className="flex-shrink-0 w-px h-5" style={{ background: 'var(--border)' }} />
-          {(
+        {/* Row 2: Mobile compact toolbar OR desktop full toolbar */}
+        {isMobileUI ? (
+          <div className="flex items-center gap-2 px-4 pb-2">
+            {/* Settings button */}
             <button
-              onClick={() => setCursorEnabled(c => !c)}
-              title={cursorEnabled ? t('tooltip_cursor_off') : t('tooltip_cursor_on')}
-              className="flex-shrink-0 w-8 h-8 rounded flex items-center justify-center transition-all"
-              style={{
-                background: cursorEnabled ? `${bookColor}18` : 'var(--bg-card)',
-                border: `1px solid ${cursorEnabled ? bookColor + '40' : 'var(--border-subtle)'}`,
-                color: cursorEnabled ? bookColor : 'var(--text-muted)',
-              }}>
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                <path d="M2 2l4 9 1.5-3.5L11 6 2 2z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
-              </svg>
+              onClick={() => setMobileSettingsOpen(true)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+              style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
+              א ▾
             </button>
-          )}
 
-          {MODES.length > 1 && <div className="flex items-center gap-1 p-1 rounded-xl flex-shrink-0"
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
-            {MODES.map(m => (
-              <button key={m.id} onClick={() => setMode(m.id)}
-                title={m.desc}
-                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex-shrink-0"
-                style={{
-                  background: mode === m.id ? `${bookColor}20` : 'transparent',
-                  color: mode === m.id ? bookColor : 'var(--text-3)',
-                  border: mode === m.id ? `1px solid ${bookColor}35` : '1px solid transparent',
-                }}>
-                <span className="text-xs">{m.label}</span>
-              </button>
-            ))}
-          </div>}
+            {/* Aliyah picker button */}
+            <button
+              onClick={() => setMobileAliyahOpen(true)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+              style={{ background: `${bookColor}18`, color: bookColor, border: `1px solid ${bookColor}35` }}>
+              {currentAliyah.n === 8 ? 'Maftir' : `${currentAliyah.n}ª`} Aliyá ▾
+            </button>
 
-          {/* Font toggle — only in sefer mode */}
-          {mode === 'sefer' && (
-            <div className="flex items-center gap-1 flex-shrink-0">
-              {[{ id: 'stam', label: 'סטם' }, { id: 'keter', label: 'כתר' }, { id: 'frank', label: 'פרנק' }].map(({ id, label }) => (
-                <button key={id} onClick={() => { setSeferFont(id); try { localStorage.setItem('seferFont', id) } catch {} }}
-                  className="px-2 py-1 rounded text-xs transition-all"
-                  style={{
-                    fontFamily: '"KeterYG", serif',
-                    background: seferFont === id ? `${bookColor}20` : 'var(--bg-card)',
-                    color: seferFont === id ? bookColor : 'var(--text-3)',
-                    border: `1px solid ${seferFont === id ? bookColor + '35' : 'var(--border-subtle)'}`,
-                  }}>
-                  {label}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Study mode dropdown — only when synced audio exists */}
-          {audio?.wordTimestamps && (
-            <div className="flex-shrink-0">
+            {/* Audio source cycle — only when sources available */}
+            {allAudioSources.length > 0 && (
               <button
-                ref={studyBtnRef}
-                onClick={() => {
-                  const rect = studyBtnRef.current?.getBoundingClientRect()
-                  if (rect) setStudyDropdownPos({ top: rect.bottom + 6, left: rect.left })
-                  setStudyDropdownOpen(o => !o)
-                }}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all"
-                style={{
-                  background: studyMode !== 'full' ? `${bookColor}18` : 'var(--bg-card)',
-                  border: `1px solid ${studyMode !== 'full' ? bookColor + '40' : 'var(--border-subtle)'}`,
-                  color: studyMode !== 'full' ? bookColor : 'var(--text-3)',
-                }}>
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.2"/>
-                  <path d="M6 3.5v2.5l1.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                </svg>
-                {t(studyMode === 'full' ? 'study_full' : 'study_phrase')}
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                  <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            </div>
-          )}
-
-          {/* Study dropdown rendered via portal so it's never clipped by overflow */}
-          {studyDropdownOpen && createPortal(
-            <div
-              style={{ position: 'fixed', top: studyDropdownPos.top, left: studyDropdownPos.left, zIndex: 9999,
-                background: 'var(--bg-deep)', border: '1px solid var(--border)', borderRadius: '12px',
-                overflow: 'hidden', minWidth: '170px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
-              onMouseDown={e => e.stopPropagation()}>
-              {[
-                { id: 'full',   icon: '▶', tkey: 'study_full' },
-                { id: 'phrase', icon: '↵', tkey: 'study_phrase' },
-              ].map(opt => (
-                <button key={opt.id}
-                  onClick={() => { setStudyMode(opt.id); setStudyDropdownOpen(false); studyPauseRef.current = -1 }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-left transition-all"
-                  style={{
-                    background: studyMode === opt.id ? `${bookColor}15` : 'transparent',
-                    color: studyMode === opt.id ? bookColor : 'var(--text-2)',
-                  }}>
-                  <span style={{ fontSize: '11px' }}>{opt.icon}</span>
-                  {t(opt.tkey)}
-                  {studyMode === opt.id && (
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="ml-auto">
-                      <path d="M2 5l2.5 2.5L8 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  )}
-                </button>
-              ))}
-            </div>,
-            document.body
-          )}
-
-          {/* Audio source selector */}
-          {allAudioSources.length > 0 && (
-            <div className="flex-shrink-0" onMouseDown={e => e.stopPropagation()}>
-              <button
-                ref={audioSrcBtnRef}
                 onClick={() => {
                   if (allAudioSources.length <= 1) return
-                  const rect = audioSrcBtnRef.current?.getBoundingClientRect()
-                  if (rect) setAudioSrcPos({ top: rect.bottom + 6, left: rect.left })
-                  setAudioSrcOpen(o => !o)
+                  const currentIdx = allAudioSources.findIndex(s => s.key === audioSourceKey)
+                  const nextIdx = (currentIdx + 1) % allAudioSources.length
+                  setAudioSourceKey(allAudioSources[nextIdx].key)
                 }}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all"
-                style={{
-                  background: audioSourceKey !== 'teacher' ? `${bookColor}18` : 'var(--bg-card)',
-                  border: `1px solid ${audioSourceKey !== 'teacher' ? bookColor + '40' : 'var(--border-subtle)'}`,
-                  color: audioSourceKey !== 'teacher' ? bookColor : 'var(--text-3)',
-                }}>
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-all"
+                style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}>
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path d="M2 4h2l2-2 2 2h2v5H2V4z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
                   <circle cx="6" cy="7" r="1.2" stroke="currentColor" strokeWidth="1.1"/>
                 </svg>
-                {allAudioSources.find(s => s.key === audioSourceKey)?.label || allAudioSources[0]?.label}
-                {allAudioSources.length > 1 && (
+              </button>
+            )}
+
+            {/* Prev/next aliyah arrows */}
+            <div className="ml-auto flex items-center gap-1">
+              <button
+                disabled={aliyahIdx === 0}
+                onClick={() => setAliyahIdxPersisted(i => Math.max(0, i - 1))}
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
+                style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M8 2L4 6l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              <button
+                disabled={aliyahIdx === parasha.aliyot.length - 1}
+                onClick={() => setAliyahIdxPersisted(i => Math.min(parasha.aliyot.length - 1, i + 1))}
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
+                style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="no-scrollbar flex items-center gap-2 px-4 sm:px-6 pb-2 overflow-x-auto">
+            <div className="flex items-center gap-1 flex-shrink-0" style={{ display: mode === 'sefer' ? 'none' : undefined }}>
+                <button onClick={() => setFontSize(f => Math.max(MIN_FONT, f - 2))}
+                  title={t('tooltip_reduce_font')}
+                  className="w-8 h-8 rounded flex items-center justify-center text-xs font-bold transition-all"
+                  style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}>
+                  א−
+                </button>
+                <span className="text-xs w-6 text-center tabular-nums" style={{ color: 'var(--text-muted)' }}>{fontSize}</span>
+                <button onClick={() => setFontSize(f => Math.min(MAX_FONT, f + 2))}
+                  title={t('tooltip_increase_font')}
+                  className="w-8 h-8 rounded flex items-center justify-center text-xs font-bold transition-all"
+                  style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}>
+                  א+
+                </button>
+              </div>
+            <div className="flex-shrink-0 w-px h-5" style={{ background: 'var(--border)' }} />
+            {(
+              <button
+                onClick={() => setCursorEnabled(c => !c)}
+                title={cursorEnabled ? t('tooltip_cursor_off') : t('tooltip_cursor_on')}
+                className="flex-shrink-0 w-8 h-8 rounded flex items-center justify-center transition-all"
+                style={{
+                  background: cursorEnabled ? `${bookColor}18` : 'var(--bg-card)',
+                  border: `1px solid ${cursorEnabled ? bookColor + '40' : 'var(--border-subtle)'}`,
+                  color: cursorEnabled ? bookColor : 'var(--text-muted)',
+                }}>
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <path d="M2 2l4 9 1.5-3.5L11 6 2 2z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            )}
+
+            {MODES.length > 1 && <div className="flex items-center gap-1 p-1 rounded-xl flex-shrink-0"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
+              {MODES.map(m => (
+                <button key={m.id} onClick={() => setMode(m.id)}
+                  title={m.desc}
+                  className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex-shrink-0"
+                  style={{
+                    background: mode === m.id ? `${bookColor}20` : 'transparent',
+                    color: mode === m.id ? bookColor : 'var(--text-3)',
+                    border: mode === m.id ? `1px solid ${bookColor}35` : '1px solid transparent',
+                  }}>
+                  <span className="text-xs">{m.label}</span>
+                </button>
+              ))}
+            </div>}
+
+            {/* Font toggle — only in sefer mode */}
+            {mode === 'sefer' && (
+              <div className="flex items-center gap-1 flex-shrink-0">
+                {[{ id: 'stam', label: 'סטם' }, { id: 'keter', label: 'כתר' }, { id: 'frank', label: 'פרנק' }].map(({ id, label }) => (
+                  <button key={id} onClick={() => { setSeferFont(id); try { localStorage.setItem('seferFont', id) } catch {} }}
+                    className="px-2 py-1 rounded text-xs transition-all"
+                    style={{
+                      fontFamily: '"KeterYG", serif',
+                      background: seferFont === id ? `${bookColor}20` : 'var(--bg-card)',
+                      color: seferFont === id ? bookColor : 'var(--text-3)',
+                      border: `1px solid ${seferFont === id ? bookColor + '35' : 'var(--border-subtle)'}`,
+                    }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Study mode dropdown — only when synced audio exists */}
+            {audio?.wordTimestamps && (
+              <div className="flex-shrink-0">
+                <button
+                  ref={studyBtnRef}
+                  onClick={() => {
+                    const rect = studyBtnRef.current?.getBoundingClientRect()
+                    if (rect) setStudyDropdownPos({ top: rect.bottom + 6, left: rect.left })
+                    setStudyDropdownOpen(o => !o)
+                  }}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all"
+                  style={{
+                    background: studyMode !== 'full' ? `${bookColor}18` : 'var(--bg-card)',
+                    border: `1px solid ${studyMode !== 'full' ? bookColor + '40' : 'var(--border-subtle)'}`,
+                    color: studyMode !== 'full' ? bookColor : 'var(--text-3)',
+                  }}>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.2"/>
+                    <path d="M6 3.5v2.5l1.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                  </svg>
+                  {t(studyMode === 'full' ? 'study_full' : 'study_phrase')}
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                     <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                )}
-              </button>
-            </div>
-          )}
-          {audioSrcOpen && allAudioSources.length > 1 && createPortal(
-            <div
-              style={{ position: 'fixed', top: audioSrcPos.top, left: audioSrcPos.left, zIndex: 9999,
-                background: 'var(--bg-deep)', border: '1px solid var(--border)', borderRadius: '12px',
-                overflow: 'hidden', minWidth: '160px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
-              onMouseDown={e => e.stopPropagation()}>
-              {allAudioSources.map(src => {
-                const isGeneric = src.key !== 'teacher'
-                return (
-                  <div key={src.key} className="flex items-center"
-                    style={{ background: audioSourceKey === src.key ? `${bookColor}15` : 'transparent' }}>
-                    <button
-                      onClick={() => { setAudioSourceKey(src.key); setAudioSrcOpen(false) }}
-                      className="flex-1 flex items-center gap-2.5 px-3 py-2.5 text-xs text-left transition-all"
-                      style={{ color: audioSourceKey === src.key ? bookColor : 'var(--text-2)' }}>
-                      {src.label}
-                      {audioSourceKey === src.key && (
-                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="ml-auto">
-                          <path d="M2 5l2.5 2.5L8 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      )}
-                    </button>
-                    {isAdmin && isGeneric && (
-                      <button
-                        onClick={e => { e.stopPropagation(); deleteGenericAudio(src.key) }}
-                        className="px-2.5 py-2.5 flex-shrink-0 transition-all"
-                        style={{ color: 'rgba(239,68,68,0.5)' }}
-                        onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
-                        onMouseLeave={e => e.currentTarget.style.color = 'rgba(239,68,68,0.5)'}>
-                        <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                          <path d="M2 3h7M4.5 3V2h2v1M4 3l.5 6M7 3l-.5 6" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
-            </div>,
-            document.body
-          )}
+                </button>
+              </div>
+            )}
 
-          {/* Aliyah nav — right side of same row */}
-          <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
-            <button
-              disabled={aliyahIdx === 0}
-              onClick={() => setAliyahIdxPersisted(i => Math.max(0, i - 1))}
-              className="w-7 h-7 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
-              style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M8 2L4 6l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-            {parasha.aliyot.map((a, i) => {
-              const aliyahAudio = get(parasha.id, i)
-              return (
-                <button key={i}
-                  onClick={() => setAliyahIdxPersisted(i)}
-                  className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all relative"
+            {/* Study dropdown rendered via portal so it's never clipped by overflow */}
+            {studyDropdownOpen && createPortal(
+              <div
+                style={{ position: 'fixed', top: studyDropdownPos.top, left: studyDropdownPos.left, zIndex: 9999,
+                  background: 'var(--bg-deep)', border: '1px solid var(--border)', borderRadius: '12px',
+                  overflow: 'hidden', minWidth: '170px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
+                onMouseDown={e => e.stopPropagation()}>
+                {[
+                  { id: 'full',   icon: '▶', tkey: 'study_full' },
+                  { id: 'phrase', icon: '↵', tkey: 'study_phrase' },
+                ].map(opt => (
+                  <button key={opt.id}
+                    onClick={() => { setStudyMode(opt.id); setStudyDropdownOpen(false); studyPauseRef.current = -1 }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-left transition-all"
+                    style={{
+                      background: studyMode === opt.id ? `${bookColor}15` : 'transparent',
+                      color: studyMode === opt.id ? bookColor : 'var(--text-2)',
+                    }}>
+                    <span style={{ fontSize: '11px' }}>{opt.icon}</span>
+                    {t(opt.tkey)}
+                    {studyMode === opt.id && (
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="ml-auto">
+                        <path d="M2 5l2.5 2.5L8 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </button>
+                ))}
+              </div>,
+              document.body
+            )}
+
+            {/* Audio source selector */}
+            {allAudioSources.length > 0 && (
+              <div className="flex-shrink-0" onMouseDown={e => e.stopPropagation()}>
+                <button
+                  ref={audioSrcBtnRef}
+                  onClick={() => {
+                    if (allAudioSources.length <= 1) return
+                    const rect = audioSrcBtnRef.current?.getBoundingClientRect()
+                    if (rect) setAudioSrcPos({ top: rect.bottom + 6, left: rect.left })
+                    setAudioSrcOpen(o => !o)
+                  }}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all"
                   style={{
-                    background: aliyahIdx === i ? bookColor : 'var(--bg-card)',
-                    color: aliyahIdx === i ? '#fff' : 'var(--text-3)',
-                    border: `1px solid ${aliyahIdx === i ? 'transparent' : 'var(--border-subtle)'}`,
+                    background: audioSourceKey !== 'teacher' ? `${bookColor}18` : 'var(--bg-card)',
+                    border: `1px solid ${audioSourceKey !== 'teacher' ? bookColor + '40' : 'var(--border-subtle)'}`,
+                    color: audioSourceKey !== 'teacher' ? bookColor : 'var(--text-3)',
                   }}>
-                  {a.n === 8 ? 'Maftir' : `${a.n}ª`}
-                  {aliyahAudio && (
-                    <span
-                      title={aliyahAudio.wordTimestamps ? t('tooltip_audio_synced') : t('tooltip_audio_available')}
-                      className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
-                      style={{
-                        background: aliyahAudio.wordTimestamps ? '#22c55e' : bookColor,
-                        border: '1px solid var(--bg)',
-                      }}
-                    />
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 4h2l2-2 2 2h2v5H2V4z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                    <circle cx="6" cy="7" r="1.2" stroke="currentColor" strokeWidth="1.1"/>
+                  </svg>
+                  {allAudioSources.find(s => s.key === audioSourceKey)?.label || allAudioSources[0]?.label}
+                  {allAudioSources.length > 1 && (
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   )}
                 </button>
-              )
-            })}
-            <button
-              disabled={aliyahIdx === parasha.aliyot.length - 1}
-              onClick={() => setAliyahIdxPersisted(i => Math.min(parasha.aliyot.length - 1, i + 1))}
-              className="w-7 h-7 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
-              style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
+              </div>
+            )}
+            {audioSrcOpen && allAudioSources.length > 1 && createPortal(
+              <div
+                style={{ position: 'fixed', top: audioSrcPos.top, left: audioSrcPos.left, zIndex: 9999,
+                  background: 'var(--bg-deep)', border: '1px solid var(--border)', borderRadius: '12px',
+                  overflow: 'hidden', minWidth: '160px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
+                onMouseDown={e => e.stopPropagation()}>
+                {allAudioSources.map(src => {
+                  const isGeneric = src.key !== 'teacher'
+                  return (
+                    <div key={src.key} className="flex items-center"
+                      style={{ background: audioSourceKey === src.key ? `${bookColor}15` : 'transparent' }}>
+                      <button
+                        onClick={() => { setAudioSourceKey(src.key); setAudioSrcOpen(false) }}
+                        className="flex-1 flex items-center gap-2.5 px-3 py-2.5 text-xs text-left transition-all"
+                        style={{ color: audioSourceKey === src.key ? bookColor : 'var(--text-2)' }}>
+                        {src.label}
+                        {audioSourceKey === src.key && (
+                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="ml-auto">
+                            <path d="M2 5l2.5 2.5L8 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </button>
+                      {isAdmin && isGeneric && (
+                        <button
+                          onClick={e => { e.stopPropagation(); deleteGenericAudio(src.key) }}
+                          className="px-2.5 py-2.5 flex-shrink-0 transition-all"
+                          style={{ color: 'rgba(239,68,68,0.5)' }}
+                          onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                          onMouseLeave={e => e.currentTarget.style.color = 'rgba(239,68,68,0.5)'}>
+                          <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                            <path d="M2 3h7M4.5 3V2h2v1M4 3l.5 6M7 3l-.5 6" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>,
+              document.body
+            )}
+
+            {/* Aliyah nav — right side of same row */}
+            <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
+              <button
+                disabled={aliyahIdx === 0}
+                onClick={() => setAliyahIdxPersisted(i => Math.max(0, i - 1))}
+                className="w-7 h-7 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
+                style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M8 2L4 6l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              {parasha.aliyot.map((a, i) => {
+                const aliyahAudio = get(parasha.id, i)
+                return (
+                  <button key={i}
+                    onClick={() => setAliyahIdxPersisted(i)}
+                    className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all relative"
+                    style={{
+                      background: aliyahIdx === i ? bookColor : 'var(--bg-card)',
+                      color: aliyahIdx === i ? '#fff' : 'var(--text-3)',
+                      border: `1px solid ${aliyahIdx === i ? 'transparent' : 'var(--border-subtle)'}`,
+                    }}>
+                    {a.n === 8 ? 'Maftir' : `${a.n}ª`}
+                    {aliyahAudio && (
+                      <span
+                        title={aliyahAudio.wordTimestamps ? t('tooltip_audio_synced') : t('tooltip_audio_available')}
+                        className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
+                        style={{
+                          background: aliyahAudio.wordTimestamps ? '#22c55e' : bookColor,
+                          border: '1px solid var(--bg)',
+                        }}
+                      />
+                    )}
+                  </button>
+                )
+              })}
+              <button
+                disabled={aliyahIdx === parasha.aliyot.length - 1}
+                onClick={() => setAliyahIdxPersisted(i => Math.min(parasha.aliyot.length - 1, i + 1))}
+                className="w-7 h-7 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
+                style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
+
+      {/* Mobile settings bottom sheet */}
+      {mobileSettingsOpen && createPortal(
+        <>
+          <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.5)' }}
+            onClick={() => setMobileSettingsOpen(false)} />
+          <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl pb-safe"
+            style={{ background: 'var(--bg-deep)', borderTop: '1px solid var(--border-subtle)', paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 1rem)' }}>
+            <div className="w-10 h-1 rounded-full mx-auto mt-3 mb-5" style={{ background: 'var(--border)' }} />
+            <div className="px-5 pb-2 flex flex-col gap-5">
+              {/* Font size */}
+              {mode !== 'sefer' && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>Tamaño fuente</span>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => setFontSize(f => Math.max(MIN_FONT, f - 2))}
+                      className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition-all"
+                      style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
+                      א−
+                    </button>
+                    <span className="text-sm w-8 text-center tabular-nums font-medium" style={{ color: 'var(--text)' }}>{fontSize}</span>
+                    <button onClick={() => setFontSize(f => Math.min(MAX_FONT, f + 2))}
+                      className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition-all"
+                      style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
+                      א+
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Modes */}
+              {MODES.length > 1 && (
+                <div className="flex flex-col gap-2">
+                  <span className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>Modo</span>
+                  <div className="flex gap-2 flex-wrap">
+                    {MODES.map(m => (
+                      <button key={m.id} onClick={() => { setMode(m.id); setMobileSettingsOpen(false) }}
+                        className="px-4 py-2 rounded-xl text-xs font-medium transition-all"
+                        style={{
+                          background: mode === m.id ? `${bookColor}20` : 'var(--bg-card)',
+                          color: mode === m.id ? bookColor : 'var(--text-3)',
+                          border: `1px solid ${mode === m.id ? bookColor + '35' : 'var(--border-subtle)'}`,
+                        }}>
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Sefer fonts */}
+              {mode === 'sefer' && (
+                <div className="flex flex-col gap-2">
+                  <span className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>Fuente sefer</span>
+                  <div className="flex gap-2">
+                    {[{ id: 'stam', label: 'סטם' }, { id: 'keter', label: 'כתר' }, { id: 'frank', label: 'פרנק' }].map(({ id, label }) => (
+                      <button key={id} onClick={() => { setSeferFont(id); try { localStorage.setItem('seferFont', id) } catch {} setMobileSettingsOpen(false) }}
+                        className="px-4 py-2 rounded-xl text-xs transition-all"
+                        style={{
+                          background: seferFont === id ? `${bookColor}20` : 'var(--bg-card)',
+                          color: seferFont === id ? bookColor : 'var(--text-3)',
+                          border: `1px solid ${seferFont === id ? bookColor + '35' : 'var(--border-subtle)'}`,
+                        }}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
+
+      {/* Mobile aliyah bottom sheet */}
+      {mobileAliyahOpen && createPortal(
+        <>
+          <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.5)' }}
+            onClick={() => setMobileAliyahOpen(false)} />
+          <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl"
+            style={{ background: 'var(--bg-deep)', borderTop: '1px solid var(--border-subtle)', paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 1rem)' }}>
+            <div className="w-10 h-1 rounded-full mx-auto mt-3 mb-5" style={{ background: 'var(--border)' }} />
+            <div className="px-4 pb-2 grid grid-cols-4 gap-2">
+              {parasha.aliyot.map((a, i) => {
+                const aliyahAudio = get(parasha.id, i)
+                return (
+                  <button key={i}
+                    onClick={() => { setAliyahIdxPersisted(i); setMobileAliyahOpen(false) }}
+                    className="relative flex flex-col items-center gap-1 py-3 rounded-xl transition-all"
+                    style={{
+                      background: aliyahIdx === i ? `${bookColor}20` : 'var(--bg-card)',
+                      border: `1px solid ${aliyahIdx === i ? bookColor + '35' : 'var(--border-subtle)'}`,
+                      color: aliyahIdx === i ? bookColor : 'var(--text-2)',
+                    }}>
+                    <span className="text-sm font-semibold">{a.n === 8 ? 'M' : a.n}</span>
+                    <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>{a.n === 8 ? 'Maftir' : `${a.n}ª`}</span>
+                    {aliyahAudio && (
+                      <span className="absolute top-1 right-1 w-2 h-2 rounded-full"
+                        style={{ background: aliyahAudio.wordTimestamps ? '#22c55e' : bookColor, border: '1px solid var(--bg)' }} />
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
 
       {/* Hidden file input — accessible from banner and audio bar */}
       <input ref={uploadInputRef} type="file" accept="audio/*,video/mp4,.mp4" className="hidden"

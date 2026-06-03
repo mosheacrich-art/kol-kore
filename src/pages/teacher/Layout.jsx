@@ -1,5 +1,6 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
@@ -31,12 +32,18 @@ export default function TeacherLayout() {
   const isRTL = lang === 'he'
   const [unreadCount, setUnreadCount] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [moreOpen, setMoreOpen] = useState(false)
   const [contactOpen, setContactOpen] = useState(false)
+  const [isLandscape, setIsLandscape] = useState(false)
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return
+    const check = () => setIsLandscape(window.innerWidth > window.innerHeight)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const allNavItems = NAV_KEYS.filter(n => !n.hidden).map(n => ({ ...n, label: t(n.key), shortLabel: t(n.shortKey) }))
-  const bottomNavItems = BOTTOM_NAV_INDICES.map(i => allNavItems[i])
-  const moreItems = allNavItems.filter((_, i) => !BOTTOM_NAV_INDICES.includes(i))
 
   useEffect(() => {
     if (!profile?.id) return
@@ -65,24 +72,25 @@ export default function TeacherLayout() {
     return () => supabase.removeChannel(ch)
   }, [profile?.id])
 
-  const go = (path) => { navigate(path); setSidebarOpen(false); setMoreOpen(false) }
+  const go = (path) => { navigate(path); setSidebarOpen(false) }
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
 
   return (
     <div className="flex h-screen" style={{ background: 'var(--bg)' }}>
 
       {/* Overlay for mobile drawer */}
-      {(sidebarOpen || moreOpen) && (
+      {sidebarOpen && (
         <div className="fixed inset-0 z-40 md:hidden"
           style={{ background: 'rgba(0,0,0,0.55)' }}
-          onClick={() => { setSidebarOpen(false); setMoreOpen(false) }} />
+          onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* ── Desktop sidebar ───────────────────────────────────────────────── */}
-      <aside className="hidden md:flex flex-shrink-0 flex-col py-8 px-4 w-64 sticky top-0 h-screen"
+      <aside className={`${isLandscape ? 'hidden' : 'hidden md:flex'} flex-shrink-0 flex-col py-8 px-4 w-64 sticky top-0 h-screen`}
         style={{ background: 'var(--bg-deep)', borderInlineEnd: '1px solid var(--border-subtle)' }}>
         <SidebarContent profile={profile} location={location}
-          go={go} unreadCount={unreadCount} showClose={false} allNavItems={allNavItems} />
+          go={go} unreadCount={unreadCount} showClose={false} allNavItems={allNavItems}
+          isDark={isDark} toggle={toggle} onContactOpen={() => setContactOpen(true)} signOut={signOut} navigate={navigate} />
       </aside>
 
       {/* ── Mobile sidebar drawer ─────────────────────────────────────────── */}
@@ -92,118 +100,69 @@ export default function TeacherLayout() {
         ${sidebarOpen ? 'translate-x-0' : isRTL ? 'translate-x-full' : '-translate-x-full'}`}
         style={{ background: 'var(--bg-deep)', borderInlineEnd: '1px solid var(--border-subtle)' }}>
         <SidebarContent profile={profile} location={location}
-          go={go} unreadCount={unreadCount} showClose onClose={() => setSidebarOpen(false)} allNavItems={allNavItems} />
+          go={go} unreadCount={unreadCount} showClose onClose={() => setSidebarOpen(false)} allNavItems={allNavItems}
+          isDark={isDark} toggle={toggle} onContactOpen={() => setContactOpen(true)} signOut={signOut} navigate={navigate} />
       </aside>
 
-      {/* ── "Más" bottom sheet ────────────────────────────────────────────── */}
-      <div className={`md:hidden fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl
-        transition-transform duration-300 ease-in-out mobile-bottom-nav
-        ${moreOpen ? 'translate-y-0' : 'translate-y-full'}`}
-        style={{ background: 'var(--bg-deep)', borderTop: '1px solid var(--border-subtle)', paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 0.5rem)' }}>
-        <div className="w-10 h-1 rounded-full mx-auto mt-3 mb-4" style={{ background: 'var(--border)' }} />
-        <div className="px-4 pb-2 grid grid-cols-3 gap-2">
-          {allNavItems.map(item => {
-            const active = isActive(item.path)
-            const showBadge = item.badge && unreadCount > 0
-            return (
-              <button key={item.path} onClick={() => { go(item.path); setMoreOpen(false) }}
-                className="relative flex flex-col items-center gap-2 py-3 rounded-xl transition-all"
-                style={{
-                  background: active ? 'rgba(249,184,0,0.1)' : 'var(--bg-card)',
-                  border: `1px solid ${active ? 'rgba(249,184,0,0.25)' : 'var(--border-subtle)'}`,
-                  color: active ? '#b8860b' : 'var(--text-2)',
-                }}>
-                <div className="text-xs font-medium text-center leading-tight">{item.shortLabel}</div>
-                <div className="text-[10px] hebrew" style={{ color: 'var(--text-gold)' }}>{item.heb}</div>
-                {showBadge && (
-                  <span className="absolute top-1.5 right-2 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
-                    style={{ background: '#6c33e6', color: '#fff' }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
-                )}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
       {/* ── Main ─────────────────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col overflow-auto scroll-smooth-ios main-with-bottom-nav">
+      <main className="flex-1 flex flex-col overflow-auto scroll-smooth-ios">
 
-        {/* Header */}
-        <div className="sticky top-0 z-30 flex items-center gap-3 px-4 flex-shrink-0 app-header"
-          style={{ background: 'var(--bg-deep)', borderBottom: '1px solid var(--border-subtle)', minHeight: '3.5rem' }}>
-          <button className="md:hidden p-2 rounded-xl relative" onClick={() => setSidebarOpen(true)}
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-2)' }}>
-            <HamburgerIcon />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-white flex items-center justify-center"
-                style={{ background: '#6c33e6', fontSize: '8px' }}>
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </button>
-          <StarSvg />
-          <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</span>
-          <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
-          <div className="ml-auto flex items-center gap-2">
-            <LangToggle />
-            <button onClick={() => setContactOpen(true)}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
-              style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}
-              title={t('contact_us')}>
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                <rect x="1" y="2.5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
-                <path d="M1 4l5.5 4L12 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              {t('contact_us')}
+        {/* Header — hidden in landscape on native */}
+        {!isLandscape && (
+          <div className="sticky top-0 z-30 flex items-center gap-3 px-4 flex-shrink-0 app-header"
+            style={{ background: 'var(--bg-deep)', borderBottom: '1px solid var(--border-subtle)', minHeight: '3.5rem' }}>
+            <button className="md:hidden p-2 rounded-xl relative" onClick={() => setSidebarOpen(true)}
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-2)' }}>
+              <HamburgerIcon />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-white flex items-center justify-center"
+                  style={{ background: '#6c33e6', fontSize: '8px' }}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </button>
-            <button onClick={() => setContactOpen(true)}
-              className="sm:hidden p-2 rounded-xl transition-all"
-              style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}
-              title={t('contact_us')}>
-              <svg width="15" height="15" viewBox="0 0 13 13" fill="none">
-                <rect x="1" y="2.5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
-                <path d="M1 4l5.5 4L12 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-            <button onClick={toggle}
-              className="p-2 rounded-xl text-xs transition-all"
-              style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
-              title={isDark ? t('light_mode') : t('dark_mode')}>
-              <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
-            </button>
-            <button onClick={async () => { await signOut(); navigate('/login') }}
-              className="p-2 rounded-xl transition-all"
-              title={t('logout')}
-              style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
-              <LogoutIcon />
-            </button>
+            <StarSvg />
+            <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</span>
+            <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
+            <div className="ml-auto flex items-center gap-2">
+              {/* Desktop only — on mobile these live in the sidebar */}
+              <div className="hidden md:flex items-center gap-2">
+                <LangToggle />
+                <button onClick={() => setContactOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
+                  style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}
+                  title={t('contact_us')}>
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                    <rect x="1" y="2.5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                    <path d="M1 4l5.5 4L12 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  {t('contact_us')}
+                </button>
+                <button onClick={toggle}
+                  className="p-2 rounded-xl text-xs transition-all"
+                  style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+                  title={isDark ? t('light_mode') : t('dark_mode')}>
+                  <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
+                </button>
+                <button onClick={async () => { await signOut(); navigate('/login') }}
+                  className="p-2 rounded-xl transition-all"
+                  title={t('logout')}
+                  style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
+                  <LogoutIcon />
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         {contactOpen && <ContactModal onClose={() => setContactOpen(false)} />}
         <Outlet />
       </main>
-
-      {/* ── Mobile FAB ───────────────────────────────────────────────────── */}
-      <button
-        className="md:hidden fixed z-30 w-14 h-14 rounded-full flex items-center justify-center"
-        style={{
-          bottom: 'max(16px, calc(16px + env(safe-area-inset-bottom, 0px)))',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'var(--bg-deep)',
-          border: '1.5px solid var(--border)',
-          color: moreOpen ? '#f9b800' : 'var(--text-2)',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.28)',
-        }}
-        onClick={() => setMoreOpen(o => !o)}>
-        {moreOpen ? <FabXIcon /> : <FabGridIcon />}
-      </button>
     </div>
   )
 }
 
-function SidebarContent({ profile, location, go, unreadCount, showClose, onClose, allNavItems }) {
+function SidebarContent({ profile, location, go, unreadCount, showClose, onClose, allNavItems, isDark, toggle, onContactOpen, signOut, navigate }) {
   const { t } = useLang()
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
   return (
@@ -261,31 +220,38 @@ function SidebarContent({ profile, location, go, unreadCount, showClose, onClose
         })}
       </nav>
 
+      <div className="mt-auto px-3 flex flex-col gap-2">
+        {/* Mobile-only: lang, dark mode, contact */}
+        <div className="md:hidden flex flex-col gap-2 pb-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{t ? t('language') ?? 'Idioma' : 'Idioma'}</span>
+            <LangToggle />
+          </div>
+          <button onClick={toggle}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs text-left transition-all"
+            style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
+            <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
+            {isDark ? (t ? t('light_mode') ?? 'Modo claro' : 'Modo claro') : (t ? t('dark_mode') ?? 'Modo oscuro' : 'Modo oscuro')}
+          </button>
+          {onContactOpen && (
+            <button onClick={() => { onContactOpen(); onClose?.() }}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs text-left transition-all"
+              style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ flexShrink: 0 }}>
+                <rect x="1" y="2.5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                <path d="M1 4l5.5 4L12 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              {t ? t('contact_us') ?? 'Contáctanos' : 'Contáctanos'}
+            </button>
+          )}
+        </div>
+        <button onClick={async () => { await signOut(); navigate('/login') }}
+          className="w-full text-xs py-2.5 px-3 rounded-xl text-left transition-all"
+          style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
+          → {t('logout')}
+        </button>
+      </div>
     </>
-  )
-}
-
-function FabGridIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <circle cx="5" cy="5" r="1.5" fill="currentColor"/>
-      <circle cx="10" cy="5" r="1.5" fill="currentColor"/>
-      <circle cx="15" cy="5" r="1.5" fill="currentColor"/>
-      <circle cx="5" cy="10" r="1.5" fill="currentColor"/>
-      <circle cx="10" cy="10" r="1.5" fill="currentColor"/>
-      <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
-      <circle cx="5" cy="15" r="1.5" fill="currentColor"/>
-      <circle cx="10" cy="15" r="1.5" fill="currentColor"/>
-      <circle cx="15" cy="15" r="1.5" fill="currentColor"/>
-    </svg>
-  )
-}
-
-function FabXIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <path d="M4 4l10 10M14 4L4 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-    </svg>
   )
 }
 
@@ -333,13 +299,3 @@ function XIcon() {
   )
 }
 
-function MoreIcon({ active }) {
-  const c = active ? '#f9b800' : 'currentColor'
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <circle cx="4" cy="10" r="1.5" fill={c}/>
-      <circle cx="10" cy="10" r="1.5" fill={c}/>
-      <circle cx="16" cy="10" r="1.5" fill={c}/>
-    </svg>
-  )
-}
