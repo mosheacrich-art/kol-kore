@@ -23,7 +23,7 @@ export default function Privacy() {
           Política de Privacidad
         </h1>
         <p className="text-sm mb-10" style={{ color: 'var(--text-3)' }}>
-          Última actualización: abril de 2025
+          Última actualización: junio de 2025
         </p>
 
         <div className="flex flex-col gap-8" style={{ color: 'var(--text-2)', lineHeight: 1.7 }}>
@@ -31,9 +31,8 @@ export default function Privacy() {
           <Section title="1. Responsable del tratamiento">
             <p>
               El responsable del tratamiento de los datos personales recogidos a través de esta aplicación es{' '}
-              <strong style={{ color: 'var(--text)' }}>[Nombre / Empresa]</strong>,
-              con domicilio en [Dirección], España.
-              Contacto: <a href="mailto:[email]" style={{ color: '#6c33e6' }}>[email de contacto]</a>.
+              <strong style={{ color: 'var(--text)' }}>PerashApp</strong> (perashapp.com).
+              Contacto: <a href="mailto:contact.perashapp@gmail.com" style={{ color: '#6c33e6' }}>contact.perashapp@gmail.com</a>.
             </p>
           </Section>
 
@@ -44,7 +43,7 @@ export default function Privacy() {
               <li><strong>Perfil:</strong> fecha de Bar/Bat Mitzvá, perashá asignada, progreso de estudio.</li>
               <li><strong>Grabaciones de audio:</strong> archivos de voz subidos voluntariamente para practicar la lectura.</li>
               <li><strong>Datos de uso:</strong> tiempo de estudio por aliyá, rachas de estudio, número de escuchas.</li>
-              <li><strong>Pago:</strong> los datos de pago son procesados directamente por Stripe. No almacenamos números de tarjeta.</li>
+              <li><strong>Pago:</strong> las suscripciones se gestionan a través de Apple In-App Purchase. No almacenamos datos de tarjeta ni información de pago.</li>
             </ul>
           </Section>
 
@@ -59,7 +58,7 @@ export default function Privacy() {
               <tbody>
                 {[
                   ['Prestar el servicio de estudio y seguimiento', 'Ejecución del contrato'],
-                  ['Gestionar pagos y suscripciones', 'Ejecución del contrato'],
+                  ['Gestionar suscripciones a través de Apple', 'Ejecución del contrato'],
                   ['Notificaciones entre profesor y alumno', 'Interés legítimo'],
                   ['Mejorar la plataforma', 'Interés legítimo'],
                   ['Cumplimiento de obligaciones legales', 'Obligación legal'],
@@ -84,7 +83,7 @@ export default function Privacy() {
             <p>Compartimos datos únicamente con los siguientes proveedores de servicios, bajo contrato de encargado del tratamiento:</p>
             <ul className="mt-2 flex flex-col gap-1.5 pl-4" style={{ listStyleType: 'disc' }}>
               <li><strong>Supabase Inc.</strong> — base de datos y autenticación (servidores en UE).</li>
-              <li><strong>Stripe Inc.</strong> — procesamiento de pagos.</li>
+              <li><strong>Apple Inc.</strong> — gestión de suscripciones y pagos a través de In-App Purchase.</li>
               <li><strong>OpenAI LLC</strong> — transcripción de audio para la sincronización de lectura (modelo Whisper). Los audios se procesan y no se utilizan para entrenar modelos.</li>
             </ul>
             <p className="mt-2">No vendemos ni cedemos datos a terceros con fines comerciales.</p>
@@ -92,7 +91,7 @@ export default function Privacy() {
 
           <Section title="6. Transferencias internacionales">
             <p>
-              Algunos proveedores (OpenAI, Stripe) tienen sede en EE.UU. Las transferencias se realizan bajo
+              Algunos proveedores (OpenAI, Apple) tienen sede en EE.UU. Las transferencias se realizan bajo
               las Cláusulas Contractuales Tipo aprobadas por la Comisión Europea o bajo el marco EU-U.S. Data Privacy Framework.
             </p>
           </Section>
@@ -108,7 +107,7 @@ export default function Privacy() {
             </ul>
             <p className="mt-2">
               Para ejercer tus derechos, escríbenos a{' '}
-              <a href="mailto:[email]" style={{ color: '#6c33e6' }}>[email de contacto]</a>.
+              <a href="mailto:contact.perashapp@gmail.com" style={{ color: '#6c33e6' }}>contact.perashapp@gmail.com</a>.
               También puedes reclamar ante la <strong>Agencia Española de Protección de Datos</strong> (aepd.es).
             </p>
           </Section>

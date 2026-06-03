@@ -23,20 +23,20 @@ export default function Terms() {
           Términos y Condiciones
         </h1>
         <p className="text-sm mb-10" style={{ color: 'var(--text-3)' }}>
-          Última actualización: abril de 2025
+          Última actualización: junio de 2025
         </p>
 
         <div className="flex flex-col gap-8" style={{ color: 'var(--text-2)', lineHeight: 1.7 }}>
 
           <Section title="1. Descripción del servicio">
             <p>
-              Perashá es una plataforma web de estudio de Torá que permite a alumnos estudiar las parashot semanales
+              Perashá es una plataforma de estudio de Torá que permite a alumnos estudiar las parashot semanales
               con texto, audio sincronizado y seguimiento de progreso, y a profesores gestionar alumnos, asignar
               deberes y subir grabaciones de referencia.
             </p>
             <p className="mt-2">
-              Prestada por <strong style={{ color: 'var(--text)' }}>[Nombre / Empresa]</strong>, España.
-              Contacto: <a href="mailto:[email]" style={{ color: '#6c33e6' }}>[email de contacto]</a>.
+              Prestada por <strong style={{ color: 'var(--text)' }}>PerashApp</strong> (perashapp.com).
+              Contacto: <a href="mailto:contact.perashapp@gmail.com" style={{ color: '#6c33e6' }}>contact.perashapp@gmail.com</a>.
             </p>
           </Section>
 
@@ -73,45 +73,51 @@ export default function Terms() {
                 <tbody>
                   <tr style={{ borderTop: '1px solid var(--border-subtle)' }}>
                     <td className="px-4 py-3">Mensual</td>
-                    <td className="px-4 py-3">5 € / mes</td>
-                    <td className="px-4 py-3">Según meses elegidos</td>
+                    <td className="px-4 py-3">$9,99 / mes</td>
+                    <td className="px-4 py-3">30 días</td>
                   </tr>
                   <tr style={{ borderTop: '1px solid var(--border-subtle)' }}>
                     <td className="px-4 py-3">Anual</td>
-                    <td className="px-4 py-3">50 € / año</td>
-                    <td className="px-4 py-3">12 meses</td>
+                    <td className="px-4 py-3">$99,99 / año</td>
+                    <td className="px-4 py-3">12 meses (ahorra 17%)</td>
                   </tr>
                 </tbody>
               </table>
             </div>
             <p className="mt-3">
-              Todos los precios incluyen IVA cuando corresponda. Los pagos se procesan de forma segura mediante Stripe.
+              Los pagos en la aplicación iOS son gestionados por Apple a través de las compras integradas
+              de la App Store (In-App Purchase). Al suscribirte aceptas también los{' '}
+              <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noreferrer" style={{ color: '#6c33e6' }}>
+                Términos de Licencia de Usuario Final de Apple
+              </a>.
             </p>
           </Section>
 
-          <Section title="5. Sin renovación automática">
+          <Section title="5. Renovación automática y cancelación">
             <div className="p-4 rounded-xl mt-1 flex items-start gap-3"
-              style={{ background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.2)' }}>
+              style={{ background: 'rgba(108,51,230,0.07)', border: '1px solid rgba(108,51,230,0.2)' }}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
-                <circle cx="8" cy="8" r="6.5" stroke="#16a34a" strokeWidth="1.3"/>
-                <path d="M5.5 8l2 2L10.5 6" stroke="#16a34a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="8" cy="8" r="6.5" stroke="#6c33e6" strokeWidth="1.3"/>
+                <path d="M8 5v4M8 10.5v.5" stroke="#6c33e6" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
               <p>
-                <strong style={{ color: '#16a34a' }}>No realizamos ningún cobro automático ni recurrente.</strong>{' '}
-                Cada pago es una compra puntual por el periodo elegido. Cuando venza tu suscripción,
-                tu acceso expirará y podrás decidir libremente si deseas renovarla. No se realizará
-                ningún cargo sin tu autorización explícita.
+                La suscripción se <strong style={{ color: 'var(--text)' }}>renueva automáticamente</strong> al final de cada
+                periodo salvo que se cancele al menos 24 horas antes. La renovación se carga a través de tu cuenta de Apple ID.{' '}
+                <strong style={{ color: 'var(--text)' }}>Para cancelar</strong>, ve a Ajustes → tu nombre → Suscripciones en
+                tu dispositivo iOS. No se reembolsan los periodos ya cobrados.
               </p>
             </div>
           </Section>
 
           <Section title="6. Política de reembolsos">
             <p>
-              Dado que el acceso al servicio digital es inmediato tras el pago, no se ofrecen reembolsos
-              salvo en los siguientes casos: (a) error técnico imputable al servicio que impida el acceso
-              durante más de 48 horas continuadas; (b) cobro duplicado por error. Las solicitudes de
-              reembolso deben enviarse en los 7 días siguientes al pago a{' '}
-              <a href="mailto:[email]" style={{ color: '#6c33e6' }}>[email de contacto]</a>.
+              Los reembolsos de compras realizadas a través de Apple se gestionan conforme a la política de
+              Apple. Para solicitar un reembolso, visita{' '}
+              <a href="https://reportaproblem.apple.com" target="_blank" rel="noreferrer" style={{ color: '#6c33e6' }}>
+                reportaproblem.apple.com
+              </a>.
+              Para cualquier incidencia técnica del servicio contacta con{' '}
+              <a href="mailto:contact.perashapp@gmail.com" style={{ color: '#6c33e6' }}>contact.perashapp@gmail.com</a>.
             </p>
           </Section>
 
@@ -160,8 +166,7 @@ export default function Terms() {
           <Section title="12. Ley aplicable y jurisdicción">
             <p>
               Estos términos se rigen por la legislación española. Para cualquier controversia, las partes
-              se someten a los juzgados y tribunales del domicilio del usuario (según normativa de consumidores)
-              o, en su defecto, a los de [ciudad], España.
+              se someten a los juzgados y tribunales del domicilio del usuario (según normativa de consumidores).
             </p>
           </Section>
 

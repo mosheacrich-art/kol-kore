@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { useTheme } from '../../context/ThemeContext'
@@ -227,13 +228,11 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
         })}
       </nav>
 
+      <LangSheet t={t} />
       <div className="mt-auto px-3 flex flex-col gap-2">
         {/* Mobile-only: lang, dark mode, contact */}
         <div className="md:hidden flex flex-col gap-2 pb-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-          <div className="flex items-center justify-between px-1">
-            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{t ? t('language') ?? 'Idioma' : 'Idioma'}</span>
-            <LangToggle />
-          </div>
+          <LangButton t={t} />
           <button onClick={toggle}
             className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs text-left transition-all"
             style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
@@ -262,6 +261,65 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
   )
 }
 
+
+const LANGS = [
+  { code: 'es', flag: '🇪🇸', label: 'Español' },
+  { code: 'en', flag: '🇬🇧', label: 'English' },
+  { code: 'fr', flag: '🇫🇷', label: 'Français' },
+  { code: 'it', flag: '🇮🇹', label: 'Italiano' },
+  { code: 'he', flag: '🇮🇱', label: 'עברית' },
+  { code: 'de', flag: '🇩🇪', label: 'Deutsch' },
+]
+
+function LangButton({ t }) {
+  const { lang } = useLang()
+  const current = LANGS.find(l => l.code === lang) || LANGS[0]
+  return (
+    <button onClick={() => window.__langSheetOpen?.()}
+      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all"
+      style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
+      <span>{t ? t('language') ?? 'Idioma' : 'Idioma'}</span>
+      <span>{current.flag} {current.label}</span>
+    </button>
+  )
+}
+
+function LangSheet({ t }) {
+  const { lang, setLang } = useLang()
+  const [open, setOpen] = useState(false)
+  useEffect(() => { window.__langSheetOpen = () => setOpen(true) }, [])
+  if (!open) return null
+  return createPortal(
+    <div className="fixed inset-0 z-[300] flex flex-col justify-end" onClick={() => setOpen(false)}>
+      <div className="rounded-t-2xl p-5 flex flex-col gap-3"
+        style={{ background: 'var(--bg-deep)', border: '1px solid var(--border-subtle)' }}
+        onClick={e => e.stopPropagation()}>
+        <div className="w-10 h-1 rounded-full mx-auto" style={{ background: 'var(--border)' }} />
+        <p className="text-xs font-medium px-1" style={{ color: 'var(--text-3)' }}>
+          {t ? t('language') ?? 'Idioma' : 'Idioma'}
+        </p>
+        {LANGS.map(l => (
+          <button key={l.code} onClick={() => { setLang(l.code); setOpen(false) }}
+            className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all"
+            style={{
+              background: lang === l.code ? 'rgba(108,51,230,0.12)' : 'var(--bg-card)',
+              border: `1px solid ${lang === l.code ? 'rgba(108,51,230,0.3)' : 'var(--border-subtle)'}`,
+              color: lang === l.code ? '#8b5cf6' : 'var(--text)',
+            }}>
+            <span style={{ fontSize: '20px' }}>{l.flag}</span>
+            <span className="font-medium">{l.label}</span>
+            {lang === l.code && (
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="ml-auto">
+                <path d="M2.5 7l3 3L11.5 4" stroke="#8b5cf6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>,
+    document.body
+  )
+}
 
 function Paywall({ user, profile, navigate }) {
   const [plan, setPlan] = useState('annual')
@@ -414,13 +472,8 @@ function Paywall({ user, profile, navigate }) {
           Pago seguro · Cancela cuando quieras
         </p>
 
-        {/* Dev bypass + guest */}
+        {/* Guest access */}
         <div className="flex flex-col items-center gap-2">
-          <button onClick={() => { sessionStorage.setItem('dev_bypass', '1'); navigate('/student/study') }}
-            className="text-xs py-2 px-5 rounded-xl transition-all font-medium"
-            style={{ color: '#8b5cf6', background: 'rgba(108,51,230,0.08)', border: '1px solid rgba(108,51,230,0.2)' }}>
-            Iniciar sesión sin pagar (solo desarrollo)
-          </button>
           <button onClick={handleGuest}
             className="text-xs py-2 px-5 rounded-xl transition-all"
             style={{ color: 'var(--text-muted)', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>

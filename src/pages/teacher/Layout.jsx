@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, createPortal } from 'react'
 import { Capacitor } from '@capacitor/core'
 import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
@@ -220,13 +220,11 @@ function SidebarContent({ profile, location, go, unreadCount, showClose, onClose
         })}
       </nav>
 
+      <TeacherLangSheet t={t} />
       <div className="mt-auto px-3 flex flex-col gap-2">
         {/* Mobile-only: lang, dark mode, contact */}
         <div className="md:hidden flex flex-col gap-2 pb-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-          <div className="flex items-center justify-between px-1">
-            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{t ? t('language') ?? 'Idioma' : 'Idioma'}</span>
-            <LangToggle />
-          </div>
+          <TeacherLangButton t={t} />
           <button onClick={toggle}
             className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs text-left transition-all"
             style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
@@ -296,6 +294,65 @@ function XIcon() {
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
       <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
+  )
+}
+
+const LANGS_T = [
+  { code: 'es', flag: '🇪🇸', label: 'Español' },
+  { code: 'en', flag: '🇬🇧', label: 'English' },
+  { code: 'fr', flag: '🇫🇷', label: 'Français' },
+  { code: 'it', flag: '🇮🇹', label: 'Italiano' },
+  { code: 'he', flag: '🇮🇱', label: 'עברית' },
+  { code: 'de', flag: '🇩🇪', label: 'Deutsch' },
+]
+
+function TeacherLangButton({ t }) {
+  const { lang } = useLang()
+  const current = LANGS_T.find(l => l.code === lang) || LANGS_T[0]
+  return (
+    <button onClick={() => window.__teacherLangSheetOpen?.()}
+      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all"
+      style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
+      <span>{t ? t('language') ?? 'Idioma' : 'Idioma'}</span>
+      <span>{current.flag} {current.label}</span>
+    </button>
+  )
+}
+
+function TeacherLangSheet({ t }) {
+  const { lang, setLang } = useLang()
+  const [open, setOpen] = useState(false)
+  useEffect(() => { window.__teacherLangSheetOpen = () => setOpen(true) }, [])
+  if (!open) return null
+  return createPortal(
+    <div className="fixed inset-0 z-[300] flex flex-col justify-end" onClick={() => setOpen(false)}>
+      <div className="rounded-t-2xl p-5 flex flex-col gap-3"
+        style={{ background: 'var(--bg-deep)', border: '1px solid var(--border-subtle)' }}
+        onClick={e => e.stopPropagation()}>
+        <div className="w-10 h-1 rounded-full mx-auto" style={{ background: 'var(--border)' }} />
+        <p className="text-xs font-medium px-1" style={{ color: 'var(--text-3)' }}>
+          {t ? t('language') ?? 'Idioma' : 'Idioma'}
+        </p>
+        {LANGS_T.map(l => (
+          <button key={l.code} onClick={() => { setLang(l.code); setOpen(false) }}
+            className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all"
+            style={{
+              background: lang === l.code ? 'rgba(249,184,0,0.1)' : 'var(--bg-card)',
+              border: `1px solid ${lang === l.code ? 'rgba(249,184,0,0.3)' : 'var(--border-subtle)'}`,
+              color: lang === l.code ? '#b8860b' : 'var(--text)',
+            }}>
+            <span style={{ fontSize: '20px' }}>{l.flag}</span>
+            <span className="font-medium">{l.label}</span>
+            {lang === l.code && (
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="ml-auto">
+                <path d="M2.5 7l3 3L11.5 4" stroke="#b8860b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>,
+    document.body
   )
 }
 
