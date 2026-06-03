@@ -113,8 +113,8 @@ export default function StudentLayout() {
       <main className="flex-1 flex flex-col min-h-0 overflow-auto scroll-smooth-ios"
         style={{ paddingTop: isNative ? 'calc(env(safe-area-inset-top, 0px) + 8px)' : undefined }}>
 
-        {/* Native: floating hamburger only, no bar */}
-        {isNative && !isLandscape && (
+        {/* Native: floating hamburger only, no bar — hidden when sidebar is open */}
+        {isNative && !isLandscape && !sidebarOpen && (
           <button className="fixed z-50 md:hidden p-2.5 rounded-xl"
             style={{
               top: 'calc(env(safe-area-inset-top, 0px) + 8px)',
@@ -137,8 +137,7 @@ export default function StudentLayout() {
               <HamburgerIcon />
             </button>
             <StarOfDavidSmall />
-            <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</span>
-            <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
+            <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashapp</span>
             <div className="ml-auto flex items-center gap-2">
               <div className="hidden md:flex items-center gap-2">
                 <LangToggle />
@@ -186,7 +185,7 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
       <div className="px-3 mb-8 flex items-center justify-between">
         <button onClick={() => go('/student/profile')} className="flex items-center gap-2">
           <StarOfDavidSmall />
-          <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</span>
+          <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashapp</span>
         </button>
         {showClose && (
           <button onClick={onClose} className="p-1.5 rounded-lg" style={{ color: 'var(--text-3)' }}>
@@ -209,7 +208,7 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
             {profile?.name ?? 'Alumno'}
           </div>
           <div className="text-xs" style={{ color: '#a78bfa' }}>
-            {'תַּלְמִיד'}
+            {t('role_student') ?? 'Alumno'}
           </div>
         </div>
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0, color: 'rgba(139,92,246,0.5)' }}>
@@ -233,9 +232,6 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
               <Icon active={active} />
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-medium">{item.label}</div>
-                <div className="text-xs hebrew" style={{ color: active ? 'var(--text-gold)' : 'var(--text-muted)' }}>
-                  {item.heb}
-                </div>
               </div>
               {showBadge && (
                 <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
@@ -391,8 +387,7 @@ function Paywall({ user, profile, navigate }) {
             fill="none" stroke="rgba(255,202,40,0.7)" strokeWidth="1.2" strokeLinejoin="round"/>
         </svg>
         <div>
-          <div className="text-base font-semibold" style={{ color: 'var(--text)' }}>Perashapp</div>
-          <div className="text-xs hebrew" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</div>
+          <div className="text-base font-semibold" style={{ color: 'var(--text)' }}>Parashapp</div>
         </div>
       </div>
 

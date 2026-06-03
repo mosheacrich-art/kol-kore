@@ -109,8 +109,8 @@ export default function TeacherLayout() {
       <main className="flex-1 flex flex-col overflow-auto scroll-smooth-ios"
         style={{ paddingTop: isNative ? 'calc(env(safe-area-inset-top, 0px) + 8px)' : undefined }}>
 
-        {/* Native: floating hamburger only, no bar */}
-        {isNative && !isLandscape && (
+        {/* Native: floating hamburger only, no bar — hidden when sidebar is open */}
+        {isNative && !isLandscape && !sidebarOpen && (
           <button className="fixed z-50 md:hidden p-2.5 rounded-xl relative"
             style={{
               top: 'calc(env(safe-area-inset-top, 0px) + 8px)',
@@ -145,8 +145,7 @@ export default function TeacherLayout() {
               )}
             </button>
             <StarSvg />
-            <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</span>
-            <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
+            <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashapp</span>
             <div className="ml-auto flex items-center gap-2">
               <div className="hidden md:flex items-center gap-2">
                 <LangToggle />
@@ -208,7 +207,7 @@ function SidebarContent({ profile, location, go, unreadCount, showClose, onClose
             <div className="text-xs font-medium truncate" style={{ color: 'var(--text)' }}>
               {profile?.name ?? 'Profesor'}
             </div>
-            <div className="text-xs" style={{ color: 'var(--text-gold)' }}>מוֹרֶה · Profesor</div>
+            <div className="text-xs" style={{ color: 'var(--text-gold)' }}>{t('role_teacher') ?? 'Profesor'}</div>
           </div>
         </div>
       </div>
@@ -227,9 +226,6 @@ function SidebarContent({ profile, location, go, unreadCount, showClose, onClose
               <NavDot active={active} />
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-medium">{item.label}</div>
-                <div className="text-xs hebrew" style={{ color: active ? 'var(--text-gold)' : 'var(--text-muted)' }}>
-                  {item.heb}
-                </div>
               </div>
               {item.badge && unreadCount > 0 && (
                 <span className="ml-auto text-xs min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center flex-shrink-0"
