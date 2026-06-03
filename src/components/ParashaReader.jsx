@@ -395,7 +395,11 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
       setRecSeconds(0)
       timerRef.current = setInterval(() => setRecSeconds(s => s + 1), 1000)
     } catch (err) {
-      alert(err.message || err)
+      setRecordingMode(false)
+      setCountdown(null)
+      alert(err.name === 'NotAllowedError'
+        ? 'Permiso de micrófono denegado. Actívalo en Ajustes → Permisos.'
+        : err.message || err)
     }
   }
 
