@@ -580,7 +580,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
 
         {/* Row 2: Mobile compact toolbar OR desktop full toolbar */}
         {isMobileUI ? (
-          <div className="flex items-center gap-2 px-4 pb-2">
+          <div className="flex items-center gap-2 pl-14 pr-4 pb-2">
             {/* Settings button */}
             <button
               onClick={() => setMobileSettingsOpen(true)}
