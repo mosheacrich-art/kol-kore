@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Capacitor } from '@capacitor/core'
 import { PARASHOT, ALL_PARASHOT, COMBINED_PARASHOT, SEFARIM_LIST, BOOK_COLORS } from '../../data/parashot'
 import { MOADIM_LIST, ALL_MOADIM } from '../../data/moadim'
 import { useAudio } from '../../context/AudioContext'
@@ -373,6 +374,15 @@ function ReaderView({ parasha, basePath }) {
   const navigate = useNavigate()
   const { t } = useLang()
   const [searchParams] = useSearchParams()
+  const [isMobileUI, setIsMobileUI] = useState(Capacitor.isNativePlatform())
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) {
+      const check = () => setIsMobileUI(window.innerWidth < 768)
+      check()
+      window.addEventListener('resize', check)
+      return () => window.removeEventListener('resize', check)
+    }
+  }, [])
   const initialAliyah = Math.min(
     Math.max(0, parseInt(searchParams.get('aliyah') || '0', 10)),
     parasha.aliyot.length - 1
@@ -381,7 +391,7 @@ function ReaderView({ parasha, basePath }) {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden" style={{ height: '100%' }}>
-      <div className="hidden md:flex flex-shrink-0 items-center gap-3 px-6 py-3"
+      <div className={`${isMobileUI ? 'hidden' : 'hidden md:flex'} flex-shrink-0 items-center gap-3 px-6 py-3`}
         style={{ background: 'var(--overlay)', borderBottom: '1px solid var(--border-subtle)' }}>
         <button onClick={() => navigate(basePath)}
           className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg transition-all"

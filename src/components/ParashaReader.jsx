@@ -1173,6 +1173,33 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
               {t('stop')}
             </button>
           </>
+        ) : isMobileUI && audio ? (
+          <>
+            <div className="flex-1 min-w-0">
+              <AudioPlayer
+                ref={audioPlayerRef}
+                audio={audio}
+                label={currentAliyah.label}
+                onPlay={handlePlay}
+                onTimeUpdate={setAudioCurrentTime}
+                onPlayingChange={setAudioPlaying}
+                onDurationChange={setAudioDuration}
+              />
+            </div>
+            <button onClick={startRec} title={t('tooltip_record_send')}
+              className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all text-lg"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              🎙️
+            </button>
+          </>
+        ) : isMobileUI && !audio ? (
+          <div className="w-full flex items-center justify-end">
+            <button onClick={startRec} title={t('tooltip_record_send')}
+              className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all text-lg"
+              style={{ background: `${bookColor}15`, border: `1px solid ${bookColor}30` }}>
+              🎙️
+            </button>
+          </div>
         ) : audio ? (
           <>
             <div className="flex-1 min-w-0">
