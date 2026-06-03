@@ -64,6 +64,8 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
   const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false)
   const [mobileAliyahOpen, setMobileAliyahOpen] = useState(false)
   const [isMobileUI, setIsMobileUI] = useState(Capacitor.isNativePlatform())
+  const [recordingMode, setRecordingMode] = useState(false)
+  const [countdown, setCountdown] = useState(null)
   const studyPauseRef = useRef(-1)
   const phraseBoundariesRef = useRef(new Set())
   const audioPlayerRef = useRef(null)
@@ -400,6 +402,24 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
   const stopRec = () => {
     clearInterval(timerRef.current)
     mediaRecorderRef.current?.stop()
+    setRecordingMode(false)
+  }
+
+  const startRecordingMode = () => {
+    if (!isMobileUI) { startRec(); return }
+    setRecordingMode(true)
+    setCountdown(3)
+    let n = 3
+    const iv = setInterval(() => {
+      n -= 1
+      if (n <= 0) {
+        clearInterval(iv)
+        setCountdown(null)
+        startRec()
+      } else {
+        setCountdown(n)
+      }
+    }, 1000)
   }
 
   const handleUploadFile = async (e) => {
@@ -477,6 +497,56 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
 
   return (
     <div className="flex flex-col h-full" style={{ background: 'var(--bg)' }}>
+
+      {/* ── Recording mode fullscreen overlay ─────────────────────────────── */}
+      {recordingMode && createPortal(
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center"
+          style={{ background: 'var(--bg)' }}>
+
+          {/* Countdown */}
+          {countdown !== null && (
+            <div className="flex flex-col items-center gap-6">
+              <div className="text-8xl font-light tabular-nums animate-pulse"
+                style={{ color: bookColor, lineHeight: 1 }}>
+                {countdown}
+              </div>
+              <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+                Preparándose para grabar…
+              </p>
+            </div>
+          )}
+
+          {/* Recording active */}
+          {countdown === null && recState === 'recording' && (
+            <div className="flex flex-col items-center gap-10 w-full px-8">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-lg font-medium tabular-nums" style={{ color: '#ef4444' }}>
+                  {fmtSec(recSeconds)}
+                </span>
+              </div>
+
+              <div className="text-center flex flex-col gap-1" style={{ color: 'var(--text-2)' }}>
+                <p className="text-sm font-medium">{parasha.name}</p>
+                <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+                  {currentAliyah.n === 8 ? 'Maftir' : `${currentAliyah.n}ª Aliyá`}
+                </p>
+              </div>
+
+              <button onClick={stopRec}
+                className="w-20 h-20 rounded-full flex items-center justify-center transition-all active:scale-95"
+                style={{ background: '#ef4444', boxShadow: '0 0 40px rgba(239,68,68,0.5)' }}>
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                  <rect x="6" y="6" width="16" height="16" rx="2" fill="white"/>
+                </svg>
+              </button>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Toca para parar</p>
+            </div>
+          )}
+        </div>,
+        document.body
+      )}
+
       {/* Top bar */}
       <div className="flex-shrink-0" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
 
@@ -959,7 +1029,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
             </div>
             {recState === 'idle' && pendingHomework.require_audio && (
               <div className="flex gap-2 pl-10">
-                <button onClick={startRec}
+                <button onClick={startRecordingMode}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                   style={{ background: 'rgba(108,51,230,0.18)', color: '#6c33e6', border: '1px solid rgba(108,51,230,0.3)' }}>
                   <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
@@ -1208,7 +1278,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
                 onDurationChange={setAudioDuration}
               />
             </div>
-            <button onClick={startRec} title={t('tooltip_record_send')}
+            <button onClick={startRecordingMode} title={t('tooltip_record_send')}
               className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all text-lg"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               🎙️
@@ -1216,7 +1286,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
           </>
         ) : isMobileUI && !audio ? (
           <div className="w-full flex items-center justify-end">
-            <button onClick={startRec} title={t('tooltip_record_send')}
+            <button onClick={startRecordingMode} title={t('tooltip_record_send')}
               className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all text-lg"
               style={{ background: `${bookColor}15`, border: `1px solid ${bookColor}30` }}>
               🎙️
