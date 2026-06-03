@@ -111,13 +111,13 @@ export default function StudentLayout() {
 
       {/* ── Main ─────────────────────────────────────────────────────────── */}
       <main className="flex-1 flex flex-col min-h-0 overflow-auto scroll-smooth-ios"
-        style={{ paddingTop: isNative ? 'calc(env(safe-area-inset-top, 0px) + 56px)' : undefined }}>
+        style={{ paddingTop: isNative ? 'calc(env(safe-area-inset-top, 0px) + 8px)' : undefined }}>
 
         {/* Native: floating hamburger only, no bar */}
         {isNative && !isLandscape && (
           <button className="fixed z-50 md:hidden p-2.5 rounded-xl"
             style={{
-              top: 'max(env(safe-area-inset-top, 12px), 12px)',
+              top: 'calc(env(safe-area-inset-top, 0px) + 8px)',
               left: '16px',
               background: 'var(--bg-card)',
               border: '1px solid var(--border-subtle)',

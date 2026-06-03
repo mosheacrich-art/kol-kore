@@ -82,7 +82,7 @@ function AppRoutes() {
       <Suspense fallback={<Spinner />}>
         <Routes>
           <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/" element={<Landing />} />
+          <Route path="/" element={Capacitor.isNativePlatform() ? <Navigate to="/login" replace /> : <Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
