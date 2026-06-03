@@ -168,10 +168,10 @@ export default function StudentLayout() {
                 </button>
               </div>
             </div>
-            {contactOpen && <ContactModal onClose={() => setContactOpen(false)} />}
           </div>
         )}
 
+        {contactOpen && <ContactModal onClose={() => setContactOpen(false)} />}
 
         <Outlet />
       </main>
