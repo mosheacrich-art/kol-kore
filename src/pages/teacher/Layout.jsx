@@ -72,6 +72,7 @@ export default function TeacherLayout() {
     return () => supabase.removeChannel(ch)
   }, [profile?.id])
 
+  const isNative = Capacitor.isNativePlatform()
   const go = (path) => { navigate(path); setSidebarOpen(false) }
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
 
@@ -105,10 +106,32 @@ export default function TeacherLayout() {
       </aside>
 
       {/* ── Main ─────────────────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col overflow-auto scroll-smooth-ios">
+      <main className="flex-1 flex flex-col overflow-auto scroll-smooth-ios"
+        style={{ paddingTop: isNative ? 'calc(env(safe-area-inset-top, 0px) + 56px)' : undefined }}>
 
-        {/* Header — hidden in landscape on native */}
-        {!isLandscape && (
+        {/* Native: floating hamburger only, no bar */}
+        {isNative && !isLandscape && (
+          <button className="fixed z-50 md:hidden p-2.5 rounded-xl relative"
+            style={{
+              top: 'max(env(safe-area-inset-top, 12px), 12px)',
+              left: '16px',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-subtle)',
+              color: 'var(--text-2)',
+            }}
+            onClick={() => setSidebarOpen(true)}>
+            <HamburgerIcon />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-white flex items-center justify-center"
+                style={{ background: '#6c33e6', fontSize: '8px' }}>
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+        )}
+
+        {/* Web/Desktop: full header bar */}
+        {!isNative && !isLandscape && (
           <div className="sticky top-0 z-30 flex items-center gap-3 px-4 flex-shrink-0 app-header"
             style={{ background: 'var(--bg-deep)', borderBottom: '1px solid var(--border-subtle)', minHeight: '3.5rem' }}>
             <button className="md:hidden p-2 rounded-xl relative" onClick={() => setSidebarOpen(true)}
@@ -125,7 +148,6 @@ export default function TeacherLayout() {
             <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</span>
             <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
             <div className="ml-auto flex items-center gap-2">
-              {/* Desktop only — on mobile these live in the sidebar */}
               <div className="hidden md:flex items-center gap-2">
                 <LangToggle />
                 <button onClick={() => setContactOpen(true)}

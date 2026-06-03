@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { flattenVerses, stripHtml } from '../utils/hebrew'
 
 // ── Text fetching ─────────────────────────────────────────────────────────
@@ -26,7 +27,7 @@ function processVerses(raw) {
 
 // Sefaria API: spaces → underscores, commas stay literal
 function refToUrl(ref) {
-  if (typeof window !== 'undefined' && window.location.protocol === 'capacitor:') {
+  if (Capacitor.isNativePlatform() || window.location.protocol === 'capacitor:') {
     return `https://www.sefaria.org/api/texts/${ref.replace(/ /g, '_')}?commentary=0&context=0&pad=0&wrapLinks=0&transLangPref=en`
   }
   return `/api/sefaria?ref=${encodeURIComponent(ref)}`
@@ -99,7 +100,7 @@ const rawIndexCache = new Map()
 
 async function fetchSiddurRaw(slug) {
   if (rawIndexCache.has(slug)) return rawIndexCache.get(slug)
-  const isCapacitor = typeof window !== 'undefined' && window.location.protocol === 'capacitor:'
+  const isCapacitor = Capacitor.isNativePlatform() || window.location.protocol === 'capacitor:'
   const url = isCapacitor
     ? `https://www.sefaria.org/api/v2/index/${encodeURIComponent(slug)}`
     : `/api/sefaria?index=${encodeURIComponent(slug)}`

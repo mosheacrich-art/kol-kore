@@ -77,6 +77,7 @@ export default function StudentLayout() {
 
   const navItems = NAV_KEYS.filter(n => !n.hidden).map(n => ({ ...n, label: t(n.key) ?? n.heb, shortLabel: t(n.shortKey) ?? n.heb }))
 
+  const isNative = Capacitor.isNativePlatform()
   const go = (path) => { navigate(path); setSidebarOpen(false) }
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
 
@@ -109,48 +110,65 @@ export default function StudentLayout() {
       </aside>
 
       {/* ── Main ─────────────────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col min-h-0 overflow-auto scroll-smooth-ios">
+      <main className="flex-1 flex flex-col min-h-0 overflow-auto scroll-smooth-ios"
+        style={{ paddingTop: isNative ? 'calc(env(safe-area-inset-top, 0px) + 56px)' : undefined }}>
 
-        {/* Header */}
-        {!isLandscape && <div className="sticky top-0 z-30 flex items-center gap-3 px-4 flex-shrink-0 app-header"
-          style={{ background: 'var(--bg-deep)', borderBottom: '1px solid var(--border-subtle)', minHeight: '3.5rem' }}>
-          <button className="md:hidden p-2 rounded-xl" onClick={() => setSidebarOpen(true)}
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-2)' }}>
+        {/* Native: floating hamburger only, no bar */}
+        {isNative && !isLandscape && (
+          <button className="fixed z-50 md:hidden p-2.5 rounded-xl"
+            style={{
+              top: 'max(env(safe-area-inset-top, 12px), 12px)',
+              left: '16px',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-subtle)',
+              color: 'var(--text-2)',
+            }}
+            onClick={() => setSidebarOpen(true)}>
             <HamburgerIcon />
           </button>
-          <StarOfDavidSmall />
-          <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</span>
-          <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
-          <div className="ml-auto flex items-center gap-2">
-            {/* Desktop only — on mobile these live in the sidebar */}
-            <div className="hidden md:flex items-center gap-2">
-              <LangToggle />
-              <button onClick={() => setContactOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
-                style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}
-                title={t('contact_us')}>
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                  <rect x="1" y="2.5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
-                  <path d="M1 4l5.5 4L12 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                {t('contact_us')}
-              </button>
-              <button onClick={toggle}
-                className="p-2 rounded-xl text-xs transition-all"
-                style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
-                title={isDark ? t('light_mode') : t('dark_mode')}>
-                <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
-              </button>
-              <button onClick={async () => { await signOut(); navigate('/login') }}
-                className="p-2 rounded-xl transition-all"
-                title={t('logout')}
-                style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
-                <LogoutIcon />
-              </button>
+        )}
+
+        {/* Web/Desktop: full header bar */}
+        {!isNative && !isLandscape && (
+          <div className="sticky top-0 z-30 flex items-center gap-3 px-4 flex-shrink-0 app-header"
+            style={{ background: 'var(--bg-deep)', borderBottom: '1px solid var(--border-subtle)', minHeight: '3.5rem' }}>
+            <button className="md:hidden p-2 rounded-xl" onClick={() => setSidebarOpen(true)}
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-2)' }}>
+              <HamburgerIcon />
+            </button>
+            <StarOfDavidSmall />
+            <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</span>
+            <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
+            <div className="ml-auto flex items-center gap-2">
+              <div className="hidden md:flex items-center gap-2">
+                <LangToggle />
+                <button onClick={() => setContactOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
+                  style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}
+                  title={t('contact_us')}>
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                    <rect x="1" y="2.5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                    <path d="M1 4l5.5 4L12 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  {t('contact_us')}
+                </button>
+                <button onClick={toggle}
+                  className="p-2 rounded-xl text-xs transition-all"
+                  style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+                  title={isDark ? t('light_mode') : t('dark_mode')}>
+                  <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
+                </button>
+                <button onClick={async () => { await signOut(); navigate('/login') }}
+                  className="p-2 rounded-xl transition-all"
+                  title={t('logout')}
+                  style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
+                  <LogoutIcon />
+                </button>
+              </div>
             </div>
+            {contactOpen && <ContactModal onClose={() => setContactOpen(false)} />}
           </div>
-          {contactOpen && <ContactModal onClose={() => setContactOpen(false)} />}
-        </div>}
+        )}
 
 
         <Outlet />
