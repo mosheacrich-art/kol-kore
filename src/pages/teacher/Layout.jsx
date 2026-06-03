@@ -115,11 +115,11 @@ export default function TeacherLayout() {
       <main className="flex-1 flex flex-col overflow-auto scroll-smooth-ios"
         style={{ paddingTop: isNative ? 'calc(env(safe-area-inset-top, 0px) + 8px)' : undefined }}>
 
-        {/* Native: floating hamburger only, no bar — hidden when sidebar is open */}
-        {isNative && !isLandscape && !sidebarOpen && (
-          <button className="fixed z-50 md:hidden p-2.5 rounded-xl relative"
+        {/* Mobile: floating hamburger — hidden when sidebar is open */}
+        {!isLandscape && !sidebarOpen && (
+          <button className="fixed z-50 md:hidden p-2.5 rounded-xl"
             style={{
-              top: 'calc(env(safe-area-inset-top, 0px) + 8px)',
+              top: isNative ? 'calc(env(safe-area-inset-top, 0px) + 8px)' : '8px',
               left: '16px',
               background: 'var(--bg-card)',
               border: '1px solid var(--border-subtle)',
@@ -136,48 +136,36 @@ export default function TeacherLayout() {
           </button>
         )}
 
-        {/* Web/Desktop: full header bar */}
+        {/* Desktop only: full header bar */}
         {!isNative && !isLandscape && (
-          <div className="sticky top-0 z-30 flex items-center gap-3 px-4 flex-shrink-0 app-header"
+          <div className="hidden md:flex sticky top-0 z-30 items-center gap-3 px-4 flex-shrink-0 app-header"
             style={{ background: 'var(--bg-deep)', borderBottom: '1px solid var(--border-subtle)', minHeight: '3.5rem' }}>
-            <button className="md:hidden p-2 rounded-xl relative" onClick={() => setSidebarOpen(true)}
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-2)' }}>
-              <HamburgerIcon />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-white flex items-center justify-center"
-                  style={{ background: '#6c33e6', fontSize: '8px' }}>
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </button>
             <StarSvg />
             <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashapp</span>
             <div className="ml-auto flex items-center gap-2">
-              <div className="hidden md:flex items-center gap-2">
-                <LangToggle />
-                <button onClick={() => setContactOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
-                  style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}
-                  title={t('contact_us')}>
-                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                    <rect x="1" y="2.5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
-                    <path d="M1 4l5.5 4L12 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  {t('contact_us')}
-                </button>
-                <button onClick={toggle}
-                  className="p-2 rounded-xl text-xs transition-all"
-                  style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
-                  title={isDark ? t('light_mode') : t('dark_mode')}>
-                  <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
-                </button>
-                <button onClick={async () => { await signOut(); navigate('/login') }}
-                  className="p-2 rounded-xl transition-all"
-                  title={t('logout')}
-                  style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
-                  <LogoutIcon />
-                </button>
-              </div>
+              <LangToggle />
+              <button onClick={() => setContactOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
+                style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}
+                title={t('contact_us')}>
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <rect x="1" y="2.5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                  <path d="M1 4l5.5 4L12 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                {t('contact_us')}
+              </button>
+              <button onClick={toggle}
+                className="p-2 rounded-xl text-xs transition-all"
+                style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+                title={isDark ? t('light_mode') : t('dark_mode')}>
+                <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
+              </button>
+              <button onClick={async () => { await signOut(); navigate('/login') }}
+                className="p-2 rounded-xl transition-all"
+                title={t('logout')}
+                style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
+                <LogoutIcon />
+              </button>
             </div>
           </div>
         )}

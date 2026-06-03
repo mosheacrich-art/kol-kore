@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
@@ -16,6 +17,7 @@ function timeAgo(dateStr) {
 export default function StudentNotifications() {
   const { profile } = useAuth()
   const { t } = useLang()
+  const navigate = useNavigate()
   const [tab, setTab] = useState('homework')
   const [homework, setHomework] = useState([])
   const [evals, setEvals] = useState([])
@@ -148,13 +150,20 @@ export default function StudentNotifications() {
           )}
 
           <div className="flex flex-col gap-3">
-            {homework.map(hw => (
+            {homework.map(hw => {
+              const aliyahIdx = hw.aliyah_idx ?? (hw.aliyah_label ? parseInt(hw.aliyah_label.match(/\d+/)?.[0] ?? '1', 10) - 1 : null)
+              const canNavigate = !!hw.parasha_id
+              return (
               <div key={hw.id}
-                className="rounded-2xl p-5 flex flex-col gap-2 relative"
+                className={`rounded-2xl p-5 flex flex-col gap-2 relative${canNavigate ? ' cursor-pointer' : ''}`}
                 style={{
                   background: 'var(--bg-card)',
                   border: `1px solid ${!hw.read ? 'rgba(108,51,230,0.3)' : 'var(--border-subtle)'}`,
-                }}>
+                }}
+                onClick={canNavigate ? () => {
+                  if (!hw.read) markRead(hw.id, setHomework)
+                  navigate(`/student/study/${hw.parasha_id}?aliyah=${aliyahIdx ?? 0}`)
+                } : undefined}>
                 {/* Unread dot */}
                 {!hw.read && (
                   <span className="absolute top-4 right-4 w-2 h-2 rounded-full"
@@ -184,7 +193,7 @@ export default function StudentNotifications() {
                   <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{timeAgo(hw.created_at)}</span>
                   {!hw.read && (
                     <button
-                      onClick={() => markRead(hw.id, setHomework)}
+                      onClick={e => { e.stopPropagation(); markRead(hw.id, setHomework) }}
                       className="text-xs px-3 py-1 rounded-lg transition-all"
                       style={{ background: 'rgba(108,51,230,0.08)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)' }}>
                       Marcar como leída
@@ -192,7 +201,8 @@ export default function StudentNotifications() {
                   )}
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
