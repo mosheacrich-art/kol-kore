@@ -103,7 +103,7 @@ export default function HomeworkQuickModal({ onClose, preType, preRef, preName, 
                 <path d="M6.5 11l3 3L15.5 8" stroke="#22c55e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>Deber asignado</p>
+            <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>{t('hw_assigned')}</p>
           </div>
         ) : (
           <>
@@ -129,7 +129,7 @@ export default function HomeworkQuickModal({ onClose, preType, preRef, preName, 
               <select value={form.to} onChange={e => setForm(f => ({ ...f, to: e.target.value }))}
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
                 {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                {!students.length && <option value="">Sin alumnos</option>}
+                {!students.length && <option value="">{t('no_students_opt')}</option>}
               </select>
             </div>
 

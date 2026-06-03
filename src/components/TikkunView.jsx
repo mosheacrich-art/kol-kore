@@ -83,7 +83,7 @@ export default function TikkunView({
 
   if (error) return (
     <div className="flex-1 flex items-center justify-center px-6">
-      <p className="text-sm" style={{ color: '#f87171' }}>Sin datos del tikún · {error}</p>
+      <p className="text-sm" style={{ color: '#f87171' }}>{t('tikkun_no_data').replace('{error}', error)}</p>
     </div>
   )
 

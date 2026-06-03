@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { useTheme } from '../../context/ThemeContext'
+import { useLang } from '../../context/LangContext'
 import { PARASHOT } from '../../data/parashot'
 
 const ADMIN_USER_ID = '1f4d0329-ddf5-48a4-965f-5f37d7416447'
@@ -12,6 +13,7 @@ export default function AdminPage() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
   const { isDark, toggle } = useTheme()
+  const { t } = useLang()
 
   const [tab, setTab] = useState('users')
 
@@ -164,7 +166,7 @@ export default function AdminPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <p className="text-xs tracking-widest uppercase mb-1" style={{ color: 'var(--text-gold)' }}>Admin · Perashapp</p>
-            <h1 className="text-2xl font-light" style={{ color: 'var(--text)', letterSpacing: '-0.5px' }}>Panel de administración</h1>
+            <h1 className="text-2xl font-light" style={{ color: 'var(--text)', letterSpacing: '-0.5px' }}>{t('admin_panel_title')}</h1>
           </div>
           <div className="flex items-center gap-3">
             <button onClick={toggle} className="p-2 rounded-xl text-xs"
@@ -175,7 +177,7 @@ export default function AdminPage() {
               className="flex items-center gap-2 text-xs px-3 py-2 rounded-xl transition-all"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-3)' }}>
               <RefreshIcon spinning={fetching || audiosFetching} />
-              Actualizar
+              {t('admin_refresh')}
             </button>
           </div>
         </div>
@@ -183,7 +185,7 @@ export default function AdminPage() {
         {/* Tabs */}
         <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          {[['users', 'Usuarios'], ['audios', 'Audios públicos']].map(([id, label]) => (
+          {[['users', t('admin_users_tab')], ['audios', t('admin_audios_tab')]].map(([id, label]) => (
             <button key={id} onClick={() => setTab(id)}
               className="text-xs px-4 py-2 rounded-lg font-medium transition-all"
               style={{
@@ -201,9 +203,9 @@ export default function AdminPage() {
           <>
             <div className="grid grid-cols-3 gap-3 mb-6">
               {[
-                { label: 'Total usuarios', value: users.length },
-                { label: 'Alumnos', value: users.filter(u => u.role === 'student').length },
-                { label: 'Suscritos', value: users.filter(u => u.subscription_status === 'active').length },
+                { label: t('admin_total_users'), value: users.length },
+                { label: t('role_student_label'), value: users.filter(u => u.role === 'student').length },
+                { label: t('admin_subscribed'), value: users.filter(u => u.subscription_status === 'active').length },
               ].map(s => (
                 <div key={s.label} className="rounded-2xl p-4"
                   style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
@@ -221,7 +223,7 @@ export default function AdminPage() {
                 </svg>
               </div>
               <input value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="Buscar por nombre, email o rol…"
+                placeholder={t('admin_search_users')}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
                 style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }} />
             </div>
@@ -233,7 +235,7 @@ export default function AdminPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr style={{ background: 'var(--bg-deep)', borderBottom: '1px solid var(--border)' }}>
-                      {['Usuario', 'Email', 'Rol', 'Suscripción', 'Plan', 'Acción'].map(h => (
+                      {[t('admin_col_user'), 'Email', t('admin_col_role'), t('admin_col_subscription'), t('admin_col_plan'), t('admin_col_action')].map(h => (
                         <th key={h} className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-3)' }}>{h}</th>
                       ))}
                     </tr>
@@ -260,25 +262,25 @@ export default function AdminPage() {
                           <td className="px-4 py-3">
                             <span className="text-xs px-2 py-0.5 rounded-full font-medium"
                               style={{ background: u.role === 'teacher' ? 'rgba(34,197,94,0.1)' : 'rgba(108,51,230,0.1)', color: u.role === 'teacher' ? '#22c55e' : '#8b5cf6' }}>
-                              {u.role === 'teacher' ? 'Profesor' : 'Alumno'}
+                              {u.role === 'teacher' ? t('role_teacher_label') : t('role_student_label')}
                             </span>
                           </td>
                           <td className="px-4 py-3">
                             <span className="text-xs px-2 py-0.5 rounded-full font-medium"
                               style={{ background: isActive ? 'rgba(34,197,94,0.1)' : 'rgba(100,100,100,0.1)', color: isActive ? '#22c55e' : 'var(--text-muted)' }}>
-                              {u.subscription_status ?? 'Sin suscripción'}
+                              {u.subscription_status ?? t('admin_no_subscription')}
                             </span>
                           </td>
-                          <td className="px-4 py-3"><span className="text-xs" style={{ color: 'var(--text-3)' }}>{u.subscription_plan === 'annual' ? 'Anual' : u.subscription_plan === 'monthly' ? 'Mensual' : '—'}</span></td>
+                          <td className="px-4 py-3"><span className="text-xs" style={{ color: 'var(--text-3)' }}>{u.subscription_plan === 'annual' ? t('annual_plan') : u.subscription_plan === 'monthly' ? t('monthly_plan') : '—'}</span></td>
                           <td className="px-4 py-3">
                             {u.role === 'student' ? (
                               <div className="flex items-center gap-2">
                                 <button disabled={sending[u.id]} onClick={() => sendWelcome(u.id, u.subscription_plan || 'monthly')}
                                   className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5"
                                   style={{ background: sending[u.id] ? 'var(--bg-deep)' : 'rgba(108,51,230,0.1)', color: sending[u.id] ? 'var(--text-muted)' : '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)', opacity: sending[u.id] ? 0.7 : 1 }}>
-                                  {sending[u.id] ? <><MiniSpinner /> Enviando…</> : <>✉️ Enviar bienvenida</>}
+                                  {sending[u.id] ? <><MiniSpinner /> {t('admin_sending')}</> : <>✉️ {t('admin_send_welcome')}</>}
                                 </button>
-                                {result === 'ok' && <span className="text-xs" style={{ color: '#22c55e' }}>✓ Enviado</span>}
+                                {result === 'ok' && <span className="text-xs" style={{ color: '#22c55e' }}>{t('admin_sent_ok')}</span>}
                                 {result === 'error' && <span className="text-xs" style={{ color: '#ef4444' }}>✗ Error</span>}
                               </div>
                             ) : <span className="text-xs" style={{ color: 'var(--text-muted)' }}>—</span>}
@@ -287,7 +289,7 @@ export default function AdminPage() {
                       )
                     })}
                     {sorted.length === 0 && (
-                      <tr><td colSpan={6} className="px-4 py-10 text-center text-sm" style={{ color: 'var(--text-muted)' }}>No hay usuarios</td></tr>
+                      <tr><td colSpan={6} className="px-4 py-10 text-center text-sm" style={{ color: 'var(--text-muted)' }}>{t('admin_no_users')}</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -301,16 +303,16 @@ export default function AdminPage() {
           <>
             {/* Upload form */}
             <div className="rounded-2xl p-5 mb-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-              <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--text)' }}>Subir nuevo audio</h2>
+              <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--text)' }}>{t('admin_upload_audio')}</h2>
               <form onSubmit={handleUpload} className="flex flex-col gap-3">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {/* Parasha */}
                   <div>
-                    <label className="text-xs mb-1 block" style={{ color: 'var(--text-3)' }}>Parashá</label>
+                    <label className="text-xs mb-1 block" style={{ color: 'var(--text-3)' }}>{t('parasha_label')}</label>
                     <select value={upParasha} onChange={e => setUpParasha(e.target.value)} required
                       className="w-full px-3 py-2 rounded-xl text-xs outline-none"
                       style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}>
-                      <option value="">Elegir…</option>
+                      <option value="">{t('choose_option')}</option>
                       {PARASHOT.map(p => (
                         <option key={p.id} value={p.id}>{p.name} — {p.heb}</option>
                       ))}
@@ -319,7 +321,7 @@ export default function AdminPage() {
 
                   {/* Aliyah */}
                   <div>
-                    <label className="text-xs mb-1 block" style={{ color: 'var(--text-3)' }}>Aliyá</label>
+                    <label className="text-xs mb-1 block" style={{ color: 'var(--text-3)' }}>{t('aliyah_form_label')}</label>
                     <select value={upAliyah} onChange={e => setUpAliyah(Number(e.target.value))}
                       className="w-full px-3 py-2 rounded-xl text-xs outline-none"
                       style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}>
@@ -331,7 +333,7 @@ export default function AdminPage() {
 
                   {/* Label */}
                   <div>
-                    <label className="text-xs mb-1 block" style={{ color: 'var(--text-3)' }}>Nusach / Label</label>
+                    <label className="text-xs mb-1 block" style={{ color: 'var(--text-3)' }}>{t('nusach_label')}</label>
                     <select value={upLabel} onChange={e => setUpLabel(e.target.value)}
                       className="w-full px-3 py-2 rounded-xl text-xs outline-none"
                       style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}>
@@ -342,7 +344,7 @@ export default function AdminPage() {
 
                 {/* File */}
                 <div>
-                  <label className="text-xs mb-1 block" style={{ color: 'var(--text-3)' }}>Archivo de audio (.m4a / .mp3)</label>
+                  <label className="text-xs mb-1 block" style={{ color: 'var(--text-3)' }}>{t('audio_file_label')}</label>
                   <input type="file" accept="audio/*,.m4a,.mp3,.webm"
                     onChange={e => setUpFile(e.target.files?.[0] || null)}
                     className="w-full text-xs"
@@ -361,7 +363,7 @@ export default function AdminPage() {
                     border: '1px solid rgba(108,51,230,0.25)',
                     opacity: uploading || !upFile || !upParasha ? 0.6 : 1,
                   }}>
-                  {uploading ? <><MiniSpinner /> Subiendo…</> : 'Subir audio'}
+                  {uploading ? <><MiniSpinner /> {t('admin_uploading')}</> : t('admin_upload_btn')}
                 </button>
               </form>
             </div>
@@ -369,11 +371,11 @@ export default function AdminPage() {
             {/* Audios table */}
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>
-                {audios.length} audios publicados
+                {t('admin_audios_count').replace('{n}', audios.length)}
               </p>
               <div className="relative">
                 <input value={audioFilter} onChange={e => setAudioFilter(e.target.value)}
-                  placeholder="Filtrar por parashá o label…"
+                  placeholder={t('admin_filter_audios')}
                   className="pl-8 pr-4 py-2 rounded-xl text-xs outline-none"
                   style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)', width: 220 }} />
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none"
@@ -391,7 +393,7 @@ export default function AdminPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr style={{ background: 'var(--bg-deep)', borderBottom: '1px solid var(--border)' }}>
-                      {['Parashá', 'Aliyá', 'Label', 'Anchor %', 'Review', 'URL'].map(h => (
+                      {[t('parasha_label'), t('aliyah_form_label'), 'Label', 'Anchor %', 'Review', 'URL'].map(h => (
                         <th key={h} className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-3)' }}>{h}</th>
                       ))}
                     </tr>
@@ -436,7 +438,7 @@ export default function AdminPage() {
                       </tr>
                     ))}
                     {filteredAudios.length === 0 && (
-                      <tr><td colSpan={6} className="px-4 py-10 text-center text-sm" style={{ color: 'var(--text-muted)' }}>No hay audios</td></tr>
+                      <tr><td colSpan={6} className="px-4 py-10 text-center text-sm" style={{ color: 'var(--text-muted)' }}>{t('admin_no_audios')}</td></tr>
                     )}
                   </tbody>
                 </table>

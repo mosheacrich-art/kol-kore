@@ -228,7 +228,7 @@ export default function TeacherAudioPanel() {
                           <div>
                             <span className="text-sm" style={{ color: isSelected ? 'var(--text)' : 'var(--text-2)' }}>{p.name}</span>
                             <span className="hebrew text-xs ml-1.5" style={{ color: c + '80' }}>{p.heb}</span>
-                            {p.combined && <span className="text-xs ml-1" style={{ color: c, fontSize: '9px', opacity: 0.7 }}>· doble</span>}
+                            {p.combined && <span className="text-xs ml-1" style={{ color: c, fontSize: '9px', opacity: 0.7 }}>· {t('double_label')}</span>}
                           </div>
                         </div>
                         {pAudios > 0 && (
@@ -390,7 +390,7 @@ export default function TeacherAudioPanel() {
           {sectionType === 'tefila' && !selectedTefila ? (
             <div className="rounded-2xl p-10 flex flex-col items-center justify-center text-center"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', minHeight: '200px' }}>
-              <p className="text-sm" style={{ color: 'var(--text-3)' }}>Selecciona una tefila del panel izquierdo</p>
+              <p className="text-sm" style={{ color: 'var(--text-3)' }}>{t('select_tefila_hint')}</p>
             </div>
           ) : entity && (
             <>

@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import { useLang } from '../context/LangContext'
 
 function fmtSec(s) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
@@ -75,6 +76,7 @@ async function submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onSta
 
 // Minimal popup that only asks for a name (+ optional audio preview)
 function NameModal({ file, status, errorMsg, onSubmit, onCancel }) {
+  const { t } = useLang()
   const [label, setLabel] = useState('')
   const previewUrl = useRef(file ? URL.createObjectURL(file) : null).current
   const busy = status === 'uploading' || status === 'syncing'
@@ -86,7 +88,7 @@ function NameModal({ file, status, errorMsg, onSubmit, onCancel }) {
       <div className="w-full max-w-sm rounded-2xl p-5 flex flex-col gap-4"
         style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: '0 20px 50px rgba(0,0,0,0.4)' }}>
 
-        <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Nombre del audio</h2>
+        <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{t('audio_name_label')}</h2>
 
         {previewUrl && (
           <audio src={previewUrl} controls className="w-full rounded-xl" style={{ height: 36 }} />

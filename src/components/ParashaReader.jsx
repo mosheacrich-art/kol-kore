@@ -1733,7 +1733,7 @@ function ErrorState({ error, ref_ }) {
           <path d="M9 5.5v4M9 11.5v1" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round"/>
         </svg>
       </div>
-      <p className="text-sm font-medium" style={{ color: '#f87171' }}>No se pudo cargar el texto</p>
+      <p className="text-sm font-medium" style={{ color: '#f87171' }}>{t('text_load_error')}</p>
       <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
         {ref_} · {error}
       </p>

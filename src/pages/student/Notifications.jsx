@@ -68,7 +68,7 @@ export default function StudentNotifications() {
             <div className="flex items-center gap-3 mb-3">
               <div className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
               <p className="text-xs tracking-widest uppercase" style={{ color: 'var(--text-gold)' }}>
-                Evaluaciones
+                {t('evaluations_label')}
               </p>
               <div className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
             </div>
@@ -83,8 +83,8 @@ export default function StudentNotifications() {
                   <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="rgba(108,51,230,0.5)" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
               </div>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin notificaciones aún</p>
-              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Tu profesor te enviará correcciones y mensajes aquí</p>
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('no_notifs')}</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{t('no_notifs_student_desc')}</p>
             </div>
           )}
 
@@ -118,7 +118,7 @@ export default function StudentNotifications() {
 
                   {ev.recording_url && (
                     <div>
-                      <p className="text-xs mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>Tu grabación:</p>
+                      <p className="text-xs mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t('your_recording')}</p>
                       <audio controls src={ev.recording_url} preload="none"
                         style={{ width: '100%', height: '32px', borderRadius: '6px' }} />
                     </div>
@@ -126,7 +126,7 @@ export default function StudentNotifications() {
 
                   {sortedErrors.length > 0 && (
                     <div>
-                      <p className="text-xs font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>Palabras con errores:</p>
+                      <p className="text-xs font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>{t('error_words_label')}</p>
                       <div className="flex flex-wrap gap-1.5">
                         {sortedErrors.map((err, i) => (
                           <div key={i}
@@ -145,7 +145,7 @@ export default function StudentNotifications() {
                   {parsed.comment && (
                     <div className="px-3.5 py-3 rounded-xl"
                       style={{ background: 'rgba(108,51,230,0.06)', border: '1px solid rgba(108,51,230,0.14)' }}>
-                      <p className="text-xs font-semibold mb-1" style={{ color: '#8b5cf6' }}>Comentario:</p>
+                      <p className="text-xs font-semibold mb-1" style={{ color: '#8b5cf6' }}>{t('comment_label')}</p>
                       <p className="text-sm leading-relaxed" style={{ color: 'var(--text-2)', whiteSpace: 'pre-wrap' }}>
                         {parsed.comment}
                       </p>

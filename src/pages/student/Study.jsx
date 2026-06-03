@@ -143,7 +143,7 @@ function ListView({ basePath }) {
                     <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>Berajot</span>
                     <span className="hebrew text-sm" style={{ color: '#10b981' }}>בְּרָכוֹת</span>
                   </div>
-                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Bendiciones · {Object.keys(BERAJOT_INLINE).length} secciones</p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('berajot_sections').replace('{n}', Object.keys(BERAJOT_INLINE).length)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -198,7 +198,7 @@ function ListView({ basePath }) {
                 <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>Taamim</span>
                 <span className="hebrew text-sm" style={{ color: '#6c33e6' }}>טַעֲמֵי הַמִּקְרָא</span>
               </div>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>סִימָנִים · Todos los trop de la Torá</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>סִימָנִים · {t('trop_subtitle')}</p>
             </div>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ color: 'var(--text-muted)', flexShrink: 0 }}>
               <path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -267,7 +267,7 @@ function ListView({ basePath }) {
                               )}
                               {p.combined
                                 ? <span className="text-xs px-1.5 py-0.5 rounded-full font-medium"
-                                    style={{ background: `${color}20`, color, fontSize: '9px' }}>Doble</span>
+                                    style={{ background: `${color}20`, color, fontSize: '9px' }}>{t('double_label')}</span>
                                 : <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{p.num}</span>
                               }
                             </div>

@@ -191,7 +191,7 @@ function BarMitzvahCalc({ student, onAssign, onClose, t }) {
         <div className="flex items-start justify-between mb-5">
           <div>
             <p className="text-xs mb-0.5" style={{ color: 'var(--text-gold)' }}>חֶשְׁבּוֹן · Calculadora</p>
-            <h2 className="text-base font-semibold" style={{ color: 'var(--text)' }}>Bar Mitzvá de {student.name?.split(' ')[0]}</h2>
+            <h2 className="text-base font-semibold" style={{ color: 'var(--text)' }}>{t('bar_mitzvah_of').replace('{name}', student.name?.split(' ')[0])}</h2>
           </div>
           <button onClick={onClose}
             className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
@@ -388,7 +388,7 @@ function AssignParashaModal({ student, onAssign, onClose, t }) {
         <div className="flex items-start justify-between p-5 pb-3">
           <div>
             <p className="text-xs mb-0.5" style={{ color: 'var(--text-gold)' }}>פָּרָשִׁיּוֹת · Asignar</p>
-            <h2 className="text-base font-semibold" style={{ color: 'var(--text)' }}>Perashiot de {student.name?.split(' ')[0]}</h2>
+            <h2 className="text-base font-semibold" style={{ color: 'var(--text)' }}>{t('parashot_of').replace('{name}', student.name?.split(' ')[0])}</h2>
           </div>
           <button onClick={onClose}
             className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
@@ -411,7 +411,7 @@ function AssignParashaModal({ student, onAssign, onClose, t }) {
           {filteredParashot.length > 0 && (
             <>
               <div className="px-2 py-1.5 mb-1">
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Torá</span>
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>{t('torah_label')}</span>
               </div>
               {filteredParashot.map(p => {
                 const sel = selectedIds.has(p.id)
@@ -438,7 +438,7 @@ function AssignParashaModal({ student, onAssign, onClose, t }) {
           {moadimByChag.length > 0 && (
             <>
               <div className="px-2 py-1.5 mt-2 mb-1">
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Lecturas especiales</span>
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>{t('special_readings')}</span>
               </div>
               {moadimByChag.map(({ chag, items }) => (
                 <div key={chag.id} className="mb-2">
@@ -469,7 +469,7 @@ function AssignParashaModal({ student, onAssign, onClose, t }) {
           )}
 
           {filteredParashot.length === 0 && filteredMoadim.length === 0 && (
-            <p className="text-center text-xs py-8" style={{ color: 'var(--text-muted)' }}>Sin resultados</p>
+            <p className="text-center text-xs py-8" style={{ color: 'var(--text-muted)' }}>{t('no_results')}</p>
           )}
         </div>
 
@@ -599,16 +599,16 @@ function SendHomeworkModal({ student, teacherId, onClose, t }) {
 
           {form.parasha_id && (
             <div>
-              <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>Fragmento</label>
+              <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('fragment_label')}</label>
               {form.word_start != null ? (
                 <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm"
                   style={{ background: 'rgba(249,184,0,0.1)', border: '1px solid rgba(249,184,0,0.3)' }}>
-                  <span style={{ color: '#d97706' }}>Palabras {form.word_start + 1}–{form.word_end + 1}</span>
+                  <span style={{ color: '#d97706' }}>{t('words_range').replace('{s}', form.word_start + 1).replace('{e}', form.word_end + 1)}</span>
                   <button type="button"
                     onClick={() => setForm(f => ({ ...f, word_start: null, word_end: null }))}
                     className="ml-auto text-xs px-2 py-0.5 rounded-md"
                     style={{ background: 'rgba(249,184,0,0.15)', color: '#92400e' }}>
-                    Aliyá completa
+                    {t('full_aliyah_btn')}
                   </button>
                 </div>
               ) : (
@@ -620,8 +620,8 @@ function SendHomeworkModal({ student, teacherId, onClose, t }) {
                     <rect x="1.5" y="1.5" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.1"/>
                     <path d="M4.5 6.5h4M6.5 4.5v4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
                   </svg>
-                  Seleccionar fragmento
-                  <span className="ml-auto text-xs opacity-40">Aliyá completa por defecto</span>
+                  {t('select_fragment')}
+                  <span className="ml-auto text-xs opacity-40">{t('full_aliyah_hint')}</span>
                 </button>
               )}
             </div>

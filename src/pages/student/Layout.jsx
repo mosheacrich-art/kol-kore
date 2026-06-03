@@ -384,7 +384,7 @@ function Paywall({ user, profile, navigate }) {
             <div className="absolute -top-2.5 right-3">
               <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
                 style={{ background: 'linear-gradient(135deg, #f9b800, #ffd54f)', color: '#0d0b1e', fontSize: '10px' }}>
-                Ahorra 17%
+                {t('save_17')}
               </span>
             </div>
             <div className="flex items-center gap-1.5 mb-2">
@@ -392,13 +392,13 @@ function Paywall({ user, profile, navigate }) {
                 style={{ borderColor: plan === 'annual' ? '#f9b800' : 'var(--border)' }}>
                 {plan === 'annual' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#f9b800' }} />}
               </div>
-              <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>Anual</span>
+              <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>{t('annual_plan')}</span>
             </div>
             <div>
               <span className="text-xl font-light" style={{ color: 'var(--text)' }}>X$</span>
               <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>/año</span>
             </div>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-gold)' }}>La opción más económica</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-gold)' }}>{t('most_affordable')}</p>
 
           </button>
 
@@ -413,13 +413,13 @@ function Paywall({ user, profile, navigate }) {
                 style={{ borderColor: plan === 'monthly' ? '#8b5cf6' : 'var(--border)' }}>
                 {plan === 'monthly' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#8b5cf6' }} />}
               </div>
-              <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>Mensual</span>
+              <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>{t('monthly_plan')}</span>
             </div>
             <div>
               <span className="text-xl font-light" style={{ color: 'var(--text)' }}>X$</span>
               <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>/mes</span>
             </div>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Cancela cuando quieras</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{t('cancel_anytime')}</p>
           </button>
         </div>
 

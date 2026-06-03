@@ -326,7 +326,7 @@ export default function TeacherHomework() {
               {/* Fragmento de aliyá */}
               {form.type === 'parasha' && form.parasha_id && (
                 <div>
-                  <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>Fragmento</label>
+                  <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('fragment_label')}</label>
                   {form.word_start != null ? (
                     <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm"
                       style={{ background: 'rgba(249,184,0,0.1)', border: '1px solid rgba(249,184,0,0.3)' }}>
@@ -334,12 +334,12 @@ export default function TeacherHomework() {
                         <circle cx="6" cy="6" r="5" stroke="#d97706" strokeWidth="1.1"/>
                         <path d="M3.5 6h5M6 3.5v5" stroke="#d97706" strokeWidth="1.1" strokeLinecap="round"/>
                       </svg>
-                      <span style={{ color: '#d97706' }}>Palabras {form.word_start + 1}–{form.word_end + 1}</span>
+                      <span style={{ color: '#d97706' }}>{t('words_range').replace('{s}', form.word_start + 1).replace('{e}', form.word_end + 1)}</span>
                       <button type="button"
                         onClick={() => setForm(f => ({ ...f, word_start: null, word_end: null }))}
                         className="ml-auto text-xs px-2 py-0.5 rounded-md"
                         style={{ background: 'rgba(249,184,0,0.15)', color: '#92400e' }}>
-                        Aliyá completa
+                        {t('full_aliyah_btn')}
                       </button>
                     </div>
                   ) : (
@@ -351,8 +351,8 @@ export default function TeacherHomework() {
                         <rect x="1.5" y="1.5" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.1"/>
                         <path d="M4.5 6.5h4M6.5 4.5v4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
                       </svg>
-                      Seleccionar fragmento
-                      <span className="ml-auto text-xs opacity-40">Aliyá completa por defecto</span>
+                      {t('select_fragment')}
+                      <span className="ml-auto text-xs opacity-40">{t('full_aliyah_hint')}</span>
                     </button>
                   )}
                 </div>
@@ -435,11 +435,11 @@ export default function TeacherHomework() {
               <div className="grid grid-cols-2 gap-3">
                 {form.type === 'tefila' ? (
                   <div>
-                    <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>Sección</label>
+                    <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('section')}</label>
                     <select value={form.subject}
                       onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
                       className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
-                      <option value="">General</option>
+                      <option value="">{t('general_option')}</option>
                       {IMPRESCINDIBLES.map(tf => (
                         <option key={tf.id} value={`${tf.name} · ${tf.heb}`}>{tf.name} · {tf.heb}</option>
                       ))}

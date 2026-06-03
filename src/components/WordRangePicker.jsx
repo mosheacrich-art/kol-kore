@@ -1,8 +1,10 @@
 import { useState, useMemo } from 'react'
 import { useAliyahText } from '../hooks/useSefaria'
 import { processVerse, splitWords } from '../utils/hebrew'
+import { useLang } from '../context/LangContext'
 
 export default function WordRangePicker({ aliyahRef, onConfirm, onClose }) {
+  const { t } = useLang()
   const { verses, loading } = useAliyahText(aliyahRef, true, null)
   const [step, setStep] = useState('start')
   const [startIdx, setStartIdx] = useState(null)
@@ -34,10 +36,10 @@ export default function WordRangePicker({ aliyahRef, onConfirm, onClose }) {
         style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         <div>
           <p className="text-sm font-semibold text-white">
-            {step === 'start' ? 'Toca la primera palabra' : 'Toca la última palabra'}
+            {step === 'start' ? t('picker_first_word') : t('picker_last_word')}
           </p>
           <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
-            {step === 'start' ? 'Empieza seleccionando el inicio del fragmento' : 'Ahora selecciona el final del fragmento'}
+            {step === 'start' ? t('picker_start_hint') : t('picker_end_hint')}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -45,7 +47,7 @@ export default function WordRangePicker({ aliyahRef, onConfirm, onClose }) {
             <button onClick={() => { setStep('start'); setStartIdx(null) }}
               className="px-3 py-1.5 rounded-lg text-xs"
               style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}>
-              ← Inicio
+              {t('picker_back_start')}
             </button>
           )}
           <button onClick={onClose}
@@ -55,7 +57,7 @@ export default function WordRangePicker({ aliyahRef, onConfirm, onClose }) {
       </div>
 
       <div className="flex items-center gap-3 px-5 py-2 flex-shrink-0">
-        {[{ n: 1, label: 'Inicio', active: step === 'start' }, { n: 2, label: 'Fin', active: step === 'end' }].map((s, idx) => (
+        {[{ n: 1, label: t('picker_step_start'), active: step === 'start' }, { n: 2, label: t('picker_step_end'), active: step === 'end' }].map((s, idx) => (
           <div key={idx} className="flex items-center gap-1.5">
             {idx > 0 && <div className="w-8 h-px" style={{ background: 'rgba(255,255,255,0.1)' }} />}
             <div className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
@@ -69,7 +71,7 @@ export default function WordRangePicker({ aliyahRef, onConfirm, onClose }) {
 
       <div className="flex-1 overflow-y-auto px-5 py-4">
         {loading ? (
-          <p className="text-center text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>Cargando...</p>
+          <p className="text-center text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>{t('loading')}</p>
         ) : (
           <div className="hebrew-reader" style={{ direction: 'rtl', textAlign: 'justify', fontSize: '26px', lineHeight: '2.4', color: 'rgba(255,255,255,0.88)' }}>
             {allWords.map((word, i) => {
