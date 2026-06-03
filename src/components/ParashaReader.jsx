@@ -52,7 +52,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
   }
   const [mode, setMode] = useState(availableModes ? availableModes[0] : 'taamim')
   const [cursorEnabled, setCursorEnabled] = useState(true)
-  const [fontSize, setFontSize] = useState(36)
+  const [fontSize, setFontSize] = useState(() => Capacitor.isNativePlatform() ? 22 : 36)
   const [audioCurrentTime, setAudioCurrentTime] = useState(null)
   const [audioPlaying, setAudioPlaying] = useState(false)
   const [audioDuration, setAudioDuration] = useState(0)
@@ -1512,7 +1512,7 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
   const canInteract = !!onWordClick || !!onWordMark
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto px-4 py-6">
+    <div className="flex-1 min-h-0 overflow-y-auto px-5 py-6">
       <div className="max-w-5xl mx-auto">
         <div className="hebrew-reader" style={{
           fontSize: fontSize + 'px',
@@ -1817,7 +1817,7 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
   if (isMobile) {
     return (
       <div className="flex-1 min-h-0 overflow-y-auto">
-        <div style={{ padding: '16px 16px 20px', background: `${bookColor}05`, borderBottom: '1px solid var(--border-subtle)' }}>
+        <div style={{ padding: '16px 20px 20px', background: `${bookColor}05`, borderBottom: '1px solid var(--border-subtle)' }}>
           <p className="text-xs mb-3" style={{ color: bookColor }}>
             <span className="hebrew">עִם טְעָמִים</span> · Con taamim
           </p>
@@ -1833,7 +1833,7 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
             ))}
           </div>
         </div>
-        <div style={{ padding: '16px 16px 40px', background: 'var(--bg-card)' }}>
+        <div style={{ padding: '16px 20px 40px', background: 'var(--bg-card)' }}>
           <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>
             <span className="hebrew">כְּתָב בִּלְבָד</span> · Solo consonantes
           </p>
