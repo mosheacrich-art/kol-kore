@@ -9,6 +9,7 @@ import { useAudio } from '../context/AudioContext'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { sendPushToUser } from '../lib/sendPush'
 import AudioPlayer from './AudioPlayer'
 import { BOOK_COLORS } from '../data/parashot'
 import { useLang } from '../context/LangContext'
@@ -473,6 +474,10 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
       recording_url: evalTarget.recording_url,
       message: JSON.stringify({ errors: sortedErrors, comment: evalComment, teacherName: profile.name }),
       read: false,
+    })
+    sendPushToUser(evalTarget.student_id, {
+      title: '📝 Nueva evaluación',
+      body: `${profile.name} ha evaluado tu lectura de ${parasha.name} · ${aliyahLabel}`,
     })
     setEvalMode(false)
     setEvalTarget(null)

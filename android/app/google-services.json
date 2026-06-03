@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "965499023812",
+    "project_id": "parashapp-330",
+    "storage_bucket": "parashapp-330.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:965499023812:android:ed528080c6a016a4e6b491",
+        "android_client_info": {
+          "package_name": "com.perasha.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDY_sddDGwsqBs2axWaV3tHmVbQVj1wM_M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

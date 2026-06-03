@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
+import { sendPushToUser } from '../../lib/sendPush'
 import { PARASHOT, COMBINED_PARASHOT, ALL_PARASHOT } from '../../data/parashot'
 import { ALL_HAFTAROT } from '../../data/haftarot'
 import { ALL_MOADIM, MOADIM_LIST } from '../../data/moadim'
@@ -188,6 +189,7 @@ export default function TeacherHomework() {
           read: false,
         }))
         await supabase.from('notifications').insert(notifRows)
+        sendPushToUser(base.student_id, { title: '📚 Nuevo deber', body: base.task })
       }
     } else {
       const { data } = await supabase.from('homework').insert({ ...base, due: form.due || null }).select('*, student:student_id(name)').single()
@@ -202,6 +204,7 @@ export default function TeacherHomework() {
           aliyah_label: base.aliyah_idx != null ? `Aliyá ${base.aliyah_idx + 1}` : null,
           read: false,
         })
+        sendPushToUser(base.student_id, { title: '📚 Nuevo deber', body: base.task })
       }
     }
 
