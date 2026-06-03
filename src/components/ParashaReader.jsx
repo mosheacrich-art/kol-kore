@@ -504,47 +504,51 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
 
       {/* ── Recording mode fullscreen overlay ─────────────────────────────── */}
       {recordingMode && createPortal(
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center"
-          style={{ background: 'var(--bg)' }}>
+        <div className="fixed inset-0 z-[100] flex flex-col"
+          style={{ background: 'var(--bg)', paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
 
-          {/* Countdown */}
-          {countdown !== null && (
-            <div className="flex flex-col items-center gap-6">
-              <div className="text-8xl font-light tabular-nums animate-pulse"
-                style={{ color: bookColor, lineHeight: 1 }}>
-                {countdown}
+          {/* Text — ocupa todo el espacio disponible */}
+          <div className="flex-1 overflow-hidden flex flex-col min-h-0 relative">
+            {verses.length > 0 && (
+              mode === 'split'
+                ? <SplitView verses={verses} bookColor={bookColor} fontSize={fontSize}
+                    wordTimestamps={null} audioCurrentTime={null} audioPlaying={false} audioDuration={0}
+                    onWordClick={null} onWordMark={null} markedWordIndices={null} />
+                : <SingleView verses={verses} mode={mode} bookColor={bookColor} fontSize={fontSize}
+                    wordTimestamps={null} audioCurrentTime={null} audioPlaying={false} audioDuration={0}
+                    onWordClick={null} onWordMark={null} markedWordIndices={null} homeworkRange={null} />
+            )}
+
+            {/* Countdown overlay encima del texto */}
+            {countdown !== null && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center"
+                style={{ background: 'rgba(0,0,0,0.55)' }}>
+                <div className="text-9xl font-bold tabular-nums"
+                  style={{ color: '#fff', lineHeight: 1, textShadow: `0 0 40px ${bookColor}` }}>
+                  {countdown}
+                </div>
               </div>
-              <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-                Preparándose para grabar…
-              </p>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Recording active */}
+          {/* Barra inferior: cronómetro + botón parar */}
           {countdown === null && recState === 'recording' && (
-            <div className="flex flex-col items-center gap-10 w-full px-8">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-lg font-medium tabular-nums" style={{ color: '#ef4444' }}>
+            <div className="flex-shrink-0 flex items-center justify-between px-6 py-4"
+              style={{ borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-deep)' }}>
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: '#ef4444' }} />
+                <span className="text-sm font-medium tabular-nums" style={{ color: '#ef4444' }}>
                   {fmtSec(recSeconds)}
                 </span>
               </div>
-
-              <div className="text-center flex flex-col gap-1" style={{ color: 'var(--text-2)' }}>
-                <p className="text-sm font-medium">{parasha.name}</p>
-                <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-                  {currentAliyah.n === 8 ? 'Maftir' : `${currentAliyah.n}ª Aliyá`}
-                </p>
-              </div>
-
               <button onClick={stopRec}
-                className="w-20 h-20 rounded-full flex items-center justify-center transition-all active:scale-95"
-                style={{ background: '#ef4444', boxShadow: '0 0 40px rgba(239,68,68,0.5)' }}>
-                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                  <rect x="6" y="6" width="16" height="16" rx="2" fill="white"/>
+                className="w-16 h-16 rounded-full flex items-center justify-center transition-all active:scale-95"
+                style={{ background: '#ef4444', boxShadow: '0 0 30px rgba(239,68,68,0.4)' }}>
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                  <rect x="4" y="4" width="14" height="14" rx="2" fill="white"/>
                 </svg>
               </button>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Toca para parar</p>
+              <div style={{ width: 60 }} />
             </div>
           )}
         </div>,
