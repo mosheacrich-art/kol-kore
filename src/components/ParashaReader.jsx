@@ -104,6 +104,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
   }, [studyDropdownOpen])
   const [pendingHomework, setPendingHomework] = useState(null)
   const pendingHomeworkRef = useRef(null)
+  const [hwMinimized, setHwMinimized] = useState(false)
   const [studentAudios, setStudentAudios] = useState([])
   const [studentAudiosOpen, setStudentAudiosOpen] = useState(false)
   const [playingStudentUrl, setPlayingStudentUrl] = useState(null)
@@ -479,18 +480,20 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
       {/* Top bar */}
       <div className="flex-shrink-0" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
 
-        {/* Row 1: Parasha info */}
-        <div className="px-4 sm:px-6 pt-2 pb-1 flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-            style={{ background: `${bookColor}20`, color: bookColor, border: `1px solid ${bookColor}30` }}>
-            {parasha.num}
+        {/* Row 1: Parasha info — hidden on mobile */}
+        {!isMobileUI && (
+          <div className="px-4 sm:px-6 pt-2 pb-1 flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+              style={{ background: `${bookColor}20`, color: bookColor, border: `1px solid ${bookColor}30` }}>
+              {parasha.num}
+            </div>
+            <div className="min-w-0 flex-1 flex items-center gap-2">
+              <span className="hebrew text-base leading-none" style={{ color: bookColor }}>{parasha.heb}</span>
+              <span className="text-sm font-medium truncate" style={{ color: 'var(--text-2)' }}>{parasha.name}</span>
+              <span className="text-xs hidden sm:inline" style={{ color: 'var(--text-muted)' }}>{currentAliyah.ref}</span>
+            </div>
           </div>
-          <div className="min-w-0 flex-1 flex items-center gap-2">
-            <span className="hebrew text-base leading-none" style={{ color: bookColor }}>{parasha.heb}</span>
-            <span className="text-sm font-medium truncate" style={{ color: 'var(--text-2)' }}>{parasha.name}</span>
-            <span className="text-xs hidden sm:inline" style={{ color: 'var(--text-muted)' }}>{currentAliyah.ref}</span>
-          </div>
-        </div>
+        )}
 
         {/* Row 2: Mobile compact toolbar OR desktop full toolbar */}
         {isMobileUI ? (
@@ -914,52 +917,71 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
 
       {/* Homework banner */}
       {pendingHomework && (
-        <div className="flex-shrink-0 px-5 py-3 flex flex-col gap-2"
-          style={{ background: 'rgba(108,51,230,0.1)', borderBottom: '1px solid rgba(108,51,230,0.2)' }}>
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: 'rgba(108,51,230,0.2)' }}>
-              <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                <path d="M2 2h6l3 3v7H2V2z" stroke="#6c33e6" strokeWidth="1.2" strokeLinejoin="round"/>
-                <path d="M8 2v3h3" stroke="#6c33e6" strokeWidth="1.2" strokeLinejoin="round"/>
-                <path d="M4 7h5M4 9.5h3" stroke="#6c33e6" strokeWidth="1.2" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold" style={{ color: '#6c33e6' }}>{t('pending_hw')}</p>
-              <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>{pendingHomework.task}</p>
-              {pendingHomework.word_start != null && (
-                <p className="text-xs mt-0.5" style={{ color: '#d97706' }}>
-                  📍 Palabras {pendingHomework.word_start + 1}–{pendingHomework.word_end + 1}
-                </p>
-              )}
-            </div>
-            <div className="w-2 h-2 rounded-full animate-pulse flex-shrink-0" style={{ background: '#6c33e6' }} />
+        hwMinimized ? (
+          <div className="flex-shrink-0 flex items-center gap-2 px-4 py-1.5"
+            style={{ background: 'rgba(108,51,230,0.08)', borderBottom: '1px solid rgba(108,51,230,0.15)' }}>
+            <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#6c33e6' }} />
+            <span className="text-xs flex-1 truncate" style={{ color: '#6c33e6' }}>{t('pending_hw')}</span>
+            <button onClick={() => setHwMinimized(false)}
+              className="text-xs px-2 py-0.5 rounded transition-all"
+              style={{ color: '#6c33e6', background: 'rgba(108,51,230,0.12)', border: '1px solid rgba(108,51,230,0.2)' }}>
+              ▾
+            </button>
           </div>
-          {recState === 'idle' && pendingHomework.require_audio && (
-            <div className="flex gap-2 pl-10">
-              <button onClick={startRec}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                style={{ background: 'rgba(108,51,230,0.18)', color: '#6c33e6', border: '1px solid rgba(108,51,230,0.3)' }}>
-                <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                  <rect x="3.5" y="0.5" width="4" height="6" rx="2" stroke="currentColor" strokeWidth="1.2"/>
-                  <path d="M1.5 5.5c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                  <path d="M5.5 9.5v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+        ) : (
+          <div className="flex-shrink-0 px-5 py-3 flex flex-col gap-2"
+            style={{ background: 'rgba(108,51,230,0.1)', borderBottom: '1px solid rgba(108,51,230,0.2)' }}>
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(108,51,230,0.2)' }}>
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                  <path d="M2 2h6l3 3v7H2V2z" stroke="#6c33e6" strokeWidth="1.2" strokeLinejoin="round"/>
+                  <path d="M8 2v3h3" stroke="#6c33e6" strokeWidth="1.2" strokeLinejoin="round"/>
+                  <path d="M4 7h5M4 9.5h3" stroke="#6c33e6" strokeWidth="1.2" strokeLinecap="round"/>
                 </svg>
-                {t('record')}
-              </button>
-              <button onClick={() => uploadInputRef.current?.click()}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-                <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                  <path d="M5.5 1v7M2 5l3.5-4L9 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M1 9.5h9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold" style={{ color: '#6c33e6' }}>{t('pending_hw')}</p>
+                <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>{pendingHomework.task}</p>
+                {pendingHomework.word_start != null && (
+                  <p className="text-xs mt-0.5" style={{ color: '#d97706' }}>
+                    📍 Palabras {pendingHomework.word_start + 1}–{pendingHomework.word_end + 1}
+                  </p>
+                )}
+              </div>
+              <button onClick={() => setHwMinimized(true)}
+                className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
+                style={{ background: 'rgba(108,51,230,0.15)', color: '#6c33e6', border: '1px solid rgba(108,51,230,0.25)' }}>
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <path d="M2 6.5l3-3 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                {t('upload')}
               </button>
             </div>
-          )}
-        </div>
+            {recState === 'idle' && pendingHomework.require_audio && (
+              <div className="flex gap-2 pl-10">
+                <button onClick={startRec}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                  style={{ background: 'rgba(108,51,230,0.18)', color: '#6c33e6', border: '1px solid rgba(108,51,230,0.3)' }}>
+                  <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                    <rect x="3.5" y="0.5" width="4" height="6" rx="2" stroke="currentColor" strokeWidth="1.2"/>
+                    <path d="M1.5 5.5c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                    <path d="M5.5 9.5v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                  </svg>
+                  {t('record')}
+                </button>
+                <button onClick={() => uploadInputRef.current?.click()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                  style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+                  <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                    <path d="M5.5 1v7M2 5l3.5-4L9 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M1 9.5h9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                  </svg>
+                  {t('upload')}
+                </button>
+              </div>
+            )}
+          </div>
+        )
       )}
 
       {/* Student upload success message */}
@@ -1154,7 +1176,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
 
       {/* Audio bar */}
       {<div className="flex-shrink-0 px-4 py-2.5 flex items-center justify-end gap-2"
-        style={{ borderTop: '1px solid var(--border-subtle)', background: 'var(--overlay)' }}>
+        style={isMobileUI && profile?.role === 'student' ? {} : { borderTop: '1px solid var(--border-subtle)', background: 'var(--overlay)' }}>
 
         {recState === 'recording' ? (
           <>
