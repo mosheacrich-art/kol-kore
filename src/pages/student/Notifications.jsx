@@ -16,42 +16,99 @@ function timeAgo(dateStr) {
 export default function StudentNotifications() {
   const { profile } = useAuth()
   const { t } = useLang()
+  const [tab, setTab] = useState('homework')
+  const [homework, setHomework] = useState([])
   const [evals, setEvals] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!profile?.id) return
-
-    supabase
-      .from('notifications')
-      .select('*')
-      .eq('student_id', profile.id)
-      .eq('type', 'evaluation')
-      .order('created_at', { ascending: false })
-      .then(({ data }) => {
-        setEvals(data || [])
-        setLoading(false)
-
-        const unread = (data || []).filter(e => !e.read).map(e => e.id)
-        if (unread.length) {
-          supabase.from('notifications').update({ read: true })
-            .in('id', unread).eq('student_id', profile.id)
-        }
-      })
+    setLoading(true)
+    Promise.all([
+      supabase
+        .from('notifications')
+        .select('*')
+        .eq('student_id', profile.id)
+        .eq('type', 'homework')
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('notifications')
+        .select('*')
+        .eq('student_id', profile.id)
+        .eq('type', 'evaluation')
+        .order('created_at', { ascending: false }),
+    ]).then(([hwRes, evRes]) => {
+      setHomework(hwRes.data || [])
+      setEvals(evRes.data || [])
+      setLoading(false)
+    })
   }, [profile?.id])
+
+  const markRead = async (id, listSetter) => {
+    await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', id)
+      .eq('student_id', profile.id)
+    listSetter(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+  }
+
+  const markAllRead = async (list, listSetter) => {
+    const unreadIds = list.filter(n => !n.read).map(n => n.id)
+    if (!unreadIds.length) return
+    await supabase
+      .from('notifications')
+      .update({ read: true })
+      .in('id', unreadIds)
+      .eq('student_id', profile.id)
+    listSetter(prev => prev.map(n => ({ ...n, read: true })))
+  }
+
+  const hwUnread = homework.filter(n => !n.read).length
+  const evUnread = evals.filter(n => !n.read).length
 
   return (
     <div className="p-8 max-w-3xl">
-      <div className="mb-10 fade-up-1">
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          הֲעָרוֹת · Notificaciones
-        </p>
+      <div className="mb-8 fade-up-1">
         <h1 className="text-3xl font-light" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-          Mis notificaciones
+          Notificaciones
         </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
-          Evaluaciones y mensajes de tu profesor
-        </p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 fade-up-2">
+        <button
+          onClick={() => setTab('homework')}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+          style={{
+            background: tab === 'homework' ? 'rgba(108,51,230,0.13)' : 'var(--bg-card)',
+            color: tab === 'homework' ? '#8b5cf6' : 'var(--text-3)',
+            border: `1px solid ${tab === 'homework' ? 'rgba(108,51,230,0.3)' : 'var(--border)'}`,
+          }}>
+          Deberes
+          {hwUnread > 0 && (
+            <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+              style={{ background: '#ef4444', color: '#fff' }}>
+              {hwUnread > 9 ? '9+' : hwUnread}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setTab('evaluations')}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+          style={{
+            background: tab === 'evaluations' ? 'rgba(108,51,230,0.13)' : 'var(--bg-card)',
+            color: tab === 'evaluations' ? '#8b5cf6' : 'var(--text-3)',
+            border: `1px solid ${tab === 'evaluations' ? 'rgba(108,51,230,0.3)' : 'var(--border)'}`,
+          }}>
+          Evaluaciones
+          {evUnread > 0 && (
+            <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+              style={{ background: '#ef4444', color: '#fff' }}>
+              {evUnread > 9 ? '9+' : evUnread}
+            </span>
+          )}
+        </button>
       </div>
 
       {loading && (
@@ -61,16 +118,96 @@ export default function StudentNotifications() {
         </div>
       )}
 
-      {/* ── Evaluations ──────────────────────────────────────────────────── */}
-      {!loading && (
-        <div className="fade-up-2">
-          {evals.length > 0 && (
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
-              <p className="text-xs tracking-widest uppercase" style={{ color: 'var(--text-gold)' }}>
-                {t('evaluations_label')}
-              </p>
-              <div className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
+      {/* ── Deberes tab ──────────────────────────────────────────────────── */}
+      {!loading && tab === 'homework' && (
+        <div className="fade-up-3">
+          {homework.length > 0 && hwUnread > 0 && (
+            <div className="flex justify-end mb-3">
+              <button
+                onClick={() => markAllRead(homework, setHomework)}
+                className="text-xs px-3 py-1.5 rounded-xl transition-all"
+                style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+                Marcar todas como leídas
+              </button>
+            </div>
+          )}
+
+          {homework.length === 0 && (
+            <div className="text-center py-20">
+              <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
+                style={{ background: 'rgba(108,51,230,0.08)', border: '1px solid rgba(108,51,230,0.15)' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" stroke="rgba(108,51,230,0.5)" strokeWidth="1.5" strokeLinecap="round"/>
+                  <rect x="9" y="3" width="6" height="4" rx="1" stroke="rgba(108,51,230,0.5)" strokeWidth="1.5"/>
+                  <path d="M9 12h6M9 16h4" stroke="rgba(108,51,230,0.5)" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin deberes por ahora</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Aquí aparecerán las tareas que te envíe tu profesor</p>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3">
+            {homework.map(hw => (
+              <div key={hw.id}
+                className="rounded-2xl p-5 flex flex-col gap-2 relative"
+                style={{
+                  background: 'var(--bg-card)',
+                  border: `1px solid ${!hw.read ? 'rgba(108,51,230,0.3)' : 'var(--border-subtle)'}`,
+                }}>
+                {/* Unread dot */}
+                {!hw.read && (
+                  <span className="absolute top-4 right-4 w-2 h-2 rounded-full"
+                    style={{ background: '#8b5cf6' }} />
+                )}
+
+                <p className="text-sm font-medium pr-5" style={{ color: 'var(--text)' }}>{hw.message}</p>
+
+                {(hw.parasha_id || hw.aliyah_label) && (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {hw.parasha_id && (
+                      <span className="text-xs px-2 py-0.5 rounded-md"
+                        style={{ background: 'rgba(245,158,11,0.1)', color: '#d97706', border: '1px solid rgba(245,158,11,0.2)' }}>
+                        {hw.parasha_id}
+                      </span>
+                    )}
+                    {hw.aliyah_label && (
+                      <span className="text-xs px-2 py-0.5 rounded-md"
+                        style={{ background: 'rgba(245,158,11,0.08)', color: '#d97706', border: '1px solid rgba(245,158,11,0.15)' }}>
+                        {hw.aliyah_label}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between gap-2 mt-1">
+                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{timeAgo(hw.created_at)}</span>
+                  {!hw.read && (
+                    <button
+                      onClick={() => markRead(hw.id, setHomework)}
+                      className="text-xs px-3 py-1 rounded-lg transition-all"
+                      style={{ background: 'rgba(108,51,230,0.08)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)' }}>
+                      Marcar como leída
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Evaluaciones tab ─────────────────────────────────────────────── */}
+      {!loading && tab === 'evaluations' && (
+        <div className="fade-up-3">
+          {evals.length > 0 && evUnread > 0 && (
+            <div className="flex justify-end mb-3">
+              <button
+                onClick={() => markAllRead(evals, setEvals)}
+                className="text-xs px-3 py-1.5 rounded-xl transition-all"
+                style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+                Marcar todas como leídas
+              </button>
             </div>
           )}
 
@@ -96,10 +233,19 @@ export default function StudentNotifications() {
               const sortedErrors = [...errors].sort((a, b) => (a.time ?? 0) - (b.time ?? 0))
               return (
                 <div key={ev.id}
-                  className="rounded-2xl p-5 flex flex-col gap-3"
-                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
+                  className="rounded-2xl p-5 flex flex-col gap-3 relative"
+                  style={{
+                    background: 'var(--bg-card)',
+                    border: `1px solid ${!ev.read ? 'rgba(108,51,230,0.3)' : 'var(--border-subtle)'}`,
+                  }}>
 
-                  <div className="flex items-start justify-between gap-2">
+                  {/* Unread dot */}
+                  {!ev.read && (
+                    <span className="absolute top-4 right-4 w-2 h-2 rounded-full"
+                      style={{ background: '#8b5cf6' }} />
+                  )}
+
+                  <div className="flex items-start justify-between gap-2 pr-5">
                     <div>
                       <p className="text-sm font-medium capitalize" style={{ color: 'var(--text)' }}>
                         {ev.parasha_id} · {ev.aliyah_label}
@@ -149,6 +295,17 @@ export default function StudentNotifications() {
                       <p className="text-sm leading-relaxed" style={{ color: 'var(--text-2)', whiteSpace: 'pre-wrap' }}>
                         {parsed.comment}
                       </p>
+                    </div>
+                  )}
+
+                  {!ev.read && (
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => markRead(ev.id, setEvals)}
+                        className="text-xs px-3 py-1 rounded-lg transition-all"
+                        style={{ background: 'rgba(108,51,230,0.08)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)' }}>
+                        Marcar como leída
+                      </button>
                     </div>
                   )}
                 </div>

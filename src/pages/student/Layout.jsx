@@ -52,25 +52,28 @@ export default function StudentLayout() {
       .select('id', { count: 'exact', head: true })
       .eq('student_id', profile.id)
       .eq('read', false)
+      .in('type', ['evaluation', 'homework'])
       .then(({ count }) => setUnreadEvals(count ?? 0))
   }, [profile?.id, location.pathname])
 
   // Real-time badge update when teacher sends a correction
   useEffect(() => {
     if (!profile?.id) return
+    const refetchCount = () => {
+      supabase.from('notifications').select('id', { count: 'exact', head: true })
+        .eq('student_id', profile.id).eq('read', false)
+        .in('type', ['evaluation', 'homework'])
+        .then(({ count }) => setUnreadEvals(count ?? 0))
+    }
     const ch = supabase.channel(`student-badge-${profile.id}`)
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'notifications',
         filter: `student_id=eq.${profile.id}`,
-      }, () => setUnreadEvals(n => n + 1))
+      }, () => refetchCount())
       .on('postgres_changes', {
         event: 'UPDATE', schema: 'public', table: 'notifications',
         filter: `student_id=eq.${profile.id}`,
-      }, () => {
-        supabase.from('notifications').select('id', { count: 'exact', head: true })
-          .eq('student_id', profile.id).eq('read', false)
-          .then(({ count }) => setUnreadEvals(count ?? 0))
-      })
+      }, () => refetchCount())
       .subscribe()
     return () => supabase.removeChannel(ch)
   }, [profile?.id])

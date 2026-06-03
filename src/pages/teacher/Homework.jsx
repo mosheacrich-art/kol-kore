@@ -177,9 +177,32 @@ export default function TeacherHomework() {
       const rows = repeatDates.map(d => ({ ...base, due: d }))
       const { data } = await supabase.from('homework').insert(rows).select('*, student:student_id(name)')
       if (data) setSent(prev => [...[...data].reverse(), ...prev])
+      if (base.student_id) {
+        const notifRows = repeatDates.map(() => ({
+          student_id: base.student_id,
+          teacher_id: profile.id,
+          type: 'homework',
+          message: base.task,
+          parasha_id: base.parasha_id || null,
+          aliyah_label: base.aliyah_idx != null ? `Aliyá ${base.aliyah_idx + 1}` : null,
+          read: false,
+        }))
+        await supabase.from('notifications').insert(notifRows)
+      }
     } else {
       const { data } = await supabase.from('homework').insert({ ...base, due: form.due || null }).select('*, student:student_id(name)').single()
       if (data) setSent(prev => [data, ...prev])
+      if (base.student_id) {
+        await supabase.from('notifications').insert({
+          student_id: base.student_id,
+          teacher_id: profile.id,
+          type: 'homework',
+          message: base.task,
+          parasha_id: base.parasha_id || null,
+          aliyah_label: base.aliyah_idx != null ? `Aliyá ${base.aliyah_idx + 1}` : null,
+          read: false,
+        })
+      }
     }
 
     setComposing(false)
