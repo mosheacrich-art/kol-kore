@@ -225,7 +225,7 @@ function StudentModal({ onClose, isDark, t, tl }) {
 
     if (!name.trim()) { setError(tl('full_name')); setLoading(false); return }
 
-    const result = await signUp(email, password, name.trim(), 'student')
+    const result = await signUp(email, password, name.trim(), 'student', marketingConsent)
     setLoading(false)
     if (result?.needsConfirmation) { setConfirmationSent(true); return }
     if (result) { setError('Error al registrarse: ' + result.message); return }
@@ -450,7 +450,7 @@ function SimpleAuthForm({ role, color, onCancel, onDone, t, tl }) {
     setError('')
     if (isRegister) {
       if (!name.trim()) { setError(tl('full_name')); setLoading(false); return }
-      const result = await signUp(email, password, name.trim(), role)
+      const result = await signUp(email, password, name.trim(), role, marketingConsent)
       setLoading(false)
       if (result?.needsConfirmation) { setConfirmationSent(true); return }
       if (result) { setError('Error: ' + result.message); return }

@@ -139,7 +139,7 @@ export function AuthProvider({ children }) {
     } catch (err) { return err }
   }
 
-  const signUp = async (email, password, name, role) => {
+  const signUp = async (email, password, name, role, marketingConsent = false) => {
     // Ensure stale role keys don't interfere with a fresh signup
     sessionStorage.removeItem('oauth_intended_role')
     sessionStorage.removeItem('login_intended_role')
@@ -162,7 +162,7 @@ export function AuthProvider({ children }) {
         ? { teacher_code: Math.random().toString(36).substring(2, 8).toUpperCase() }
         : {}
       const { error: upsertErr } = await supabase.from('profiles').upsert(
-        { id: data.user.id, role, name, ...extra },
+        { id: data.user.id, role, name, marketing_consent: !!marketingConsent, ...extra },
         { onConflict: 'id' }
       )
       if (upsertErr) console.error('Profile upsert error:', upsertErr.message)
