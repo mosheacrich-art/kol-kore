@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useLang } from '../../context/LangContext'
+import LangToggle from '../../components/LangToggle'
 
 function getSections(lang) {
   const es = lang === 'es'
@@ -172,14 +173,17 @@ export default function Terms() {
   return (
     <div className="min-h-screen" style={{ background: bg }}>
       <div className="max-w-3xl mx-auto px-6 py-12">
-        <button onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-xs mb-10 px-4 py-2 rounded-full transition-all"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-3)' }}>
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-            <path d="M8 2L3 6.5l5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          {es ? 'Volver' : 'Back'}
-        </button>
+        <div className="flex items-center justify-between mb-10">
+          <button onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-xs px-4 py-2 rounded-full transition-all"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-3)' }}>
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <path d="M8 2L3 6.5l5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            {es ? 'Volver' : 'Back'}
+          </button>
+          <LangToggle compact />
+        </div>
 
         <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>Legal</p>
         <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
