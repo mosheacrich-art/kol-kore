@@ -104,7 +104,9 @@ function AppRoutes() {
             <Route path="account" element={<AccountSettings />} />
           </Route>
 
-<Route path="/admin" element={<AdminPage />} />
+<Route path="/admin" element={
+  <ProtectedRoute><AdminPage /></ProtectedRoute>
+} />
 
           <Route path="/teacher" element={
             <ProtectedRoute role="teacher"><TeacherLayout /></ProtectedRoute>

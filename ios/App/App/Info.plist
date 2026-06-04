@@ -47,5 +47,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Perashapp needs microphone access to record your Torah reading practice.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Perashapp needs camera access to record video of your Torah reading.</string>
 </dict>
 </plist>
