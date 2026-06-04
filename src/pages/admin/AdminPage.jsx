@@ -7,7 +7,7 @@ import { useLang } from '../../context/LangContext'
 import { PARASHOT } from '../../data/parashot'
 
 const ADMIN_USER_ID = '1f4d0329-ddf5-48a4-965f-5f37d7416447'
-const LABELS = ['Ashkenazi', 'Sefardi', 'Mizrahi', 'Yemenite']
+const LABELS = ['Ashkenazi L', 'Sefardi', 'Mizrahi', 'Yemenite']
 
 export default function AdminPage() {
   const { user, loading } = useAuth()
@@ -32,7 +32,7 @@ export default function AdminPage() {
   // Upload form
   const [upParasha, setUpParasha] = useState('')
   const [upAliyah, setUpAliyah] = useState(0)
-  const [upLabel, setUpLabel] = useState('Ashkenazi')
+  const [upLabel, setUpLabel] = useState('Ashkenazi L')
   const [upFile, setUpFile] = useState(null)
   const [uploading, setUploading] = useState(false)
   const [upError, setUpError] = useState('')
