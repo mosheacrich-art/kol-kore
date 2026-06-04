@@ -21,7 +21,7 @@ async function submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onSta
   onStatus('uploading')
 
   // Step 1: get a signed upload URL from the server (bypasses storage RLS)
-  const urlRes = await fetch('/api/admin-audio-upload-url', {
+  const urlRes = await fetch('/api/admin?action=audio-upload-url', {
     method: 'POST', headers,
     body: JSON.stringify({ parashaId, aliyahIdx, label, ext }),
   })
@@ -40,7 +40,7 @@ async function submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onSta
   if (!uploadRes.ok) throw new Error(`Error ${uploadRes.status} al subir el archivo`)
 
   // Step 3: save metadata to DB via server (needs service key for RLS bypass)
-  const saveRes = await fetch('/api/admin-audio-save', {
+  const saveRes = await fetch('/api/admin?action=audio-save', {
     method: 'POST', headers,
     body: JSON.stringify({ parashaId, aliyahIdx, label, publicUrl, fileType }),
   })
@@ -58,7 +58,7 @@ async function submitAudio({ parashaId, aliyahIdx, aliyahRef, label, file, onSta
       })
       if (syncRes.ok) {
         const syncData = await syncRes.json()
-        await fetch('/api/admin-audio-save', {
+        await fetch('/api/admin?action=audio-save', {
           method: 'POST', headers,
           body: JSON.stringify({
             parashaId, aliyahIdx, label, publicUrl, fileType,

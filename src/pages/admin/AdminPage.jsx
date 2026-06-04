@@ -49,7 +49,7 @@ export default function AdminPage() {
     setFetching(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/api/admin-users', {
+      const res = await fetch('/api/admin?action=users', {
         headers: { Authorization: `Bearer ${session.access_token}` },
       })
       const data = await res.json()
@@ -102,7 +102,7 @@ export default function AdminPage() {
       const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }
 
       // 1. Get signed upload URL
-      const urlRes = await fetch('/api/admin-audio-upload-url', {
+      const urlRes = await fetch('/api/admin?action=audio-upload-url', {
         method: 'POST', headers,
         body: JSON.stringify({ parashaId: upParasha, aliyahIdx: upAliyah, label: upLabel }),
       })
@@ -116,7 +116,7 @@ export default function AdminPage() {
       if (uploadErr) throw new Error(uploadErr.message)
 
       // 3. Save DB record
-      const saveRes = await fetch('/api/admin-audio-save', {
+      const saveRes = await fetch('/api/admin?action=audio-save', {
         method: 'POST', headers,
         body: JSON.stringify({ parashaId: upParasha, aliyahIdx: upAliyah, label: upLabel, publicUrl: urlData.publicUrl }),
       })
