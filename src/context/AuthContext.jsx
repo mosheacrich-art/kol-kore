@@ -43,8 +43,10 @@ export function AuthProvider({ children }) {
           // No profile yet — create it (first OAuth login, or signup upsert failed due to RLS).
           const role = metadataRole || intendedRole || 'student'
           const name = userMetadata.app_name
+            || sessionStorage.getItem('apple_display_name')
             || userMetadata.full_name || userMetadata.name
             || userMetadata.email?.split('@')[0] || 'Usuario'
+          sessionStorage.removeItem('apple_display_name')
           const extra = role === 'teacher'
             ? { teacher_code: Math.random().toString(36).substring(2, 8).toUpperCase() }
             : {}
@@ -181,6 +183,34 @@ export function AuthProvider({ children }) {
     return null
   }
 
+  const signInWithApple = async (role) => {
+    sessionStorage.setItem('oauth_intended_role', role)
+    try {
+      const { SignInWithApple } = await import('@capacitor-community/apple-sign-in')
+      const nonce = Math.random().toString(36).substring(2, 15)
+      const result = await SignInWithApple.authorize({
+        clientId: 'com.perasha.app',
+        redirectURI: `${window.location.origin}/auth/callback`,
+        scopes: 'email name',
+        state: Math.random().toString(36).substring(2, 10),
+        nonce,
+      })
+      const { identityToken, givenName, familyName } = result.response
+      const fullName = [givenName, familyName].filter(Boolean).join(' ')
+      if (fullName) sessionStorage.setItem('apple_display_name', fullName)
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: identityToken,
+        nonce,
+      })
+      if (error) { sessionStorage.removeItem('oauth_intended_role'); return error }
+      return null
+    } catch (e) {
+      sessionStorage.removeItem('oauth_intended_role')
+      return e
+    }
+  }
+
   const signInWithGoogle = (role) => {
     sessionStorage.setItem('oauth_intended_role', role)
     return supabase.auth.signInWithOAuth({
@@ -200,7 +230,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthCtx.Provider value={{
       user, profile, setProfile, loading,
-      signIn, signUp, signInWithGoogle, signOut,
+      signIn, signUp, signInWithGoogle, signInWithApple, signOut,
       recoveryMode, clearRecovery,
       oauthConflict, clearOauthConflict,
     }}>

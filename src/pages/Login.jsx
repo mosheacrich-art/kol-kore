@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext'
 import { useLang } from '../context/LangContext'
 import { supabase } from '../lib/supabase'
 import LangToggle from '../components/LangToggle'
+import { Capacitor } from '@capacitor/core'
 
 
 export default function Login() {
@@ -184,8 +185,9 @@ export default function Login() {
 // ── Student modal: registro + plan en un solo popup ──────────────────────────
 
 function StudentModal({ onClose, isDark, t, tl }) {
-  const { signIn, signUp, signInWithGoogle } = useAuth()
+  const { signIn, signUp, signInWithGoogle, signInWithApple } = useAuth()
   const navigate = useNavigate()
+  const isNative = Capacitor.isNativePlatform()
 
   const [isLogin, setIsLogin] = useState(true)
   const [isForgot, setIsForgot] = useState(false)
@@ -400,6 +402,15 @@ function StudentModal({ onClose, isDark, t, tl }) {
             {tl('google_btn')}
           </button>
 
+          {isNative && (
+            <button type="button" onClick={() => signInWithApple('student')}
+              className="w-full py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-all"
+              style={{ background: '#000', color: '#fff', border: 'none', borderRadius: '12px' }}>
+              <AppleIcon />
+              Sign in with Apple
+            </button>
+          )}
+
           {/* Forgot password link — only on login */}
           {isLogin && (
             <button type="button"
@@ -428,7 +439,8 @@ function StudentModal({ onClose, isDark, t, tl }) {
 // ── Teacher inline auth form (unchanged) ────────────────────────────────────
 
 function SimpleAuthForm({ role, color, onCancel, onDone, t, tl }) {
-  const { signIn, signUp, signInWithGoogle } = useAuth()
+  const { signIn, signUp, signInWithGoogle, signInWithApple } = useAuth()
+  const isNative = Capacitor.isNativePlatform()
   const [isRegister, setIsRegister] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -540,6 +552,15 @@ function SimpleAuthForm({ role, color, onCancel, onDone, t, tl }) {
         <GoogleIcon />
         {tl('google_btn')}
       </button>
+
+      {isNative && (
+        <button type="button" onClick={() => signInWithApple(role)}
+          className="w-full py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-all"
+          style={{ background: '#000', color: '#fff', border: 'none', borderRadius: '12px' }}>
+          <AppleIcon />
+          Sign in with Apple
+        </button>
+      )}
     </form>
   )
 }
@@ -642,6 +663,14 @@ function GoogleIcon() {
       <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
       <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
       <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+    </svg>
+  )
+}
+
+function AppleIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 814 1000" fill="white">
+      <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-37.5-156.8-108.4C98.3 653.1 56 552.8 56 454.3c0-168.8 109.7-258.2 221.5-258.2 79.3 0 145.2 51.9 194.8 51.9 47.5 0 121.9-55 212.6-55 34.2 0 122.5 3.2 189.4 86.2zm-278-190.5c35.8-42.5 61.6-101.9 61.6-161.3 0-8.3-.6-16.7-2-24.4-58.3 2.3-128 38.9-169.2 87.2-32.7 36.8-63.3 96.2-63.3 156.3 0 9 1.4 18 2 21 3.5.6 9 1.4 14.5 1.4 52.3 0 116.2-34.9 156.4-80.2z"/>
     </svg>
   )
 }
