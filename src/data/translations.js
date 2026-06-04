@@ -545,6 +545,7 @@ export const translations = {
     admin_col_subscription: 'Suscripción',
     admin_col_plan: 'Plan',
     admin_col_action: 'Acción',
+    marketing_consent_label: 'Acepto recibir emails informativos y promocionales de Perashapp (opcional)',
   },
 
   en: {
@@ -1093,6 +1094,7 @@ export const translations = {
     admin_col_subscription: 'Subscription',
     admin_col_plan: 'Plan',
     admin_col_action: 'Action',
+    marketing_consent_label: 'I agree to receive informational and promotional emails from Perashapp (optional)',
   },
 
   fr: {

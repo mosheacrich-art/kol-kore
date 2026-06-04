@@ -192,6 +192,7 @@ function StudentModal({ onClose, isDark, t, tl }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [marketingConsent, setMarketingConsent] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [forgotSent, setForgotSent] = useState(false)
@@ -355,6 +356,16 @@ function StudentModal({ onClose, isDark, t, tl }) {
             className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none"
             style={inputStyle} />
 
+          {!isLogin && (
+            <label className="flex items-start gap-2.5 cursor-pointer mt-1">
+              <input type="checkbox" checked={marketingConsent} onChange={e => setMarketingConsent(e.target.checked)}
+                className="mt-0.5 flex-shrink-0 accent-[#6c33e6]" />
+              <span className="text-xs leading-relaxed" style={{ color: t.switchText }}>
+                {tl('marketing_consent_label')}
+              </span>
+            </label>
+          )}
+
           {error && <p className="text-xs px-1" style={{ color: '#f87171' }}>{error}</p>}
 
           {/* Submit */}
@@ -422,6 +433,7 @@ function SimpleAuthForm({ role, color, onCancel, onDone, t, tl }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [marketingConsent, setMarketingConsent] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [confirmationSent, setConfirmationSent] = useState(false)
@@ -488,6 +500,15 @@ function SimpleAuthForm({ role, color, onCancel, onDone, t, tl }) {
         placeholder={tl('password')} required
         className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
         style={inputStyle} />
+      {isRegister && (
+        <label className="flex items-start gap-2.5 cursor-pointer">
+          <input type="checkbox" checked={marketingConsent} onChange={e => setMarketingConsent(e.target.checked)}
+            className="mt-0.5 flex-shrink-0 accent-[#6c33e6]" />
+          <span className="text-xs leading-relaxed" style={{ color: t.switchText }}>
+            {tl('marketing_consent_label')}
+          </span>
+        </label>
+      )}
       {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
       <div className="flex gap-2">
         <button type="button" onClick={onCancel}

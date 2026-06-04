@@ -51,6 +51,8 @@ function getSections(lang) {
                 ['Prestar el servicio de estudio y seguimiento', 'Ejecución del contrato'],
                 ['Gestionar suscripciones a través de Apple', 'Ejecución del contrato'],
                 ['Notificaciones entre profesor y alumno', 'Interés legítimo'],
+                ['Envío de emails transaccionales (confirmación de cuenta, recuperación de contraseña)', 'Ejecución del contrato'],
+                ['Envío de emails informativos y promocionales', 'Consentimiento'],
                 ['Mejorar la plataforma', 'Interés legítimo'],
                 ['Cumplimiento de obligaciones legales', 'Obligación legal'],
               ].map(([fin, base], i) => (
@@ -71,6 +73,8 @@ function getSections(lang) {
                 ['Provide the study and tracking service', 'Contract performance'],
                 ['Manage subscriptions through Apple', 'Contract performance'],
                 ['Notifications between teacher and student', 'Legitimate interest'],
+                ['Sending transactional emails (account confirmation, password recovery)', 'Contract performance'],
+                ['Sending informational and promotional emails', 'Consent'],
                 ['Improve the platform', 'Legitimate interest'],
                 ['Compliance with legal obligations', 'Legal obligation'],
               ].map(([fin, base], i) => (
@@ -96,6 +100,7 @@ function getSections(lang) {
               <li><strong>Supabase Inc.</strong> — base de datos y autenticación (servidores en UE).</li>
               <li><strong>Apple Inc.</strong> — gestión de suscripciones y pagos a través de In-App Purchase.</li>
               <li><strong>OpenAI LLC</strong> — transcripción de audio para la sincronización de lectura (modelo Whisper). Los audios se procesan y no se utilizan para entrenar modelos.</li>
+              <li><strong>Resend Inc.</strong> — envío de emails transaccionales y promocionales (servidores en EE.UU.).</li>
             </ul>
             <p className="mt-2">No vendemos ni cedemos datos a terceros con fines comerciales.</p></>
         : <><p>We share data only with the following service providers, under a data processing agreement:</p>
@@ -103,6 +108,7 @@ function getSections(lang) {
               <li><strong>Supabase Inc.</strong> — database and authentication (EU servers).</li>
               <li><strong>Apple Inc.</strong> — subscription and payment management through In-App Purchase.</li>
               <li><strong>OpenAI LLC</strong> — audio transcription for reading synchronization (Whisper model). Audio is processed and not used to train AI models.</li>
+              <li><strong>Resend Inc.</strong> — transactional and promotional email delivery (US servers).</li>
             </ul>
             <p className="mt-2">We do not sell or share data with third parties for commercial purposes.</p></>
     },
