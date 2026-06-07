@@ -187,13 +187,19 @@ export function AuthProvider({ children }) {
     sessionStorage.setItem('oauth_intended_role', role)
     try {
       const { SignInWithApple } = await import('@capacitor-community/apple-sign-in')
-      const nonce = Math.random().toString(36).substring(2, 15)
+      const rawNonce = Math.random().toString(36).substring(2, 15)
+      // SHA256 hash del nonce — Apple lo requiere así
+      const msgBuffer = new TextEncoder().encode(rawNonce)
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
+      const hashArray = Array.from(new Uint8Array(hashBuffer))
+      const hashedNonce = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+
       const result = await SignInWithApple.authorize({
         clientId: 'com.perasha.app',
         redirectURI: `${window.location.origin}/auth/callback`,
         scopes: 'email name',
         state: Math.random().toString(36).substring(2, 10),
-        nonce,
+        nonce: hashedNonce,
       })
       const { identityToken, givenName, familyName } = result.response
       const fullName = [givenName, familyName].filter(Boolean).join(' ')
@@ -201,7 +207,7 @@ export function AuthProvider({ children }) {
       const { error } = await supabase.auth.signInWithIdToken({
         provider: 'apple',
         token: identityToken,
-        nonce,
+        nonce: rawNonce,
       })
       if (error) { sessionStorage.removeItem('oauth_intended_role'); return error }
       return null
