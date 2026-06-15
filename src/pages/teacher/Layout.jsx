@@ -174,6 +174,27 @@ export default function TeacherLayout() {
 
         {contactOpen && <ContactModal onClose={() => setContactOpen(false)} />}
         <Outlet />
+        {/* Bottom-center fallback menu button for mobile web (iOS touch fix) */}
+        {!isLandscape && !sidebarOpen && (
+          <button className="fixed md:hidden z-50 flex items-center gap-2 px-4 py-2.5 rounded-full shadow-lg"
+            style={{
+              bottom: '20px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-subtle)',
+              color: 'var(--text-2)',
+            }}
+            onClick={() => setSidebarOpen(true)}>
+            <HamburgerIcon />
+            {unreadCount > 0 && (
+              <span className="w-4 h-4 rounded-full text-white flex items-center justify-center flex-shrink-0"
+                style={{ background: '#6c33e6', fontSize: '8px' }}>
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+        )}
       </main>
     </div>
   )
