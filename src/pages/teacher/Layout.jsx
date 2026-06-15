@@ -111,30 +111,32 @@ export default function TeacherLayout() {
           isDark={isDark} toggle={toggle} onContactOpen={() => setContactOpen(true)} signOut={signOut} navigate={navigate} />
       </aside>
 
+      {/* Mobile: floating hamburger — outside <main> to fix iOS Safari touch bug
+           (fixed elements inside overflow-auto lose touch events on iOS) */}
+      {!isLandscape && !sidebarOpen && (
+        <button className="fixed z-50 md:hidden p-2.5 rounded-xl"
+          style={{
+            top: isNative ? 'calc(env(safe-area-inset-top, 0px) + 8px)' : '8px',
+            left: '16px',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-subtle)',
+            color: 'var(--text-2)',
+          }}
+          onClick={() => setSidebarOpen(true)}>
+          <HamburgerIcon />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-white flex items-center justify-center"
+              style={{ background: '#6c33e6', fontSize: '8px' }}>
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+      )}
+
       {/* ── Main ─────────────────────────────────────────────────────────── */}
       <main className="flex-1 flex flex-col overflow-auto scroll-smooth-ios"
         style={{ paddingTop: isNative ? 'calc(env(safe-area-inset-top, 0px) + 8px)' : undefined }}>
 
-        {/* Mobile: floating hamburger — hidden when sidebar is open */}
-        {!isLandscape && !sidebarOpen && (
-          <button className="fixed z-50 md:hidden p-2.5 rounded-xl"
-            style={{
-              top: isNative ? 'calc(env(safe-area-inset-top, 0px) + 8px)' : '8px',
-              left: '16px',
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-subtle)',
-              color: 'var(--text-2)',
-            }}
-            onClick={() => setSidebarOpen(true)}>
-            <HamburgerIcon />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-white flex items-center justify-center"
-                style={{ background: '#6c33e6', fontSize: '8px' }}>
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </button>
-        )}
 
         {/* Desktop only: full header bar */}
         {!isNative && !isLandscape && (
