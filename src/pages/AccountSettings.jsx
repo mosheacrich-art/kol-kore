@@ -18,8 +18,8 @@ export default function AccountSettings() {
   const handleSaveName = async (e) => {
     e.preventDefault()
     const trimmed = displayName.trim()
-    if (!trimmed) { setNameMsg({ ok: false, text: 'El nombre no puede estar vacío' }); return }
-    if (trimmed === profile?.name) { setNameMsg({ ok: false, text: 'Es el mismo nombre actual' }); return }
+    if (!trimmed) { setNameMsg({ ok: false, text: 'Name cannot be empty' }); return }
+    if (trimmed === profile?.name) { setNameMsg({ ok: false, text: 'That is already your current name' }); return }
     setNameLoading(true)
     setNameMsg(null)
     const { error } = await supabase.from('profiles').update({ name: trimmed }).eq('id', profile.id)
@@ -28,7 +28,7 @@ export default function AccountSettings() {
       setNameMsg({ ok: false, text: error.message })
     } else {
       setProfile(p => ({ ...p, name: trimmed }))
-      setNameMsg({ ok: true, text: 'Nombre actualizado' })
+      setNameMsg({ ok: true, text: 'Name updated' })
     }
   }
 
@@ -105,13 +105,13 @@ export default function AccountSettings() {
       <section className="rounded-2xl p-5 mb-4"
         style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--text)' }}>
-          Nombre en pantalla
+          Display name
         </h2>
 
         <form onSubmit={handleSaveName} className="flex flex-col gap-3">
           <input
             type="text"
-            placeholder="Tu nombre"
+            placeholder="Your name"
             value={displayName}
             onChange={e => { setDisplayName(e.target.value); setNameMsg(null) }}
             className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
@@ -136,7 +136,7 @@ export default function AccountSettings() {
               color: nameLoading || !displayName.trim() ? 'var(--text-3)' : isTeacher ? '#0d0b1e' : '#fff',
               border: `1px solid ${nameLoading || !displayName.trim() ? 'var(--border)' : accent}`,
             }}>
-            {nameLoading ? '…' : 'Guardar nombre'}
+            {nameLoading ? '…' : 'Save name'}
           </button>
         </form>
       </section>

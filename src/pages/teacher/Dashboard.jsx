@@ -106,7 +106,7 @@ export default function TeacherDashboard() {
           Shalom, {profile?.name || 'Profesor'}
         </h1>
         <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
-          {students.length} alumno{students.length !== 1 ? 's' : ''} activo{students.length !== 1 ? 's' : ''}
+          {students.length} active student{students.length !== 1 ? 's' : ''}
         </p>
       </div>
 
