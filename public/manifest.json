@@ -1,7 +1,7 @@
 {
   "name": "Parashapp",
   "short_name": "Perashapp",
-  "description": "Estudia la Perashá con audio del profesor sincronizado palabra a palabra",
+  "description": "Study the weekly Parasha with your teacher's audio synced word by word",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
