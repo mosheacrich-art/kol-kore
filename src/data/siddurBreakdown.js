@@ -1,7 +1,8 @@
 // Breakdown of large Siddur Sefard weekday sections into their component prayers.
 //
-// Each Sefaria "section" (e.g. "Hodu", "Amidah") is really a bundle of many
-// distinct prayers. This map splits those bundles into one card per prayer.
+// Some Sefaria "sections" (e.g. "Hodu") are really a bundle of many distinct
+// prayers. This map splits those bundles into one card per prayer.
+// The Amidah is intentionally left whole.
 //
 // Keyed by the exact Sefaria section ref. Each part becomes its own item:
 //   - `seg`  → a segment sub-ref into that section, e.g. "2-6" → "<section> 2-6"
@@ -53,31 +54,6 @@ export const SIDDUR_BREAKDOWN = {
     { title: 'Emet VeYatziv',    heTitle: 'אֱמֶת וְיַצִּיב',     seg: '31-38' },
   ],
 
-  // ── Shajarit · Amidá (19 berajot) ─────────────────────────────────────
-  [`${SH}, Amidah`]: [
-    { title: '1 · Avot',                 heTitle: 'אָבוֹת',                    seg: '1-7' },
-    { title: '2 · Guevurot',             heTitle: 'גְּבוּרוֹת',                seg: '8-19' },
-    { title: 'Kedushá',                  heTitle: 'קְדֻשָּׁה',                 seg: '20-33' },
-    { title: '3 · Kedushat HaShem',      heTitle: 'קְדֻשַּׁת הַשֵּׁם',          seg: '34-39' },
-    { title: '4 · Biná',                 heTitle: 'בִּינָה',                   seg: '40-41' },
-    { title: '5 · Teshuvá',              heTitle: 'תְּשׁוּבָה',                seg: '42-43' },
-    { title: '6 · Selijá',               heTitle: 'סְלִיחָה',                  seg: '44-45' },
-    { title: '7 · Gueulá',               heTitle: 'גְּאוּלָּה',                seg: '46-48' },
-    { title: '8 · Refuá',                heTitle: 'רְפוּאָה',                  seg: '49-53' },
-    { title: '9 · Birkat HaShanim',      heTitle: 'בִּרְכַּת הַשָּׁנִים',       seg: '54-60' },
-    { title: '10 · Kibutz Galuyot',      heTitle: 'קִבּוּץ גָּלֻיּוֹת',         seg: '61-63' },
-    { title: '11 · Mishpat',             heTitle: 'מִשְׁפָּט',                 seg: '64-69' },
-    { title: '12 · Birkat HaMinim',      heTitle: 'בִּרְכַּת הַמִּינִים',       seg: '70-71' },
-    { title: '13 · Tzadikim',            heTitle: 'צַדִּיקִים',                seg: '72-73' },
-    { title: '14 · Binyan Yerushalayim', heTitle: 'בִּנְיַן יְרוּשָׁלַֽיִם',    seg: '74-75' },
-    { title: '15 · Maljut Bet David',    heTitle: 'מַלְכוּת בֵּית דָּוִד',      seg: '76-77' },
-    { title: '16 · Shomea Tefilá',       heTitle: 'שׁוֹמֵעַ תְּפִלָּה',         seg: '78-81' },
-    { title: '17 · Avodá',               heTitle: 'עֲבוֹדָה',                  seg: '82-91' },
-    { title: '18 · Hodaá',               heTitle: 'הוֹדָאָה',                  seg: '92-107' },
-    { title: 'Birkat Kohanim',           heTitle: 'בִּרְכַּת כֹּהֲנִים',        seg: '108-115' },
-    { title: '19 · Shalom',              heTitle: 'שָׁלוֹם',                   seg: '116-125' },
-  ],
-
   // ── Minjá · Korbanot ──────────────────────────────────────────────────
   [`${MI}, Korbanot`]: [
     { title: 'Parashat HaTamid',   heTitle: 'פָּרָשַׁת הַתָּמִיד',    seg: '1-3' },
@@ -86,32 +62,6 @@ export const SIDDUR_BREAKDOWN = {
     { title: 'Aná BeJóaj',         heTitle: 'אָנָּא בְּכֹֽחַ',         seg: '15-22' },
     { title: 'Ashréi',             heTitle: 'אַשְׁרֵי',               seg: '23' },
     { title: 'Jatzí Kadish',       heTitle: 'חֲצִי קַדִּישׁ',          seg: '25-28' },
-  ],
-
-  // ── Minjá · Amidá (19 berajot) ───────────────────────────────────────
-  [`${MI}, Amidah`]: [
-    { title: '1 · Avot',                 heTitle: 'אָבוֹת',                    seg: '1-7' },
-    { title: '2 · Guevurot',             heTitle: 'גְּבוּרוֹת',                seg: '8-19' },
-    { title: 'Kedushá',                  heTitle: 'קְדֻשָּׁה',                 seg: '20-33' },
-    { title: '3 · Kedushat HaShem',      heTitle: 'קְדֻשַּׁת הַשֵּׁם',          seg: '34-39' },
-    { title: '4 · Biná',                 heTitle: 'בִּינָה',                   seg: '40-41' },
-    { title: '5 · Teshuvá',              heTitle: 'תְּשׁוּבָה',                seg: '42-43' },
-    { title: '6 · Selijá',               heTitle: 'סְלִיחָה',                  seg: '44-45' },
-    { title: '7 · Gueulá',               heTitle: 'גְּאוּלָּה',                seg: '46-49' },
-    { title: '8 · Refuá',                heTitle: 'רְפוּאָה',                  seg: '50-51' },
-    { title: '9 · Birkat HaShanim',      heTitle: 'בִּרְכַּת הַשָּׁנִים',       seg: '52-58' },
-    { title: '10 · Kibutz Galuyot',      heTitle: 'קִבּוּץ גָּלֻיּוֹת',         seg: '59-60' },
-    { title: '11 · Mishpat',             heTitle: 'מִשְׁפָּט',                 seg: '61-66' },
-    { title: '12 · Birkat HaMinim',      heTitle: 'בִּרְכַּת הַמִּינִים',       seg: '67-68' },
-    { title: '13 · Tzadikim',            heTitle: 'צַדִּיקִים',                seg: '69-70' },
-    { title: '14 · Binyan Yerushalayim', heTitle: 'בִּנְיַן יְרוּשָׁלַֽיִם',    seg: '71-76' },
-    { title: '15 · Maljut Bet David',    heTitle: 'מַלְכוּת בֵּית דָּוִד',      seg: '77-78' },
-    { title: '16 · Shomea Tefilá',       heTitle: 'שׁוֹמֵעַ תְּפִלָּה',         seg: '79-83' },
-    { title: '17 · Avodá',               heTitle: 'עֲבוֹדָה',                  seg: '84-93' },
-    { title: '18 · Hodaá',               heTitle: 'הוֹדָאָה',                  seg: '94-109' },
-    { title: 'Birkat Kohanim',           heTitle: 'בִּרְכַּת כֹּהֲנִים',        seg: '110-117' },
-    { title: '19 · Shalom',              heTitle: 'שָׁלוֹם',                   seg: '118-123' },
-    { title: 'Sof Tefilá',               heTitle: 'סוֹף תְּפִלָּה',             seg: '124-128' },
   ],
 
   // ── Arvit · Keriat Shemá uVirjoteha ──────────────────────────────────
@@ -124,29 +74,5 @@ export const SIDDUR_BREAKDOWN = {
     { title: 'Hashkivenu',               heTitle: 'הַשְׁכִּיבֵֽנוּ',           seg: '26' },
     { title: 'Baruj Adonai LeOlam',      heTitle: 'בָּרוּךְ יְהֹוָה לְעוֹלָם',  seg: '28-29' },
     { title: 'Jatzí Kadish',             heTitle: 'חֲצִי קַדִּישׁ',            seg: '31-33' },
-  ],
-
-  // ── Arvit · Amidá (19 berajot) ──────────────────────────────────────
-  [`${MA}, Amidah`]: [
-    { title: '1 · Avot',                 heTitle: 'אָבוֹת',                    seg: '1-7' },
-    { title: '2 · Guevurot',             heTitle: 'גְּבוּרוֹת',                seg: '8-19' },
-    { title: '3 · Kedushat HaShem',      heTitle: 'קְדֻשַּׁת הַשֵּׁם',          seg: '20-25' },
-    { title: '4 · Biná',                 heTitle: 'בִּינָה',                   seg: '26-29' },
-    { title: '5 · Teshuvá',              heTitle: 'תְּשׁוּבָה',                seg: '30-31' },
-    { title: '6 · Selijá',               heTitle: 'סְלִיחָה',                  seg: '32-33' },
-    { title: '7 · Gueulá',               heTitle: 'גְּאוּלָּה',                seg: '34-35' },
-    { title: '8 · Refuá',                heTitle: 'רְפוּאָה',                  seg: '36-37' },
-    { title: '9 · Birkat HaShanim',      heTitle: 'בִּרְכַּת הַשָּׁנִים',       seg: '38-44' },
-    { title: '10 · Kibutz Galuyot',      heTitle: 'קִבּוּץ גָּלֻיּוֹת',         seg: '46-47' },
-    { title: '11 · Mishpat',             heTitle: 'מִשְׁפָּט',                 seg: '48-52' },
-    { title: '12 · Birkat HaMinim',      heTitle: 'בִּרְכַּת הַמִּינִים',       seg: '54-55' },
-    { title: '13 · Tzadikim',            heTitle: 'צַדִּיקִים',                seg: '56-57' },
-    { title: '14 · Binyan Yerushalayim', heTitle: 'בִּנְיַן יְרוּשָׁלַֽיִם',    seg: '58-59' },
-    { title: '15 · Maljut Bet David',    heTitle: 'מַלְכוּת בֵּית דָּוִד',      seg: '60-61' },
-    { title: '16 · Shomea Tefilá',       heTitle: 'שׁוֹמֵעַ תְּפִלָּה',         seg: '62-63' },
-    { title: '17 · Avodá',               heTitle: 'עֲבוֹדָה',                  seg: '64-72' },
-    { title: '18 · Hodaá',               heTitle: 'הוֹדָאָה',                  seg: '73-86' },
-    { title: '19 · Shalom',              heTitle: 'שָׁלוֹם',                   seg: '87-92' },
-    { title: 'Sof Tefilá · Kadish · Alenu', heTitle: 'סוֹף תְּפִלָּה', seg: '93-121' },
   ],
 }
