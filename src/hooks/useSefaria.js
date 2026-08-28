@@ -181,6 +181,28 @@ function filterService(srv) {
   return { ...srv, allSections, subsections, total: allSections.length }
 }
 
+// Weekday scope per service (Sefaria English section titles), applied to Siddur Sefard.
+// Keeps each tab focused on the stretch students actually practise:
+//   Shajarit → from Hodu through the Amidah (inclusive)
+//   Minjá    → Korbanot + Amidah only
+//   Arvit    → Shemá + the Maariv Amidah only
+const WEEKDAY_SCOPE = {
+  shacharit: ['Hodu', 'Yishtabach', 'The Shema', 'Amidah'],
+  mincha:    ['Korbanot', 'Amidah'],
+  maariv:    ['The Shema', 'Amidah'],
+}
+
+function scopeWeekdayService(srv) {
+  const allow = WEEKDAY_SCOPE[srv.id]
+  if (!allow) return srv
+  const allowSet = new Set(allow)
+  const allSections = srv.allSections.filter(s => allowSet.has(s.title))
+  const subsections = srv.subsections
+    .map(sub => ({ ...sub, items: sub.items.filter(i => allowSet.has(i.title)) }))
+    .filter(sub => sub.items.length > 0)
+  return { ...srv, allSections, subsections, total: allSections.length }
+}
+
 // Inline Hebrew text for Berajot service (not from Sefaria)
 export const BERAJOT_INLINE = {
   'berajot:talit-tefilin': {
@@ -265,8 +287,10 @@ function parseWeekdayServices(data, bookName) {
     raw = sefardServices.map(srvNode => buildService(srvNode, [srvNode.title], bookName))
   }
 
-  // Filter unwanted sections and prepend Berajot
-  return [makeBerajotService(), ...raw.map(filterService)]
+  // Filter unwanted sections, scope weekday services (Sefard only), prepend Berajot
+  const services = raw.map(filterService)
+  const scoped = nusach === 'sefard' ? services.map(scopeWeekdayService) : services
+  return [makeBerajotService(), ...scoped]
 }
 
 // ── Siddur Sefard Shabbat (dedicated linear book) ────────────────────────
