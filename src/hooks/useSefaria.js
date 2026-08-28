@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Capacitor } from '@capacitor/core'
 import { flattenVerses, stripHtml } from '../utils/hebrew'
+import { SIDDUR_BREAKDOWN } from '../data/siddurBreakdown'
 
 // ── Text fetching ─────────────────────────────────────────────────────────
 
@@ -203,6 +204,28 @@ function scopeWeekdayService(srv) {
   return { ...srv, allSections, subsections, total: allSections.length }
 }
 
+// Split bundled sections (Hodu, Amidá, …) into one item per component prayer,
+// using the segment sub-refs in SIDDUR_BREAKDOWN. Sections without an entry pass
+// through untouched.
+function explodeSection(item) {
+  const parts = SIDDUR_BREAKDOWN[item.ref]
+  if (!parts) return [item]
+  return parts.map(p => ({
+    title: p.title,
+    heTitle: p.heTitle || '',
+    ref: p.ref || `${item.ref} ${p.seg}`,
+    subGroup: item.subGroup ?? '',
+  }))
+}
+
+function explodeService(srv) {
+  const allSections = srv.allSections.flatMap(explodeSection)
+  const subsections = srv.subsections
+    .map(sub => ({ ...sub, items: sub.items.flatMap(explodeSection) }))
+    .filter(sub => sub.items.length > 0)
+  return { ...srv, allSections, subsections, total: allSections.length }
+}
+
 // Inline Hebrew text for Berajot service (not from Sefaria)
 export const BERAJOT_INLINE = {
   'berajot:talit-tefilin': {
@@ -287,9 +310,11 @@ function parseWeekdayServices(data, bookName) {
     raw = sefardServices.map(srvNode => buildService(srvNode, [srvNode.title], bookName))
   }
 
-  // Filter unwanted sections, scope weekday services (Sefard only), prepend Berajot
+  // Filter unwanted sections, scope + break down weekday services (Sefard only), prepend Berajot
   const services = raw.map(filterService)
-  const scoped = nusach === 'sefard' ? services.map(scopeWeekdayService) : services
+  const scoped = nusach === 'sefard'
+    ? services.map(scopeWeekdayService).map(explodeService)
+    : services
   return [makeBerajotService(), ...scoped]
 }
 
