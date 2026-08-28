@@ -37,10 +37,21 @@ export default function TefilaStudy({ basePath = '/student/tefila' }) {
   const selectDay     = useCallback(d => setSearchParams({ n: nusach, d }), [setSearchParams, nusach])
   const selectSection = useCallback(r => setSearchParams({ n: nusach, d: day, r }), [setSearchParams, nusach, day])
   const backToList    = useCallback(() => setSearchParams({ n: nusach, d: day }), [setSearchParams, nusach, day])
-  const changeNusach  = useCallback(() => setSearchParams({}), [setSearchParams])
+  const changeNusach  = useCallback(() => setSearchParams({ n: 'pick' }), [setSearchParams])
   const changeDay     = useCallback(() => setSearchParams({ n: nusach }), [setSearchParams, nusach])
 
-  if (!nusach) return <ImprescindiblesListView onSelectRef={r => setSearchParams({ n: 'imprescindibles', r })} />
+  // Default landing: Siddur Sefard weekday (Shajarit / Minjá / Arvit accordion).
+  if (!nusach) return (
+    <SiddurListView
+      nusach="sefard"
+      onSelectRef={r => setSearchParams({ n: 'sefard', d: 'semana', r })}
+      onChangeNusach={() => setSearchParams({ n: 'pick' })}
+      onChangeDay={() => setSearchParams({ n: 'sefard' })}
+      initialSearch=""
+    />
+  )
+
+  if (nusach === 'pick') return <NusachPicker onSelect={selectNusach} onSearch={searchGlobal} />
 
   if (nusach === 'imprescindibles') {
     if (sefRef) return (
