@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 const AuthCtx = createContext(null)
@@ -9,6 +9,10 @@ export function AuthProvider({ children }) {
   const [loading, setLoading]       = useState(true)
   const [recoveryMode, setRecoveryMode] = useState(false)
   const [oauthConflict, setOauthConflict] = useState(null) // existing role when there's a mismatch
+
+  // Mirror of `profile` for the auth listener (which closes over the initial state).
+  const profileRef = useRef(null)
+  useEffect(() => { profileRef.current = profile }, [profile])
 
   useEffect(() => {
     let active = true
@@ -123,6 +127,10 @@ export function AuthProvider({ children }) {
       if (event === 'TOKEN_REFRESHED') { setUser(session?.user ?? null); return }
       setUser(session?.user ?? null)
       if (session?.user) {
+        // Supabase re-emits SIGNED_IN whenever the tab regains focus. If we already
+        // hold this user's profile, don't flip `loading` / refetch — that unmounts
+        // and remounts the whole routed app, wiping in-page state and scroll.
+        if (profileRef.current && profileRef.current.id === session.user.id) return
         setLoading(true)
         fetchProfile(session.user.id, session.user.user_metadata, session.user.created_at)
       } else {

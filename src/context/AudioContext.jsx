@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { sendPushToUser } from '../lib/sendPush'
 import { useLang } from './LangContext'
@@ -30,8 +30,13 @@ export function AudioProvider({ children }) {
   const [syncingKeys, setSyncingKeys] = useState(new Set())
   const [syncErrors, setSyncErrors] = useState({}) // key → error string
 
+  const loadedForRef = useRef(undefined)
+
   useEffect(() => {
     const load = async (userId) => {
+      // Skip redundant reloads: Supabase re-fires SIGNED_IN on every tab focus.
+      if (userId === loadedForRef.current) return
+      loadedForRef.current = userId
       if (!userId) { setAudios({}); return }
 
       const { data: profile } = await supabase
@@ -73,7 +78,8 @@ export function AudioProvider({ children }) {
 
     supabase.auth.getSession().then(({ data: { session } }) => load(session?.user?.id ?? null))
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'TOKEN_REFRESHED') return
       load(session?.user?.id ?? null)
     })
     return () => subscription.unsubscribe()
