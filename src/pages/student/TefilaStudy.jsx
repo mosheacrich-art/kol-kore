@@ -25,58 +25,80 @@ export default function TefilaStudy({ basePath = '/student/tefila' }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const { profile } = useAuth()
 
-  const nusach = searchParams.get('n')  // 'ashkenaz' | 'sefard' | null
-  const day    = searchParams.get('d')  // 'semana' | 'shabat' | null
+  // Everything is Siddur Sefard now. First choose the day, then the section.
+  const day    = searchParams.get('d')  // 'semana' | 'shabat' | 'imprescindibles' | null
   const sefRef = searchParams.get('r')  // full Sefaria ref | null
-  const q      = searchParams.get('q')  // global search pre-fill | null
+  const q      = searchParams.get('q')  // search pre-fill | null
 
   const isTeacher = profile?.role === 'teacher'
+  const toChooser = useCallback(() => setSearchParams({}), [setSearchParams])
 
-  const searchGlobal  = useCallback(query => setSearchParams({ n: 'ashkenaz', d: 'semana', q: query }), [setSearchParams])
-  const selectNusach  = useCallback(n => setSearchParams({ n }), [setSearchParams])
-  const selectDay     = useCallback(d => setSearchParams({ n: nusach, d }), [setSearchParams, nusach])
-  const selectSection = useCallback(r => setSearchParams({ n: nusach, d: day, r }), [setSearchParams, nusach, day])
-  const backToList    = useCallback(() => setSearchParams({ n: nusach, d: day }), [setSearchParams, nusach, day])
-  const changeNusach  = useCallback(() => setSearchParams({ n: 'pick' }), [setSearchParams])
-  const changeDay     = useCallback(() => setSearchParams({ n: nusach }), [setSearchParams, nusach])
+  // 1. Day chooser
+  if (!day) return <DayChooser onPick={d => setSearchParams({ d })} />
 
-  // Default landing: Siddur Sefard weekday (Shajarit / Minjá / Arvit accordion).
-  if (!nusach) return (
-    <SiddurListView
-      nusach="sefard"
-      onSelectRef={r => setSearchParams({ n: 'sefard', d: 'semana', r })}
-      onChangeNusach={() => setSearchParams({ n: 'pick' })}
-      onChangeDay={() => setSearchParams({ n: 'sefard' })}
-      initialSearch=""
-    />
-  )
-
-  if (nusach === 'pick') return <NusachPicker onSelect={selectNusach} onSearch={searchGlobal} />
-
-  if (nusach === 'imprescindibles') {
+  // 2. Imprescindibles (curated biblical texts with taamim)
+  if (day === 'imprescindibles') {
     if (sefRef) return (
       <SiddurReaderView
-        nusach={null} day={null} sefRef={sefRef}
-        isTeacher={isTeacher}
-        onBack={() => setSearchParams({ n: 'imprescindibles' })}
-        onNavigate={r => setSearchParams({ n: 'imprescindibles', r })}
+        nusach={null} day={null} sefRef={sefRef} isTeacher={isTeacher}
+        onBack={() => setSearchParams({ d: 'imprescindibles' })}
+        onNavigate={r => setSearchParams({ d: 'imprescindibles', r })}
       />
     )
-    return <ImprescindiblesListView onSelectRef={r => setSearchParams({ n: 'imprescindibles', r })} />
+    return <ImprescindiblesListView onSelectRef={r => setSearchParams({ d: 'imprescindibles', r })} />
   }
 
-  if (!day)    return <DayPicker nusach={nusach} onSelect={selectDay} onBack={changeNusach} />
+  // 3. Reader for one section / trozo
   if (sefRef) return (
     <SiddurReaderView
-      nusach={nusach} day={day} sefRef={sefRef}
-      isTeacher={isTeacher}
-      onBack={backToList}
-      onNavigate={r => setSearchParams({ n: nusach, d: day, r })}
+      nusach="sefard" day={day} sefRef={sefRef} isTeacher={isTeacher}
+      onBack={() => setSearchParams({ d: day })}
+      onNavigate={r => setSearchParams({ d: day, r })}
     />
   )
+
+  // 4. Section list (Shabbat or weekday)
   if (day === 'shabat')
-    return <SiddurShabbatListView nusach={nusach} onSelectRef={selectSection} onChangeNusach={changeNusach} onChangeDay={changeDay} initialSearch={q || ''} />
-  return <SiddurListView nusach={nusach} onSelectRef={selectSection} onChangeNusach={changeNusach} onChangeDay={changeDay} initialSearch={q || ''} />
+    return <SiddurShabbatListView nusach="sefard" onSelectRef={r => setSearchParams({ d: 'shabat', r })}
+      onChangeNusach={toChooser} onChangeDay={toChooser} initialSearch={q || ''} />
+  return <SiddurListView nusach="sefard" onSelectRef={r => setSearchParams({ d: 'semana', r })}
+    onChangeNusach={toChooser} onChangeDay={toChooser} initialSearch={q || ''} />
+}
+
+// ── Day chooser (Siddur Sefard) ───────────────────────────────────────────
+
+function DayChooser({ onPick }) {
+  const { t } = useLang()
+  return (
+    <div className="p-4 sm:p-8 max-w-2xl">
+      <div className="mb-8 fade-up-1">
+        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
+          סִדּוּר · Siddur Sefard
+        </p>
+        <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>{t('nav_tefila')}</h1>
+        <p className="text-sm" style={{ color: 'var(--text-3)' }}>{t('siddur_day_subtitle')}</p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 fade-up-2">
+        <NusachCard
+          title={t('siddur_semana_title')} heb="יְמוֹת הַשָּׁבוּעַ" subtitle="Shajarit · Minjá · Arvit"
+          desc={t('siddur_semana_desc')}
+          color="#f59e0b" onClick={() => onPick('semana')}
+        />
+        <NusachCard
+          title={t('siddur_shabat_title')} heb="שַׁבָּת קֹדֶשׁ" subtitle="Arvit · Shajarit · Musaf · Minjá"
+          desc={t('siddur_shabat_desc')}
+          color="#6366f1" onClick={() => onPick('shabat')}
+        />
+      </div>
+      <div className="mt-4 fade-up-3">
+        <NusachCard
+          title="Imprescindibles" heb="עִקָּרִים" subtitle="Ve'ahavta · Vehaya · Vayomer · Az Yashir"
+          desc="Los textos bíblicos fundamentales con taamim: los tres párrafos del Shemá y la Canción del Mar."
+          color="#10b981" onClick={() => onPick('imprescindibles')}
+        />
+      </div>
+    </div>
+  )
 }
 
 // ── Nusach Picker ─────────────────────────────────────────────────────────
@@ -103,108 +125,6 @@ function NusachCard({ title, heb, subtitle, desc, color, onClick }) {
         </svg>
       </div>
     </button>
-  )
-}
-
-function NusachPicker({ onSelect, onSearch }) {
-  const { t } = useLang()
-  const [searchQ, setSearchQ] = useState('')
-  const handleSearch = (e) => {
-    e.preventDefault()
-    if (searchQ.trim()) onSearch(searchQ.trim())
-  }
-  return (
-    <div className="p-4 sm:p-8 max-w-2xl">
-      <div className="mb-8 fade-up-1">
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          סִדּוּר · Siddur
-        </p>
-        <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>{t('nav_tefila')}</h1>
-        <p className="text-sm" style={{ color: 'var(--text-3)' }}>{t('siddur_pick_subtitle')}</p>
-      </div>
-
-      {/* Global search */}
-      <form onSubmit={handleSearch} className="relative mb-8 fade-up-2">
-        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-            <circle cx="6.5" cy="6.5" r="4" stroke="var(--text-3)" strokeWidth="1.3"/>
-            <path d="M9.5 9.5L12 12" stroke="var(--text-3)" strokeWidth="1.3" strokeLinecap="round"/>
-          </svg>
-        </div>
-        <input value={searchQ} onChange={e => setSearchQ(e.target.value)}
-          placeholder={t('siddur_search')}
-          className="w-full pl-10 pr-24 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }} />
-        {searchQ && (
-          <button type="submit"
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
-            style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)' }}>
-            Buscar →
-          </button>
-        )}
-      </form>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 fade-up-3">
-        <NusachCard
-          title="Ashkenaz" heb="נוּסַח אַשְׁכְּנַז" subtitle="Siddur Ashkenaz"
-          desc={t('siddur_ashkenaz_desc')}
-          color="#f59e0b" onClick={() => onSelect('ashkenaz')}
-        />
-        <NusachCard
-          title="Sefard" heb="נוּסַח סְפָרַד" subtitle="Siddur Sefard"
-          desc={t('siddur_sefard_desc')}
-          color="#8b5cf6" onClick={() => onSelect('sefard')}
-        />
-      </div>
-      <div className="mt-4 fade-up-3">
-        <NusachCard
-          title="Imprescindibles" heb="עִקָּרִים" subtitle="Ve'ahavta · Vehaya · Vayomer · Az Yashir"
-          desc="Los textos bíblicos fundamentales con taamim: los tres párrafos del Shemá y la Canción del Mar."
-          color="#10b981" onClick={() => onSelect('imprescindibles')}
-        />
-      </div>
-    </div>
-  )
-}
-
-// ── Day Picker ─────────────────────────────────────────────────────────────
-
-function DayPicker({ nusach, onSelect, onBack }) {
-  const { t } = useLang()
-  const nusachHeb   = nusach === 'ashkenaz' ? 'אַשְׁכְּנַז' : 'סְפָרַד'
-  const nusachLabel = nusach === 'ashkenaz' ? 'Ashkenaz' : 'Sefard'
-  return (
-    <div className="p-4 sm:p-8 max-w-2xl">
-      <div className="mb-10 fade-up-1">
-        <button onClick={onBack}
-          className="mb-4 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg"
-          style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <path d="M7 2L3 5l4 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          {t('siddur_change_nusach')}
-        </button>
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          סִדּוּר · Siddur
-        </p>
-        <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>{t('nav_tefila')}</h1>
-        <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-          {t('siddur_nusach_label')} <span className="hebrew">{nusachHeb}</span> · {nusachLabel} · {t('siddur_day_subtitle')}
-        </p>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 fade-up-2">
-        <NusachCard
-          title={t('siddur_semana_title')} heb="יְמוֹת הַשָּׁבוּעַ" subtitle="Shajarit · Minjá · Arvit"
-          desc={t('siddur_semana_desc')}
-          color="#f59e0b" onClick={() => onSelect('semana')}
-        />
-        <NusachCard
-          title={t('siddur_shabat_title')} heb="שַׁבָּת קֹדֶשׁ" subtitle="Kabalat Shabat · Shajarit · Musaf · Minjá"
-          desc={t('siddur_shabat_desc')}
-          color="#6366f1" onClick={() => onSelect('shabat')}
-        />
-      </div>
-    </div>
   )
 }
 

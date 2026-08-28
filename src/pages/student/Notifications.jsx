@@ -162,7 +162,14 @@ export default function StudentNotifications() {
                 }}
                 onClick={canNavigate ? () => {
                   if (!hw.read) markRead(hw.id, setHomework)
-                  navigate(`/student/study/${hw.parasha_id}?aliyah=${aliyahIdx ?? 0}`)
+                  const ref = hw.parasha_id
+                  if (/[\s,]/.test(ref)) {
+                    // tefila homework — ref is a Sefaria siddur ref, open the Tefilá reader
+                    const d = /Shabbat Siddur/i.test(ref) ? 'shabat' : 'semana'
+                    navigate(`/student/tefila?d=${d}&r=${encodeURIComponent(ref)}`)
+                  } else {
+                    navigate(`/student/study/${ref}?aliyah=${aliyahIdx ?? 0}`)
+                  }
                 } : undefined}>
                 {/* Unread dot */}
                 {!hw.read && (

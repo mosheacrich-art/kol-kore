@@ -7,6 +7,7 @@ import { PARASHOT, COMBINED_PARASHOT, ALL_PARASHOT } from '../../data/parashot'
 import { ALL_HAFTAROT } from '../../data/haftarot'
 import { ALL_MOADIM, MOADIM_LIST } from '../../data/moadim'
 import { useLang } from '../../context/LangContext'
+import { useSiddurIndex, useSiddurShabbatIndex } from '../../hooks/useSefaria'
 import WordRangePicker from '../../components/WordRangePicker'
 
 const statusStyle = {
@@ -16,16 +17,6 @@ const statusStyle = {
 }
 
 const ALIYAH_LABELS = ['1ª Aliyá', '2ª Aliyá', '3ª Aliyá', '4ª Aliyá', '5ª Aliyá', '6ª Aliyá', '7ª Aliyá', 'Maftir']
-
-const IMPRESCINDIBLES = [
-  { id: 'hodu',       name: 'Hodu',       heb: 'הוֹדוּ' },
-  { id: 'ashrei',     name: 'Ashrei',     heb: 'אַשְׁרֵי' },
-  { id: 'halleluyah', name: 'Halleluyah', heb: 'הַלְלוּיָהּ' },
-  { id: 'az-yashir',  name: 'Az Yashir',  heb: 'אָז יָשִׁיר' },
-  { id: 'veahavta',   name: "Ve'ahavta",  heb: 'וְאָהַבְתָּ' },
-  { id: 'vehaya',     name: 'Vehaya',     heb: 'וְהָיָה' },
-  { id: 'vayomer',    name: 'Vayomer',    heb: 'וַיֹּאמֶר' },
-]
 
 const HAFTARA_CHAG_LABELS = {
   'rosh-hashana': 'Rosh Hashaná', 'yom-kipur': 'Yom Kipur',
@@ -114,7 +105,23 @@ export default function TeacherHomework() {
     parasha_id: '', aliyah_idx: 0, require_audio: false,
     haftara_id: '',
     word_start: null, word_end: null,
+    tefila_ref: '', tefila_name: '',
   })
+
+  // All Siddur Sefard trozos (weekday + Shabbat) for the tefila homework picker
+  const { services: tefilaWeekday } = useSiddurIndex('sefard')
+  const { services: tefilaShabbat } = useSiddurShabbatIndex('sefard')
+  const tefilaGroups = useMemo(() => {
+    const build = list => (list || []).map(srv => ({
+      name: srv.name,
+      items: (srv.allSections || []).map(s => ({
+        ref: s.ref,
+        label: `${srv.name} · ${s.title}`,
+        heb: s.heTitle || '',
+      })),
+    })).filter(g => g.items.length)
+    return [...build(tefilaWeekday), ...build(tefilaShabbat)]
+  }, [tefilaWeekday, tefilaShabbat])
   const [saving, setSaving] = useState(false)
   const [hoverItem, setHoverItem] = useState(null)
   const [deleting, setDeleting] = useState(null)
@@ -163,9 +170,11 @@ export default function TeacherHomework() {
       teacher_id: profile.id,
       student_id: form.to || null,
       task: form.task,
-      subject: form.subject || null,
+      subject: form.type === 'tefila' ? (form.tefila_name || null) : (form.subject || null),
       type: form.type,
-      parasha_id: form.type === 'parasha' ? (form.parasha_id || null) : null,
+      parasha_id: form.type === 'parasha'
+        ? (form.parasha_id || null)
+        : (form.type === 'tefila' ? (form.tefila_ref || null) : null),
       aliyah_idx: form.type === 'parasha' && form.parasha_id ? form.aliyah_idx : null,
       require_audio: form.type === 'parasha' && form.parasha_id ? form.require_audio : false,
       haftara_id: form.type === 'haftara' ? (form.haftara_id || null) : null,
@@ -211,7 +220,7 @@ export default function TeacherHomework() {
     setComposing(false)
     setRepeatMode(false)
     setRepeatDates([])
-    setForm(f => ({ ...f, task: '', subject: '', due: '', type: 'parasha', parasha_id: '', aliyah_idx: 0, require_audio: false, haftara_id: '', word_start: null, word_end: null }))
+    setForm(f => ({ ...f, task: '', subject: '', due: '', type: 'parasha', parasha_id: '', aliyah_idx: 0, require_audio: false, haftara_id: '', word_start: null, word_end: null, tefila_ref: '', tefila_name: '' }))
     setSaving(false)
   }
 
@@ -287,7 +296,7 @@ export default function TeacherHomework() {
                     { key: 'tefila',  label: t('nav_tefila'),  color: '#8b5cf6' },
                   ].map(opt => (
                     <button key={opt.key} type="button"
-                      onClick={() => setForm(f => ({ ...f, type: opt.key, parasha_id: '', aliyah_idx: 0, haftara_id: '', require_audio: false, word_start: null, word_end: null, subject: '' }))}
+                      onClick={() => setForm(f => ({ ...f, type: opt.key, parasha_id: '', aliyah_idx: 0, haftara_id: '', require_audio: false, word_start: null, word_end: null, subject: '', tefila_ref: '', tefila_name: '' }))}
                       className="py-2 rounded-xl text-xs font-medium transition-all"
                       style={{
                         background: form.type === opt.key ? `${opt.color}18` : 'var(--bg-card)',
@@ -462,12 +471,24 @@ export default function TeacherHomework() {
                 {form.type === 'tefila' ? (
                   <div>
                     <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('section')}</label>
-                    <select value={form.subject}
-                      onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
+                    <select value={form.tefila_ref}
+                      onChange={e => {
+                        const ref = e.target.value
+                        let name = ''
+                        for (const g of tefilaGroups) {
+                          const hit = g.items.find(i => i.ref === ref)
+                          if (hit) { name = `${hit.label}${hit.heb ? ' · ' + hit.heb : ''}`; break }
+                        }
+                        setForm(f => ({ ...f, tefila_ref: ref, tefila_name: name }))
+                      }}
                       className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
                       <option value="">{t('general_option')}</option>
-                      {IMPRESCINDIBLES.map(tf => (
-                        <option key={tf.id} value={`${tf.name} · ${tf.heb}`}>{tf.name} · {tf.heb}</option>
+                      {tefilaGroups.map(g => (
+                        <optgroup key={g.name} label={g.name}>
+                          {g.items.map(it => (
+                            <option key={it.ref} value={it.ref}>{it.label}{it.heb ? ` · ${it.heb}` : ''}</option>
+                          ))}
+                        </optgroup>
                       ))}
                     </select>
                   </div>

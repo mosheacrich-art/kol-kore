@@ -168,16 +168,19 @@ function buildService(srvNode, pathPrefix, bookName) {
   return { ...meta, total: sections.length, subsections, allSections: sections }
 }
 
-// Titles to exclude from all services
-const EXCLUDED_SECTIONS = new Set(['Avinu Malkeinu', "El Melech Ne'eman"])
+// Titles to exclude from all services (rubric-only or empty wrapper nodes)
+const EXCLUDED_SECTIONS = new Set([
+  'Avinu Malkeinu', "El Melech Ne'eman", 'Pesukei Dezimrah', 'Preface', '',
+])
+const keepSection = s => s.title && !EXCLUDED_SECTIONS.has(s.title)
 
 // Shema section titles as Sefaria names them (Ashkenaz vs Sefard differ)
 export const SHEMA_TITLES = new Set(['Sovereignty of Heaven', 'The Shema'])
 
 function filterService(srv) {
-  const allSections = srv.allSections.filter(s => !EXCLUDED_SECTIONS.has(s.title))
+  const allSections = srv.allSections.filter(keepSection)
   const subsections = srv.subsections
-    .map(sub => ({ ...sub, items: sub.items.filter(i => !EXCLUDED_SECTIONS.has(i.title)) }))
+    .map(sub => ({ ...sub, items: sub.items.filter(keepSection) }))
     .filter(sub => sub.items.length > 0)
   return { ...srv, allSections, subsections, total: allSections.length }
 }

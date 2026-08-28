@@ -222,9 +222,14 @@ export default function StudentProfile() {
   const progress = deberes.length ? Math.round((done / deberes.length) * 100) : 0
 
   const handleDeberClick = (deber) => {
-    if (deber.parasha_id) {
-      const aliyah = deber.aliyah_idx ?? 0
-      navigate(`/student/study/${deber.parasha_id}?aliyah=${aliyah}`)
+    if (!deber.parasha_id) return
+    const ref = deber.parasha_id
+    if (/[\s,]/.test(ref)) {
+      // tefila homework — ref is a Sefaria siddur ref
+      const d = /Shabbat Siddur/i.test(ref) ? 'shabat' : 'semana'
+      navigate(`/student/tefila?d=${d}&r=${encodeURIComponent(ref)}`)
+    } else {
+      navigate(`/student/study/${ref}?aliyah=${deber.aliyah_idx ?? 0}`)
     }
   }
 
