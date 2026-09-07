@@ -19,9 +19,13 @@ async function callSyncApi(audioUrl, fileType, aliyahRef, prompt) {
   if (!res.ok) throw new Error(json.error || `Error ${res.status}`)
   if (json.format === 'v2') {
     if (json.needs_review) console.warn(`Sync needs_review: anchor_pct=${json.anchor_pct}`)
-    return json.words
+    return { words: json.words, anchorPct: json.anchor_pct ?? null, needsReview: json.needs_review ?? false }
   }
-  return (json.words ?? []).map(w => ({ word: w.word, start: w.start, end: w.end }))
+  return {
+    words: (json.words ?? []).map(w => ({ word: w.word, start: w.start, end: w.end })),
+    anchorPct: null,
+    needsReview: false,
+  }
 }
 
 export function AudioProvider({ children }) {
@@ -76,6 +80,8 @@ export function AudioProvider({ children }) {
             day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
           }),
           wordTimestamps: row.word_timestamps ?? null,
+          anchorPct: row.anchor_pct ?? null,
+          needsReview: row.needs_review ?? false,
           storagePath: row.storage_path,
           teacherId: row.teacher_id,
         }
@@ -157,17 +163,17 @@ export function AudioProvider({ children }) {
     setSyncingKeys(prev => new Set([...prev, key]))
     setSyncErrors(prev => { const n = { ...prev }; delete n[key]; return n })
     callSyncApi(publicUrl, contentType, aliyahRef)
-      .then(async (wordTimestamps) => {
+      .then(async ({ words: wordTimestamps, anchorPct, needsReview }) => {
         if (!wordTimestamps.length) { console.warn('Auto-sync: no words returned'); return }
         await supabase
           .from('audio_files')
-          .update({ word_timestamps: wordTimestamps })
+          .update({ word_timestamps: wordTimestamps, anchor_pct: anchorPct, needs_review: needsReview })
           .eq('parasha_id', parashaId)
           .eq('aliyah_idx', aliyahIdx)
           .eq('teacher_id', teacherId)
         setAudios(prev => ({
           ...prev,
-          [key]: { ...prev[key], wordTimestamps },
+          [key]: { ...prev[key], wordTimestamps, anchorPct, needsReview },
         }))
       })
       .catch(err => {
@@ -263,7 +269,7 @@ export function AudioProvider({ children }) {
     setSyncErrors(prev => { const n = { ...prev }; delete n[key]; return n })
     try {
       const cleanUrl = row.public_url.split('?')[0]
-      const wordTimestamps = await callSyncApi(cleanUrl, row.file_type || 'audio/webm', aliyahRef)
+      const { words: wordTimestamps, anchorPct, needsReview } = await callSyncApi(cleanUrl, row.file_type || 'audio/webm', aliyahRef)
 
       if (!wordTimestamps.length) {
         console.error('generateSync: no words returned')
@@ -273,14 +279,14 @@ export function AudioProvider({ children }) {
 
       await supabase
         .from('audio_files')
-        .update({ word_timestamps: wordTimestamps })
+        .update({ word_timestamps: wordTimestamps, anchor_pct: anchorPct, needs_review: needsReview })
         .eq('parasha_id', parashaId)
         .eq('aliyah_idx', aliyahIdx)
         .eq('teacher_id', row.teacher_id)
 
       setAudios(prev => ({
         ...prev,
-        [key]: { ...prev[key], wordTimestamps },
+        [key]: { ...prev[key], wordTimestamps, anchorPct, needsReview },
       }))
 
       return true

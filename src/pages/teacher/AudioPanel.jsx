@@ -545,17 +545,39 @@ export default function TeacherAudioPanel() {
                               </div>
                               <span className="text-xs" style={{ color: 'var(--text-2)' }}>{a.label}</span>
                               <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{audio.name.slice(0, 20)}{audio.name.length > 20 ? '…' : ''}</span>
-                              {audio.wordTimestamps
-                                ? <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(34,197,94,0.15)', color: '#16a34a', border: '1px solid rgba(34,197,94,0.3)' }}>sync ✓</span>
-                                : syncing
-                                  ? (
-                                    <span className="text-xs px-1.5 py-0.5 rounded-full flex items-center gap-1"
-                                      style={{ background: `${color}15`, color, border: `1px solid ${color}30` }}>
-                                      <span className="inline-block w-2.5 h-2.5 rounded-full border border-t-transparent animate-spin"
-                                        style={{ borderColor: `${color}50`, borderTopColor: color }} />
-                                      {t('syncing_label')}
-                                    </span>
-                                  )
+                              {syncing
+                                ? (
+                                  <span className="text-xs px-1.5 py-0.5 rounded-full flex items-center gap-1"
+                                    style={{ background: `${color}15`, color, border: `1px solid ${color}30` }}>
+                                    <span className="inline-block w-2.5 h-2.5 rounded-full border border-t-transparent animate-spin"
+                                      style={{ borderColor: `${color}50`, borderTopColor: color }} />
+                                    {t('syncing_label')}
+                                  </span>
+                                )
+                                : audio.wordTimestamps
+                                  ? (() => {
+                                      const pct = audio.anchorPct != null ? Math.round(audio.anchorPct * 100) : null
+                                      const bad = audio.needsReview || (pct !== null && pct < 40)
+                                      const mid = !bad && pct !== null && pct < 75
+                                      const badgeColor = bad ? '#ef4444' : mid ? '#f59e0b' : '#16a34a'
+                                      return (
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="text-xs px-1.5 py-0.5 rounded-full flex items-center gap-1"
+                                            style={{ background: `${badgeColor}20`, color: badgeColor, border: `1px solid ${badgeColor}4d` }}
+                                            title={pct !== null ? `${pct}% de las palabras están ancladas al audio real; el resto son estimadas` : undefined}>
+                                            {bad ? '⚠️' : '✓'} sync {pct !== null ? `${pct}%` : ''}
+                                          </span>
+                                          {bad && (
+                                            <button
+                                              onClick={async () => { await generateSync(entity.id, i, entity.aliyot[i].ref) }}
+                                              className="text-xs px-1.5 py-0.5 rounded-full transition-all"
+                                              style={{ background: `${color}15`, color, border: `1px solid ${color}30` }}>
+                                              {t('retry_sync')}
+                                            </button>
+                                          )}
+                                        </div>
+                                      )
+                                    })()
                                   : (
                                     <div className="flex flex-col gap-1 items-start">
                                       <button
