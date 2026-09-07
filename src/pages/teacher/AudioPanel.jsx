@@ -252,7 +252,7 @@ export default function TeacherAudioPanel() {
                   const isSelected = selectedHaftara.id === h.id
                   const hAudios = Object.keys(audios).filter(k => k.startsWith(`${h.id}-`)).length
                   return (
-                    <button key={h.id} onClick={() => { setSelectedHaftara(h); setSelectedHaftaraAliyah(0) }}
+                    <button key={h.id} onClick={() => setSelectedHaftara(h)}
                       className="w-full flex items-center justify-between px-4 py-2.5 text-left transition-all"
                       style={{
                         background: isSelected ? `${c}15` : 'transparent',
@@ -424,10 +424,9 @@ export default function TeacherAudioPanel() {
                         const hasAudio = !!get(entity.id, i)
                         const key = `${entity.id}-${i}`
                         const syncing = syncingKeys.has(key)
-                        const setAliyah = sectionType === 'parasha' ? setSelectedAliyah : setSelectedHaftaraAliyah
                         const currentIdx = selectedAliyah
                         return (
-                          <button key={i} onClick={() => setAliyah(i)}
+                          <button key={i} onClick={() => setSelectedAliyah(i)}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
                             style={{
                               background: currentIdx === i ? color : 'var(--bg-card)',

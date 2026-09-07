@@ -2,37 +2,55 @@ import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 're
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5]
 
+// Cross-instance coordination: only one <audio> (this player or any other
+// audio element on the page, e.g. a student recording) should play at once.
+const activePlayers = new Set()
+function pauseOthers(me) {
+  for (const p of activePlayers) {
+    if (p !== me) p.pause()
+  }
+  // Also pause any plain <audio>/<video> elements elsewhere on the page
+  // (e.g. student recording playback) that aren't registered players.
+  document.querySelectorAll('audio, video').forEach(el => {
+    if (el !== me.audioEl && !el.paused) el.pause()
+  })
+}
+
 const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTimeUpdate, onPlayingChange, onDurationChange }, ref) {
   const audioRef = useRef(null)
+
+  const attemptPlay = () => {
+    if (!audioRef.current) return
+    const p = audioRef.current.play()
+    if (p?.catch) {
+      p.catch((err) => {
+        // Autoplay blocked, interrupted by another source, etc. — the
+        // onPause/onError listeners below will reconcile `playing`.
+        console.warn('Audio play() failed:', err)
+      })
+    }
+  }
 
   useImperativeHandle(ref, () => ({
     seekTo(t) {
       if (!audioRef.current) return
       audioRef.current.currentTime = t
       if (audioRef.current.paused) {
-        audioRef.current.play()
-        setPlaying(true)
-        onPlay?.()
-        onPlayingChange?.(true)
+        pauseOthers({ audioEl: audioRef.current, pause: () => audioRef.current?.pause() })
+        attemptPlay()
       }
     },
     pause() {
       if (!audioRef.current || audioRef.current.paused) return
       audioRef.current.pause()
-      setPlaying(false)
-      onPlayingChange?.(false)
     },
     toggle() {
       if (!audioRef.current) return
       if (audioRef.current.paused) {
-        audioRef.current.play()
-        setPlaying(true)
-        onPlay?.()
-        onPlayingChange?.(true)
+        pauseOthers({ audioEl: audioRef.current, pause: () => audioRef.current?.pause() })
+        attemptPlay()
       } else {
         audioRef.current.pause()
-        setPlaying(false)
-        onPlayingChange?.(false)
       }
     },
   }))
@@ -41,26 +59,61 @@ const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTi
   const [duration, setDuration] = useState(0)
   const [current, setCurrent] = useState(0)
   const [speedIdx, setSpeedIdx] = useState(2)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     setPlaying(false)
     setProgress(0)
     setCurrent(0)
+    setDuration(0)
+    setError(false)
     onPlayingChange?.(false)
   }, [audio?.url])
+
+  // Register/unregister this player so other players (and the module-level
+  // pauseOthers helper) can pause it when a different source starts.
+  useEffect(() => {
+    const entry = { audioEl: audioRef.current, pause: () => audioRef.current?.pause() }
+    activePlayers.add(entry)
+    return () => activePlayers.delete(entry)
+  }, [])
 
   const toggle = () => {
     if (!audioRef.current) return
     if (playing) {
       audioRef.current.pause()
-      setPlaying(false)
-      onPlayingChange?.(false)
     } else {
-      audioRef.current.play()
-      setPlaying(true)
-      onPlay?.()
-      onPlayingChange?.(true)
+      pauseOthers({ audioEl: audioRef.current, pause: () => audioRef.current?.pause() })
+      attemptPlay()
     }
+  }
+
+  // Sync UI state from the real <audio> element instead of guessing —
+  // catches autoplay rejection, OS/lock-screen pause, call interruptions, etc.
+  const handlePlaying = () => {
+    setError(false)
+    setPlaying(true)
+    onPlay?.()
+    onPlayingChange?.(true)
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'playing'
+      navigator.mediaSession.metadata = new window.MediaMetadata({
+        title: label || 'Kol Koré',
+        artist: 'Kol Koré',
+      })
+    }
+  }
+
+  const handlePause = () => {
+    setPlaying(false)
+    onPlayingChange?.(false)
+    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'
+  }
+
+  const handleError = () => {
+    setPlaying(false)
+    setError(true)
+    onPlayingChange?.(false)
   }
 
   // rAF loop: drives word cursor at ~60fps while playing (timeupdate fires only ~4fps)
@@ -105,10 +158,12 @@ const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTi
 
   const seek = (e) => {
     if (!audioRef.current) return
+    const d = audioRef.current.duration
+    if (!d || !isFinite(d)) return // metadata not loaded yet — nothing to seek to
     const rect = e.currentTarget.getBoundingClientRect()
     const clientX = e.touches ? e.touches[0]?.clientX ?? e.clientX : e.clientX
     const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-    audioRef.current.currentTime = pct * audioRef.current.duration
+    audioRef.current.currentTime = pct * d
   }
 
   const fmt = (s) => {
@@ -117,6 +172,20 @@ const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTi
     const sec = Math.floor(s % 60).toString().padStart(2, '0')
     return `${m}:${sec}`
   }
+
+  // Let the OS media notification / lock screen control play & pause.
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return
+    navigator.mediaSession.setActionHandler('play', () => {
+      pauseOthers({ audioEl: audioRef.current, pause: () => audioRef.current?.pause() })
+      attemptPlay()
+    })
+    navigator.mediaSession.setActionHandler('pause', () => audioRef.current?.pause())
+    return () => {
+      navigator.mediaSession.setActionHandler('play', null)
+      navigator.mediaSession.setActionHandler('pause', null)
+    }
+  }, [])
 
   if (!audio) return null
 
@@ -129,13 +198,20 @@ const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTi
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoaded}
         onEnded={handleEnded}
+        onPlaying={handlePlaying}
+        onPause={handlePause}
+        onError={handleError}
         preload="metadata"
       />
 
-      <button onClick={toggle}
+      <button onClick={toggle} disabled={error}
         className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
-        style={{ background: playing ? '#6c33e6' : 'rgba(108,51,230,0.3)' }}>
-        {playing ? (
+        style={{ background: error ? 'rgba(220,38,38,0.3)' : playing ? '#6c33e6' : 'rgba(108,51,230,0.3)', opacity: error ? 0.6 : 1, cursor: error ? 'not-allowed' : 'pointer' }}>
+        {error ? (
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M6 2.5v4M6 8.5h.01" stroke="white" strokeWidth="1.4" strokeLinecap="round"/>
+          </svg>
+        ) : playing ? (
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <rect x="2" y="1" width="3" height="10" rx="1" fill="white"/>
             <rect x="7" y="1" width="3" height="10" rx="1" fill="white"/>
@@ -149,8 +225,8 @@ const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTi
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-xs font-medium truncate" style={{ color: 'var(--text-2)' }}>
-            🎧 {label}
+          <span className="text-xs font-medium truncate" style={{ color: error ? '#f87171' : 'var(--text-2)' }}>
+            {error ? '⚠️ Audio no disponible' : `🎧 ${label}`}
           </span>
           <span className="text-xs flex-shrink-0 ml-2" style={{ color: 'var(--text-muted)' }}>
             {fmt(current)} / {fmt(duration)}

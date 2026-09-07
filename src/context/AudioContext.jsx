@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { sendPushToUser } from '../lib/sendPush'
 import { useLang } from './LangContext'
@@ -30,15 +30,25 @@ export function AudioProvider({ children }) {
   const [syncingKeys, setSyncingKeys] = useState(new Set())
   const [syncErrors, setSyncErrors] = useState({}) // key → error string
 
+  // Guards against overlapping load() calls (e.g. rapid tab focus/blur)
+  // overwriting fresher data with a stale, slower response.
+  const loadSeqRef = useRef(0)
+
   useEffect(() => {
     const load = async (userId) => {
+      const seq = ++loadSeqRef.current
+      const isStale = () => seq !== loadSeqRef.current
+
       if (!userId) { setAudios({}); return }
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileErr } = await supabase
         .from('profiles')
         .select('role, teacher_id')
         .eq('id', userId)
         .maybeSingle()
+
+      if (isStale()) return
+      if (profileErr) { console.error('Failed to load profile for audio list:', profileErr); return }
 
       let teacherIdFilter = null
       if (profile?.role === 'teacher') teacherIdFilter = userId
@@ -46,11 +56,13 @@ export function AudioProvider({ children }) {
 
       if (!teacherIdFilter) { setAudios({}); return }
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('audio_files')
         .select('*')
         .eq('teacher_id', teacherIdFilter)
 
+      if (isStale()) return
+      if (error) { console.error('Failed to load audio files:', error); return }
       if (!data) return
       const map = {}
       data.forEach(row => {

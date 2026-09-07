@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useLang } from '../context/LangContext'
 
@@ -80,6 +80,10 @@ function NameModal({ file, status, errorMsg, onSubmit, onCancel }) {
   const [label, setLabel] = useState('')
   const previewUrl = useRef(file ? URL.createObjectURL(file) : null).current
   const busy = status === 'uploading' || status === 'syncing'
+
+  useEffect(() => {
+    return () => { if (previewUrl) URL.revokeObjectURL(previewUrl) }
+  }, [previewUrl])
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -184,7 +188,7 @@ export function AdminUploadButton({ parashaId, aliyahIdx, aliyahRef, onSaved, no
       </button>
       <input ref={fileRef} type="file" accept="audio/*,.m4a" className="hidden" onChange={handleFile} />
       {file && (
-        <NameModal file={null} status={status} errorMsg={errorMsg} onSubmit={submit} onCancel={reset} />
+        <NameModal file={file} status={status} errorMsg={errorMsg} onSubmit={submit} onCancel={reset} />
       )}
     </>
   )

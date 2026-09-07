@@ -1125,7 +1125,14 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
                       controls
                       src={sa.recording_url}
                       preload="none"
-                      onPlay={() => setPlayingStudentUrl(sa.recording_url)}
+                      onPlay={(e) => {
+                        setPlayingStudentUrl(sa.recording_url)
+                        // Only one audio source (this recording, another student's,
+                        // or the main aliyah player) should play at a time.
+                        document.querySelectorAll('audio, video').forEach(el => {
+                          if (el !== e.currentTarget && !el.paused) el.pause()
+                        })
+                      }}
                       onPause={() => setPlayingStudentUrl(null)}
                       onEnded={() => setPlayingStudentUrl(null)}
                       style={{ height: '28px', width: '140px', borderRadius: '6px', flexShrink: 0 }}
