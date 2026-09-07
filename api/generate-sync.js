@@ -125,20 +125,10 @@ function alignClean(srcNorm, dstNorm, srcOcc, dstOcc) {
     }
     // Occurrence matching: same base word but wrong occurrence scores -2 (below GAP=-1)
     // so NW always skips a wrong occurrence rather than accepting it.
-    if (sameBase && srcOcc && dstOcc && srcOcc[si] !== dstOcc[di]) return -2
-
-    // Position proximity: prefer matches that fall near the same relative
-    // position in both sequences. Without this, a long aliyah with many
-    // repeated words (e.g. ויאמר ×N) can let one early mis-transcription
-    // shift the occurrence count and drag every later match out of order —
-    // this keeps matches "local" so one bad spot can't corrupt the rest of
-    // the aliyah. Fuzzy (non-exact) matches are the riskiest and get hard
-    // rejected if they're implausibly far apart positionally.
-    const sPct = sLen > 1 ? si / (sLen - 1) : 0
-    const dPct = dLen > 1 ? di / (dLen - 1) : 0
-    const posDiff = Math.abs(sPct - dPct)
-    if (!sameBase && posDiff > 0.3) return -2
-    return base + 1.5 * (1 - posDiff)
+    if (sameBase && srcOcc && dstOcc) {
+      return srcOcc[si] === dstOcc[di] ? base : -2
+    }
+    return base
   }
   const dp = Array.from({ length: dLen + 1 }, (_, i) =>
     Array.from({ length: sLen + 1 }, (_, j) => (i === 0 ? j * GAP : j === 0 ? i * GAP : 0))
