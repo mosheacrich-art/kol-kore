@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { sendPushToUser } from '../lib/sendPush'
 import AudioPlayer from './AudioPlayer'
+import RangeRecorder from './RangeRecorder'
 import { BOOK_COLORS } from '../data/parashot'
 import { useLang } from '../context/LangContext'
 import { AdminUploadButton, AdminRecordButton } from './AdminAudioUpload'
@@ -1267,6 +1268,13 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
       {/* Audio bar */}
       {<div className="flex-shrink-0 px-4 py-2.5 flex items-center justify-end gap-2"
         style={isMobileUI && profile?.role === 'student' ? {} : { borderTop: '1px solid var(--border-subtle)', background: 'var(--overlay)' }}>
+
+        {isTeacher && recState === 'idle' && (
+          <div className="flex items-center gap-2 mr-auto">
+            <RangeRecorder parashaId={parasha.id} aliyahIdx={aliyahIdx} aliyahRef={currentAliyah.ref}
+              heText={currentAliyah.heText || null} />
+          </div>
+        )}
 
         {recState === 'recording' ? (
           <>

@@ -98,7 +98,7 @@ export function AudioProvider({ children }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  const upload = useCallback(async (parashaId, aliyahIdx, file, aliyahRef) => {
+  const upload = useCallback(async (parashaId, aliyahIdx, file, aliyahRef, manualTimestamps = null) => {
     const key = `${parashaId}-${aliyahIdx}`
 
     const { data: { session } } = await supabase.auth.getSession()
@@ -132,7 +132,7 @@ export function AudioProvider({ children }) {
       public_url: publicUrl,
       file_name: file.name,
       file_type: contentType,
-      word_timestamps: null,
+      word_timestamps: manualTimestamps,
       uploaded_at: uploadedAt,
     }, { onConflict: 'teacher_id,parasha_id,aliyah_idx' })
 
@@ -153,11 +153,14 @@ export function AudioProvider({ children }) {
         uploadedAt: new Date(uploadedAt).toLocaleString(t('date_locale'), {
           day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
         }),
-        wordTimestamps: null,
+        wordTimestamps: manualTimestamps,
         storagePath,
         teacherId,
       },
     }))
+
+    // Manual range sync: timestamps already known, skip Whisper
+    if (manualTimestamps) return true
 
     // Auto-sync via server-side Vercel API (avoids CORS with OpenAI)
     setSyncingKeys(prev => new Set([...prev, key]))

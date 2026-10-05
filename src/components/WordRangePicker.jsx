@@ -3,9 +3,9 @@ import { useAliyahText } from '../hooks/useSefaria'
 import { processVerse, splitWords } from '../utils/hebrew'
 import { useLang } from '../context/LangContext'
 
-export default function WordRangePicker({ aliyahRef, onConfirm, onClose }) {
+export default function WordRangePicker({ aliyahRef, heText = null, onConfirm, onClose }) {
   const { t } = useLang()
-  const { verses, loading } = useAliyahText(aliyahRef, true, null)
+  const { verses, loading } = useAliyahText(aliyahRef, true, heText)
   const [step, setStep] = useState('start')
   const [startIdx, setStartIdx] = useState(null)
   const [hoverIdx, setHoverIdx] = useState(-1)
@@ -20,7 +20,7 @@ export default function WordRangePicker({ aliyahRef, onConfirm, onClose }) {
     if (step === 'start') { setStartIdx(i); setStep('end') }
     else {
       const s = Math.min(startIdx, i), e = Math.max(startIdx, i)
-      onConfirm(s, e)
+      onConfirm(s, e, allWords)
     }
   }
 

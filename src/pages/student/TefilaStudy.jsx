@@ -97,6 +97,13 @@ function DayChooser({ onPick }) {
           color="#1b2f6b" onClick={() => onPick('imprescindibles')}
         />
       </div>
+      <div className="mt-4 fade-up-3">
+        <NusachCard
+          title="Sidur completo" heb="סִדּוּר שָׁלֵם" subtitle="Nusaj Sefaradí · Edot HaMizraj"
+          desc="El sidur entero con rúbricas en español: Shajarit, Minjá, Arvit, Birkat Hamazón y más."
+          color="#c8941f" onClick={() => window.open('/sidur/index.html', '_blank')}
+        />
+      </div>
     </div>
   )
 }
