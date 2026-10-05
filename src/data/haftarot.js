@@ -301,27 +301,27 @@ export const ALL_HAFTAROT = [
   // ── HAFTAROT DE FESTIVIDADES ───────────────────────────────────────────────
   {
     id: 'haftara-shekalim', name: 'Haftará Shekalim', heb: 'הַפְטָרַת שְׁקָלִים',
-    book: 'bereshit', chag: 'arba-parshiot', color: '#ef4444',
+    book: 'bereshit', chag: 'arba-parshiot', color: '#A8473C',
     aliyot: [{ n: 1, label: 'Haftará', ref: 'II Kings 12:1-17' }],
   },
   {
     id: 'haftara-zajor', name: 'Haftará Zajor', heb: 'הַפְטָרַת זָכוֹר',
-    book: 'bereshit', chag: 'arba-parshiot', color: '#ef4444',
+    book: 'bereshit', chag: 'arba-parshiot', color: '#A8473C',
     aliyot: [{ n: 1, label: 'Haftará', ref: 'I Samuel 15:2-34' }],
   },
   {
     id: 'haftara-para', name: 'Haftará Pará', heb: 'הַפְטָרַת פָּרָה',
-    book: 'bamidbar', chag: 'arba-parshiot', color: '#ef4444',
+    book: 'bamidbar', chag: 'arba-parshiot', color: '#A8473C',
     aliyot: [{ n: 1, label: 'Haftará', ref: 'Ezekiel 36:16-38' }],
   },
   {
     id: 'haftara-hajodesh', name: 'Haftará HaJodesh', heb: 'הַפְטָרַת הַחֹדֶשׁ',
-    book: 'shemot', chag: 'arba-parshiot', color: '#ef4444',
+    book: 'shemot', chag: 'arba-parshiot', color: '#A8473C',
     aliyot: [{ n: 1, label: 'Haftará', ref: 'Ezekiel 45:16-46:18' }],
   },
   {
     id: 'haftara-shabbat-shuva', name: 'Haftará Shabat Shuva', heb: 'הַפְטָרַת שַׁבַּת שׁוּבָה',
-    book: 'devarim', chag: 'rosh-hashana', color: '#f59e0b',
+    book: 'devarim', chag: 'rosh-hashana', color: '#B7862E',
     aliyot: [
       { n: 1, label: 'Parte 1', ref: 'Hosea 14:2-10' },
       { n: 2, label: 'Parte 2', ref: 'Micah 7:18-20' },
@@ -329,22 +329,22 @@ export const ALL_HAFTAROT = [
   },
   {
     id: 'haftara-rosh-hashana-1', name: 'Haftará Rosh Hashaná – Día 1', heb: 'הַפְטָרַת רֹאשׁ הַשָּׁנָה א׳',
-    book: 'bereshit', chag: 'rosh-hashana', color: '#f59e0b',
+    book: 'bereshit', chag: 'rosh-hashana', color: '#B7862E',
     aliyot: [{ n: 1, label: 'Haftará', ref: 'I Samuel 1:1-2:10' }],
   },
   {
     id: 'haftara-rosh-hashana-2', name: 'Haftará Rosh Hashaná – Día 2', heb: 'הַפְטָרַת רֹאשׁ הַשָּׁנָה ב׳',
-    book: 'bereshit', chag: 'rosh-hashana', color: '#f59e0b',
+    book: 'bereshit', chag: 'rosh-hashana', color: '#B7862E',
     aliyot: [{ n: 1, label: 'Haftará', ref: 'Jeremiah 31:2-20' }],
   },
   {
     id: 'haftara-yom-kipur-shajarit', name: 'Haftará Yom Kipur – Shajarit', heb: 'הַפְטָרַת יוֹם כִּפּוּר שַׁחֲרִית',
-    book: 'devarim', chag: 'yom-kipur', color: '#94a3b8',
+    book: 'devarim', chag: 'yom-kipur', color: '#6E7A8C',
     aliyot: [{ n: 1, label: 'Haftará', ref: 'Isaiah 57:14-58:14' }],
   },
   {
     id: 'haftara-yom-kipur-minja', name: 'Haftará Yom Kipur – Minjá', heb: 'הַפְטָרַת יוֹם כִּפּוּר מִנְחָה',
-    book: 'devarim', chag: 'yom-kipur', color: '#94a3b8',
+    book: 'devarim', chag: 'yom-kipur', color: '#6E7A8C',
     aliyot: [
       { n: 1, label: 'Haftará',    ref: 'Jonah 1:1-4:11' },
       { n: 2, label: 'Conclusión', ref: 'Micah 7:18-20' },
@@ -352,27 +352,27 @@ export const ALL_HAFTAROT = [
   },
   {
     id: 'haftara-sucot-1', name: 'Haftará Sucot – Día 1', heb: 'הַפְטָרַת סֻכּוֹת א׳',
-    book: 'vayikra', chag: 'sucot', color: '#22c55e',
+    book: 'vayikra', chag: 'sucot', color: '#4E8058',
     aliyot: [{ n: 1, label: 'Haftará', ref: 'Zechariah 14:1-21' }],
   },
   {
     id: 'haftara-sucot-2', name: 'Haftará Sucot – Día 2', heb: 'הַפְטָרַת סֻכּוֹת ב׳',
-    book: 'vayikra', chag: 'sucot', color: '#22c55e',
+    book: 'vayikra', chag: 'sucot', color: '#4E8058',
     aliyot: [{ n: 1, label: 'Haftará', ref: 'I Kings 8:2-21' }],
   },
   {
     id: 'haftara-shemini-atzeret', name: 'Haftará Shemini Atzeret', heb: 'הַפְטָרַת שְׁמִינִי עֲצֶרֶת',
-    book: 'devarim', chag: 'sucot', color: '#22c55e',
+    book: 'devarim', chag: 'sucot', color: '#4E8058',
     aliyot: [{ n: 1, label: 'Haftará', ref: 'I Kings 8:54-9:1' }],
   },
   {
     id: 'haftara-simjat-tora', name: 'Haftará Simjat Torá', heb: 'הַפְטָרַת שִׂמְחַת תּוֹרָה',
-    book: 'devarim', chag: 'sucot', color: '#22c55e',
+    book: 'devarim', chag: 'sucot', color: '#4E8058',
     aliyot: [{ n: 1, label: 'Haftará', ref: 'Joshua 1:1-18' }],
   },
   {
     id: 'haftara-pesaj-1', name: 'Haftará Pesaj – Día 1', heb: 'הַפְטָרַת פֶּסַח א׳',
-    book: 'shemot', chag: 'pesaj', color: '#84cc16',
+    book: 'shemot', chag: 'pesaj', color: '#6E7F32',
     aliyot: [
       { n: 1, label: 'Haftará',    ref: 'Joshua 5:2-6:1' },
       { n: 2, label: 'Conclusión', ref: 'Joshua 6:27' },
@@ -380,7 +380,7 @@ export const ALL_HAFTAROT = [
   },
   {
     id: 'haftara-pesaj-2', name: 'Haftará Pesaj – Día 2', heb: 'הַפְטָרַת פֶּסַח ב׳',
-    book: 'shemot', chag: 'pesaj', color: '#84cc16',
+    book: 'shemot', chag: 'pesaj', color: '#6E7F32',
     aliyot: [
       { n: 1, label: 'Parte 1', ref: 'II Kings 23:1-9' },
       { n: 2, label: 'Parte 2', ref: 'II Kings 23:21-25' },
@@ -388,17 +388,17 @@ export const ALL_HAFTAROT = [
   },
   {
     id: 'haftara-pesaj-7', name: 'Haftará Pesaj – Día 7', heb: 'הַפְטָרַת פֶּסַח ז׳',
-    book: 'shemot', chag: 'pesaj', color: '#84cc16',
+    book: 'shemot', chag: 'pesaj', color: '#6E7F32',
     aliyot: [{ n: 1, label: 'Haftará', ref: 'II Samuel 22:1-51' }],
   },
   {
     id: 'haftara-pesaj-8', name: 'Haftará Pesaj – Día 8', heb: 'הַפְטָרַת פֶּסַח ח׳',
-    book: 'shemot', chag: 'pesaj', color: '#84cc16',
+    book: 'shemot', chag: 'pesaj', color: '#6E7F32',
     aliyot: [{ n: 1, label: 'Haftará', ref: 'Isaiah 10:32-12:6' }],
   },
   {
     id: 'haftara-shavuot-1', name: 'Haftará Shavuot – Día 1', heb: 'הַפְטָרַת שָׁבוּעוֹת א׳',
-    book: 'vayikra', chag: 'shavuot', color: '#d97706',
+    book: 'vayikra', chag: 'shavuot', color: '#A8692A',
     aliyot: [
       { n: 1, label: 'Haftará',    ref: 'Ezekiel 1:1-28' },
       { n: 2, label: 'Conclusión', ref: 'Ezekiel 3:12' },
@@ -406,12 +406,12 @@ export const ALL_HAFTAROT = [
   },
   {
     id: 'haftara-shavuot-2', name: 'Haftará Shavuot – Día 2', heb: 'הַפְטָרַת שָׁבוּעוֹת ב׳',
-    book: 'bamidbar', chag: 'shavuot', color: '#d97706',
+    book: 'bamidbar', chag: 'shavuot', color: '#A8692A',
     aliyot: [{ n: 1, label: 'Haftará', ref: 'Habakkuk 3:1-19' }],
   },
   {
     id: 'haftara-shabbat-hagadol', name: 'Haftará Shabat HaGadol', heb: 'הַפְטָרַת שַׁבַּת הַגָּדוֹל',
-    book: 'vayikra', chag: 'pesaj', color: '#84cc16',
+    book: 'vayikra', chag: 'pesaj', color: '#6E7F32',
     aliyot: [{ n: 1, label: 'Haftará', ref: 'Malachi 3:4-24' }],
   },
 ]

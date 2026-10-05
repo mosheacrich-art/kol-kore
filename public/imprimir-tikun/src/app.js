@@ -199,6 +199,9 @@ function renderParasha(startPage) {
 
   canvas.innerHTML = html || '<div class="err">לא נמצא תוכן לפרשה זו.</div>';
   buildWordMap();
+  if (isEmbed && window.parent !== window) {
+    window.parent.postMessage({ tikkunState: { parasha: thisP.name, page: startPage } }, '*');
+  }
   if (pendingMarkers) injectAliyotMarkers(pendingMarkers);
 
   if (isEmbed) {
@@ -227,9 +230,20 @@ function fitToScreen() {
   applyZoom();
 }
 
+var userZoom = 1;
 function fitWidth() {
-  canvas.style.zoom = book.clientWidth / canvas.offsetWidth;
+  var base = book.clientWidth / canvas.offsetWidth;
+  /* single-column reading: don't let the column grow absurdly wide */
+  if (canvas.classList.contains('only-sefer') || canvas.classList.contains('only-tikkun')) base = Math.min(base, 1.5);
+  canvas.style.zoom = base * userZoom;
   canvas.style.transform = 'none';
+}
+
+/* Layout: 'both' (tikkun + sefer) | 'sefer' | 'tikkun' — presentation only */
+function applyLayout(mode) {
+  canvas.classList.remove('only-sefer', 'only-tikkun');
+  if (mode === 'sefer' || mode === 'tikkun') canvas.classList.add('only-' + mode);
+  if (isEmbed) fitWidth(); else fitToScreen();
 }
 
 if (!isEmbed) {
@@ -370,7 +384,7 @@ window.addEventListener('beforeprint', function() {
   // Printable ~194x277mm = ~733x1047px at 96dpi
   var printW = Math.round(194 / 25.4 * 96);
   var printH = Math.round(277 / 25.4 * 96);
-  var scale  = printW / 1280;
+  var scale  = printW / (canvas.offsetWidth || 1280);
   canvas.style.zoom = scale.toFixed(4);
 
   // Target page height in CSS coords (before zoom)
@@ -436,6 +450,12 @@ window.addEventListener('message', function(e) {
       renderParasha(entry.page);
     }
   }
+  /* Presentation controls from the app toolbar */
+  if (typeof e.data.setZoom === 'number') {
+    userZoom = Math.max(0.6, Math.min(1.8, e.data.setZoom));
+    if (isEmbed) fitWidth();
+  }
+  if (e.data.setLayout) applyLayout(e.data.setLayout);
   /* Word tracking */
   if (e.data.setFont) applyFont(e.data.setFont);
   if (e.data.aliyotMarkers !== undefined) injectAliyotMarkers(e.data.aliyotMarkers);

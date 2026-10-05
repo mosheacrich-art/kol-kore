@@ -2,11 +2,11 @@
 // Aliyah refs use Sefaria's English book names (Genesis, Exodus, etc.)
 
 export const SEFARIM_LIST = [
-  { id: 'bereshit', name: 'Bereshit', heb: 'בְּרֵאשִׁית', en: 'Génesis', color: '#6c33e6' },
-  { id: 'shemot', name: 'Shemot', heb: 'שְׁמוֹת', en: 'Éxodo', color: '#f9b800' },
-  { id: 'vayikra', name: 'Vayikrá', heb: 'וַיִּקְרָא', en: 'Levítico', color: '#2dd4bf' },
-  { id: 'bamidbar', name: 'Bamidbar', heb: 'בְּמִדְבַּר', en: 'Números', color: '#f87171' },
-  { id: 'devarim', name: 'Devarim', heb: 'דְּבָרִים', en: 'Deuteronomio', color: '#a78bfa' },
+  { id: 'bereshit', name: 'Bereshit', heb: 'בְּרֵאשִׁית', en: 'Génesis', color: '#2F5E93' },
+  { id: 'shemot', name: 'Shemot', heb: 'שְׁמוֹת', en: 'Éxodo', color: '#B8862B' },
+  { id: 'vayikra', name: 'Vayikrá', heb: 'וַיִּקְרָא', en: 'Levítico', color: '#2F7F78' },
+  { id: 'bamidbar', name: 'Bamidbar', heb: 'בְּמִדְבַּר', en: 'Números', color: '#A85A43' },
+  { id: 'devarim', name: 'Devarim', heb: 'דְּבָרִים', en: 'Deuteronomio', color: '#5E6399' },
 ]
 
 export const PARASHOT = [
@@ -883,11 +883,11 @@ export const COMBINED_PARASHOT = [
 ]
 
 export const BOOK_COLORS = {
-  bereshit: '#6c33e6',
-  shemot: '#f9b800',
-  vayikra: '#2dd4bf',
-  bamidbar: '#f87171',
-  devarim: '#a78bfa',
+  bereshit: '#2F5E93',
+  shemot: '#B8862B',
+  vayikra: '#2F7F78',
+  bamidbar: '#A85A43',
+  devarim: '#5E6399',
 }
 
 export const ALL_PARASHOT = [

@@ -1,3 +1,9 @@
+/* ══════════════════════════════════════════════════════════════════════
+   Tikkun Korim — digital Sefer Torah surface
+   PRESENTATION ONLY. Text, line breaks, petuchot/setumot, shirot and
+   ketiv/kri come from data/tikkun-pages.json and are never altered here.
+   ══════════════════════════════════════════════════════════════════════ */
+
 /* ── Fonts ──────────────────────────────────────────────────────────── */
 @font-face {
   font-family: 'KeterYG';
@@ -35,93 +41,104 @@
 
 /* ── Variables ──────────────────────────────────────────────────────── */
 :root {
-  --paper:       hsl(45, 30%, 96%);
-  --ink:         hsla(0, 0%, 0%, 0.82);
-  --col-border:  hsla(0, 0%, 0%, 0.20);
-  --toolbar-bg:  #1e1600;
-  --toolbar-h:   48px;
+  --desk:        #ECE6D8;            /* surface the scroll rests on */
+  --paper:       #FBF7EC;            /* parchment */
+  --paper-edge:  #F1E8D2;
+  --ink:         #1C1710;
+  --ink-soft:    rgba(28, 23, 16, 0.55);
+  --rule:        rgba(92, 70, 30, 0.22);
+  --gold:        #9C7121;
+  --hl:          rgba(201, 151, 50, 0.30);
+  --accent:      #0B315F;
+  --toolbar-bg:  #0B1F3A;
+  --toolbar-h:   52px;
 }
+/* Dark theme: the room darkens, the parchment stays warm and readable */
 .dark-mode {
-  --paper:       #0f0d1a;
-  --ink:         rgba(240, 235, 210, 0.88);
-  --col-border:  rgba(255, 255, 255, 0.15);
-  --toolbar-bg:  #0a0800;
+  --desk:        #0E1522;
+  --paper:       #F4EEDD;
+  --paper-edge:  #E7DDC3;
+  --toolbar-bg:  #070D18;
 }
 
 /* ── Body ───────────────────────────────────────────────────────────── */
 html, body {
   height: 100%;
   overflow: hidden;
-  background: var(--paper);
+  background: var(--desk);
   color: var(--ink);
   font-family: 'ShlomosemiStam', 'KeterYG', serif;
   direction: rtl;
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Toolbar ────────────────────────────────────────────────────────── */
+/* ── Standalone toolbar (hidden when embedded in the app) ───────────── */
 .toolbar {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  inset: 0 0 auto 0;
   z-index: 100;
   height: var(--toolbar-h);
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 14px;
+  gap: 12px;
+  padding: 0 16px;
   background: var(--toolbar-bg);
-  border-bottom: 2px solid #6c4e00;
+  color: #F3EFE7;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
 }
-.toolbar-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #f9d96a;
-  flex-shrink: 0;
-}
-.toolbar-actions {
-  display: flex;
-  gap: 8px;
-  margin-right: auto;
-  align-items: center;
-}
+.toolbar-title { font-size: 15px; font-weight: 600; color: #E0B04B; flex-shrink: 0; }
+.toolbar-actions { display: flex; gap: 8px; margin-right: auto; align-items: center; }
 #parashaSelect {
-  font-family: 'ShlomosemiStam', serif;
-  font-size: 13px;
-  padding: 3px 7px;
-  border-radius: 5px;
-  border: 1px solid #7a6030;
-  background: #2e2300;
-  color: #f5e9c4;
+  font-family: 'KeterYG', serif;
+  font-size: 14px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: #F3EFE7;
   direction: rtl;
 }
 #printBtn {
-  font-family: sans-serif;
-  font-size: 12px;
-  padding: 4px 12px;
-  border-radius: 5px;
-  border: 1px solid #a07828;
-  background: linear-gradient(135deg, #a06820, #d09830);
-  color: #100a00;
-  font-weight: 700;
+  font-size: 13px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 0;
+  background: #C99732;
+  color: #1A1204;
+  font-weight: 600;
   cursor: pointer;
 }
-#printBtn:hover { filter: brightness(1.1); }
+#printBtn:hover { filter: brightness(1.06); }
+.font-btns { display: flex; gap: 2px; padding: 2px; border-radius: 9px; background: rgba(255,255,255,0.06); }
+.font-btn {
+  font-family: 'KeterYG', serif;
+  font-size: 13px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 7px;
+  border: 0;
+  background: transparent;
+  color: rgba(243,239,231,0.65);
+  cursor: pointer;
+}
+.font-btn.active, .font-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
 
 /* ── Viewport (zoom/pan container) ─────────────────────────────────── */
 #book {
   position: fixed;
   top: var(--toolbar-h);
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 0; right: 0; bottom: 0;
   overflow: hidden;
   cursor: grab;
   user-select: none;
   touch-action: none;
-  background: var(--paper);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.35), transparent 60%),
+    var(--desk);
 }
+.dark-mode #book { background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.04), transparent 60%), var(--desk); }
 #book.dragging { cursor: grabbing; }
 
 /* ── Canvas (the transformable layer) ──────────────────────────────── */
@@ -131,53 +148,87 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 32px 24px 80px;
+  padding: 40px 32px 96px;
   width: 1280px;
 }
+#book-canvas.only-sefer,
+#book-canvas.only-tikkun { width: 720px; }
 
-/* ── Amud ────────────────────────────────────────────────────────────── */
+/* ── Amud: one parchment sheet ─────────────────────────────────────── */
 .amud {
+  position: relative;
   width: 100%;
-  margin-bottom: 4em;
+  margin-bottom: 40px;
+  padding: 28px 44px 40px;
+  background:
+    linear-gradient(90deg, rgba(120, 90, 40, 0.06), transparent 6%, transparent 94%, rgba(120, 90, 40, 0.06)),
+    linear-gradient(180deg, var(--paper) 0%, var(--paper) 70%, var(--paper-edge) 100%);
+  border-radius: 6px;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.6) inset,
+    0 1px 2px rgba(40, 30, 10, 0.06),
+    0 18px 40px -18px rgba(40, 30, 10, 0.28);
+}
+.dark-mode .amud {
+  box-shadow: 0 1px 2px rgba(0,0,0,0.4), 0 24px 60px -20px rgba(0,0,0,0.75);
 }
 
 .amud-header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  padding: 3px 12px;
-  background: var(--toolbar-bg);
-  color: #f9d96a;
-  font-size: 11px;
-  font-family: sans-serif;
-  border-radius: 3px 3px 0 0;
-  margin-bottom: 4px;
+  margin: 0 -8px 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule);
+  font-family: 'KeterYG', serif;
+  font-size: 13px;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
 }
-.amud-num  { color: #c8a84e; }
-.col-label { color: #d4b560; letter-spacing: 0.05em; }
+.amud-header .col-label:first-child { text-align: right; }
+.amud-header .col-label:last-child  { text-align: left; }
+.amud-num {
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--gold);
+  padding: 2px 10px;
+  border: 1px solid rgba(156, 113, 33, 0.3);
+  border-radius: 999px;
+}
+.col-label { color: var(--ink-soft); }
 
-/* ── Single table, two fixed columns ────────────────────────────────── */
+/* ── Two columns: tikkun (vocalized, right) · sefer (STAM, left) ───── */
 .tikkun-table {
   width: 100%;
   table-layout: fixed;
   border-collapse: collapse;
   font-family: 'ShlomosemiStam', 'KeterYG', serif;
-  font-size: 1.3em;
+  font-size: 1.32em;
   direction: rtl;
+  color: var(--ink);
 }
 
 .tikkun-cell {
   width: 50%;
   vertical-align: top;
-  padding: 0 20px;        /* generous horizontal gap */
+  padding: 0 24px;
 }
-
-/* Divider between tikkun (right) and sefer (left) */
-.tikkun-cell:last-child {
-  border-right: 2px solid var(--col-border);
+/* Vocalized column: a font that carries niqqud and te'amim correctly */
+.tikkun-cell:first-child {
+  font-family: 'TaameyFrankCLM', 'KeterYG', serif;
+  font-size: 0.94em;
 }
+/* Central division between the two columns */
+.tikkun-cell:last-child { border-right: 1px solid var(--rule); }
 
-/* ── Line — tikkun.io page.css exact copy ───────────────────────────── */
+#book-canvas.only-sefer  .tikkun-cell:first-child,
+#book-canvas.only-tikkun .tikkun-cell:last-child { display: none; }
+#book-canvas.only-sefer  .tikkun-cell,
+#book-canvas.only-tikkun .tikkun-cell { width: 100%; border: 0; }
+
+/* ── Line — tikkun.io page geometry (justified, fixed line height) ──── */
 .line {
   position: relative;
   text-align: justify;
@@ -185,9 +236,10 @@ html, body {
   min-height: 1em;
   display: flex;
   justify-content: space-between;
+  padding: 0.14em 0;
 }
 .line.mod-petucha { text-align: start; }
-.empty-line { min-height: 1em; }
+.empty-line { min-height: 1em; padding: 0.14em 0; }
 
 .column {
   flex: 1;
@@ -195,9 +247,9 @@ html, body {
   justify-content: space-between;
 }
 
-.fragment { width: 100%; transition: color 0.12s; }
-.fragment.w-active { color: #3b82f6 !important; }
-body.embed .fragment:hover { color: #3b82f6; cursor: pointer; }
+.fragment { width: 100%; transition: background-color 0.15s, color 0.15s; border-radius: 4px; }
+.fragment.w-active { background: var(--hl); color: var(--ink) !important; box-shadow: 0 0 0 2px var(--hl); }
+body.embed .fragment:hover { color: var(--accent); cursor: pointer; }
 .fragment.mod-setuma { width: auto; }
 .fragment:after {
   content: '';
@@ -205,11 +257,12 @@ body.embed .fragment:hover { color: #3b82f6; cursor: pointer; }
   display: inline-block;
 }
 
+/* Ketiv/kri: marked, never rewritten */
 .ktiv-kri {
-  background-color: rgba(0,0,0,0.08);
-  padding: 0.1rem 0.1rem;
-  border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 8px;
+  background-color: rgba(201, 151, 50, 0.12);
+  padding: 0.05rem 0.12rem;
+  border-bottom: 1px solid rgba(156, 113, 33, 0.45);
+  border-radius: 4px;
   position: relative;
 }
 
@@ -218,87 +271,76 @@ body.embed .toolbar { display: none !important; }
 body.embed #book {
   top: 0;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: auto;
   cursor: default;
   user-select: text;
-  touch-action: pan-y;
+  touch-action: pan-x pan-y;
   -webkit-overflow-scrolling: touch;
 }
 body.embed #book.dragging { cursor: default; }
 body.embed #book-canvas {
   transform: none !important;
-  /* fitWidth() will set CSS zoom via JS */
-  padding: 16px 8px 60px;
+  margin: 0 auto;
+  /* fitWidth() sets CSS zoom via JS */
+  padding: 24px 16px 72px;
 }
 
-/* ── Error ──────────────────────────────────────────────────────────── */
+/* ── Error / loading ────────────────────────────────────────────────── */
 .err {
-  padding: 40px;
+  padding: 48px;
   text-align: center;
-  color: #888;
-  font-size: 18px;
+  color: var(--ink-soft);
+  font-family: 'KeterYG', serif;
+  font-size: 20px;
 }
 
 /* ── Haazinu: two parallel columns within each tikkun/sefer cell ───── */
-.haazinu-row {
-  display: flex;
-  width: 100%;
-  gap: 0;
-}
+.haazinu-row { display: flex; width: 100%; gap: 0; }
 .haazinu-col {
   flex: 1;
   text-align: justify;
   line-height: 100%;
   min-height: 1em;
-  padding: 0 4px;
+  padding: 0.14em 4px;
 }
 .haazinu-col:first-child { text-align: right; }
 .haazinu-col:last-child  { text-align: left; }
-.haazinu-col + .haazinu-col {
-  border-right: 1px dotted var(--col-border);
-}
+.haazinu-col + .haazinu-col { border-right: 1px dotted var(--rule); }
 
 /* ── Shirot: Az Yashir & Haazinu (multi-fragment lines) ─────────────── */
-/* Lines with mod-setuma fragments = shirah layout: fragments spread across line */
-.line .column {
-  width: 100%;
-}
-/* Each fragment in a shirah line gets equal space */
-.fragment.mod-setuma {
-  width: auto;
-  flex: 1;
-  text-align: center;
-}
-/* First fragment in shirah: align right (as in sefer torah) */
+.line .column { width: 100%; }
+.fragment.mod-setuma { width: auto; flex: 1; text-align: center; }
 .fragment.mod-setuma:first-child { text-align: right; }
-/* Last fragment in shirah: align left */
 .fragment.mod-setuma:last-child  { text-align: left; }
-/* Middle fragments: centered */
-
-/* Thin vertical rule between shirah columns */
 .fragment.mod-setuma + .fragment.mod-setuma {
-  border-right: 1px dotted var(--col-border);
+  border-right: 1px dotted var(--rule);
   padding-right: 6px;
   margin-right: 2px;
 }
 
-/* ── Dark mode body/background ───────────────────────────────────────── */
-.dark-mode body {
-  background: var(--paper);
-}
-.dark-mode #book {
-  background: var(--paper);
+/* ── Sefer-column font choice (the vocalized column keeps Taamey Frank) ── */
+#book-canvas.font-keter .tikkun-cell:last-child { font-family: 'KeterYG', 'ShlomosemiStam', serif !important; font-weight: 700 !important; }
+#book-canvas.font-frank .tikkun-cell:last-child { font-family: 'TaameyFrankCLM', 'ShlomosemiStam', serif !important; font-weight: 700 !important; }
+
+/* ── Aliyah markers ────────────────────────────────────────────────── */
+.aliyah-marker {
+  display: block;
+  font-size: 0.44em;
+  line-height: 1;
+  margin-top: 0.2em;
+  font-family: 'KeterYG', serif;
+  color: var(--gold);
+  opacity: 0.85;
+  text-align: start;   /* start = right in RTL → after last word */
+  pointer-events: none;
 }
 
 /* ── Print ──────────────────────────────────────────────────────────── */
 @media print {
   @page { size: A4 portrait; margin: 10mm 8mm; }
 
-  html, body { height: auto !important; overflow: visible; margin: 0; }
-
+  html, body { height: auto !important; overflow: visible; margin: 0; background: white; }
   .no-print { display: none !important; }
-
-  body { background: white; }
 
   #book {
     position: static !important;
@@ -314,54 +356,32 @@ body.embed #book-canvas {
     /* width fixed; zoom calculated dynamically in beforeprint JS */
     width: 1280px !important;
     padding: 0;
+    margin: 0;
   }
+  #book-canvas.only-sefer,
+  #book-canvas.only-tikkun { width: 720px !important; }
 
   .amud {
-    margin-bottom: 0;
+    margin: 0;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
     page-break-after: always;
     break-after: page;
   }
-  .amud:last-child {
-    page-break-after: avoid;
-    break-after: avoid;
-  }
+  .amud:last-child { page-break-after: avoid; break-after: avoid; }
 
-  .amud-header {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .tikkun-table { font-size: 1.05em; }
+  .amud-header { margin: 0 0 4px; padding-bottom: 4px; color: #555; }
+  .amud-num { border-color: #bbb; color: #555; }
+  .tikkun-table { font-size: 1.05em; color: #000; }
   .tikkun-cell { padding: 0 10px; }
+  .tikkun-cell:last-child { border-right-color: #999; }
+  .line, .empty-line { padding: 0; }
+  .fragment.w-active { background: none; box-shadow: none; }
+  .ktiv-kri { background: none; border-bottom-color: #888; }
 }
 
-/* ?? Sefer-column font toggle ???????????????????????????????????????????? */
-#book-canvas.font-keter .tikkun-cell { font-family: 'KeterYG', 'ShlomosemiStam', serif !important; font-weight: 700 !important; }
-#book-canvas.font-frank .tikkun-cell { font-family: 'TaameyFrankCLM', 'ShlomosemiStam', serif !important; font-weight: 700 !important; }
-
-/* ── Aliyah markers ────────────────────────────────────────────────────── */
-.aliyah-marker {
-  display: block;
-  font-size: 0.44em;
-  line-height: 1;
-  margin-top: 0.15em;
-  font-family: 'KeterYG', serif;
-  color: var(--ink);
-  opacity: 0.45;
-  text-align: start;   /* start = right in RTL → after last word */
-  pointer-events: none;
-}
-
-.font-btns { display: flex; gap: 4px; }
-.font-btn {
-  font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 5px;
-  border: 1px solid #7a6030;
-  background: #2e2300;
-  color: #c8a84e;
-  cursor: pointer;
-  transition: background 0.1s;
-}
-.font-btn.active,
-.font-btn:hover { background: #5a3c00; color: #f9d96a; }
+/* Single-column layouts: label only the column on show */
+#book-canvas.only-sefer  .amud-header .col-label:first-child,
+#book-canvas.only-tikkun .amud-header .col-label:last-child { visibility: hidden; }

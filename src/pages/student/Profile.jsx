@@ -1,20 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import {
+  ArrowRight, Award, BookOpen, CalendarHeart, Check, CheckCircle2, ChevronRight, ClipboardList, Flame,
+  Headphones, Library, Link2, Mic, Radio, Sparkles, Star, Trophy, Zap,
+} from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
 import { PARASHOT } from '../../data/parashot'
-import { ALL_MOADIM } from '../../data/moadim'
-
-function resolveAnyParasha(idOrName) {
-  if (!idOrName) return null
-  const lower = idOrName.toLowerCase().replace(/[\s-]/g, '')
-  return PARASHOT.find(p =>
-    p.id === idOrName ||
-    p.name.toLowerCase() === idOrName.toLowerCase() ||
-    p.id.replace(/-/g, '') === lower
-  ) || ALL_MOADIM.find(m => m.id === idOrName || m.name === idOrName) || null
-}
+import { Avatar, CardHeader, EmptyState, IconTile, PageHeader, Progress } from '../../components/ui'
+import { resolveParasha, bookColor, capitalize } from '../../utils/parasha'
 
 function AccountSection({ user }) {
   const { t } = useLang()
@@ -29,106 +24,68 @@ function AccountSection({ user }) {
 
   const handleEmail = async (e) => {
     e.preventDefault()
-    if (!newEmail.includes('@')) { setMsg({ type: 'err', text: 'Email no válido' }); return }
+    if (!newEmail.includes('@')) { setMsg({ type: 'err', text: t('ui_invalid_email') }); return }
     setLoading(true)
     const { error } = await supabase.auth.updateUser({ email: newEmail })
     setLoading(false)
     if (error) { setMsg({ type: 'err', text: error.message }); return }
-    setMsg({ type: 'ok', text: 'Te hemos enviado un enlace de confirmación al nuevo email.' })
+    setMsg({ type: 'ok', text: t('ui_email_confirm_sent') })
     setSection(null)
   }
 
   const handlePassword = async (e) => {
     e.preventDefault()
-    if (newPass.length < 6) { setMsg({ type: 'err', text: 'Mínimo 6 caracteres' }); return }
-    if (newPass !== confirmPass) { setMsg({ type: 'err', text: 'Las contraseñas no coinciden' }); return }
+    if (newPass.length < 6) { setMsg({ type: 'err', text: t('pwd_too_short') }); return }
+    if (newPass !== confirmPass) { setMsg({ type: 'err', text: t('pwd_mismatch') }); return }
     setLoading(true)
     const { error } = await supabase.auth.updateUser({ password: newPass })
     setLoading(false)
     if (error) { setMsg({ type: 'err', text: error.message }); return }
-    setMsg({ type: 'ok', text: 'Contraseña actualizada correctamente.' })
+    setMsg({ type: 'ok', text: t('pwd_changed_ok') })
     setSection(null)
   }
 
-  const inputStyle = {
-    background: 'var(--bg-card)',
-    border: '1px solid var(--border)',
-    color: 'var(--text)',
-  }
-
   return (
-    <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-      <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{t('account')}</p>
-
+    <section className="card p-5 sm:p-6">
+      <h2 className="section-title mb-3">{t('account')}</h2>
       {msg && (
-        <div className="mb-3 p-2.5 rounded-xl text-xs"
-          style={{
-            background: msg.type === 'ok' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-            color: msg.type === 'ok' ? '#16a34a' : '#ef4444',
-            border: `1px solid ${msg.type === 'ok' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`,
-          }}>
+        <p className="mb-3 px-3.5 py-2.5 rounded-xl text-[13px]"
+          style={msg.type === 'ok'
+            ? { background: 'rgba(var(--success-rgb),0.08)', color: 'rgb(var(--success-rgb))' }
+            : { background: 'rgba(var(--danger-rgb),0.07)', color: 'rgb(var(--danger-rgb))' }}>
           {msg.text}
-        </div>
+        </p>
       )}
 
-      {/* Email display */}
-      <div className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-        <div>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('email')}</p>
-          <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--text-2)' }}>{user?.email}</p>
+      <div className="flex items-center justify-between gap-3 py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+        <div className="min-w-0">
+          <p className="text-[12px] text-ink-3">{t('email')}</p>
+          <p className="text-[14px] font-medium text-ink truncate">{user?.email}</p>
         </div>
-        <button onClick={() => show(section === 'email' ? null : 'email')}
-          className="text-xs px-2.5 py-1 rounded-lg transition-all"
-          style={{ background: 'rgba(108,51,230,0.1)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)' }}>
-          {t('change')}
-        </button>
+        <button onClick={() => show(section === 'email' ? null : 'email')} className="btn btn-ghost btn-sm text-accent">{t('change')}</button>
       </div>
-
       {section === 'email' && (
         <form onSubmit={handleEmail} className="flex flex-col gap-2 pt-3">
-          <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)}
-            placeholder={t('new_email')} required autoFocus
-            className="w-full px-3 py-2 rounded-xl text-xs outline-none"
-            style={inputStyle} />
-          <button type="submit" disabled={loading}
-            className="w-full py-2 rounded-xl text-xs font-semibold transition-all"
-            style={{ background: loading ? 'var(--bg-card)' : '#6c33e6', color: loading ? 'var(--text-3)' : '#fff', border: loading ? '1px solid var(--border)' : 'none' }}>
-            {loading ? '…' : t('send_confirm')}
-          </button>
+          <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder={t('new_email')} required autoFocus className="input" />
+          <button type="submit" disabled={loading} className="btn btn-primary">{loading ? '…' : t('send_confirm')}</button>
         </form>
       )}
 
-      {/* Password */}
-      <div className="flex items-center justify-between py-2 mt-1">
+      <div className="flex items-center justify-between gap-3 py-3">
         <div>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('password')}</p>
-          <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--text-2)' }}>••••••••</p>
+          <p className="text-[12px] text-ink-3">{t('password')}</p>
+          <p className="text-[14px] font-medium text-ink">••••••••</p>
         </div>
-        <button onClick={() => show(section === 'password' ? null : 'password')}
-          className="text-xs px-2.5 py-1 rounded-lg transition-all"
-          style={{ background: 'rgba(108,51,230,0.1)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)' }}>
-          {t('change')}
-        </button>
+        <button onClick={() => show(section === 'password' ? null : 'password')} className="btn btn-ghost btn-sm text-accent">{t('change')}</button>
       </div>
-
       {section === 'password' && (
-        <form onSubmit={handlePassword} className="flex flex-col gap-2 pt-1">
-          <input type="password" value={newPass} onChange={e => setNewPass(e.target.value)}
-            placeholder={t('new_password')} required autoFocus
-            className="w-full px-3 py-2 rounded-xl text-xs outline-none"
-            style={inputStyle} />
-          <input type="password" value={confirmPass} onChange={e => setConfirmPass(e.target.value)}
-            placeholder={t('repeat_password')} required
-            className="w-full px-3 py-2 rounded-xl text-xs outline-none"
-            style={inputStyle} />
-          <button type="submit" disabled={loading}
-            className="w-full py-2 rounded-xl text-xs font-semibold transition-all"
-            style={{ background: loading ? 'var(--bg-card)' : '#6c33e6', color: loading ? 'var(--text-3)' : '#fff', border: loading ? '1px solid var(--border)' : 'none' }}>
-            {loading ? '…' : t('save_password')}
-          </button>
+        <form onSubmit={handlePassword} className="flex flex-col gap-2">
+          <input type="password" value={newPass} onChange={e => setNewPass(e.target.value)} placeholder={t('new_password')} required autoFocus className="input" />
+          <input type="password" value={confirmPass} onChange={e => setConfirmPass(e.target.value)} placeholder={t('repeat_password')} required className="input" />
+          <button type="submit" disabled={loading} className="btn btn-primary">{loading ? '…' : t('save_password')}</button>
         </form>
       )}
-    </div>
+    </section>
   )
 }
 
@@ -138,28 +95,23 @@ function daysUntil(dateStr) {
   return Math.ceil(diff / (1000 * 60 * 60 * 24))
 }
 
-const priorityColors = {
-  high:   { bg: 'rgba(239,68,68,0.1)',  border: 'rgba(239,68,68,0.2)',  text: '#dc2626', dot: '#ef4444' },
-  medium: { bg: 'rgba(249,184,0,0.1)',  border: 'rgba(249,184,0,0.2)',  text: '#d97706', dot: '#f9b800' },
-  low:    { bg: 'rgba(45,212,191,0.1)', border: 'rgba(45,212,191,0.2)', text: '#0d9488', dot: '#2dd4bf' },
-}
-
 const ACHIEVEMENTS = [
-  { id: 'first_listen', icon: '🎧', labelKey: 'ach_first_listen_label', descKey: 'ach_first_listen_desc', check: (s) => s.totalListens >= 1 },
-  { id: 'listen_10',   icon: '📻', labelKey: 'ach_listen_10_label',    descKey: 'ach_listen_10_desc',    check: (s) => s.totalListens >= 10 },
-  { id: 'listen_50',   icon: '🎶', labelKey: 'ach_listen_50_label',    descKey: 'ach_listen_50_desc',    check: (s) => s.totalListens >= 50 },
-  { id: 'first_hw',    icon: '✅', labelKey: 'ach_first_hw_label',     descKey: 'ach_first_hw_desc',     check: (s) => s.homeworkDone >= 1 },
-  { id: 'hw_5',        icon: '📚', labelKey: 'ach_hw_5_label',         descKey: 'ach_hw_5_desc',         check: (s) => s.homeworkDone >= 5 },
-  { id: 'hw_20',       icon: '🏆', labelKey: 'ach_hw_20_label',        descKey: 'ach_hw_20_desc',        check: (s) => s.homeworkDone >= 20 },
-  { id: 'streak_3',    icon: '🔥', labelKey: 'ach_streak_3_label',     descKey: 'ach_streak_3_desc',     check: (s) => s.streak >= 3 },
-  { id: 'streak_7',    icon: '⚡', labelKey: 'ach_streak_7_label',     descKey: 'ach_streak_7_desc',     check: (s) => s.streak >= 7 },
-  { id: 'streak_30',   icon: '🌟', labelKey: 'ach_streak_30_label',    descKey: 'ach_streak_30_desc',    check: (s) => s.streak >= 30 },
+  { id: 'first_listen', icon: Headphones,   labelKey: 'ach_first_listen_label', descKey: 'ach_first_listen_desc', check: (s) => s.totalListens >= 1 },
+  { id: 'listen_10',    icon: Radio,        labelKey: 'ach_listen_10_label',    descKey: 'ach_listen_10_desc',    check: (s) => s.totalListens >= 10 },
+  { id: 'listen_50',    icon: Sparkles,     labelKey: 'ach_listen_50_label',    descKey: 'ach_listen_50_desc',    check: (s) => s.totalListens >= 50 },
+  { id: 'first_hw',     icon: CheckCircle2, labelKey: 'ach_first_hw_label',     descKey: 'ach_first_hw_desc',     check: (s) => s.homeworkDone >= 1 },
+  { id: 'hw_5',         icon: Library,      labelKey: 'ach_hw_5_label',         descKey: 'ach_hw_5_desc',         check: (s) => s.homeworkDone >= 5 },
+  { id: 'hw_20',        icon: Trophy,       labelKey: 'ach_hw_20_label',        descKey: 'ach_hw_20_desc',        check: (s) => s.homeworkDone >= 20 },
+  { id: 'streak_3',     icon: Flame,        labelKey: 'ach_streak_3_label',     descKey: 'ach_streak_3_desc',     check: (s) => s.streak >= 3 },
+  { id: 'streak_7',     icon: Zap,          labelKey: 'ach_streak_7_label',     descKey: 'ach_streak_7_desc',     check: (s) => s.streak >= 7 },
+  { id: 'streak_30',    icon: Star,         labelKey: 'ach_streak_30_label',    descKey: 'ach_streak_30_desc',    check: (s) => s.streak >= 30 },
 ]
 
 export default function StudentProfile() {
   const navigate = useNavigate()
   const { profile, setProfile, user } = useAuth()
   const { t } = useLang()
+  const locale = t('date_locale')
   const [deberes, setDeberes] = useState([])
   const [teacherCode, setTeacherCode] = useState('')
   const [teacherName, setTeacherName] = useState(null)
@@ -185,10 +137,7 @@ export default function StudentProfile() {
       .select('count')
       .eq('student_id', profile.id)
       .then(({ data }) => {
-        if (mounted && data) {
-          const total = data.reduce((sum, row) => sum + (row.count || 0), 0)
-          setTotalListens(total)
-        }
+        if (mounted && data) setTotalListens(data.reduce((sum, row) => sum + (row.count || 0), 0))
       })
 
     if (profile.teacher_id) {
@@ -197,7 +146,7 @@ export default function StudentProfile() {
     }
 
     return () => { mounted = false }
-  }, [profile?.id])
+  }, [profile?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const linkTeacher = async () => {
     const code = teacherCode.trim().toUpperCase()
@@ -219,6 +168,7 @@ export default function StudentProfile() {
 
   const days = daysUntil(profile?.bar_mitzvah)
   const done = deberes.filter(d => d.status === 'submitted').length
+  const pending = deberes.length - done
   const progress = deberes.length ? Math.round((done / deberes.length) * 100) : 0
 
   const handleDeberClick = (deber) => {
@@ -235,325 +185,186 @@ export default function StudentProfile() {
 
   if (!profile) return null
 
+  const assigned = [profile.parasha_id, ...(profile.extra_parasha_ids || [])].filter(Boolean)
+  const resolved = assigned.map(id => ({ id, p: resolveParasha(id) }))
+  const today = capitalize(new Date().toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' }))
+
   return (
-    <div className="p-4 sm:p-8 max-w-5xl">
-      <div className="mb-10 fade-up-1">
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          פְּרוֹפִיל · {t('profile_title')}
-        </p>
-        <h1 className="text-3xl font-light" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-          Shalom, {profile.name?.split(' ')[0] || 'Alumno'} 👋
-        </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
-          {[profile.parasha_id, ...(profile.extra_parasha_ids || [])].filter(Boolean).map((id, i) => {
-            const p = resolveAnyParasha(id)
-            return <span key={id}>{i > 0 && <span style={{ color: 'var(--border)' }}> · </span>}<span className="hebrew" style={{ color: 'var(--text-gold)' }}>{p?.name || id}</span></span>
+    <div className="page">
+      <PageHeader hebrew="בְּרוּכִים הַבָּאִים" eyebrow={t('ui_home')}
+        title={`Shalom, ${profile.name?.split(' ')[0] || ''}`}
+        subtitle={t('ui_student_home_subtitle')}
+        aside={<p className="hidden sm:block text-sm text-ink-3 pb-1">{today}</p>} />
+
+      {/* My parasha — editorial hero */}
+      {resolved.length > 0 ? (
+        <div className={`grid gap-4 mb-6 fade-up-1 ${resolved.length > 1 ? 'md:grid-cols-2' : ''}`}>
+          {resolved.map(({ id, p }, i) => {
+            const color = bookColor(p)
+            return (
+              <button key={id} onClick={() => p && navigate(`/student/study/${p.id}`)}
+                className="card card-interactive group overflow-hidden text-start grid grid-cols-[1fr_auto]">
+                <div className="p-6 sm:p-7">
+                  <p className="eyebrow mb-2">{i === 0 ? t('my_parasha') : t('special_reading')}</p>
+                  <p className="font-serif text-[30px] font-semibold text-ink leading-tight">{p?.name || id}</p>
+                  <p className="text-[14px] text-ink-3 mt-1">{t('assigned_parasha')}</p>
+                  <span className="inline-flex items-center gap-1.5 mt-5 text-[14px] font-medium text-ink group-hover:gap-2.5 transition-all">
+                    {t('go_my_parasha')}<ArrowRight size={16} className="rtl:rotate-180" />
+                  </span>
+                </div>
+                <div className="relative w-36 sm:w-56 flex items-center justify-center overflow-hidden"
+                  style={{ background: 'linear-gradient(135deg, var(--parchment), var(--parchment-2))' }} aria-hidden="true">
+                  <div className="absolute inset-0 opacity-60" style={{ backgroundImage: 'repeating-linear-gradient(180deg, transparent 0 23px, var(--parchment-line) 23px 24px)' }} />
+                  <span className="relative hebrew text-[34px] sm:text-[44px] px-3 text-center leading-tight" style={{ color, fontWeight: 400 }}>{p?.heb || ''}</span>
+                </div>
+              </button>
+            )
           })}
-          {!profile.parasha_id && <span className="hebrew" style={{ color: 'var(--text-gold)' }}>—</span>}
-        </p>
+        </div>
+      ) : (
+        <div className="card mb-6 fade-up-1">
+          <EmptyState icon={BookOpen} title={t('ui_no_parasha_yet')} description={t('ui_no_parasha_yet_desc')}
+            action={<button onClick={() => navigate('/student/study')} className="btn btn-secondary">{t('all_parashot_btn')}</button>} />
+        </div>
+      )}
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 fade-up-2">
+        <div className="card p-5 flex items-center gap-4">
+          <IconTile icon={CalendarHeart} tone="gold" size={46} />
+          <div className="min-w-0">
+            <p className="text-[28px] font-semibold text-ink leading-none tabular-nums">{days !== null && days >= 0 ? days : '—'}</p>
+            <p className="text-[13px] text-ink-2 mt-1.5">{t('bar_mitzvah')} · {t('days_left')}</p>
+            {profile.bar_mitzvah && (
+              <p className="text-[12px] text-ink-3 truncate">{new Date(profile.bar_mitzvah).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            )}
+          </div>
+        </div>
+        <div className="card p-5 flex items-center gap-4">
+          <IconTile icon={ClipboardList} tone="accent" size={46} />
+          <div className="min-w-0 flex-1">
+            <p className="text-[28px] font-semibold text-ink leading-none tabular-nums">{progress}%</p>
+            <p className="text-[13px] text-ink-2 mt-1.5">{t('hw_done')} · {done}/{deberes.length}</p>
+            <Progress value={progress} className="mt-2" label={t('hw_done')} />
+          </div>
+        </div>
+        <div className="card p-5 flex items-center gap-4">
+          <IconTile icon={Headphones} tone="neutral" size={46} />
+          <div className="min-w-0">
+            <p className="text-[28px] font-semibold text-ink leading-none tabular-nums">{totalListens}</p>
+            <p className="text-[13px] text-ink-2 mt-1.5">{t('listens')}</p>
+            <p className="text-[12px] text-ink-3 inline-flex items-center gap-1"><Flame size={12} />{profile.streak || 0} {t('days')} · {t('streak').toLowerCase()}</p>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 fade-up-2">
-        <div className="rounded-2xl p-6 relative overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, rgba(108,51,230,0.2) 0%, rgba(108,51,230,0.06) 100%)', border: '1px solid rgba(108,51,230,0.25)' }}>
-          <div className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-20 pointer-events-none"
-            style={{ background: 'radial-gradient(circle, #6c33e6, transparent)', filter: 'blur(20px)', transform: 'translate(30%, -30%)' }} />
-          <p className="text-xs mb-2" style={{ color: 'rgba(108,51,230,0.7)' }}>{t('bar_mitzvah')}</p>
-          {days !== null ? (
-            <>
-              <div className="text-5xl font-light mb-1" style={{ color: '#6c33e6' }}>{days}</div>
-              <p className="text-xs" style={{ color: 'rgba(108,51,230,0.5)' }}>{t('days_left')}</p>
-            </>
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        {/* Homework */}
+        <section className="card xl:col-span-7 fade-up-3 self-start">
+          <div className="p-5 sm:p-6 pb-3">
+            <CardHeader title={t('my_homework')}
+              action={<span className={`badge ${pending ? 'badge-warning' : 'badge-success'} badge-dot`}>{pending} {t('pending')}</span>} />
+          </div>
+          {deberes.length === 0 ? (
+            <EmptyState icon={ClipboardList} title={t('no_hw')} className="pt-4" />
           ) : (
-            <div className="text-2xl font-light" style={{ color: '#6c33e6' }}>—</div>
-          )}
-          {profile.bar_mitzvah && (
-            <div className="mt-3 pt-2.5" style={{ borderTop: '1px solid rgba(108,51,230,0.15)' }}>
-              <p className="text-xs mb-0.5" style={{ color: 'rgba(108,51,230,0.5)' }}>{t('bar_mitzvah_date')}</p>
-              <p className="text-sm font-semibold" style={{ color: '#8b5cf6' }}>
-                {new Date(profile.bar_mitzvah).toLocaleDateString(t('date_locale'), { day: 'numeric', month: 'long', year: 'numeric' })}
-              </p>
-            </div>
-          )}
-        </div>
-
-        <div className="rounded-2xl p-6 relative overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, rgba(249,184,0,0.12) 0%, rgba(249,184,0,0.04) 100%)', border: '1px solid rgba(249,184,0,0.2)' }}>
-          <p className="text-xs mb-2" style={{ color: 'var(--text-gold)' }}>{t('my_parasha')}</p>
-          {(() => {
-            const all = [profile.parasha_id, ...(profile.extra_parasha_ids || [])].filter(Boolean)
-            if (!all.length) return <div className="text-3xl font-light mb-1" style={{ color: '#d97706' }}>—</div>
-            return all.map((id, i) => {
-              const p = resolveAnyParasha(id)
-              return (
-                <div key={id} className={i > 0 ? 'mt-1 pt-1' : ''} style={i > 0 ? { borderTop: '1px solid rgba(249,184,0,0.15)' } : {}}>
-                  <div className={`font-light`} style={{ color: '#d97706', fontSize: all.length > 1 ? '1.35rem' : '1.875rem' }}>{p?.name || id}</div>
-                  {p?.heb && <div className="hebrew text-xs mt-0.5" style={{ color: 'rgba(249,184,0,0.55)' }}>{p.heb}</div>}
-                </div>
-              )
-            })
-          })()}
-          <p className="text-xs mt-2" style={{ color: 'var(--text-3)' }}>{t('assigned_parasha')}</p>
-        </div>
-
-        <div className="rounded-2xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{t('hw_done')}</p>
-          <div className="flex items-end gap-2 mb-3">
-            <span className="text-4xl font-light" style={{ color: '#0d9488' }}>{progress}%</span>
-            <span className="text-xs pb-1.5" style={{ color: 'var(--text-muted)' }}>{done}/{deberes.length}</span>
-          </div>
-          <div className="w-full h-1.5 rounded-full" style={{ background: 'var(--border)' }}>
-            <div className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #6c33e6, #2dd4bf)' }} />
-          </div>
-        </div>
-      </div>
-
-      {(() => {
-        const allIds = [profile.parasha_id, ...(profile.extra_parasha_ids || [])].filter(Boolean)
-        const resolved = allIds.map(id => resolveAnyParasha(id)).filter(Boolean)
-        if (!resolved.length) return null
-
-        const arrowIcon = (color) => (
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-            <path d="M6 4l4 4-4 4" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        )
-
-        // Colors cycle for extra parashiot
-        const PCOLS = [
-          { bg: 'rgba(108,51,230,0.18)', bgHover: 'rgba(108,51,230,0.28)', border: 'rgba(108,51,230,0.3)', icon: 'rgba(108,51,230,0.2)', iconBorder: 'rgba(108,51,230,0.3)', text: '#8b5cf6', stroke: '#8b5cf6' },
-          { bg: 'rgba(249,184,0,0.12)',   bgHover: 'rgba(249,184,0,0.22)',   border: 'rgba(249,184,0,0.3)',   icon: 'rgba(249,184,0,0.2)',  iconBorder: 'rgba(249,184,0,0.3)',  text: '#d97706', stroke: '#d97706' },
-          { bg: 'rgba(45,212,191,0.1)',   bgHover: 'rgba(45,212,191,0.18)',  border: 'rgba(45,212,191,0.28)', icon: 'rgba(45,212,191,0.2)', iconBorder: 'rgba(45,212,191,0.3)', text: '#0d9488', stroke: '#0d9488' },
-        ]
-
-        return (
-          <div className={`mb-6 fade-up-3 ${resolved.length > 1 ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : ''}`}>
-            {resolved.map((p, i) => {
-              const c = PCOLS[i % PCOLS.length]
-              const label = i === 0 ? t('go_my_parasha') : 'Ir a mi perashá'
-              return (
-                <button key={p.id}
-                  onClick={() => navigate(`/student/study/${p.id}`)}
-                  className="w-full flex items-center justify-between gap-4 p-4 rounded-2xl transition-all text-left"
-                  style={{ background: `linear-gradient(135deg, ${c.bg} 0%, rgba(0,0,0,0) 100%)`, border: `1px solid ${c.border}` }}
-                  onMouseEnter={e => { e.currentTarget.style.background = `linear-gradient(135deg, ${c.bgHover} 0%, rgba(0,0,0,0) 100%)` }}
-                  onMouseLeave={e => { e.currentTarget.style.background = `linear-gradient(135deg, ${c.bg} 0%, rgba(0,0,0,0) 100%)` }}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: c.icon, border: `1px solid ${c.iconBorder}` }}>
-                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                        <path d="M3 9h12M9 3l6 6-6 6" stroke={c.stroke} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                    <div className="text-left">
-                      <p className="text-xs font-semibold" style={{ color: c.text }}>{label}</p>
-                      <p className="text-xs mt-0.5">
-                        <span className="hebrew" style={{ color: 'var(--text-gold)' }}>{p.name}</span>
-                      </p>
-                      {p.heb && <p className="hebrew text-xs" style={{ color: 'var(--text-muted)', fontSize: '10px' }}>{p.heb}</p>}
-                    </div>
-                  </div>
-                  {arrowIcon(c.stroke)}
-                </button>
-              )
-            })}
-          </div>
-        )
-      })()}
-
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-3 fade-up-3">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{t('my_homework')}</h2>
-            <span className="text-xs px-2.5 py-1 rounded-full"
-              style={{ background: 'rgba(108,51,230,0.12)', color: '#6c33e6', border: '1px solid rgba(108,51,230,0.2)' }}>
-              {deberes.filter(d => d.status !== 'submitted').length} {t('pending')}
-            </span>
-          </div>
-          {deberes.length === 0 && (
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('no_hw')}</p>
-          )}
-          <div className="flex flex-col gap-2.5">
-            {deberes.map(deber => {
-              const isDone = deber.status === 'submitted'
-              const p = priorityColors.medium
-              return (
-                <div key={deber.id}
-                  onClick={() => handleDeberClick(deber)}
-                  className={`flex items-start gap-3.5 p-4 rounded-xl transition-all duration-200 ${deber.parasha_id ? 'cursor-pointer' : ''}`}
-                  style={{
-                    background: 'var(--bg-card)',
-                    border: `1px solid ${isDone ? 'var(--border-subtle)' : 'var(--border)'}`,
-                    opacity: isDone ? 0.55 : 1,
-                  }}>
-                  <div className="mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-all"
-                    style={{ borderColor: isDone ? '#6c33e6' : 'var(--border)', background: isDone ? '#6c33e6' : 'transparent' }}>
-                    {isDone && (
-                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                        <path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium" style={{ color: 'var(--text)', textDecoration: isDone ? 'line-through' : 'none' }}>
-                      {deber.task}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      {(() => {
-                        const parasha = deber.parasha_id ? PARASHOT.find(p => p.id === deber.parasha_id) : null
-                        const aliyahN = parasha && deber.aliyah_idx != null ? parasha.aliyot[deber.aliyah_idx]?.n : null
-                        if (!parasha) return null
-                        return (
-                          <span className="text-xs px-2 py-0.5 rounded-md flex items-center gap-1"
-                            style={{ background: 'rgba(108,51,230,0.1)', color: '#6c33e6', border: '1px solid rgba(108,51,230,0.2)' }}>
-                            <span className="hebrew">{parasha.heb}</span>
-                            {aliyahN != null && <span>· {aliyahN === 8 ? 'Maftir' : `${aliyahN}ª`}</span>}
-                            {deber.require_audio && !isDone && (
-                              <svg width="9" height="9" viewBox="0 0 9 9" fill="none" style={{ marginLeft: 2 }}>
-                                <rect x="3" y="0.5" width="3" height="5" rx="1.5" stroke="currentColor" strokeWidth="1"/>
-                                <path d="M1 4.5c0 1.9 1.6 3.5 3.5 3.5S8 6.4 8 4.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-                              </svg>
-                            )}
-                          </span>
-                        )
-                      })()}
-                      {deber.subject && (
-                        <span className="text-xs px-2 py-0.5 rounded-md"
-                          style={{ background: p.bg, border: `1px solid ${p.border}`, color: p.text }}>
-                          {deber.subject}
+            <ul>
+              {deberes.map(deber => {
+                const isDone = deber.status === 'submitted'
+                const parasha = deber.parasha_id ? PARASHOT.find(p => p.id === deber.parasha_id) : null
+                const aliyahN = parasha && deber.aliyah_idx != null ? parasha.aliyot[deber.aliyah_idx]?.n : null
+                return (
+                  <li key={deber.id} style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                    <button onClick={() => handleDeberClick(deber)} disabled={!deber.parasha_id}
+                      className={`w-full flex items-start gap-3.5 px-5 sm:px-6 py-4 text-start transition-colors ${deber.parasha_id ? 'hover:bg-surface-2' : 'cursor-default'}`}>
+                      <span className="mt-0.5 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={isDone
+                          ? { background: 'rgb(var(--success-rgb))', color: '#fff' }
+                          : { border: '1.5px solid var(--border-strong)' }}>
+                        {isDone && <Check size={12} strokeWidth={3} />}
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span className={`block text-[14px] font-medium ${isDone ? 'text-ink-3 line-through' : 'text-ink'}`}>{deber.task}</span>
+                        <span className="flex items-center gap-1.5 mt-1.5 flex-wrap text-[12px]">
+                          {parasha && (
+                            <span className="badge">
+                              <span className="hebrew-ui text-[13px]">{parasha.heb}</span>
+                              {aliyahN != null && <span>· {aliyahN === 8 ? 'Maftir' : `${aliyahN}ª`}</span>}
+                              {deber.require_audio && !isDone && <Mic size={11} />}
+                            </span>
+                          )}
+                          {deber.subject && <span className="badge max-w-[240px] truncate">{deber.subject}</span>}
+                          {deber.due && (
+                            <span className="text-ink-3">{t('hw_due_short')}: {new Date(deber.due).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}</span>
+                          )}
                         </span>
-                      )}
-                      {deber.due && (
-                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          {t('hw_due_short')}: {new Date(deber.due).toLocaleDateString(t('date_locale'), { day: 'numeric', month: 'short' })}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
+                      </span>
+                      {deber.parasha_id && <ChevronRight size={16} className="text-ink-4 mt-1 rtl:rotate-180" />}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </section>
 
-        <div className="lg:col-span-2 flex flex-col gap-5 fade-up-4">
-          <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>{t('my_data')}</p>
-            <div className="flex flex-col gap-0">
-              {[
-                { label: t('name'), value: profile.name },
-                { label: t('bar_mitzvah'), value: profile.bar_mitzvah ? new Date(profile.bar_mitzvah).toLocaleDateString(t('date_locale'), { day: 'numeric', month: 'long', year: 'numeric' }) : '—' },
-                { label: 'Perashá', value: [profile.parasha_id, ...(profile.extra_parasha_ids || [])].filter(Boolean).map(id => resolveAnyParasha(id)?.name || id).join(' + ') || '—' },
-                { label: t('progress'), value: `${profile.progress || 0}%` },
-                { label: t('streak'), value: `${profile.streak || 0} ${t('days')} 🔥` },
-              ].map(item => (
-                <div key={item.label} className="flex justify-between items-center py-2"
-                  style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{item.label}</span>
-                  <span className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{item.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{t('my_teacher')}</p>
+        <aside className="xl:col-span-5 flex flex-col gap-6 fade-up-4">
+          {/* Teacher */}
+          <section className="card p-5 sm:p-6">
+            <h2 className="section-title mb-4">{t('my_teacher')}</h2>
             {teacherName ? (
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                  style={{ background: 'rgba(249,184,0,0.2)', color: '#d97706' }}>
-                  {teacherName.charAt(0)}
-                </div>
+              <div className="flex items-center gap-3.5">
+                <Avatar name={teacherName} size={44} />
                 <div>
-                  <div className="text-sm font-medium" style={{ color: 'var(--text)' }}>{teacherName}</div>
-                  <div className="text-xs" style={{ color: 'var(--text-gold)' }}>מוֹרֶה · {t('linked')}</div>
+                  <p className="text-[15px] font-medium text-ink">{teacherName}</p>
+                  <p className="text-[13px] text-ink-3 inline-flex items-center gap-1"><Link2 size={13} />{t('linked')}</p>
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  {t('link_teacher')}
-                </p>
+              <div className="flex flex-col gap-2.5">
+                <p className="text-[13px] text-ink-3">{t('link_teacher')}</p>
                 <div className="flex gap-2">
-                  <input
-                    value={teacherCode}
+                  <input value={teacherCode} maxLength={6} placeholder="AB3X7K" aria-label={t('teacher_code')}
                     onChange={e => { setTeacherCode(e.target.value.toUpperCase()); setLinkStatus(null) }}
-                    placeholder="Ej: AB3X7K"
-                    maxLength={6}
-                    className="flex-1 px-3 py-2 rounded-xl text-sm font-mono tracking-widest outline-none"
-                    style={{ background: 'var(--bg-card)', border: `1px solid ${linkStatus === 'error' ? '#ef4444' : 'var(--border)'}`, color: 'var(--text)' }}
                     onKeyDown={e => e.key === 'Enter' && linkTeacher()}
-                  />
-                  <button onClick={linkTeacher} disabled={linkStatus === 'loading' || !teacherCode}
-                    className="px-3 py-2 rounded-xl text-xs font-semibold"
-                    style={{ background: 'rgba(108,51,230,0.15)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.25)', opacity: !teacherCode ? 0.5 : 1 }}>
+                    className="input flex-1 font-mono tracking-[0.25em] uppercase" dir="ltr"
+                    style={linkStatus === 'error' ? { borderColor: 'rgb(var(--danger-rgb))' } : undefined} />
+                  <button onClick={linkTeacher} disabled={linkStatus === 'loading' || !teacherCode} className="btn btn-primary">
                     {linkStatus === 'loading' ? '…' : t('join')}
                   </button>
                 </div>
-                {linkStatus === 'error' && (
-                  <p className="text-xs" style={{ color: '#ef4444' }}>{t('code_not_found')}</p>
-                )}
+                {linkStatus === 'error' && <p className="text-[13px] text-danger">{t('code_not_found')}</p>}
               </div>
             )}
-          </div>
+          </section>
 
-          <div className="rounded-2xl p-5"
-            style={{ background: 'linear-gradient(135deg, rgba(249,184,0,0.1), rgba(249,184,0,0.03))', border: '1px solid rgba(249,184,0,0.15)' }}>
-            <p className="text-xs mb-3" style={{ color: 'var(--text-gold)' }}>{t('study_streak')}</p>
-            <div className="flex items-center gap-2">
-              <span className="text-3xl">🔥</span>
-              <div>
-                <span className="text-2xl font-light" style={{ color: '#d97706' }}>{profile.streak || 0} {t('days')}</span>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
-                  {(profile.streak || 0) > 5 ? t('keep_going') : t('start_streak')}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <AccountSection user={user} />
-
-          {/* Achievements */}
-          <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{t('achievements')}</p>
-            <div className="flex items-center gap-4 mb-4 mt-3">
-              <StatPill icon="🎧" value={totalListens} label="escuchas" />
-              <StatPill icon="✅" value={done} label="deberes" />
-              <StatPill icon="🔥" value={profile.streak || 0} label="días racha" />
+          {/* Achievements — quiet, informative */}
+          <section className="card p-5 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="section-title">{t('achievements')}</h2>
+              <Award size={18} className="text-ink-4" />
             </div>
             <div className="grid grid-cols-3 gap-2">
               {ACHIEVEMENTS.map(a => {
                 const unlocked = a.check({ totalListens, homeworkDone: done, streak: profile.streak || 0 })
+                const Icon = a.icon
                 return (
                   <div key={a.id} title={t(a.descKey)}
-                    className="flex flex-col items-center gap-1 p-2.5 rounded-xl transition-all"
-                    style={{
-                      background: unlocked ? 'rgba(108,51,230,0.1)' : 'var(--bg)',
-                      border: `1px solid ${unlocked ? 'rgba(108,51,230,0.25)' : 'var(--border-subtle)'}`,
-                      opacity: unlocked ? 1 : 0.4,
-                    }}>
-                    <span style={{ fontSize: '20px', filter: unlocked ? 'none' : 'grayscale(1)' }}>{a.icon}</span>
-                    <span className="text-center leading-tight" style={{ fontSize: '9px', color: unlocked ? 'var(--text-2)' : 'var(--text-muted)' }}>
-                      {t(a.labelKey)}
-                    </span>
+                    className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl text-center"
+                    style={unlocked
+                      ? { background: 'rgba(var(--gold-rgb),0.1)', color: 'var(--text-gold)' }
+                      : { background: 'var(--surface-2)', color: 'var(--text-muted)' }}>
+                    <Icon size={18} strokeWidth={1.7} />
+                    <span className="text-[11px] leading-tight" style={{ color: unlocked ? 'var(--text-2)' : 'var(--text-muted)' }}>{t(a.labelKey)}</span>
                   </div>
                 )
               })}
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+          </section>
 
-function StatPill({ icon, value, label }) {
-  return (
-    <div className="flex flex-col items-center gap-0.5">
-      <span style={{ fontSize: '16px' }}>{icon}</span>
-      <span className="text-lg font-light" style={{ color: 'var(--text)' }}>{value}</span>
-      <span className="text-xs" style={{ color: 'var(--text-muted)', fontSize: '9px' }}>{label}</span>
+          <AccountSection user={user} />
+        </aside>
+      </div>
     </div>
   )
 }

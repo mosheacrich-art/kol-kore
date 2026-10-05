@@ -110,12 +110,12 @@ function NameModal({ file, status, errorMsg, onSubmit, onCancel }) {
         />
 
         {errorMsg && (
-          <p className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444' }}>
+          <p className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(var(--danger-rgb),0.1)', color: 'rgb(var(--danger-rgb))' }}>
             {errorMsg}
           </p>
         )}
         {status === 'done' && (
-          <p className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e' }}>
+          <p className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(var(--success-rgb),0.1)', color: 'rgb(var(--success-rgb))' }}>
             Subido y sincronizado.
           </p>
         )}
@@ -130,13 +130,13 @@ function NameModal({ file, status, errorMsg, onSubmit, onCancel }) {
             <button onClick={() => onSubmit(label.trim())} disabled={!label.trim() || busy}
               className="px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2"
               style={{
-                background: 'rgba(245,158,11,0.15)', color: '#f59e0b',
-                border: '1px solid rgba(245,158,11,0.3)',
+                background: 'rgba(var(--warning-rgb),0.15)', color: 'rgb(var(--warning-rgb))',
+                border: '1px solid rgba(var(--warning-rgb),0.3)',
                 opacity: (!label.trim() || busy) ? 0.45 : 1,
               }}>
               {busy && (
                 <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin"
-                  style={{ borderColor: 'rgba(245,158,11,0.3)', borderTopColor: '#f59e0b' }} />
+                  style={{ borderColor: 'rgba(var(--warning-rgb),0.3)', borderTopColor: 'rgb(var(--warning-rgb))' }} />
               )}
               {status === 'uploading' ? 'Subiendo…' : status === 'syncing' ? 'Sincronizando…' : 'Subir'}
             </button>
@@ -179,7 +179,7 @@ export function AdminUploadButton({ parashaId, aliyahIdx, aliyahRef, onSaved, no
       <button
         onClick={() => fileRef.current?.click()}
         className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
-        style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)' }}>
+        style={{ background: 'rgba(var(--warning-rgb),0.12)', color: 'rgb(var(--warning-rgb))', border: '1px solid rgba(var(--warning-rgb),0.3)' }}>
         <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
           <path d="M5.5 1v6M2.5 4l3-3 3 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
           <path d="M1 9h9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
@@ -258,16 +258,16 @@ export function AdminRecordButton({ parashaId, aliyahIdx, aliyahRef, onSaved, no
   if (recState === 'recording') {
     return (
       <div className="flex items-center gap-2">
-        <div className="w-2 h-2 rounded-full animate-pulse flex-shrink-0" style={{ background: '#ef4444' }} />
-        <span className="text-xs font-mono tabular-nums font-medium" style={{ color: '#ef4444' }}>
+        <div className="w-2 h-2 rounded-full animate-pulse flex-shrink-0" style={{ background: 'rgb(var(--danger-rgb))' }} />
+        <span className="text-xs font-mono tabular-nums font-medium" style={{ color: 'rgb(var(--danger-rgb))' }}>
           {fmtSec(recSeconds)}
         </span>
         <button
           onClick={stopRec}
           className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
-          style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}>
+          style={{ background: 'rgba(var(--danger-rgb),0.12)', color: 'rgb(var(--danger-rgb))', border: '1px solid rgba(var(--danger-rgb),0.3)' }}>
           <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-            <rect x="1" y="1" width="7" height="7" rx="1" fill="#ef4444"/>
+            <rect x="1" y="1" width="7" height="7" rx="1" fill="rgb(var(--danger-rgb))"/>
           </svg>
           Parar
         </button>
@@ -281,7 +281,7 @@ export function AdminRecordButton({ parashaId, aliyahIdx, aliyahRef, onSaved, no
         <button
           onClick={startRec}
           className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
-          style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.25)' }}>
+          style={{ background: 'rgba(var(--danger-rgb),0.1)', color: 'rgb(var(--danger-rgb))', border: '1px solid rgba(var(--danger-rgb),0.25)' }}>
           <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
             <rect x="3" y="0.5" width="5" height="7" rx="2.5" fill="currentColor"/>
             <path d="M1.5 6a4 4 0 008 0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
@@ -290,7 +290,7 @@ export function AdminRecordButton({ parashaId, aliyahIdx, aliyahRef, onSaved, no
           Grabar admin
         </button>
         {micError && (
-          <span className="text-[10px] px-2 py-1 rounded-lg" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444' }}>
+          <span className="text-[10px] px-2 py-1 rounded-lg" style={{ background: 'rgba(var(--danger-rgb),0.1)', color: 'rgb(var(--danger-rgb))' }}>
             {micError}
           </span>
         )}

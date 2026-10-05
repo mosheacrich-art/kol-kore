@@ -1,3 +1,4 @@
+import { Moon, Sun } from 'lucide-react'
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
@@ -149,9 +150,9 @@ export default function AdminPage() {
   const parashaName = (id) => PARASHOT.find(p => p.id === id)?.name || id
   const anchorColor = (pct) => {
     if (pct == null) return 'var(--text-muted)'
-    if (pct >= 0.7) return '#22c55e'
-    if (pct >= 0.4) return '#f59e0b'
-    return '#ef4444'
+    if (pct >= 0.7) return 'rgb(var(--success-rgb))'
+    if (pct >= 0.4) return 'rgb(var(--warning-rgb))'
+    return 'rgb(var(--danger-rgb))'
   }
 
   const selectedParasha = PARASHOT.find(p => p.id === upParasha)
@@ -165,13 +166,12 @@ export default function AdminPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <p className="text-xs tracking-widest uppercase mb-1" style={{ color: 'var(--text-gold)' }}>Admin · Perashapp</p>
-            <h1 className="text-2xl font-light" style={{ color: 'var(--text)', letterSpacing: '-0.5px' }}>{t('admin_panel_title')}</h1>
+            <p className="eyebrow mb-1">Admin · Perashapp</p>
+            <h1 className="page-title">{t('admin_panel_title')}</h1>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={toggle} className="p-2 rounded-xl text-xs"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-3)' }}>
-              {isDark ? '☀️' : '🌙'}
+            <button onClick={toggle} className="btn btn-secondary btn-icon" aria-label="Theme">
+              {isDark ? <Sun size={17} /> : <Moon size={17} />}
             </button>
             <button onClick={tab === 'users' ? loadUsers : loadAudios} disabled={fetching || audiosFetching}
               className="flex items-center gap-2 text-xs px-3 py-2 rounded-xl transition-all"
@@ -189,9 +189,9 @@ export default function AdminPage() {
             <button key={id} onClick={() => setTab(id)}
               className="text-xs px-4 py-2 rounded-lg font-medium transition-all"
               style={{
-                background: tab === id ? 'rgba(108,51,230,0.15)' : 'transparent',
-                color: tab === id ? '#8b5cf6' : 'var(--text-3)',
-                border: tab === id ? '1px solid rgba(108,51,230,0.25)' : '1px solid transparent',
+                background: tab === id ? 'rgba(var(--accent-rgb),0.15)' : 'transparent',
+                color: tab === id ? 'rgb(var(--accent-rgb))' : 'var(--text-3)',
+                border: tab === id ? '1px solid rgba(var(--accent-rgb),0.25)' : '1px solid transparent',
               }}>
               {label}
             </button>
@@ -252,7 +252,7 @@ export default function AdminPage() {
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2.5">
                               <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                                style={{ background: 'rgba(108,51,230,0.2)', color: '#a78bfa' }}>
+                                style={{ background: 'rgba(var(--accent-rgb),0.2)', color: 'rgb(var(--accent-rgb))' }}>
                                 {u.name?.[0]?.toUpperCase() ?? '?'}
                               </div>
                               <span className="font-medium text-xs" style={{ color: 'var(--text)' }}>{u.name ?? '—'}</span>
@@ -261,13 +261,13 @@ export default function AdminPage() {
                           <td className="px-4 py-3"><span className="text-xs" style={{ color: 'var(--text-3)' }}>{u.email ?? '—'}</span></td>
                           <td className="px-4 py-3">
                             <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                              style={{ background: u.role === 'teacher' ? 'rgba(34,197,94,0.1)' : 'rgba(108,51,230,0.1)', color: u.role === 'teacher' ? '#22c55e' : '#8b5cf6' }}>
+                              style={{ background: u.role === 'teacher' ? 'rgba(var(--success-rgb),0.1)' : 'rgba(var(--accent-rgb),0.1)', color: u.role === 'teacher' ? '#248054' : '#2F5E93' }}>
                               {u.role === 'teacher' ? t('role_teacher_label') : t('role_student_label')}
                             </span>
                           </td>
                           <td className="px-4 py-3">
                             <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                              style={{ background: isActive ? 'rgba(34,197,94,0.1)' : 'rgba(100,100,100,0.1)', color: isActive ? '#22c55e' : 'var(--text-muted)' }}>
+                              style={{ background: isActive ? 'rgba(var(--success-rgb),0.1)' : 'rgba(100,100,100,0.1)', color: isActive ? 'rgb(var(--success-rgb))' : 'var(--text-muted)' }}>
                               {u.subscription_status ?? t('admin_no_subscription')}
                             </span>
                           </td>
@@ -277,11 +277,11 @@ export default function AdminPage() {
                               <div className="flex items-center gap-2">
                                 <button disabled={sending[u.id]} onClick={() => sendWelcome(u.id, u.subscription_plan || 'monthly')}
                                   className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5"
-                                  style={{ background: sending[u.id] ? 'var(--bg-deep)' : 'rgba(108,51,230,0.1)', color: sending[u.id] ? 'var(--text-muted)' : '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)', opacity: sending[u.id] ? 0.7 : 1 }}>
+                                  style={{ background: sending[u.id] ? 'var(--bg-deep)' : 'rgba(var(--accent-rgb),0.1)', color: sending[u.id] ? 'var(--text-muted)' : 'rgb(var(--accent-rgb))', border: '1px solid rgba(var(--accent-rgb),0.2)', opacity: sending[u.id] ? 0.7 : 1 }}>
                                   {sending[u.id] ? <><MiniSpinner /> {t('admin_sending')}</> : <>✉️ {t('admin_send_welcome')}</>}
                                 </button>
-                                {result === 'ok' && <span className="text-xs" style={{ color: '#22c55e' }}>{t('admin_sent_ok')}</span>}
-                                {result === 'error' && <span className="text-xs" style={{ color: '#ef4444' }}>✗ Error</span>}
+                                {result === 'ok' && <span className="text-xs" style={{ color: 'rgb(var(--success-rgb))' }}>{t('admin_sent_ok')}</span>}
+                                {result === 'error' && <span className="text-xs" style={{ color: 'rgb(var(--danger-rgb))' }}>✗ Error</span>}
                               </div>
                             ) : <span className="text-xs" style={{ color: 'var(--text-muted)' }}>—</span>}
                           </td>
@@ -352,15 +352,15 @@ export default function AdminPage() {
                   {upFile && <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{upFile.name} — {(upFile.size / 1e6).toFixed(1)} MB</p>}
                 </div>
 
-                {upError && <p className="text-xs px-1" style={{ color: '#ef4444' }}>{upError}</p>}
-                {upSuccess && <p className="text-xs px-1" style={{ color: '#22c55e' }}>{upSuccess}</p>}
+                {upError && <p className="text-xs px-1" style={{ color: 'rgb(var(--danger-rgb))' }}>{upError}</p>}
+                {upSuccess && <p className="text-xs px-1" style={{ color: 'rgb(var(--success-rgb))' }}>{upSuccess}</p>}
 
                 <button type="submit" disabled={uploading || !upFile || !upParasha}
                   className="self-start text-xs px-5 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2"
                   style={{
-                    background: uploading || !upFile || !upParasha ? 'var(--bg-deep)' : 'rgba(108,51,230,0.15)',
-                    color: uploading || !upFile || !upParasha ? 'var(--text-muted)' : '#8b5cf6',
-                    border: '1px solid rgba(108,51,230,0.25)',
+                    background: uploading || !upFile || !upParasha ? 'var(--bg-deep)' : 'rgba(var(--accent-rgb),0.15)',
+                    color: uploading || !upFile || !upParasha ? 'var(--text-muted)' : 'rgb(var(--accent-rgb))',
+                    border: '1px solid rgba(var(--accent-rgb),0.25)',
                     opacity: uploading || !upFile || !upParasha ? 0.6 : 1,
                   }}>
                   {uploading ? <><MiniSpinner /> {t('admin_uploading')}</> : t('admin_upload_btn')}
@@ -415,7 +415,7 @@ export default function AdminPage() {
                         </td>
                         <td className="px-4 py-2.5">
                           <span className="text-xs px-2 py-0.5 rounded-full"
-                            style={{ background: 'rgba(108,51,230,0.1)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.15)' }}>
+                            style={{ background: 'rgba(var(--accent-rgb),0.1)', color: 'rgb(var(--accent-rgb))', border: '1px solid rgba(var(--accent-rgb),0.15)' }}>
                             {a.label}
                           </span>
                         </td>
@@ -426,8 +426,8 @@ export default function AdminPage() {
                         </td>
                         <td className="px-4 py-2.5">
                           {a.needs_review
-                            ? <span className="text-xs" style={{ color: '#f59e0b' }}>⚠ Revisar</span>
-                            : <span className="text-xs" style={{ color: '#22c55e' }}>✓ OK</span>}
+                            ? <span className="text-xs" style={{ color: 'rgb(var(--warning-rgb))' }}>⚠ Revisar</span>
+                            : <span className="text-xs" style={{ color: 'rgb(var(--success-rgb))' }}>✓ OK</span>}
                         </td>
                         <td className="px-4 py-2.5">
                           <a href={a.public_url} target="_blank" rel="noopener noreferrer"
@@ -454,14 +454,14 @@ export default function AdminPage() {
 function Spinner() {
   return (
     <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin"
-      style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#6c33e6' }} />
+      style={{ borderColor: 'rgba(var(--accent-rgb),0.3)', borderTopColor: 'rgb(var(--accent-rgb))' }} />
   )
 }
 
 function MiniSpinner() {
   return (
     <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin"
-      style={{ borderColor: 'rgba(139,92,246,0.4)', borderTopColor: '#8b5cf6' }} />
+      style={{ borderColor: 'rgba(var(--accent-rgb),0.4)', borderTopColor: 'rgb(var(--accent-rgb))' }} />
   )
 }
 

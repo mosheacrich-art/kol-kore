@@ -1,27 +1,32 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { useTheme } from '../../context/ThemeContext'
+import { AnimatePresence, motion } from 'framer-motion'
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Maximize2, Minimize2, PenLine } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import ParashaReader from '../../components/ParashaReader'
 import { useSiddurIndex, useSiddurShabbatIndex, BERAJOT_INLINE, SHEMA_TITLES } from '../../hooks/useSefaria'
 import HomeworkQuickModal from '../../components/HomeworkQuickModal'
 import { tSef } from '../../data/sefariaTitles'
+import { useShell } from '../../components/shell/AppShell'
+import { EmptyState, PageHeader, SearchInput, Spinner } from '../../components/ui'
+import { Section, ItemCard } from './Study'
 
-const ADMIN_USER_ID = '1f4d0329-ddf5-48a4-965f-5f37d7416447'
+const GOLD = '#B7862E'
+const TEAL = '#2F7F6A'
 
 const IMPRESCINDIBLES = [
-  { ref: 'I Chronicles 16:8-36',  name: 'Hodu',      heTitle: 'הוֹדוּ',      color: '#d97706' },
-  { ref: 'Psalms 145',            name: 'Ashrei',     heTitle: 'אַשְׁרֵי',     color: '#d97706' },
-  { ref: 'Psalms 150',            name: 'Halleluyah', heTitle: 'הַלְלוּיָהּ', color: '#d97706' },
-  { ref: 'Exodus 15:1-19',        name: 'Az Yashir',  heTitle: 'אָז יָשִׁיר', color: '#d97706' },
-  { ref: 'Deuteronomy 6:5-9',     name: "Ve'ahavta",  heTitle: 'וְאָהַבְתָּ', color: '#10b981' },
-  { ref: 'Deuteronomy 11:13-21',  name: 'Vehaya',     heTitle: 'וְהָיָה',     color: '#10b981' },
-  { ref: 'Numbers 15:37-41',      name: 'Vayomer',    heTitle: 'וַיֹּאמֶר',   color: '#10b981' },
+  { ref: 'I Chronicles 16:8-36',  name: 'Hodu',      heTitle: 'הוֹדוּ',      color: GOLD },
+  { ref: 'Psalms 145',            name: 'Ashrei',     heTitle: 'אַשְׁרֵי',     color: GOLD },
+  { ref: 'Psalms 150',            name: 'Halleluyah', heTitle: 'הַלְלוּיָהּ', color: GOLD },
+  { ref: 'Exodus 15:1-19',        name: 'Az Yashir',  heTitle: 'אָז יָשִׁיר', color: GOLD },
+  { ref: 'Deuteronomy 6:5-9',     name: "Ve'ahavta",  heTitle: 'וְאָהַבְתָּ', color: TEAL },
+  { ref: 'Deuteronomy 11:13-21',  name: 'Vehaya',     heTitle: 'וְהָיָה',     color: TEAL },
+  { ref: 'Numbers 15:37-41',      name: 'Vayomer',    heTitle: 'וַיֹּאמֶר',   color: TEAL },
 ]
 const IMPRESCINDIBLES_MAP = Object.fromEntries(IMPRESCINDIBLES.map(s => [s.ref, s]))
 
-export default function TefilaStudy({ basePath = '/student/tefila' }) {
+export default function TefilaStudy({ basePath = '/student/tefila' }) { // eslint-disable-line no-unused-vars
   const [searchParams, setSearchParams] = useSearchParams()
   const { profile } = useAuth()
 
@@ -45,7 +50,7 @@ export default function TefilaStudy({ basePath = '/student/tefila' }) {
         onNavigate={r => setSearchParams({ d: 'imprescindibles', r })}
       />
     )
-    return <ImprescindiblesListView onSelectRef={r => setSearchParams({ d: 'imprescindibles', r })} />
+    return <ImprescindiblesListView onSelectRef={r => setSearchParams({ d: 'imprescindibles', r })} onChangeDay={toChooser} />
   }
 
   // 3. Reader for one section / trozo
@@ -58,90 +63,56 @@ export default function TefilaStudy({ basePath = '/student/tefila' }) {
   )
 
   // 4. Section list (Shabbat or weekday)
-  if (day === 'shabat')
-    return <SiddurShabbatListView nusach="sefard" onSelectRef={r => setSearchParams({ d: 'shabat', r })}
-      onChangeNusach={toChooser} onChangeDay={toChooser} initialSearch={q || ''} />
-  return <SiddurListView nusach="sefard" onSelectRef={r => setSearchParams({ d: 'semana', r })}
-    onChangeNusach={toChooser} onChangeDay={toChooser} initialSearch={q || ''} />
+  return (
+    <SiddurListView key={day} shabbat={day === 'shabat'} nusach="sefard"
+      onSelectRef={r => setSearchParams({ d: day, r })}
+      onChangeDay={toChooser} initialSearch={q || ''} />
+  )
 }
 
 // ── Day chooser (Siddur Sefard) ───────────────────────────────────────────
 
 function DayChooser({ onPick }) {
   const { t } = useLang()
+  const cards = [
+    { key: 'semana', title: t('siddur_semana_title'), heb: 'יְמוֹת הַשָּׁבוּעַ', subtitle: 'Shajarit · Minjá · Arvit', desc: t('siddur_semana_desc'), color: GOLD },
+    { key: 'shabat', title: t('siddur_shabat_title'), heb: 'שַׁבָּת קֹדֶשׁ', subtitle: 'Arvit · Shajarit · Musaf · Minjá', desc: t('siddur_shabat_desc'), color: '#3E5A9A' },
+    { key: 'imprescindibles', title: 'Imprescindibles', heb: 'עִקָּרִים', subtitle: "Ve'ahavta · Vehaya · Vayomer · Az Yashir", desc: t('ui_essentials_desc'), color: TEAL },
+  ]
   return (
-    <div className="p-4 sm:p-8 max-w-2xl">
-      <div className="mb-8 fade-up-1">
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          סִדּוּר · Siddur Sefard
-        </p>
-        <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>{t('nav_tefila')}</h1>
-        <p className="text-sm" style={{ color: 'var(--text-3)' }}>{t('siddur_day_subtitle')}</p>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 fade-up-2">
-        <NusachCard
-          title={t('siddur_semana_title')} heb="יְמוֹת הַשָּׁבוּעַ" subtitle="Shajarit · Minjá · Arvit"
-          desc={t('siddur_semana_desc')}
-          color="#f59e0b" onClick={() => onPick('semana')}
-        />
-        <NusachCard
-          title={t('siddur_shabat_title')} heb="שַׁבָּת קֹדֶשׁ" subtitle="Arvit · Shajarit · Musaf · Minjá"
-          desc={t('siddur_shabat_desc')}
-          color="#6366f1" onClick={() => onPick('shabat')}
-        />
-      </div>
-      <div className="mt-4 fade-up-3">
-        <NusachCard
-          title="Imprescindibles" heb="עִקָּרִים" subtitle="Ve'ahavta · Vehaya · Vayomer · Az Yashir"
-          desc="Los textos bíblicos fundamentales con taamim: los tres párrafos del Shemá y la Canción del Mar."
-          color="#10b981" onClick={() => onPick('imprescindibles')}
-        />
+    <div className="page page-narrow">
+      <PageHeader hebrew="סִדּוּר" eyebrow="Siddur Sefard" title={t('nav_tefila')} subtitle={t('siddur_day_subtitle')} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 fade-up-1">
+        {cards.map(c => (
+          <button key={c.key} onClick={() => onPick(c.key)}
+            className="card card-interactive group relative overflow-hidden text-start p-6 flex flex-col min-h-[260px]">
+            <span className="absolute inset-x-0 top-0 h-[3px]" style={{ background: c.color }} />
+            <span className="hebrew text-[30px] leading-tight" style={{ color: c.color, fontWeight: 400 }}>{c.heb}</span>
+            <span className="font-serif text-[20px] font-semibold text-ink mt-3">{c.title}</span>
+            <span className="text-[12px] text-ink-3 mt-1">{c.subtitle}</span>
+            <span className="text-[14px] text-ink-2 leading-relaxed mt-4 flex-1">{c.desc}</span>
+            <span className="inline-flex items-center gap-1.5 text-[13px] font-medium mt-5 text-ink-2 group-hover:text-ink">
+              {t('siddur_select')}<ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5 rtl:rotate-180" />
+            </span>
+          </button>
+        ))}
       </div>
     </div>
   )
 }
 
-// ── Nusach Picker ─────────────────────────────────────────────────────────
+// ── Siddur List View (weekday + Shabbat share one layout) ─────────────────
 
-function NusachCard({ title, heb, subtitle, desc, color, onClick }) {
-  const { t } = useLang()
-  const [hovered, setHovered] = useState(false)
-  return (
-    <button onClick={onClick}
-      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-      className="text-left p-6 rounded-2xl transition-all duration-200 w-full"
-      style={{
-        background: hovered ? `${color}10` : 'var(--bg-card)',
-        border: `1px solid ${hovered ? `${color}45` : 'var(--border)'}`,
-      }}>
-      <div className="hebrew text-2xl mb-2 leading-snug" style={{ color }}>{heb}</div>
-      <div className="font-semibold text-base mb-0.5" style={{ color: 'var(--text)' }}>{title}</div>
-      <div className="text-xs mb-3" style={{ color }}>{subtitle}</div>
-      <div className="text-xs leading-relaxed" style={{ color: 'var(--text-3)' }}>{desc}</div>
-      <div className="mt-5 flex items-center gap-1 text-xs font-medium" style={{ color }}>
-        {t('siddur_select')}
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </div>
-    </button>
-  )
-}
-
-// ── Siddur List View ──────────────────────────────────────────────────────
-
-function SiddurListView({ nusach, onSelectRef, onChangeNusach, onChangeDay, initialSearch = '' }) {
-  const { isDark } = useTheme()
+function SiddurListView({ shabbat, nusach, onSelectRef, onChangeDay, initialSearch = '' }) {
   const { t, lang } = useLang()
   const [search, setSearch] = useState(initialSearch)
-  const [openService, setOpenService] = useState('shacharit')
+  const [openService, setOpenService] = useState(shabbat ? null : 'shacharit')
   const [openSub, setOpenSub] = useState(null)
 
-  const { services, loading, error } = useSiddurIndex(nusach)
-
-  const cardDefault = isDark
-    ? { bg: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.05)' }
-    : { bg: 'rgba(0,0,0,0.03)', border: 'rgba(0,0,0,0.07)' }
+  const weekday = useSiddurIndex(shabbat ? null : nusach)
+  const shab = useSiddurShabbatIndex(shabbat ? nusach : null)
+  const { services, loading: hookLoading, error } = shabbat ? shab : weekday
+  const loading = hookLoading || (!services && !error)
 
   const filteredServices = useMemo(() => {
     if (!services) return []
@@ -149,364 +120,75 @@ function SiddurListView({ nusach, onSelectRef, onChangeNusach, onChangeDay, init
     const q = search.toLowerCase()
     return services.map(srv => {
       const filteredSubs = srv.subsections
-        .map(sub => ({
-          ...sub,
-          items: sub.items.filter(item =>
-            item.title.toLowerCase().includes(q) || item.heTitle.includes(search)
-          ),
-        }))
+        .map(sub => ({ ...sub, items: sub.items.filter(item => item.title.toLowerCase().includes(q) || item.heTitle.includes(search)) }))
         .filter(sub => sub.items.length > 0)
       const total = filteredSubs.reduce((n, s) => n + s.items.length, 0)
       return { ...srv, subsections: filteredSubs, total }
     }).filter(srv => srv.total > 0)
   }, [services, search])
 
-  const nusachHeb   = nusach === 'ashkenaz' ? 'אַשְׁכְּנַז' : 'סְפָרַד'
-  const nusachLabel = nusach === 'ashkenaz' ? 'Ashkenaz' : 'Sefard'
-
   return (
-    <div className="p-4 sm:p-8 max-w-3xl">
-      {/* Header */}
-      <div className="mb-8 fade-up-1">
-        <div className="flex items-center gap-2 mb-4 flex-wrap">
-          <button onClick={onChangeDay}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg"
-            style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M7 2L3 5l4 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            {t('siddur_change_day')}
-          </button>
-          <button onClick={onChangeNusach}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg"
-            style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-            {t('siddur_change_nusach')}
-          </button>
-        </div>
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          סִדּוּר · Siddur
-        </p>
-        <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>{t('nav_tefila')}</h1>
-        <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-          {t('siddur_nusach_label')} <span className="hebrew">{nusachHeb}</span> · {nusachLabel} · {t('siddur_semana_title')}
-        </p>
-      </div>
+    <div className="page page-narrow">
+      <button onClick={onChangeDay} className="btn btn-ghost btn-sm -ms-3 mb-4 text-ink-3">
+        <ArrowLeft size={16} className="rtl:rotate-180" />{t('siddur_change_day')}
+      </button>
+      <PageHeader hebrew="סִדּוּר" eyebrow="Siddur Sefard" title={t('nav_tefila')}
+        subtitle={<>{t('siddur_nusach_label')} <span className="hebrew-ui">סְפָרַד</span> · Sefard · <span className="text-ink-2 font-medium">{shabbat ? t('siddur_shabat_title') : t('siddur_semana_title')}</span></>} />
 
-      {/* Search */}
-      <div className="relative mb-7 fade-up-2">
-        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-            <circle cx="6.5" cy="6.5" r="4" stroke="var(--text-3)" strokeWidth="1.3"/>
-            <path d="M9.5 9.5L12 12" stroke="var(--text-3)" strokeWidth="1.3" strokeLinecap="round"/>
-          </svg>
-        </div>
-        <input value={search} onChange={e => setSearch(e.target.value)}
-          placeholder={t('siddur_search')}
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }} />
-      </div>
-
-      {/* Loading */}
-      {loading && (
-        <div className="flex flex-col items-center gap-3 py-16 fade-up-3">
-          <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin"
-            style={{ borderColor: 'rgba(245,158,11,0.25)', borderTopColor: '#f59e0b' }} />
-          <p className="text-sm" style={{ color: 'var(--text-3)' }}>{t('siddur_loading')}</p>
-        </div>
-      )}
-
-      {/* Error */}
-      {error && !loading && (
-        <div className="py-10 text-center fade-up-3">
-          <p className="text-sm mb-1" style={{ color: 'var(--text-2)' }}>{t('siddur_error')}</p>
-          <p className="text-xs" style={{ color: 'var(--text-3)' }}>{error}</p>
-        </div>
-      )}
-
-      {/* Services accordion */}
-      {!loading && !error && (
-        <div className="flex flex-col gap-2.5 fade-up-3">
-          {filteredServices.map(srv => {
-            const isOpen = openService === srv.id || !!search
-            return (
-              <div key={srv.id} className="rounded-2xl overflow-hidden transition-all"
-                style={{ border: `1px solid ${isOpen ? srv.color + '30' : 'var(--border)'}` }}>
-
-                {/* Service header */}
-                <button
-                  onClick={() => !search && setOpenService(isOpen ? null : srv.id)}
-                  className="w-full flex items-center justify-between px-5 py-4 text-left"
-                  style={{ background: isOpen ? `${srv.color}0d` : 'var(--bg-card)' }}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ background: srv.color }} />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>{srv.name}</span>
-                        <span className="hebrew text-sm" style={{ color: srv.color }}>{srv.heb}</span>
-                      </div>
-                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{srv.total} {t('siddur_sections')}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs px-2 py-0.5 rounded-full"
-                      style={{ background: `${srv.color}15`, color: srv.color, border: `1px solid ${srv.color}20` }}>
-                      {srv.total}
-                    </span>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
-                      style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s', color: 'var(--text-muted)' }}>
-                      <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                </button>
-
-                {/* Subsections + items */}
-                {isOpen && (
-                  <div className="px-4 pb-4 pt-2" style={{ background: 'var(--bg-card)' }}>
-                    {srv.subsections.map(sub => {
-                      const subKey = `${srv.id}:${sub.name}`
-                      const subOpen = openSub === subKey || !!search || !sub.name
-                      return (
-                        <div key={sub.name || '__root'} className="mb-3">
-                          {sub.name && (
-                            <button
-                              onClick={() => !search && setOpenSub(subOpen ? null : subKey)}
-                              className="w-full flex items-center gap-2 mb-2 text-left">
-                              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"
-                                style={{ transform: subOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>
-                                <path d="M3 2l4 3-4 3" stroke={srv.color} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                              <span className="text-xs font-semibold tracking-wide uppercase"
-                                style={{ color: srv.color, opacity: 0.8 }}>
-                                {tSef(sub.name, lang)}
-                              </span>
-                              <div className="h-px flex-1" style={{ background: `${srv.color}20` }} />
-                              <span className="text-xs" style={{ color: srv.color, opacity: 0.5 }}>{sub.items.length}</span>
-                            </button>
-                          )}
-                          {(subOpen || !sub.name) && (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                              {sub.items.map(item => (
-                                <button key={item.ref} onClick={() => onSelectRef(item.ref)}
-                                  className="text-left p-3 rounded-xl transition-all duration-200"
-                                  style={{ background: cardDefault.bg, border: `1px solid ${cardDefault.border}` }}
-                                  onMouseEnter={e => {
-                                    e.currentTarget.style.background = `${srv.color}12`
-                                    e.currentTarget.style.borderColor = `${srv.color}30`
-                                  }}
-                                  onMouseLeave={e => {
-                                    e.currentTarget.style.background = cardDefault.bg
-                                    e.currentTarget.style.borderColor = cardDefault.border
-                                  }}>
-                                  {item.heTitle && (
-                                    <div className="hebrew text-sm mb-1 leading-tight" style={{ color: srv.color }}>{item.heTitle}</div>
-                                  )}
-                                  <div className="text-xs font-medium" style={{ color: item.heTitle ? 'var(--text-2)' : 'var(--text)' }}>
-                                    {tSef(item.title, lang)}
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ── Siddur Shabbat List View ──────────────────────────────────────────────
-
-function SiddurShabbatListView({ nusach, onSelectRef, onChangeNusach, onChangeDay, initialSearch = '' }) {
-  const { isDark } = useTheme()
-  const { t, lang } = useLang()
-  const [search, setSearch] = useState(initialSearch)
-  const [openService, setOpenService] = useState(null)
-  const [openSub, setOpenSub] = useState(null)
-
-  const { services, loading, error } = useSiddurShabbatIndex(nusach)
-
-  const filteredServices = useMemo(() => {
-    if (!services) return []
-    if (!search) return services
-    const q = search.toLowerCase()
-    return services.map(srv => {
-      const filteredSubs = srv.subsections
-        .map(sub => ({
-          ...sub,
-          items: sub.items.filter(item =>
-            item.title.toLowerCase().includes(q) || item.heTitle.includes(search)
-          ),
-        }))
-        .filter(sub => sub.items.length > 0)
-      const total = filteredSubs.reduce((n, s) => n + s.items.length, 0)
-      return { ...srv, subsections: filteredSubs, total }
-    }).filter(srv => srv.total > 0)
-  }, [services, search])
-
-  const cardDefault = isDark
-    ? { bg: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.05)' }
-    : { bg: 'rgba(0,0,0,0.03)', border: 'rgba(0,0,0,0.07)' }
-
-  const nusachHeb   = nusach === 'ashkenaz' ? 'אַשְׁכְּנַז' : 'סְפָרַד'
-  const nusachLabel = nusach === 'ashkenaz' ? 'Ashkenaz' : 'Sefard'
-
-  return (
-    <div className="p-4 sm:p-8 max-w-3xl">
-      <div className="mb-8 fade-up-1">
-        <div className="flex items-center gap-2 mb-4 flex-wrap">
-          <button onClick={onChangeDay}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg"
-            style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M7 2L3 5l4 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            {t('siddur_change_day')}
-          </button>
-          <button onClick={onChangeNusach}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg"
-            style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-            {t('siddur_change_nusach')}
-          </button>
-        </div>
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          סִדּוּר · Siddur
-        </p>
-        <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>{t('nav_tefila')}</h1>
-        <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-          {t('siddur_nusach_label')} <span className="hebrew">{nusachHeb}</span> · {nusachLabel} · <span style={{ color: '#6366f1' }}>{t('siddur_shabat_title')}</span>
-        </p>
-      </div>
-
-      {/* Search */}
-      <div className="relative mb-7 fade-up-2">
-        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-            <circle cx="6.5" cy="6.5" r="4" stroke="var(--text-3)" strokeWidth="1.3"/>
-            <path d="M9.5 9.5L12 12" stroke="var(--text-3)" strokeWidth="1.3" strokeLinecap="round"/>
-          </svg>
-        </div>
-        <input value={search} onChange={e => setSearch(e.target.value)}
-          placeholder={t('siddur_search')}
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }} />
-      </div>
+      <SearchInput value={search} onChange={setSearch} placeholder={t('siddur_search')} className="mb-6 sm:max-w-md fade-up-1" />
 
       {loading && (
-        <div className="flex flex-col items-center gap-3 py-16 fade-up-3">
-          <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin"
-            style={{ borderColor: 'rgba(99,102,241,0.25)', borderTopColor: '#6366f1' }} />
-          <p className="text-sm" style={{ color: 'var(--text-3)' }}>{t('siddur_loading')}</p>
+        <div className="flex flex-col items-center gap-3 py-16">
+          <Spinner />
+          <p className="text-sm text-ink-3">{t('siddur_loading')}</p>
         </div>
       )}
 
-      {error && !loading && (
-        <div className="py-10 text-center fade-up-3">
-          <p className="text-sm mb-1" style={{ color: 'var(--text-2)' }}>{t('siddur_error')}</p>
-          <p className="text-xs" style={{ color: 'var(--text-3)' }}>{error}</p>
-        </div>
-      )}
+      {error && !loading && <div className="card"><EmptyState title={t('siddur_error')} description={error} /></div>}
 
       {!loading && !error && filteredServices.length === 0 && (
-        <div className="py-10 text-center fade-up-3">
-          <p className="text-sm" style={{ color: 'var(--text-3)' }}>{search ? t('siddur_no_results') || 'Sin resultados' : 'No se encontraron tefilot de Shabat en este siddur.'}</p>
-        </div>
+        <div className="card"><EmptyState title={t('siddur_no_results') || t('no_results')} /></div>
       )}
 
       {!loading && !error && filteredServices.length > 0 && (
-        <div className="flex flex-col gap-2.5 fade-up-3">
-          {filteredServices.map(srv => {
-            const isOpen = openService === srv.id || !!search
-            return (
-              <div key={srv.id} className="rounded-2xl overflow-hidden transition-all"
-                style={{ border: `1px solid ${isOpen ? srv.color + '30' : 'var(--border)'}` }}>
-                <button
-                  onClick={() => setOpenService(isOpen ? null : srv.id)}
-                  className="w-full flex items-center justify-between px-5 py-4 text-left"
-                  style={{ background: isOpen ? `${srv.color}0d` : 'var(--bg-card)' }}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ background: srv.color }} />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>{srv.name}</span>
-                        <span className="hebrew text-sm" style={{ color: srv.color }}>{srv.heb}</span>
-                      </div>
-                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{srv.total} {t('siddur_sections')}</p>
-                    </div>
+        <div className="flex flex-col gap-3 fade-up-2">
+          {filteredServices.map(srv => (
+            <Section key={srv.id} color={srv.color} title={srv.name} heb={srv.heb}
+              subtitle={`${srv.total} ${t('siddur_sections')}`} count={srv.total}
+              open={openService === srv.id} forceOpen={!!search}
+              onToggle={() => setOpenService(openService === srv.id ? null : srv.id)}>
+              {srv.subsections.map(sub => {
+                const subKey = `${srv.id}:${sub.name}`
+                const subOpen = openSub === subKey || !!search || !sub.name
+                return (
+                  <div key={sub.name || '__root'} className="mb-3 last:mb-0">
+                    {sub.name && (
+                      <button onClick={() => !search && setOpenSub(subOpen ? null : subKey)} aria-expanded={subOpen}
+                        className="w-full flex items-center gap-2.5 py-2 px-1 text-start group">
+                        <ChevronRight size={14} strokeWidth={2} className={`transition-transform rtl:rotate-180 ${subOpen ? 'rotate-90 rtl:rotate-90' : ''}`} style={{ color: srv.color }} />
+                        <span className="eyebrow group-hover:text-ink" style={{ color: srv.color }}>{tSef(sub.name, lang)}</span>
+                        <span className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
+                        <span className="text-[12px] text-ink-4 tabular-nums">{sub.items.length}</span>
+                      </button>
+                    )}
+                    <AnimatePresence initial={false}>
+                      {subOpen && (
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }} className="overflow-hidden">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
+                            {sub.items.map(item => (
+                              <ItemCard key={item.ref} color={srv.color} heb={item.heTitle} name={tSef(item.title, lang)}
+                                cta={t('ui_read')} onClick={() => onSelectRef(item.ref)} />
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs px-2 py-0.5 rounded-full"
-                      style={{ background: `${srv.color}15`, color: srv.color, border: `1px solid ${srv.color}20` }}>
-                      {srv.total}
-                    </span>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
-                      style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s', color: 'var(--text-muted)' }}>
-                      <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                </button>
-
-                {isOpen && (
-                  <div className="px-4 pb-4 pt-2" style={{ background: 'var(--bg-card)' }}>
-                    {srv.subsections.map(sub => {
-                      const subKey = `${srv.id}:${sub.name}`
-                      const subOpen = openSub === subKey || !sub.name
-                      return (
-                        <div key={sub.name || '__root'} className="mb-3">
-                          {sub.name && (
-                            <button
-                              onClick={() => setOpenSub(subOpen ? null : subKey)}
-                              className="w-full flex items-center gap-2 mb-2 text-left">
-                              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"
-                                style={{ transform: subOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>
-                                <path d="M3 2l4 3-4 3" stroke={srv.color} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                              <span className="text-xs font-semibold tracking-wide uppercase"
-                                style={{ color: srv.color, opacity: 0.8 }}>
-                                {tSef(sub.name, lang)}
-                              </span>
-                              <div className="h-px flex-1" style={{ background: `${srv.color}20` }} />
-                              <span className="text-xs" style={{ color: srv.color, opacity: 0.5 }}>{sub.items.length}</span>
-                            </button>
-                          )}
-                          {(subOpen || !sub.name) && (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                              {sub.items.map(item => (
-                                <button key={item.ref} onClick={() => onSelectRef(item.ref)}
-                                  className="text-left p-3 rounded-xl transition-all duration-200"
-                                  style={{ background: cardDefault.bg, border: `1px solid ${cardDefault.border}` }}
-                                  onMouseEnter={e => {
-                                    e.currentTarget.style.background = `${srv.color}12`
-                                    e.currentTarget.style.borderColor = `${srv.color}30`
-                                  }}
-                                  onMouseLeave={e => {
-                                    e.currentTarget.style.background = cardDefault.bg
-                                    e.currentTarget.style.borderColor = cardDefault.border
-                                  }}>
-                                  {item.heTitle && (
-                                    <div className="hebrew text-sm mb-1 leading-tight" style={{ color: srv.color }}>{item.heTitle}</div>
-                                  )}
-                                  <div className="text-xs font-medium" style={{ color: item.heTitle ? 'var(--text-2)' : 'var(--text)' }}>
-                                    {tSef(item.title, lang)}
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            )
-          })}
+                )
+              })}
+            </Section>
+          ))}
         </div>
       )}
     </div>
@@ -515,42 +197,22 @@ function SiddurShabbatListView({ nusach, onSelectRef, onChangeNusach, onChangeDa
 
 // ── Imprescindibles List View ─────────────────────────────────────────────
 
-function ImprescindiblesListView({ onSelectRef }) {
-  const { isDark } = useTheme()
-  const cardDefault = isDark
-    ? { bg: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.05)' }
-    : { bg: 'rgba(0,0,0,0.03)', border: 'rgba(0,0,0,0.07)' }
-
+function ImprescindiblesListView({ onSelectRef, onChangeDay }) {
+  const { t } = useLang()
   return (
-    <div className="p-4 sm:p-8 max-w-2xl">
-      <div className="mb-8 fade-up-1">
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          סִדּוּר · Siddur
-        </p>
-        <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-          Tefilá
-        </h1>
-        <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-          Textos bíblicos con טְעָמִים (taamim)
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 fade-up-2">
+    <div className="page page-narrow">
+      <button onClick={onChangeDay} className="btn btn-ghost btn-sm -ms-3 mb-4 text-ink-3">
+        <ArrowLeft size={16} className="rtl:rotate-180" />{t('siddur_change_day')}
+      </button>
+      <PageHeader hebrew="עִקָּרִים" eyebrow="Siddur" title="Imprescindibles" subtitle={t('ui_essentials_subtitle')} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 fade-up-1">
         {IMPRESCINDIBLES.map(item => (
           <button key={item.ref} onClick={() => onSelectRef(item.ref)}
-            className="text-left p-5 rounded-2xl transition-all duration-200"
-            style={{ background: cardDefault.bg, border: `1px solid ${cardDefault.border}` }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = `${item.color}12`
-              e.currentTarget.style.borderColor = `${item.color}35`
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = cardDefault.bg
-              e.currentTarget.style.borderColor = cardDefault.border
-            }}>
-            <div className="hebrew text-2xl mb-1 leading-snug" style={{ color: item.color }}>{item.heTitle}</div>
-            <div className="font-medium text-sm mb-0.5" style={{ color: 'var(--text)' }}>{item.name}</div>
-            <div className="text-xs font-mono opacity-50" style={{ color: 'var(--text-3)' }}>{item.ref}</div>
+            className="card card-interactive group text-start p-5 relative overflow-hidden">
+            <span className="absolute inset-y-0 start-0 w-[3px]" style={{ background: item.color }} />
+            <span className="block hebrew text-[26px] leading-snug" style={{ color: item.color, fontWeight: 400 }}>{item.heTitle}</span>
+            <span className="block font-medium text-[15px] text-ink mt-1">{item.name}</span>
+            <span className="block text-[12px] text-ink-3 mt-0.5" dir="ltr" style={{ textAlign: 'start' }}>{item.ref}</span>
           </button>
         ))}
       </div>
@@ -562,8 +224,7 @@ function ImprescindiblesListView({ onSelectRef }) {
 
 function SiddurReaderView({ nusach, day, sefRef, onBack, onNavigate, isTeacher }) {
   const { t, lang } = useLang()
-  const { user } = useAuth()
-  const isAdmin = user?.id === ADMIN_USER_ID
+  const { focusMode, setFocusMode } = useShell()
   const [hwOpen, setHwOpen] = useState(false)
   const siddurNusach = (nusach === 'imprescindibles' || !nusach) ? null : nusach
   const { services: weekdayServices } = useSiddurIndex(siddurNusach)
@@ -587,7 +248,7 @@ function SiddurReaderView({ nusach, day, sefRef, onBack, onNavigate, isTeacher }
   const hasTaamim   = isShema || !!impMeta
   const displayName = berajotData?.name || impMeta?.name || tSef(section?.title, lang) || sefRef.split(', ').pop()
   const displayHeb  = berajotData?.heTitle || impMeta?.heTitle || section?.heTitle || ''
-  const color       = impMeta?.color || service?.color || '#10b981'
+  const color       = impMeta?.color || service?.color || TEAL
 
   const aliyot = useMemo(() => {
     if (berajotData) return berajotData.aliyot
@@ -609,49 +270,38 @@ function SiddurReaderView({ nusach, day, sefRef, onBack, onNavigate, isTeacher }
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden" style={{ height: '100%' }}>
-      {/* Top bar */}
-      <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 flex-wrap"
-        style={{ background: 'var(--overlay)', borderBottom: '1px solid var(--border-subtle)' }}>
-        <button onClick={onBack}
-          className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg transition-all"
-          style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M8 2L4 6l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          {t('nav_tefila')}
+      <div className="flex-shrink-0 flex items-center gap-2 sm:gap-3 px-3 sm:px-6 h-14 bg-surface"
+        style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+        <button onClick={onBack} className="btn btn-ghost btn-sm text-ink-3">
+          <ArrowLeft size={16} className="rtl:rotate-180" /><span className="hidden sm:inline">{t('nav_tefila')}</span>
         </button>
-        <div className="h-4 w-px" style={{ background: 'var(--border)' }} />
-        <span className="text-xs" style={{ color: 'var(--text-3)' }}>
-          {service?.name && `${service.name} · `}
-          <span className="hebrew" style={{ color }}>{displayHeb || displayName}</span>
-        </span>
+        <span className="w-px h-5 hidden sm:block" style={{ background: 'var(--border)' }} />
+        <div className="flex items-baseline gap-2 min-w-0">
+          {service?.name && <span className="hidden md:inline text-[13px] text-ink-3">{service.name} ·</span>}
+          <span className="font-serif text-[16px] font-semibold text-ink truncate">{displayName}</span>
+          {displayHeb && <span className="hebrew-ui text-[16px] truncate hidden sm:inline" style={{ color }}>{displayHeb}</span>}
+        </div>
 
-        <div className="ml-auto flex gap-2 items-center">
+        <div className="ms-auto flex gap-1.5 items-center">
           {isTeacher && !isBerajot && (
-            <button onClick={() => setHwOpen(true)}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
-              style={{ background: 'rgba(108,51,230,0.12)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.3)' }}>
-              <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                <path d="M1 10l1.5-3.5L9 2 9.5 2.5 3 9.5 1 10z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
-                <path d="M7 2.5l1.5 1.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
-              </svg>
-              Deber
+            <button onClick={() => setHwOpen(true)} className="btn btn-secondary btn-sm">
+              <PenLine size={14} /><span className="hidden sm:inline">{t('ui_assign_hw')}</span>
             </button>
           )}
           {prev && (
-            <button onClick={() => onNavigate(prev.ref)}
-              className="text-xs px-3 py-1.5 rounded-lg transition-all"
-              style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-              ← {tSef(prev.title, lang)}
+            <button onClick={() => onNavigate(prev.ref)} className="btn btn-ghost btn-sm text-ink-3" title={tSef(prev.title, lang)}>
+              <ChevronLeft size={16} className="rtl:rotate-180" /><span className="hidden xl:inline max-w-[140px] truncate">{tSef(prev.title, lang)}</span>
             </button>
           )}
           {next && (
-            <button onClick={() => onNavigate(next.ref)}
-              className="text-xs px-3 py-1.5 rounded-lg transition-all"
-              style={{ background: `${color}15`, color, border: `1px solid ${color}25` }}>
-              {tSef(next.title, lang)} →
+            <button onClick={() => onNavigate(next.ref)} className="btn btn-secondary btn-sm" title={tSef(next.title, lang)}>
+              <span className="hidden xl:inline max-w-[140px] truncate">{tSef(next.title, lang)}</span><ChevronRight size={16} className="rtl:rotate-180" />
             </button>
           )}
+          <button onClick={() => setFocusMode(f => !f)} className="btn btn-ghost btn-sm btn-icon hidden md:inline-flex"
+            aria-pressed={focusMode} aria-label={focusMode ? t('ui_exit_focus') : t('ui_focus_mode')}>
+            {focusMode ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+          </button>
         </div>
       </div>
 

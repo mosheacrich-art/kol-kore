@@ -1,7 +1,7 @@
 export const TEFILOT_SERVICES = [
-  { id: 'shajarit', name: 'Shajarit', heb: 'שַׁחֲרִית', color: '#f59e0b' },
-  { id: 'minja',    name: 'Minjá',    heb: 'מִנְחָה',    color: '#8b5cf6' },
-  { id: 'arvit',    name: 'Arvit',    heb: 'עַרְבִית',   color: '#1e40af' },
+  { id: 'shajarit', name: 'Shajarit', heb: 'שַׁחֲרִית', color: '#B7862E' },
+  { id: 'minja',    name: 'Minjá',    heb: 'מִנְחָה',    color: '#5E6399' },
+  { id: 'arvit',    name: 'Arvit',    heb: 'עַרְבִית',   color: '#2F4F86' },
 ]
 
 // ── Shared text blocks ────────────────────────────────────────────────────
@@ -300,7 +300,7 @@ export const ALL_TEFILOT = [
   // ── Apertura ─────────────────────────────────
   {
     id: 'ma-tovu', name: 'Ma Tovu', heb: 'מַה טֹּבוּ',
-    service: 'shajarit', subsection: 'Apertura', color: '#f59e0b',
+    service: 'shajarit', subsection: 'Apertura', color: '#B7862E',
     aliyot: [{
       n: 1, label: 'Ma Tovu', ref: null,
       heText: [
@@ -318,7 +318,7 @@ export const ALL_TEFILOT = [
   // ── Pesukei DeZimrá ──────────────────────────
   {
     id: 'baruj-sheamar', name: 'Baruj Sheamar', heb: 'בָּרוּךְ שֶׁאָמַר',
-    service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#f59e0b',
+    service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#B7862E',
     aliyot: [{
       n: 1, label: 'Baruj Sheamar', ref: null,
       heText: [
@@ -342,16 +342,16 @@ export const ALL_TEFILOT = [
       ],
     }],
   },
-  { id: 'mizmor-letoda', name: 'Mizmor LeTodá', heb: 'מִזְמוֹר לְתוֹדָה', service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#f59e0b', aliyot: [{ n: 1, label: 'Mizmor LeTodá', ref: 'Psalms 100' }] },
-  { id: 'ashrei-pesukei', name: 'Ashrei', heb: 'אַשְׁרֵי', service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#f59e0b', aliyot: [{ n: 1, label: 'Ashrei', ref: null, heText: ASHREI_HE }] },
-  { id: 'tehilim-146', name: 'Tehilim 146', heb: 'תְּהִלִּים קמ״ו', service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#f59e0b', aliyot: [{ n: 1, label: 'Tehilim 146', ref: 'Psalms 146' }] },
-  { id: 'tehilim-147', name: 'Tehilim 147', heb: 'תְּהִלִּים קמ״ז', service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#f59e0b', aliyot: [{ n: 1, label: 'Tehilim 147', ref: 'Psalms 147' }] },
-  { id: 'tehilim-148', name: 'Tehilim 148', heb: 'תְּהִלִּים קמ״ח', service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#f59e0b', aliyot: [{ n: 1, label: 'Tehilim 148', ref: 'Psalms 148' }] },
-  { id: 'tehilim-149', name: 'Tehilim 149', heb: 'תְּהִלִּים קמ״ט', service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#f59e0b', aliyot: [{ n: 1, label: 'Tehilim 149', ref: 'Psalms 149' }] },
-  { id: 'tehilim-150', name: 'Tehilim 150', heb: 'תְּהִלִּים ק״נ', service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#f59e0b', aliyot: [{ n: 1, label: 'Tehilim 150', ref: 'Psalms 150' }] },
+  { id: 'mizmor-letoda', name: 'Mizmor LeTodá', heb: 'מִזְמוֹר לְתוֹדָה', service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#B7862E', aliyot: [{ n: 1, label: 'Mizmor LeTodá', ref: 'Psalms 100' }] },
+  { id: 'ashrei-pesukei', name: 'Ashrei', heb: 'אַשְׁרֵי', service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#B7862E', aliyot: [{ n: 1, label: 'Ashrei', ref: null, heText: ASHREI_HE }] },
+  { id: 'tehilim-146', name: 'Tehilim 146', heb: 'תְּהִלִּים קמ״ו', service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#B7862E', aliyot: [{ n: 1, label: 'Tehilim 146', ref: 'Psalms 146' }] },
+  { id: 'tehilim-147', name: 'Tehilim 147', heb: 'תְּהִלִּים קמ״ז', service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#B7862E', aliyot: [{ n: 1, label: 'Tehilim 147', ref: 'Psalms 147' }] },
+  { id: 'tehilim-148', name: 'Tehilim 148', heb: 'תְּהִלִּים קמ״ח', service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#B7862E', aliyot: [{ n: 1, label: 'Tehilim 148', ref: 'Psalms 148' }] },
+  { id: 'tehilim-149', name: 'Tehilim 149', heb: 'תְּהִלִּים קמ״ט', service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#B7862E', aliyot: [{ n: 1, label: 'Tehilim 149', ref: 'Psalms 149' }] },
+  { id: 'tehilim-150', name: 'Tehilim 150', heb: 'תְּהִלִּים ק״נ', service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#B7862E', aliyot: [{ n: 1, label: 'Tehilim 150', ref: 'Psalms 150' }] },
   {
     id: 'az-yashir', name: 'Az Yashir', heb: 'אָז יָשִׁיר',
-    service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#f59e0b',
+    service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#B7862E',
     aliyot: [
       { n: 1, label: 'Vayoshá',      ref: 'Exodus 14:30-15:1' },
       { n: 2, label: 'Shirat HaYam', ref: 'Exodus 15:2-19' },
@@ -359,7 +359,7 @@ export const ALL_TEFILOT = [
   },
   {
     id: 'yishtabaj', name: 'Yishtabaj', heb: 'יִשְׁתַּבַּח',
-    service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#f59e0b',
+    service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#B7862E',
     aliyot: [{
       n: 1, label: 'Yishtabaj', ref: null,
       heText: [
@@ -378,14 +378,14 @@ export const ALL_TEFILOT = [
   },
   {
     id: 'chatzi-kadish-pesukei', name: 'Chatzi Kadish', heb: 'חֲצִי קַדִּישׁ',
-    service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#f59e0b',
+    service: 'shajarit', subsection: 'Pesukei DeZimrá', color: '#B7862E',
     aliyot: [{ n: 1, label: 'Chatzi Kadish', ref: null, heText: CHATZI_KADISH_HE }],
   },
 
   // ── Keriat Shemá ────────────────────────────
   {
     id: 'yotzer-or', name: 'Yotzer Or', heb: 'יוֹצֵר אוֹר',
-    service: 'shajarit', subsection: 'Keriat Shemá', color: '#f59e0b',
+    service: 'shajarit', subsection: 'Keriat Shemá', color: '#B7862E',
     aliyot: [{
       n: 1, label: 'Yotzer Or', ref: null,
       heText: [
@@ -409,7 +409,7 @@ export const ALL_TEFILOT = [
   },
   {
     id: 'ahavah-rabbah', name: 'Ahavah Rabbah', heb: 'אַהֲבָה רַבָּה',
-    service: 'shajarit', subsection: 'Keriat Shemá', color: '#f59e0b',
+    service: 'shajarit', subsection: 'Keriat Shemá', color: '#B7862E',
     aliyot: [{
       n: 1, label: 'Ahavah Rabbah', ref: null,
       heText: [
@@ -433,7 +433,7 @@ export const ALL_TEFILOT = [
   },
   {
     id: 'shema', name: 'Keriat Shemá', heb: 'קְרִיאַת שְׁמַע',
-    service: 'shajarit', subsection: 'Keriat Shemá', color: '#f59e0b',
+    service: 'shajarit', subsection: 'Keriat Shemá', color: '#B7862E',
     aliyot: [
       { n: 1, label: 'Shemá',            ref: 'Deuteronomy 6:4-9' },
       { n: 2, label: 'VeHayá Im Shamoa', ref: 'Deuteronomy 11:13-21' },
@@ -442,7 +442,7 @@ export const ALL_TEFILOT = [
   },
   {
     id: 'emet-veyatziv', name: 'Emet VeYatziv', heb: 'אֱמֶת וְיַצִּיב',
-    service: 'shajarit', subsection: 'Keriat Shemá', color: '#f59e0b',
+    service: 'shajarit', subsection: 'Keriat Shemá', color: '#B7862E',
     aliyot: [{
       n: 1, label: 'Emet VeYatziv', ref: null,
       heText: [
@@ -471,19 +471,19 @@ export const ALL_TEFILOT = [
   // ── Amidá (Shajarit) ──────────────────────────
   {
     id: 'amida-shajarit', name: 'Amidá', heb: 'עֲמִידָה',
-    service: 'shajarit', subsection: 'Amidá', color: '#f59e0b',
+    service: 'shajarit', subsection: 'Amidá', color: '#B7862E',
     aliyot: AMIDA_19,
   },
   {
     id: 'kadish-shalem-shajarit', name: 'Kadish Shalem', heb: 'קַדִּישׁ שָׁלֵם',
-    service: 'shajarit', subsection: 'Amidá', color: '#f59e0b',
+    service: 'shajarit', subsection: 'Amidá', color: '#B7862E',
     aliyot: [{ n: 1, label: 'Kadish Shalem', ref: null, heText: KADISH_SHALEM_HE }],
   },
 
   // ── Cierre ───────────────────────────────────
   {
     id: 'ashrei-uva', name: 'Ashrei / Uvá LeTzión', heb: 'אַשְׁרֵי / וּבָא לְצִיּוֹן',
-    service: 'shajarit', subsection: 'Cierre', color: '#f59e0b',
+    service: 'shajarit', subsection: 'Cierre', color: '#B7862E',
     aliyot: [
       { n: 1, label: 'Ashrei', ref: null, heText: ASHREI_HE },
       {
@@ -514,12 +514,12 @@ export const ALL_TEFILOT = [
   },
   {
     id: 'alenu-shajarit', name: 'Alenu', heb: 'עָלֵינוּ',
-    service: 'shajarit', subsection: 'Cierre', color: '#f59e0b',
+    service: 'shajarit', subsection: 'Cierre', color: '#B7862E',
     aliyot: [{ n: 1, label: 'Alenu', ref: null, heText: ALENU_HE }],
   },
   {
     id: 'kadish-yatom-shajarit', name: 'Kadish Yatom', heb: 'קַדִּישׁ יָתוֹם',
-    service: 'shajarit', subsection: 'Cierre', color: '#f59e0b',
+    service: 'shajarit', subsection: 'Cierre', color: '#B7862E',
     aliyot: [{ n: 1, label: 'Kadish Yatom', ref: null, heText: KADISH_YATOM_HE }],
   },
 
@@ -527,26 +527,26 @@ export const ALL_TEFILOT = [
   // MINJÁ
   // ════════════════════════════════════════════════
 
-  { id: 'ashrei-minja', name: 'Ashrei', heb: 'אַשְׁרֵי', service: 'minja', subsection: 'Apertura', color: '#8b5cf6', aliyot: [{ n: 1, label: 'Ashrei', ref: null, heText: ASHREI_HE }] },
+  { id: 'ashrei-minja', name: 'Ashrei', heb: 'אַשְׁרֵי', service: 'minja', subsection: 'Apertura', color: '#5E6399', aliyot: [{ n: 1, label: 'Ashrei', ref: null, heText: ASHREI_HE }] },
   {
     id: 'chatzi-kadish-minja', name: 'Chatzi Kadish', heb: 'חֲצִי קַדִּישׁ',
-    service: 'minja', subsection: 'Apertura', color: '#8b5cf6',
+    service: 'minja', subsection: 'Apertura', color: '#5E6399',
     aliyot: [{ n: 1, label: 'Chatzi Kadish', ref: null, heText: CHATZI_KADISH_HE }],
   },
   {
     id: 'amida-minja', name: 'Amidá', heb: 'עֲמִידָה',
-    service: 'minja', subsection: 'Amidá', color: '#8b5cf6',
+    service: 'minja', subsection: 'Amidá', color: '#5E6399',
     aliyot: AMIDA_19,
   },
   {
     id: 'kadish-shalem-minja', name: 'Kadish Shalem', heb: 'קַדִּישׁ שָׁלֵם',
-    service: 'minja', subsection: 'Amidá', color: '#8b5cf6',
+    service: 'minja', subsection: 'Amidá', color: '#5E6399',
     aliyot: [{ n: 1, label: 'Kadish Shalem', ref: null, heText: KADISH_SHALEM_HE }],
   },
-  { id: 'alenu-minja', name: 'Alenu', heb: 'עָלֵינוּ', service: 'minja', subsection: 'Cierre', color: '#8b5cf6', aliyot: [{ n: 1, label: 'Alenu', ref: null, heText: ALENU_HE }] },
+  { id: 'alenu-minja', name: 'Alenu', heb: 'עָלֵינוּ', service: 'minja', subsection: 'Cierre', color: '#5E6399', aliyot: [{ n: 1, label: 'Alenu', ref: null, heText: ALENU_HE }] },
   {
     id: 'kadish-yatom-minja', name: 'Kadish Yatom', heb: 'קַדִּישׁ יָתוֹם',
-    service: 'minja', subsection: 'Cierre', color: '#8b5cf6',
+    service: 'minja', subsection: 'Cierre', color: '#5E6399',
     aliyot: [{ n: 1, label: 'Kadish Yatom', ref: null, heText: KADISH_YATOM_HE }],
   },
 
@@ -556,7 +556,7 @@ export const ALL_TEFILOT = [
 
   {
     id: 'barju-arvit', name: 'Barjú', heb: 'בָּרְכוּ',
-    service: 'arvit', subsection: 'Apertura', color: '#1e40af',
+    service: 'arvit', subsection: 'Apertura', color: '#2F4F86',
     aliyot: [{
       n: 1, label: 'Barjú', ref: null,
       heText: [
@@ -567,7 +567,7 @@ export const ALL_TEFILOT = [
   },
   {
     id: 'maariv-aravim', name: "Ma'ariv Aravim", heb: 'מַעֲרִיב עֲרָבִים',
-    service: 'arvit', subsection: 'Apertura', color: '#1e40af',
+    service: 'arvit', subsection: 'Apertura', color: '#2F4F86',
     aliyot: [{
       n: 1, label: "Ma'ariv Aravim", ref: null,
       heText: [
@@ -588,7 +588,7 @@ export const ALL_TEFILOT = [
   },
   {
     id: 'ahavat-olam-arvit', name: 'Ahavat Olam', heb: 'אַהֲבַת עוֹלָם',
-    service: 'arvit', subsection: 'Apertura', color: '#1e40af',
+    service: 'arvit', subsection: 'Apertura', color: '#2F4F86',
     aliyot: [{
       n: 1, label: 'Ahavat Olam', ref: null,
       heText: [
@@ -606,7 +606,7 @@ export const ALL_TEFILOT = [
   },
   {
     id: 'shema-arvit', name: 'Keriat Shemá', heb: 'קְרִיאַת שְׁמַע',
-    service: 'arvit', subsection: 'Keriat Shemá', color: '#1e40af',
+    service: 'arvit', subsection: 'Keriat Shemá', color: '#2F4F86',
     aliyot: [
       { n: 1, label: 'Shemá',            ref: 'Deuteronomy 6:4-9' },
       { n: 2, label: 'VeHayá Im Shamoa', ref: 'Deuteronomy 11:13-21' },
@@ -615,7 +615,7 @@ export const ALL_TEFILOT = [
   },
   {
     id: 'emet-veemuna', name: 'Emet VeEmunah', heb: 'אֱמֶת וֶאֱמוּנָה',
-    service: 'arvit', subsection: 'Keriat Shemá', color: '#1e40af',
+    service: 'arvit', subsection: 'Keriat Shemá', color: '#2F4F86',
     aliyot: [{
       n: 1, label: 'Emet VeEmunah', ref: null,
       heText: [
@@ -652,7 +652,7 @@ export const ALL_TEFILOT = [
   },
   {
     id: 'hashkivenu', name: 'Hashkivenu', heb: 'הַשְׁכִּיבֵנוּ',
-    service: 'arvit', subsection: 'Keriat Shemá', color: '#1e40af',
+    service: 'arvit', subsection: 'Keriat Shemá', color: '#2F4F86',
     aliyot: [{
       n: 1, label: 'Hashkivenu', ref: null,
       heText: [
@@ -675,23 +675,23 @@ export const ALL_TEFILOT = [
   },
   {
     id: 'chatzi-kadish-arvit', name: 'Chatzi Kadish', heb: 'חֲצִי קַדִּישׁ',
-    service: 'arvit', subsection: 'Keriat Shemá', color: '#1e40af',
+    service: 'arvit', subsection: 'Keriat Shemá', color: '#2F4F86',
     aliyot: [{ n: 1, label: 'Chatzi Kadish', ref: null, heText: CHATZI_KADISH_HE }],
   },
   {
     id: 'amida-arvit', name: 'Amidá', heb: 'עֲמִידָה',
-    service: 'arvit', subsection: 'Amidá', color: '#1e40af',
+    service: 'arvit', subsection: 'Amidá', color: '#2F4F86',
     aliyot: AMIDA_19,
   },
   {
     id: 'kadish-shalem-arvit', name: 'Kadish Shalem', heb: 'קַדִּישׁ שָׁלֵם',
-    service: 'arvit', subsection: 'Amidá', color: '#1e40af',
+    service: 'arvit', subsection: 'Amidá', color: '#2F4F86',
     aliyot: [{ n: 1, label: 'Kadish Shalem', ref: null, heText: KADISH_SHALEM_HE }],
   },
-  { id: 'alenu-arvit', name: 'Alenu', heb: 'עָלֵינוּ', service: 'arvit', subsection: 'Cierre', color: '#1e40af', aliyot: [{ n: 1, label: 'Alenu', ref: null, heText: ALENU_HE }] },
+  { id: 'alenu-arvit', name: 'Alenu', heb: 'עָלֵינוּ', service: 'arvit', subsection: 'Cierre', color: '#2F4F86', aliyot: [{ n: 1, label: 'Alenu', ref: null, heText: ALENU_HE }] },
   {
     id: 'kadish-yatom-arvit', name: 'Kadish Yatom', heb: 'קַדִּישׁ יָתוֹם',
-    service: 'arvit', subsection: 'Cierre', color: '#1e40af',
+    service: 'arvit', subsection: 'Cierre', color: '#2F4F86',
     aliyot: [{ n: 1, label: 'Kadish Yatom', ref: null, heText: KADISH_YATOM_HE }],
   },
 ]

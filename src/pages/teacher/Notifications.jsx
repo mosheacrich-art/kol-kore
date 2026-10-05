@@ -1,31 +1,23 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ArrowRight, Bell, CheckCheck, Headphones, Mic, Trash2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
-
-function timeAgo(dateStr) {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'ahora mismo'
-  if (mins < 60) return `hace ${mins}m`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `hace ${hours}h`
-  const days = Math.floor(hours / 24)
-  return `hace ${days}d`
-}
+import { EmptyState, PageHeader, PageSpinner } from '../../components/ui'
+import NotificationGroups from '../../components/NotificationGroups'
+import { displayParashaName, timeAgo } from '../../utils/parasha'
 
 export default function TeacherNotifications() {
   const { profile } = useAuth()
   const { t } = useLang()
+  const locale = t('date_locale') || undefined
   const navigate = useNavigate()
   const [notifs, setNotifs] = useState([])
   const [loading, setLoading] = useState(true)
-  const [hoverItem, setHoverItem] = useState(null)
   const [deleting, setDeleting] = useState(null)
   const [newArrivedId, setNewArrivedId] = useState(null)
   const newArrivedTimer = useRef(null)
-
 
   useEffect(() => {
     if (!profile) return
@@ -59,7 +51,6 @@ export default function TeacherNotifications() {
     return () => { supabase.removeChannel(ch); clearTimeout(newArrivedTimer.current) }
   }, [profile?.id])
 
-
   const markRead = async (id) => {
     await supabase.from('notifications').update({ read: true })
       .eq('id', id).eq('teacher_id', profile.id)
@@ -84,168 +75,69 @@ export default function TeacherNotifications() {
   const unreadCount = notifs.filter(n => !n.read).length
 
   return (
-    <div className="p-8 max-w-3xl">
-      {/* Header */}
-      <div className="mb-10 fade-up-1">
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          הוֹדָעוֹת · Notificaciones
-        </p>
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-light" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-            {t('notif_title')}
-          </h1>
-          {unreadCount > 0 && (
-            <button onClick={markAllRead}
-              className="text-xs px-3 py-1.5 rounded-full"
-              style={{ background: 'rgba(108,51,230,0.1)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)' }}>
-              {t('mark_all_read')}
-            </button>
-          )}
-        </div>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
-          {unreadCount > 0 ? `${unreadCount} ${t('unread_n')}` : t('up_to_date')}
-        </p>
-      </div>
-
-      {/* ── Student activity notifications ───────────────────────────────── */}
-      <div className="fade-up-2">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
-          <p className="text-xs tracking-widest uppercase" style={{ color: 'var(--text-gold)' }}>
-            {t('notif_title')}
-          </p>
-          <div className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
-        </div>
-
-        {loading && (
-          <div className="flex items-center justify-center py-16">
-            <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin"
-              style={{ borderColor: 'rgba(108,51,230,0.2)', borderTopColor: '#6c33e6' }} />
-          </div>
+    <div className="page page-narrow">
+      <PageHeader
+        hebrew="הוֹדָעוֹת"
+        eyebrow={t('nav_notifications')}
+        title={t('notif_title')}
+        subtitle={unreadCount > 0 ? `${unreadCount} ${t('unread_n')}` : t('up_to_date')}
+        actions={unreadCount > 0 && (
+          <button onClick={markAllRead} className="btn btn-secondary"><CheckCheck size={16} />{t('mark_all_read')}</button>
         )}
+      />
 
-        {!loading && notifs.length === 0 && (
-          <div className="text-center py-12">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
-              style={{ background: 'rgba(108,51,230,0.08)', border: '1px solid rgba(108,51,230,0.15)' }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M12 3C8 3 5 6 5 10v5l-2 2v1h18v-1l-2-2v-5c0-4-3-7-7-7z" stroke="rgba(108,51,230,0.5)" strokeWidth="1.5" strokeLinejoin="round"/>
-                <path d="M10 20a2 2 0 004 0" stroke="rgba(108,51,230,0.5)" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('no_notifs')}</p>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{t('no_notifs_desc')}</p>
-          </div>
-        )}
-
-        <div className="flex flex-col gap-2">
-          {notifs.map(n => (
-            <div key={n.id}
-              onClick={() => !n.read && markRead(n.id)}
-              onMouseEnter={() => setHoverItem(n.id)}
-              onMouseLeave={() => setHoverItem(null)}
-              className="relative group flex items-start gap-4 p-4 rounded-2xl transition-all duration-200"
-              style={{
-                background: newArrivedId === n.id
-                  ? 'rgba(108,51,230,0.14)'
-                  : n.read ? 'var(--bg-card)' : 'rgba(108,51,230,0.07)',
-                border: `1px solid ${newArrivedId === n.id ? 'rgba(108,51,230,0.4)' : n.read ? 'var(--border-subtle)' : 'rgba(108,51,230,0.2)'}`,
-                cursor: n.read ? 'default' : 'pointer',
-                boxShadow: newArrivedId === n.id ? '0 0 0 2px rgba(108,51,230,0.15)' : 'none',
-              }}>
-
-              {/* Delete button */}
-              <button
-                onClick={e => { e.stopPropagation(); deleteNotif(n.id) }}
-                disabled={deleting === n.id}
-                className="absolute top-3 right-3 w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+      <div className="fade-up-1">
+        {loading ? <PageSpinner /> : notifs.length === 0 ? (
+          <div className="card"><EmptyState icon={Bell} title={t('no_notifs')} description={t('no_notifs_desc')} /></div>
+        ) : (
+          <NotificationGroups items={notifs} renderItem={n => {
+            const Icon = n.type === 'audio' ? Mic : Headphones
+            return (
+              <article onClick={() => !n.read && markRead(n.id)}
+                className={`group relative flex items-start gap-4 px-4 sm:px-5 py-4 transition-colors ${n.read ? '' : 'cursor-pointer'}`}
                 style={{
-                  opacity: hoverItem === n.id ? 1 : 0,
-                  pointerEvents: hoverItem === n.id ? 'auto' : 'none',
-                  background: 'rgba(239,68,68,0.08)',
-                  border: '1px solid rgba(239,68,68,0.15)',
-                  color: '#ef4444',
+                  background: newArrivedId === n.id ? 'rgba(var(--gold-rgb),0.1)' : n.read ? undefined : 'rgba(var(--accent-rgb),0.035)',
                 }}>
-                {deleting === n.id ? (
-                  <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin"
-                    style={{ borderColor: 'rgba(239,68,68,0.3)', borderTopColor: '#ef4444' }} />
-                ) : (
-                  <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                    <path d="M1.5 3h8M3.5 3V2h4v1M4 5v3M7 5v3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
-                    <path d="M2.5 3l.5 6h5l.5-6" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
-              </button>
-
-              {/* Icon */}
-              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{
-                  background: n.read ? 'var(--bg-card)' : 'rgba(108,51,230,0.15)',
-                  border: `1px solid ${n.read ? 'var(--border-subtle)' : 'rgba(108,51,230,0.25)'}`,
-                }}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <rect x="3.5" y="0.5" width="4" height="6" rx="2"
-                    stroke={n.read ? 'var(--text-muted)' : '#8b5cf6'} strokeWidth="1.2"/>
-                  <path d="M1.5 5.5c0 2.2 1.8 4 4 4s4-1.8 4-4"
-                    stroke={n.read ? 'var(--text-muted)' : '#8b5cf6'} strokeWidth="1.2" strokeLinecap="round"/>
-                  <path d="M9 10l5 4M14 10l-5 4" stroke={n.read ? 'var(--text-muted)' : '#6c33e6'} strokeWidth="1.2" strokeLinecap="round"/>
-                </svg>
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-medium" style={{ color: n.read ? 'var(--text-2)' : 'var(--text)' }}>
-                    {n.student_name}
-                  </p>
-                  <span className="text-xs flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
-                    {timeAgo(n.created_at)}
-                  </span>
-                </div>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{n.message}</p>
-                <div className="flex items-center gap-2 mt-2">
-                  {n.parasha_id && (
-                    <span className="text-xs px-2 py-0.5 rounded-md"
-                      style={{ background: 'rgba(108,51,230,0.1)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.15)' }}>
-                      {n.parasha_id}
-                    </span>
-                  )}
-                  {n.aliyah_label && (
-                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{n.aliyah_label}</span>
-                  )}
-                  {!n.read && (
-                    <span className="ml-auto text-xs" style={{ color: '#8b5cf6' }}>{t('click_mark_read')}</span>
-                  )}
-                </div>
-                {n.type === 'audio' && n.recording_url && (
-                  <div className="mt-2 flex flex-col gap-2">
-                    <audio controls src={n.recording_url} preload="none"
-                      style={{ width: '100%', height: '32px', borderRadius: '6px' }}
-                      onClick={e => e.stopPropagation()} />
-                    {n.parasha_id && (
-                      <button
-                        onClick={e => {
-                          e.stopPropagation()
-                          navigate(`/teacher/study/${n.parasha_id}?aliyah=${n.aliyah_idx ?? 0}`)
-                        }}
-                        className="self-start flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                        style={{ background: 'rgba(108,51,230,0.12)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.25)' }}>
-                        <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                          <path d="M1.5 5.5h8M6 2l3.5 3.5L6 9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        {t('read_parasha')}
-                      </button>
-                    )}
+                <span className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: n.read ? 'var(--surface-2)' : 'rgba(var(--accent-rgb),0.08)', color: n.read ? 'var(--text-3)' : 'rgb(var(--accent-rgb))' }}>
+                  <Icon size={17} strokeWidth={1.8} />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <p className={`text-[14px] ${n.read ? 'text-ink-2' : 'text-ink font-semibold'}`}>{n.student_name}</p>
+                    <span className="text-[12px] text-ink-4 flex-shrink-0">{timeAgo(n.created_at, locale)}</span>
                   </div>
-                )}
-              </div>
-
-              {!n.read && (
-                <div className="w-2 h-2 rounded-full flex-shrink-0 mt-1" style={{ background: '#6c33e6' }} />
-              )}
-            </div>
-          ))}
-        </div>
+                  <p className="text-[14px] text-ink-3 mt-0.5">{n.message}</p>
+                  {(n.parasha_id || n.aliyah_label) && (
+                    <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                      {n.parasha_id && <span className="badge">{displayParashaName(n.parasha_id)}</span>}
+                      {n.aliyah_label && <span className="badge">{n.aliyah_label}</span>}
+                    </div>
+                  )}
+                  {n.type === 'audio' && n.recording_url && (
+                    <div className="mt-3 flex flex-col gap-2" onClick={e => e.stopPropagation()}>
+                      <audio controls src={n.recording_url} preload="none" className="w-full h-9" />
+                      {n.parasha_id && (
+                        <button onClick={() => navigate(`/teacher/study/${n.parasha_id}?aliyah=${n.aliyah_idx ?? 0}`)}
+                          className="btn btn-secondary btn-sm self-start">
+                          {t('read_parasha')}<ArrowRight size={14} className="rtl:rotate-180" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                  {!n.read && <span className="w-2 h-2 rounded-full bg-gold mt-1.5" aria-label={t('unread_n')} />}
+                  <button onClick={e => { e.stopPropagation(); deleteNotif(n.id) }} disabled={deleting === n.id}
+                    className="btn btn-ghost btn-sm btn-icon text-ink-4 hover:text-danger opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                    aria-label={t('ui_delete')}>
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              </article>
+            )
+          }} />
+        )}
       </div>
     </div>
   )

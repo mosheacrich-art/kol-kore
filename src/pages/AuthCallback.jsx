@@ -45,7 +45,7 @@ export default function AuthCallback() {
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
       <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
-        style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#6c33e6' }} />
+        style={{ borderColor: 'rgba(var(--accent-rgb),0.3)', borderTopColor: 'rgb(var(--accent-rgb))' }} />
     </div>
   )
 }

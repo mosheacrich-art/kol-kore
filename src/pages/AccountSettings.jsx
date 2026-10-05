@@ -1,12 +1,51 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { KeyRound, LogOut, Monitor, Moon, Sun, Trash2, UserRound } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useLang } from '../context/LangContext'
+import { useTheme } from '../context/ThemeContext'
 import { supabase } from '../lib/supabase'
+import LangToggle from '../components/LangToggle'
+import { Avatar, PageHeader } from '../components/ui'
+
+function Group({ icon: Icon, title, description, children, tone }) {
+  return (
+    <section className="card p-5 sm:p-6">
+      <div className="flex items-start gap-3 mb-5">
+        {Icon && (
+          <span className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={tone === 'danger'
+              ? { background: 'rgba(var(--danger-rgb),0.08)', color: 'rgb(var(--danger-rgb))' }
+              : { background: 'var(--surface-2)', color: 'var(--text-2)' }}>
+            <Icon size={17} strokeWidth={1.8} />
+          </span>
+        )}
+        <div className="min-w-0">
+          <h2 className={`text-[16px] font-semibold ${tone === 'danger' ? 'text-danger' : 'text-ink'}`}>{title}</h2>
+          {description && <p className="text-[13px] text-ink-3 mt-0.5">{description}</p>}
+        </div>
+      </div>
+      {children}
+    </section>
+  )
+}
+
+function Message({ msg }) {
+  if (!msg) return null
+  return (
+    <p role="status" className="text-[13px] px-3.5 py-2.5 rounded-xl"
+      style={msg.ok
+        ? { color: 'rgb(var(--success-rgb))', background: 'rgba(var(--success-rgb),0.08)' }
+        : { color: 'rgb(var(--danger-rgb))', background: 'rgba(var(--danger-rgb),0.07)' }}>
+      {msg.text}
+    </p>
+  )
+}
 
 export default function AccountSettings() {
-  const { profile, setProfile, signOut } = useAuth()
+  const { user, profile, setProfile, signOut } = useAuth()
   const { t } = useLang()
+  const { isDark, toggle } = useTheme()
   const navigate = useNavigate()
   const isTeacher = profile?.role === 'teacher'
 
@@ -18,8 +57,8 @@ export default function AccountSettings() {
   const handleSaveName = async (e) => {
     e.preventDefault()
     const trimmed = displayName.trim()
-    if (!trimmed) { setNameMsg({ ok: false, text: 'Name cannot be empty' }); return }
-    if (trimmed === profile?.name) { setNameMsg({ ok: false, text: 'That is already your current name' }); return }
+    if (!trimmed) { setNameMsg({ ok: false, text: t('ui_name_empty') }); return }
+    if (trimmed === profile?.name) { setNameMsg({ ok: false, text: t('ui_name_same') }); return }
     setNameLoading(true)
     setNameMsg(null)
     const { error } = await supabase.from('profiles').update({ name: trimmed }).eq('id', profile.id)
@@ -28,7 +67,7 @@ export default function AccountSettings() {
       setNameMsg({ ok: false, text: error.message })
     } else {
       setProfile(p => ({ ...p, name: trimmed }))
-      setNameMsg({ ok: true, text: 'Name updated' })
+      setNameMsg({ ok: true, text: t('ui_name_updated') })
     }
   }
 
@@ -91,155 +130,100 @@ export default function AccountSettings() {
     }
   }
 
-  const accent = isTeacher ? '#f9b800' : '#8b5cf6'
-  const accentBg = isTeacher ? 'rgba(249,184,0,0.1)' : 'rgba(108,51,230,0.1)'
-  const accentBorder = isTeacher ? 'rgba(249,184,0,0.2)' : 'rgba(108,51,230,0.2)'
-
   return (
-    <div className="flex-1 overflow-auto px-4 py-6 max-w-lg mx-auto w-full">
-      <h1 className="text-lg font-semibold mb-6" style={{ color: 'var(--text)' }}>
-        {t('nav_account')}
-      </h1>
+    <div className="page page-narrow">
+      <PageHeader hebrew="חֶשְׁבּוֹן" eyebrow={t('nav_account')} title={t('nav_account')} subtitle={t('ui_account_subtitle')} />
 
-      {/* ── Change display name ─────────────────────────────────────────── */}
-      <section className="rounded-2xl p-5 mb-4"
-        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--text)' }}>
-          Display name
-        </h2>
-
-        <form onSubmit={handleSaveName} className="flex flex-col gap-3">
-          <input
-            type="text"
-            placeholder="Your name"
-            value={displayName}
-            onChange={e => { setDisplayName(e.target.value); setNameMsg(null) }}
-            className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-            style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
-          />
-
-          {nameMsg && (
-            <p className="text-xs px-3 py-2 rounded-lg"
-              style={{
-                color: nameMsg.ok ? '#22c55e' : '#ef4444',
-                background: nameMsg.ok ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.08)',
-                border: `1px solid ${nameMsg.ok ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.15)'}`,
-              }}>
-              {nameMsg.text}
-            </p>
-          )}
-
-          <button type="submit" disabled={nameLoading || !displayName.trim()}
-            className="py-2.5 rounded-xl text-sm font-semibold transition-all"
-            style={{
-              background: nameLoading || !displayName.trim() ? 'var(--bg)' : `linear-gradient(135deg, ${accent}, ${accent}cc)`,
-              color: nameLoading || !displayName.trim() ? 'var(--text-3)' : isTeacher ? '#0d0b1e' : '#fff',
-              border: `1px solid ${nameLoading || !displayName.trim() ? 'var(--border)' : accent}`,
-            }}>
-            {nameLoading ? '…' : 'Save name'}
-          </button>
-        </form>
-      </section>
-
-      {/* ── Change password ─────────────────────────────────────────────── */}
-      <section className="rounded-2xl p-5 mb-4"
-        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--text)' }}>
-          {t('change_password')}
-        </h2>
-
-        <form onSubmit={handleResetPassword} className="flex flex-col gap-3">
-          <input
-            type="password"
-            placeholder={t('new_password')}
-            value={newPwd}
-            onChange={e => setNewPwd(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-            style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
-          />
-          <input
-            type="password"
-            placeholder={t('repeat_password')}
-            value={repeatPwd}
-            onChange={e => setRepeatPwd(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-            style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
-          />
-
-          {pwdMsg && (
-            <p className="text-xs px-3 py-2 rounded-lg"
-              style={{
-                color: pwdMsg.ok ? '#22c55e' : '#ef4444',
-                background: pwdMsg.ok ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.08)',
-                border: `1px solid ${pwdMsg.ok ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.15)'}`,
-              }}>
-              {pwdMsg.text}
-            </p>
-          )}
-
-          <button type="submit" disabled={pwdLoading || !newPwd}
-            className="py-2.5 rounded-xl text-sm font-semibold transition-all"
-            style={{
-              background: pwdLoading || !newPwd ? 'var(--bg)' : `linear-gradient(135deg, ${accent}, ${accent}cc)`,
-              color: pwdLoading || !newPwd ? 'var(--text-3)' : isTeacher ? '#0d0b1e' : '#fff',
-              border: `1px solid ${pwdLoading || !newPwd ? 'var(--border)' : accent}`,
-            }}>
-            {pwdLoading ? '…' : t('save_password')}
-          </button>
-        </form>
-      </section>
-
-      {/* ── Danger zone: delete account ─────────────────────────────────── */}
-      <section className="rounded-2xl p-5"
-        style={{ background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.15)' }}>
-        <h2 className="text-sm font-semibold mb-1" style={{ color: '#ef4444' }}>
-          {t('delete_account')}
-        </h2>
-        <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>
-          {t('delete_account_desc')}
-        </p>
-
-        {deletePhase === 'idle' && (
-          <button onClick={() => setDeletePhase('confirm')}
-            className="px-4 py-2 rounded-xl text-xs font-semibold transition-all"
-            style={{ color: '#ef4444', background: 'rgba(239,68,68,0.09)', border: '1px solid rgba(239,68,68,0.2)' }}>
-            {t('delete_account')}
-          </button>
-        )}
-
-        {(deletePhase === 'confirm' || deletePhase === 'deleting') && (
-          <div className="flex flex-col gap-3">
-            <p className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>
-              {t('delete_account_confirm').replace('{word}', CONFIRM_WORD)}
-            </p>
-            <input
-              type="text"
-              placeholder={CONFIRM_WORD}
-              value={deleteConfirm}
-              onChange={e => { setDeleteConfirm(e.target.value); setDeleteError(null) }}
-              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-              style={{ background: 'var(--bg)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--text)' }}
-            />
-            {deleteError && (
-              <p className="text-xs" style={{ color: '#ef4444' }}>{deleteError}</p>
-            )}
-            <div className="flex gap-2">
-              <button onClick={() => { setDeletePhase('idle'); setDeleteConfirm(''); setDeleteError(null) }}
-                disabled={deletePhase === 'deleting'}
-                className="flex-1 py-2 rounded-xl text-xs transition-all"
-                style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                {t('cancel') || 'Cancelar'}
-              </button>
-              <button onClick={handleDeleteAccount}
-                disabled={deletePhase === 'deleting'}
-                className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
-                style={{ color: '#fff', background: '#ef4444', border: '1px solid #ef4444' }}>
-                {deletePhase === 'deleting' ? '…' : t('delete_account_btn')}
-              </button>
-            </div>
+      {/* Identity */}
+      <section className="card p-5 sm:p-6 mb-5 flex items-center gap-5 fade-up-1">
+        <Avatar name={profile?.name || ''} size={64} />
+        <div className="min-w-0 flex-1">
+          <p className="font-serif text-[24px] font-semibold text-ink truncate">{profile?.name}</p>
+          <p className="text-[14px] text-ink-3 truncate">
+            {isTeacher ? t('role_teacher_label') : t('role_student_label')}{user?.email ? ` · ${user.email}` : ''}
+          </p>
+        </div>
+        {isTeacher && profile?.teacher_code && (
+          <div className="hidden sm:block text-end">
+            <p className="eyebrow mb-1">{t('teacher_code')}</p>
+            <p className="font-mono text-[18px] font-semibold tracking-[0.2em] text-ink" dir="ltr">{profile.teacher_code}</p>
           </div>
         )}
       </section>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 fade-up-2">
+        <Group icon={UserRound} title={t('ui_profile')} description={t('ui_display_name_desc')}>
+          <form onSubmit={handleSaveName} className="flex flex-col gap-3">
+            <label className="label" htmlFor="acc-name">{t('ui_display_name')}</label>
+            <input id="acc-name" type="text" value={displayName} className="input -mt-2"
+              onChange={e => { setDisplayName(e.target.value); setNameMsg(null) }} />
+            <Message msg={nameMsg} />
+            <button type="submit" disabled={nameLoading || !displayName.trim()} className="btn btn-primary self-start">
+              {nameLoading ? t('saving') : t('ui_save')}
+            </button>
+          </form>
+        </Group>
+
+        <Group icon={Monitor} title={t('ui_preferences')} description={t('ui_preferences_desc')}>
+          <p className="label">{t('language')}</p>
+          <LangToggle variant="list" />
+          <p className="label mt-5">{t('ui_appearance')}</p>
+          <div className="segmented w-full">
+            <button aria-pressed={!isDark} onClick={() => isDark && toggle()} className="flex-1 inline-flex items-center justify-center gap-1.5">
+              <Sun size={14} />{t('light_mode')}
+            </button>
+            <button aria-pressed={isDark} onClick={() => !isDark && toggle()} className="flex-1 inline-flex items-center justify-center gap-1.5">
+              <Moon size={14} />{t('dark_mode')}
+            </button>
+          </div>
+        </Group>
+
+        <Group icon={KeyRound} title={t('change_password')} description={t('ui_security_desc')}>
+          <form onSubmit={handleResetPassword} className="flex flex-col gap-3">
+            <input type="password" autoComplete="new-password" placeholder={t('new_password')} aria-label={t('new_password')}
+              value={newPwd} onChange={e => setNewPwd(e.target.value)} className="input" />
+            <input type="password" autoComplete="new-password" placeholder={t('repeat_password')} aria-label={t('repeat_password')}
+              value={repeatPwd} onChange={e => setRepeatPwd(e.target.value)} className="input" />
+            <Message msg={pwdMsg} />
+            <button type="submit" disabled={pwdLoading || !newPwd} className="btn btn-primary self-start">
+              {pwdLoading ? t('saving') : t('save_password')}
+            </button>
+          </form>
+        </Group>
+
+        <Group icon={LogOut} title={t('ui_session')} description={t('ui_session_desc')}>
+          <button onClick={async () => { await signOut(); navigate('/login') }} className="btn btn-secondary">
+            <LogOut size={16} className="rtl:rotate-180" />{t('logout')}
+          </button>
+        </Group>
+      </div>
+
+      <div className="mt-5 fade-up-3">
+        <Group icon={Trash2} tone="danger" title={t('delete_account')} description={t('delete_account_desc')}>
+          {deletePhase === 'idle' && (
+            <button onClick={() => setDeletePhase('confirm')} className="btn btn-danger">{t('delete_account')}</button>
+          )}
+          {(deletePhase === 'confirm' || deletePhase === 'deleting') && (
+            <div className="flex flex-col gap-3 max-w-md">
+              <p className="text-[13px] font-medium text-ink-2">{t('delete_account_confirm').replace('{word}', CONFIRM_WORD)}</p>
+              <input type="text" placeholder={CONFIRM_WORD} value={deleteConfirm} className="input"
+                style={{ borderColor: 'rgba(var(--danger-rgb),0.35)' }}
+                onChange={e => { setDeleteConfirm(e.target.value); setDeleteError(null) }} />
+              {deleteError && <p className="text-[13px] text-danger">{deleteError}</p>}
+              <div className="flex gap-2.5">
+                <button onClick={() => { setDeletePhase('idle'); setDeleteConfirm(''); setDeleteError(null) }}
+                  disabled={deletePhase === 'deleting'} className="btn btn-secondary">
+                  {t('cancel') || 'Cancelar'}
+                </button>
+                <button onClick={handleDeleteAccount} disabled={deletePhase === 'deleting'} className="btn"
+                  style={{ background: 'rgb(var(--danger-rgb))', color: '#fff' }}>
+                  {deletePhase === 'deleting' ? '…' : t('delete_account_btn')}
+                </button>
+              </div>
+            </div>
+          )}
+        </Group>
+      </div>
     </div>
   )
 }

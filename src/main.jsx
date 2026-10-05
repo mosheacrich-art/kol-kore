@@ -1,5 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import '@fontsource-variable/inter'
+import '@fontsource-variable/source-serif-4/opsz.css'
+import '@fontsource-variable/frank-ruhl-libre'
+import '@fontsource-variable/heebo'
 import './index.css'
 import App from './App.jsx'
 import { Capacitor } from '@capacitor/core'
@@ -14,9 +18,10 @@ if ('serviceWorker' in navigator) {
 }
 
 if (Capacitor.isNativePlatform()) {
-  StatusBar.setStyle({ style: Style.Dark })
+  const dark = localStorage.getItem('theme') === 'dark'
+  StatusBar.setStyle({ style: dark ? Style.Dark : Style.Light })
   if (Capacitor.getPlatform() === 'android') {
-    StatusBar.setBackgroundColor({ color: '#07060f' })
+    StatusBar.setBackgroundColor({ color: dark ? '#0A1322' : '#FAF8F4' })
   }
 
   // Push notifications

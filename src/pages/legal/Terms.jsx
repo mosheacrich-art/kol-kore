@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom'
-import { useTheme } from '../../context/ThemeContext'
 import { useLang } from '../../context/LangContext'
 import LangToggle from '../../components/LangToggle'
+import { ArrowLeft } from 'lucide-react'
+import { Logo } from '../../components/ui'
 
 function getSections(lang) {
   const es = lang === 'es'
@@ -10,9 +11,9 @@ function getSections(lang) {
       title: es ? '1. Descripción del servicio' : '1. Service Description',
       body: es
         ? <><p>Perashá es una plataforma de estudio de Torá que permite a alumnos estudiar las parashot semanales con texto, audio sincronizado y seguimiento de progreso, y a profesores gestionar alumnos, asignar deberes y subir grabaciones de referencia.</p>
-            <p className="mt-2">Prestada por <strong style={{ color: 'var(--text)' }}>PerashApp</strong> (perashapp.com). Contacto: <a href="mailto:contact.perashapp@gmail.com" style={{ color: '#6c33e6' }}>contact.perashapp@gmail.com</a>.</p></>
+            <p className="mt-2">Prestada por <strong style={{ color: 'var(--text)' }}>PerashApp</strong> (perashapp.com). Contacto: <a href="mailto:contact.perashapp@gmail.com" style={{ color: 'rgb(var(--accent-rgb))' }}>contact.perashapp@gmail.com</a>.</p></>
         : <><p>Perashá is a Torah study platform that allows students to study weekly parashot with text, synchronized audio and progress tracking, and teachers to manage students, assign homework and upload reference recordings.</p>
-            <p className="mt-2">Provided by <strong style={{ color: 'var(--text)' }}>PerashApp</strong> (perashapp.com). Contact: <a href="mailto:contact.perashapp@gmail.com" style={{ color: '#6c33e6' }}>contact.perashapp@gmail.com</a>.</p></>
+            <p className="mt-2">Provided by <strong style={{ color: 'var(--text)' }}>PerashApp</strong> (perashapp.com). Contact: <a href="mailto:contact.perashapp@gmail.com" style={{ color: 'rgb(var(--accent-rgb))' }}>contact.perashapp@gmail.com</a>.</p></>
     },
     {
       title: es ? '2. Registro y cuenta' : '2. Registration and Account',
@@ -51,7 +52,7 @@ function getSections(lang) {
             </table>
           </div>
           <p className="mt-3">Los pagos en la aplicación iOS son gestionados por Apple a través de las compras integradas de la App Store (In-App Purchase). Al suscribirte aceptas también los{' '}
-            <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noreferrer" style={{ color: '#6c33e6' }}>Términos de Licencia de Usuario Final de Apple</a>.
+            <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noreferrer" style={{ color: 'rgb(var(--accent-rgb))' }}>Términos de Licencia de Usuario Final de Apple</a>.
           </p></>
         : <><div className="mt-1 rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
             <table className="w-full text-sm">
@@ -73,24 +74,24 @@ function getSections(lang) {
             </table>
           </div>
           <p className="mt-3">Payments within the iOS app are managed by Apple through App Store In-App Purchase. By subscribing you also accept{' '}
-            <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noreferrer" style={{ color: '#6c33e6' }}>Apple's End User License Agreement</a>.
+            <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noreferrer" style={{ color: 'rgb(var(--accent-rgb))' }}>Apple's End User License Agreement</a>.
           </p></>
     },
     {
       title: es ? '5. Renovación automática y cancelación' : '5. Auto-Renewal and Cancellation',
       body: es
-        ? <div className="p-4 rounded-xl mt-1 flex items-start gap-3" style={{ background: 'rgba(108,51,230,0.07)', border: '1px solid rgba(108,51,230,0.2)' }}>
+        ? <div className="p-4 rounded-xl mt-1 flex items-start gap-3" style={{ background: 'rgba(var(--accent-rgb),0.07)', border: '1px solid rgba(var(--accent-rgb),0.2)' }}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
-              <circle cx="8" cy="8" r="6.5" stroke="#6c33e6" strokeWidth="1.3"/>
-              <path d="M8 5v4M8 10.5v.5" stroke="#6c33e6" strokeWidth="1.5" strokeLinecap="round"/>
+              <circle cx="8" cy="8" r="6.5" stroke="rgb(var(--accent-rgb))" strokeWidth="1.3"/>
+              <path d="M8 5v4M8 10.5v.5" stroke="rgb(var(--accent-rgb))" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
             <p>La suscripción se <strong style={{ color: 'var(--text)' }}>renueva automáticamente</strong> al final de cada periodo salvo que se cancele al menos 24 horas antes. La renovación se carga a través de tu cuenta de Apple ID.{' '}
               <strong style={{ color: 'var(--text)' }}>Para cancelar</strong>, ve a Ajustes → tu nombre → Suscripciones en tu dispositivo iOS. No se reembolsan los periodos ya cobrados.</p>
           </div>
-        : <div className="p-4 rounded-xl mt-1 flex items-start gap-3" style={{ background: 'rgba(108,51,230,0.07)', border: '1px solid rgba(108,51,230,0.2)' }}>
+        : <div className="p-4 rounded-xl mt-1 flex items-start gap-3" style={{ background: 'rgba(var(--accent-rgb),0.07)', border: '1px solid rgba(var(--accent-rgb),0.2)' }}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
-              <circle cx="8" cy="8" r="6.5" stroke="#6c33e6" strokeWidth="1.3"/>
-              <path d="M8 5v4M8 10.5v.5" stroke="#6c33e6" strokeWidth="1.5" strokeLinecap="round"/>
+              <circle cx="8" cy="8" r="6.5" stroke="rgb(var(--accent-rgb))" strokeWidth="1.3"/>
+              <path d="M8 5v4M8 10.5v.5" stroke="rgb(var(--accent-rgb))" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
             <p>The subscription <strong style={{ color: 'var(--text)' }}>renews automatically</strong> at the end of each period unless cancelled at least 24 hours before. The renewal is charged to your Apple ID account.{' '}
               <strong style={{ color: 'var(--text)' }}>To cancel</strong>, go to Settings → your name → Subscriptions on your iOS device. No refunds are given for periods already charged.</p>
@@ -100,14 +101,14 @@ function getSections(lang) {
       title: es ? '6. Política de reembolsos' : '6. Refund Policy',
       body: es
         ? <p>Los reembolsos de compras realizadas a través de Apple se gestionan conforme a la política de Apple. Para solicitar un reembolso, visita{' '}
-            <a href="https://reportaproblem.apple.com" target="_blank" rel="noreferrer" style={{ color: '#6c33e6' }}>reportaproblem.apple.com</a>.
+            <a href="https://reportaproblem.apple.com" target="_blank" rel="noreferrer" style={{ color: 'rgb(var(--accent-rgb))' }}>reportaproblem.apple.com</a>.
             Para cualquier incidencia técnica del servicio contacta con{' '}
-            <a href="mailto:contact.perashapp@gmail.com" style={{ color: '#6c33e6' }}>contact.perashapp@gmail.com</a>.
+            <a href="mailto:contact.perashapp@gmail.com" style={{ color: 'rgb(var(--accent-rgb))' }}>contact.perashapp@gmail.com</a>.
           </p>
         : <p>Refunds for purchases made through Apple are handled in accordance with Apple's policy. To request a refund, visit{' '}
-            <a href="https://reportaproblem.apple.com" target="_blank" rel="noreferrer" style={{ color: '#6c33e6' }}>reportaproblem.apple.com</a>.
+            <a href="https://reportaproblem.apple.com" target="_blank" rel="noreferrer" style={{ color: 'rgb(var(--accent-rgb))' }}>reportaproblem.apple.com</a>.
             For any service technical issue contact{' '}
-            <a href="mailto:contact.perashapp@gmail.com" style={{ color: '#6c33e6' }}>contact.perashapp@gmail.com</a>.
+            <a href="mailto:contact.perashapp@gmail.com" style={{ color: 'rgb(var(--accent-rgb))' }}>contact.perashapp@gmail.com</a>.
           </p>
     },
     {
@@ -163,42 +164,32 @@ function getSections(lang) {
 
 export default function Terms() {
   const navigate = useNavigate()
-  const { isDark } = useTheme()
   const { lang } = useLang()
-  const bg = isDark ? '#07060f' : '#f5f0e4'
   const es = lang === 'es'
 
   const sections = getSections(lang)
 
   return (
-    <div className="min-h-screen" style={{ background: bg }}>
-      <div className="max-w-3xl mx-auto px-6 py-12">
-        <div className="flex items-center justify-between mb-10">
-          <button onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-xs px-4 py-2 rounded-full transition-all"
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-3)' }}>
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-              <path d="M8 2L3 6.5l5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            {es ? 'Volver' : 'Back'}
+    <div className="min-h-[100svh] bg-canvas">
+      <header className="sticky top-0 z-30 app-header" style={{ background: 'color-mix(in srgb, var(--bg) 88%, transparent)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--border-subtle)' }}>
+        <div className="max-w-3xl mx-auto flex items-center justify-between gap-3 px-4 sm:px-6 h-16">
+          <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm text-ink-3">
+            <ArrowLeft size={16} className="rtl:rotate-180" />{es ? 'Volver' : 'Back'}
           </button>
-          <LangToggle compact />
+          <Logo size={28} />
+          <LangToggle />
         </div>
-
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>Legal</p>
-        <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-          {es ? 'Términos y Condiciones' : 'Terms and Conditions'}
-        </h1>
-        <p className="text-sm mb-10" style={{ color: 'var(--text-3)' }}>
-          {es ? 'Última actualización: junio de 2025' : 'Last updated: June 2025'}
-        </p>
-
-        <div className="flex flex-col gap-8" style={{ color: 'var(--text-2)', lineHeight: 1.7 }}>
+      </header>
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
+        <p className="eyebrow mb-3">Legal</p>
+        <h1 className="page-title">{es ? 'Términos y Condiciones' : 'Terms and Conditions'}</h1>
+        <p className="page-subtitle mb-10">{es ? 'Última actualización: junio de 2025' : 'Last updated: June 2025'}</p>
+        <div className="card p-6 sm:p-10 flex flex-col gap-9">
           {sections.map((s, i) => (
             <Section key={i} title={s.title}>{s.body}</Section>
           ))}
         </div>
-      </div>
+      </main>
     </div>
   )
 }
@@ -206,8 +197,8 @@ export default function Terms() {
 function Section({ title, children }) {
   return (
     <div>
-      <h2 className="text-base font-semibold mb-3" style={{ color: 'var(--text)' }}>{title}</h2>
-      <div className="text-sm" style={{ color: 'var(--text-2)' }}>{children}</div>
+      <h2 className="font-serif text-[20px] font-semibold text-ink mb-3">{title}</h2>
+      <div className="text-[15px] text-ink-2 leading-[1.75]">{children}</div>
     </div>
   )
 }

@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import { ArrowRight, Check, CheckCircle2, Lock, RotateCcw } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { useLang } from '../../context/LangContext'
 import { Capacitor } from '@capacitor/core'
 import { setupIAP, getIAPOfferings, purchaseIAP, restoreIAP, getPlanFromCustomerInfo } from '../../lib/iap'
+import { PageHeader, Spinner } from '../../components/ui'
 
 const MONTHLY_ID = 'pdt_0Ne7sWfihRRycFHWb1SB2'
 const ANNUAL_ID  = 'pdt_0Ne7sn0u5XBSPuebqTIsh'
 
 export default function StudentSubscription() {
-  const { user, profile, setProfile, loading } = useAuth()
+  const { user, profile, setProfile } = useAuth()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { t } = useLang()
@@ -32,32 +34,36 @@ export default function StudentSubscription() {
       if (attempts >= 15) clearInterval(interval) // stop after ~45s
     }, 3000)
     return () => clearInterval(interval)
-  }, [justPaid, isActive])
+  }, [justPaid, isActive]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (justPaid && !isActive) {
-    return <ActivatingView t={t} />
-  }
-
-  if (isActive) {
-    return <ActiveView profile={profile} justPaid={justPaid} navigate={navigate} t={t} />
-  }
-
-  if (Capacitor.isNativePlatform()) {
-    return <NativeCheckoutView user={user} profile={profile} setProfile={setProfile} t={t} />
-  }
+  if (justPaid && !isActive) return <ActivatingView t={t} />
+  if (isActive) return <ActiveView profile={profile} justPaid={justPaid} navigate={navigate} t={t} />
+  if (Capacitor.isNativePlatform()) return <NativeCheckoutView user={user} profile={profile} setProfile={setProfile} t={t} />
   return <CheckoutView user={user} profile={profile} t={t} />
 }
 
 function ActivatingView({ t }) {
   return (
-    <div className="p-4 sm:p-8 max-w-lg mx-auto flex flex-col items-center justify-center min-h-[60vh] gap-6">
-      <div className="w-14 h-14 rounded-full border-2 border-t-transparent animate-spin"
-        style={{ borderColor: 'rgba(108,51,230,0.2)', borderTopColor: '#6c33e6' }} />
-      <div className="text-center">
-        <p className="text-lg font-medium" style={{ color: 'var(--text)' }}>{t('activating_sub')}</p>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>{t('activating_desc')}</p>
+    <div className="page page-narrow flex flex-col items-center justify-center min-h-[60vh] gap-5 text-center">
+      <Spinner size={36} />
+      <div>
+        <p className="font-serif text-[22px] font-semibold text-ink">{t('activating_sub')}</p>
+        <p className="text-sm text-ink-3 mt-1">{t('activating_desc')}</p>
       </div>
     </div>
+  )
+}
+
+function FeatureList({ items, compact = false }) {
+  return (
+    <ul className={`flex flex-col ${compact ? 'gap-1.5' : 'gap-2.5'}`}>
+      {(items || []).map(f => (
+        <li key={f} className="flex items-start gap-2.5">
+          <Check size={compact ? 14 : 16} strokeWidth={2.4} className="flex-shrink-0 mt-0.5" style={{ color: 'rgb(var(--success-rgb))' }} />
+          <span className={`${compact ? 'text-[13px]' : 'text-[14px]'} text-ink-2 leading-snug`}>{f}</span>
+        </li>
+      ))}
+    </ul>
   )
 }
 
@@ -65,111 +71,95 @@ function ActiveView({ profile, justPaid, navigate, t }) {
   const endDate = profile?.subscription_end_date ? new Date(profile.subscription_end_date) : null
   const daysLeft = endDate ? Math.ceil((endDate - Date.now()) / (1000 * 60 * 60 * 24)) : null
   const plan = profile?.subscription_plan
-
   const planLabel = plan === 'annual' ? t('annual_plan') : plan === 'monthly' ? t('monthly_plan') : null
 
   return (
-    <div className="p-4 sm:p-8 max-w-2xl mx-auto">
-      <div className="mb-8 fade-up-1">
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          הַרְשָׁמָה · Suscripción
-        </p>
-        <h1 className="text-3xl font-light" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-          Tu suscripción
-        </h1>
-      </div>
+    <div className="page page-narrow">
+      <PageHeader hebrew="הַרְשָׁמָה" eyebrow={t('nav_subscription')} title={t('ui_your_subscription')} />
 
       {justPaid && (
-        <div className="mb-6 p-4 rounded-2xl flex items-center gap-3 fade-up-1"
-          style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)' }}>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(34,197,94,0.2)' }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <circle cx="7" cy="7" r="6" stroke="#16a34a" strokeWidth="1.3"/>
-              <path d="M4 7l2.5 2.5L10 5" stroke="#16a34a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
+        <div className="mb-5 p-4 rounded-2xl flex items-center gap-3 fade-up-1" style={{ background: 'rgba(var(--success-rgb),0.08)' }}>
+          <CheckCircle2 size={22} style={{ color: 'rgb(var(--success-rgb))' }} />
           <div>
-            <p className="text-sm font-semibold" style={{ color: '#16a34a' }}>{t('welcome_pro')}</p>
-            <p className="text-xs" style={{ color: 'var(--text-3)' }}>{t('sub_active_now')}</p>
+            <p className="text-[14px] font-semibold" style={{ color: 'rgb(var(--success-rgb))' }}>{t('welcome_pro')}</p>
+            <p className="text-[13px] text-ink-3">{t('sub_active_now')}</p>
           </div>
         </div>
       )}
 
-      {/* Status card */}
-      <div className="p-5 rounded-2xl mb-4 fade-up-2"
-        style={{ background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.2)' }}>
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: '#22c55e' }} />
-            <div>
-              <p className="text-sm font-semibold" style={{ color: '#16a34a' }}>{t('sub_active')}</p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{t('full_access')}</p>
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 fade-up-2">
+        <section className="card p-6">
+          <div className="flex items-center justify-between gap-3 mb-5">
+            <span className="badge badge-success badge-dot">{t('sub_active')}</span>
+            {planLabel && <span className="badge">{planLabel}</span>}
           </div>
-          {planLabel && (
-            <span className="text-xs px-2.5 py-1 rounded-full flex-shrink-0"
-              style={{ background: 'rgba(34,197,94,0.15)', color: '#16a34a', border: '1px solid rgba(34,197,94,0.3)' }}>
-              {planLabel}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Renewal info */}
-      {endDate && (
-        <div className="p-4 rounded-2xl mb-4 fade-up-2 flex items-center justify-between gap-3"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <div>
-            <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-              {daysLeft > 0 ? t('sub_renews_on') : t('sub_expired_on')}
-            </p>
-            <p className="text-sm font-medium mt-0.5" style={{ color: 'var(--text)' }}>
-              {endDate.toLocaleDateString(t('date_locale'), { day: 'numeric', month: 'long', year: 'numeric' })}
-            </p>
-          </div>
-          {daysLeft !== null && (
-            <div className="text-right flex-shrink-0">
-              <p className="text-2xl font-light tabular-nums"
-                style={{ color: daysLeft <= 7 ? '#f59e0b' : '#16a34a' }}>
-                {Math.max(0, daysLeft)}
-              </p>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>días</p>
+          <p className="text-[14px] text-ink-3">{t('full_access')}</p>
+          {endDate && (
+            <div className="mt-5 pt-5 flex items-end justify-between gap-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+              <div>
+                <p className="text-[12px] text-ink-3">{daysLeft > 0 ? t('sub_renews_on') : t('sub_expired_on')}</p>
+                <p className="text-[15px] font-medium text-ink mt-0.5">
+                  {endDate.toLocaleDateString(t('date_locale'), { day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+              </div>
+              {daysLeft !== null && (
+                <div className="text-end">
+                  <p className="font-serif text-[30px] font-semibold leading-none tabular-nums"
+                    style={{ color: daysLeft <= 7 ? 'rgb(var(--warning-rgb))' : 'var(--text)' }}>{Math.max(0, daysLeft)}</p>
+                  <p className="text-[12px] text-ink-3">{t('days')}</p>
+                </div>
+              )}
             </div>
           )}
-        </div>
-      )}
-
-      <div className="p-4 rounded-2xl mb-6 fade-up-3"
-        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{t('includes')}</p>
-        <ul className="flex flex-col gap-2">
-          {(t('sub_features') || []).map(item => (
-            <li key={item} className="flex items-center gap-2">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0 }}>
-                <circle cx="6" cy="6" r="5" stroke="#22c55e" strokeWidth="1.2"/>
-                <path d="M3.5 6l2 2L8.5 4" stroke="#22c55e" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <span className="text-xs" style={{ color: 'var(--text-2)' }}>{item}</span>
-            </li>
-          ))}
-        </ul>
+        </section>
+        <section className="card p-6">
+          <p className="eyebrow mb-4">{t('includes')}</p>
+          <FeatureList items={t('sub_features')} />
+        </section>
       </div>
 
-      <button onClick={() => navigate('/student/study')}
-        className="w-full py-3 rounded-xl text-sm font-semibold transition-all"
-        style={{ background: 'linear-gradient(135deg, #6c33e6, #8b5cf6)', color: '#fff', boxShadow: '0 4px 20px rgba(108,51,230,0.3)' }}>
-        {t('go_study')}
-      </button>
-
-      <p className="text-xs text-center mt-4" style={{ color: 'var(--text-muted)' }}>
-        {t('cancel_info')}
-      </p>
+      <div className="mt-6 flex flex-col items-center gap-3 fade-up-3">
+        <button onClick={() => navigate('/student/study')} className="btn btn-primary btn-lg w-full sm:w-auto">
+          {t('go_study')}<ArrowRight size={17} className="rtl:rotate-180" />
+        </button>
+        <p className="text-[12px] text-ink-3 text-center">{t('cancel_info')}</p>
+      </div>
     </div>
   )
 }
 
-function CheckoutView({ user, profile, t }) {
+function PlanCard({ selected, onSelect, title, price, unit, desc, badge, tag, features }) {
+  return (
+    <button onClick={onSelect} aria-pressed={selected}
+      className="relative text-start p-6 rounded-2xl bg-surface transition-all"
+      style={{
+        border: `1.5px solid ${selected ? 'rgb(var(--accent-rgb))' : 'var(--border)'}`,
+        boxShadow: selected ? '0 0 0 4px rgba(var(--accent-rgb),0.07), var(--shadow-md)' : 'var(--shadow-sm)',
+      }}>
+      {badge && (
+        <span className="absolute -top-3 end-5 btn-gold text-[12px] font-semibold h-6 px-2.5 rounded-full inline-flex items-center">{badge}</span>
+      )}
+      <span className="flex items-center justify-between gap-3">
+        <span className="flex items-center gap-2.5">
+          <span className="w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ border: `1.5px solid ${selected ? 'rgb(var(--accent-rgb))' : 'var(--border-strong)'}` }}>
+            {selected && <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'rgb(var(--accent-rgb))' }} />}
+          </span>
+          <span className="text-[15px] font-semibold text-ink">{title}</span>
+        </span>
+        {tag && <span className="badge">{tag}</span>}
+      </span>
+      <span className="flex items-baseline gap-1 mt-5">
+        <span className="font-serif text-[40px] font-semibold text-ink leading-none tracking-tight">{price}</span>
+        <span className="text-[14px] text-ink-3">{unit}</span>
+      </span>
+      {desc && <span className="block text-[13px] text-ink-3 mt-2">{desc}</span>}
+      {features && <span className="block mt-5 pt-5" style={{ borderTop: '1px solid var(--border-subtle)' }}><FeatureList items={features} compact /></span>}
+    </button>
+  )
+}
+
+function CheckoutView({ profile, t }) {
   const [plan, setPlan] = useState('annual')
   const [paying, setPaying] = useState(false)
 
@@ -197,135 +187,32 @@ function CheckoutView({ user, profile, t }) {
     }
   }
 
-  const Spinner = () => (
-    <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
-      style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#8b5cf6' }} />
-  )
-
   return (
-    <div className="p-4 sm:p-8 max-w-2xl mx-auto">
-      <div className="mb-8 fade-up-1">
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          הַרְשָׁמָה · Suscripción
-        </p>
-        <h1 className="text-3xl font-light" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-          {t('choose_plan')}
-        </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
-          {t('cancel_anytime')}
-        </p>
+    <div className="page page-narrow">
+      <PageHeader hebrew="הַרְשָׁמָה" eyebrow={t('nav_subscription')} title={t('choose_plan')} subtitle={t('cancel_anytime')} />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6 fade-up-1">
+        <PlanCard selected={plan === 'annual'} onSelect={() => setPlan('annual')} badge={t('save_17')}
+          title={t('annual_plan')} price="$100" unit={t('year_unit')} desc={t('annual_desc')} features={t('sub_features')} />
+        <PlanCard selected={plan === 'monthly'} onSelect={() => setPlan('monthly')} tag={t('flexible')}
+          title={t('monthly_plan')} price="$10" unit={t('month_unit')} desc={t('monthly_desc')} features={t('sub_features')} />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5 fade-up-2">
-
-        {/* Annual */}
-        <button onClick={() => setPlan('annual')}
-          className="rounded-2xl p-5 text-left transition-all relative"
-          style={{
-            background: plan === 'annual' ? 'rgba(249,184,0,0.07)' : 'var(--bg-card)',
-            border: `1.5px solid ${plan === 'annual' ? '#f9b800' : 'var(--border)'}`,
-          }}>
-          <div className="absolute -top-3 right-4">
-            <span className="text-xs px-2.5 py-1 rounded-full font-semibold"
-              style={{ background: 'linear-gradient(135deg, #f9b800, #ffd54f)', color: '#0d0b1e' }}>
-              {t('save_17')}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0"
-              style={{ borderColor: plan === 'annual' ? '#f9b800' : 'var(--border)' }}>
-              {plan === 'annual' && <div className="w-2 h-2 rounded-full" style={{ background: '#f9b800' }} />}
-            </div>
-            <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{t('annual_plan')}</span>
-          </div>
-          <div className="mb-0.5">
-            <span className="text-3xl font-light" style={{ color: 'var(--text)' }}>$100</span>
-            <span className="text-sm ml-1" style={{ color: 'var(--text-3)' }}>{t('year_unit')}</span>
-          </div>
-          <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{t('annual_desc')}</p>
-          <ul className="flex flex-col gap-1.5">
-            {(t('sub_features') || []).map(f => (
-              <li key={f} className="flex items-start gap-1.5">
-                <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ flexShrink: 0, marginTop: '2px' }}>
-                  <circle cx="5.5" cy="5.5" r="4.5" stroke="#f9b800" strokeWidth="1"/>
-                  <path d="M3.5 5.5l1.5 1.5L7.5 4" stroke="#f9b800" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span className="text-xs" style={{ color: 'var(--text-2)', lineHeight: '1.3' }}>{f}</span>
-              </li>
-            ))}
-          </ul>
-        </button>
-
-        {/* Monthly */}
-        <button onClick={() => setPlan('monthly')}
-          className="rounded-2xl p-5 text-left transition-all"
-          style={{
-            background: plan === 'monthly' ? 'rgba(108,51,230,0.08)' : 'var(--bg-card)',
-            border: `1.5px solid ${plan === 'monthly' ? '#8b5cf6' : 'var(--border)'}`,
-          }}>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0"
-                style={{ borderColor: plan === 'monthly' ? '#8b5cf6' : 'var(--border)' }}>
-                {plan === 'monthly' && <div className="w-2 h-2 rounded-full" style={{ background: '#8b5cf6' }} />}
-              </div>
-              <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{t('monthly_plan')}</span>
-            </div>
-            <span className="text-xs px-2 py-0.5 rounded-full"
-              style={{ background: 'rgba(108,51,230,0.1)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)' }}>
-              {t('flexible')}
-            </span>
-          </div>
-          <div className="mb-0.5">
-            <span className="text-3xl font-light" style={{ color: 'var(--text)' }}>$10</span>
-            <span className="text-sm ml-1" style={{ color: 'var(--text-3)' }}>{t('month_unit')}</span>
-          </div>
-          <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{t('monthly_desc')}</p>
-          <ul className="flex flex-col gap-1.5">
-            {(t('sub_features') || []).map(f => (
-              <li key={f} className="flex items-start gap-1.5">
-                <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ flexShrink: 0, marginTop: '2px' }}>
-                  <circle cx="5.5" cy="5.5" r="4.5" stroke="#8b5cf6" strokeWidth="1"/>
-                  <path d="M3.5 5.5l1.5 1.5L7.5 4" stroke="#8b5cf6" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span className="text-xs" style={{ color: 'var(--text-2)', lineHeight: '1.3' }}>{f}</span>
-              </li>
-            ))}
-          </ul>
-        </button>
-      </div>
-
-      {/* Summary + CTAs */}
-      <div className="rounded-2xl p-5 fade-up-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        <div className="flex items-center justify-between mb-4">
+      <section className="card p-5 sm:p-6 fade-up-2">
+        <div className="flex items-center justify-between gap-4 mb-5">
           <div>
-            <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
-              {plan === 'annual' ? t('plan_annual') : t('plan_monthly')}
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-              {t('auto_renew')}
-            </p>
+            <p className="text-[15px] font-semibold text-ink">{plan === 'annual' ? t('plan_annual') : t('plan_monthly')}</p>
+            <p className="text-[13px] text-ink-3 mt-0.5">{t('auto_renew')}</p>
           </div>
-          <p className="text-2xl font-light" style={{ color: 'var(--text)' }}>
-            {plan === 'annual' ? '$99,99' : '$9,99'}
-          </p>
+          <p className="font-serif text-[28px] font-semibold text-ink">{plan === 'annual' ? '$99,99' : '$9,99'}</p>
         </div>
-
-        <button onClick={handlePay} disabled={paying}
-          className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2"
-          style={{
-            background: paying ? 'var(--bg-card)' : 'linear-gradient(135deg, #6c33e6, #8b5cf6)',
-            color: paying ? 'var(--text-3)' : '#fff',
-            border: paying ? '1px solid var(--border)' : 'none',
-            boxShadow: paying ? 'none' : '0 4px 20px rgba(108,51,230,0.35)',
-          }}>
-          {paying ? <><Spinner /> {t('redirecting_payment')}</> : t('subscribe_btn')}
+        <button onClick={handlePay} disabled={paying} className="btn btn-primary btn-lg w-full">
+          {paying ? <><Spinner size={16} />{t('redirecting_payment')}</> : t('subscribe_btn')}
         </button>
-
-        <p className="text-xs text-center mt-3" style={{ color: 'var(--text-muted)' }}>
-          {t('secure_payment')}
+        <p className="text-[12px] text-ink-3 text-center mt-3 inline-flex items-center justify-center gap-1.5 w-full">
+          <Lock size={12} />{t('secure_payment')}
         </p>
-      </div>
+      </section>
     </div>
   )
 }
@@ -397,116 +284,39 @@ function NativeCheckoutView({ user, setProfile, t }) {
     }
   }
 
-  if (loadingIAP) return (
-    <div className="p-8 flex items-center justify-center min-h-[60vh]">
-      <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin"
-        style={{ borderColor: 'rgba(108,51,230,0.2)', borderTopColor: '#6c33e6' }} />
-    </div>
-  )
+  if (loadingIAP) return <div className="page flex items-center justify-center min-h-[60vh]"><Spinner size={32} /></div>
 
   return (
-    <div className="p-4 sm:p-8 max-w-2xl mx-auto">
-      <div className="mb-8 fade-up-1">
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          הַרְשָׁמָה · {t('nav_subscription')}
-        </p>
-        <h1 className="text-3xl font-light" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-          {t('choose_plan')}
-        </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>{t('cancel_anytime')}</p>
+    <div className="page page-narrow">
+      <PageHeader hebrew="הַרְשָׁמָה" eyebrow={t('nav_subscription')} title={t('choose_plan')} subtitle={t('cancel_anytime')} />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6 fade-up-1">
+        <PlanCard selected={plan === 'annual'} onSelect={() => setPlan('annual')} badge={t('save_17')}
+          title={t('annual_plan')} price={annualPrice} unit={t('year_unit')} desc={t('annual_desc')} />
+        <PlanCard selected={plan === 'monthly'} onSelect={() => setPlan('monthly')}
+          title={t('monthly_plan')} price={monthlyPrice} unit={t('month_unit')} desc={t('monthly_desc')} />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5 fade-up-2">
-        <button onClick={() => setPlan('annual')}
-          className="rounded-2xl p-5 text-left transition-all relative"
-          style={{
-            background: plan === 'annual' ? 'rgba(249,184,0,0.07)' : 'var(--bg-card)',
-            border: `1.5px solid ${plan === 'annual' ? '#f9b800' : 'var(--border)'}`,
-          }}>
-          <div className="absolute -top-3 right-4">
-            <span className="text-xs px-2.5 py-1 rounded-full font-semibold"
-              style={{ background: 'linear-gradient(135deg, #f9b800, #ffd54f)', color: '#0d0b1e' }}>
-              {t('save_17')}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0"
-              style={{ borderColor: plan === 'annual' ? '#f9b800' : 'var(--border)' }}>
-              {plan === 'annual' && <div className="w-2 h-2 rounded-full" style={{ background: '#f9b800' }} />}
-            </div>
-            <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{t('annual_plan')}</span>
-          </div>
-          <div>
-            <span className="text-3xl font-light" style={{ color: 'var(--text)' }}>{annualPrice}</span>
-            <span className="text-sm ml-1" style={{ color: 'var(--text-3)' }}>{t('year_unit')}</span>
-          </div>
-          <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{t('annual_desc')}</p>
-        </button>
+      {error && <p className="text-[13px] mb-3 text-center text-danger">{error}</p>}
 
-        <button onClick={() => setPlan('monthly')}
-          className="rounded-2xl p-5 text-left transition-all"
-          style={{
-            background: plan === 'monthly' ? 'rgba(108,51,230,0.08)' : 'var(--bg-card)',
-            border: `1.5px solid ${plan === 'monthly' ? '#8b5cf6' : 'var(--border)'}`,
-          }}>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0"
-              style={{ borderColor: plan === 'monthly' ? '#8b5cf6' : 'var(--border)' }}>
-              {plan === 'monthly' && <div className="w-2 h-2 rounded-full" style={{ background: '#8b5cf6' }} />}
-            </div>
-            <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{t('monthly_plan')}</span>
-          </div>
-          <div>
-            <span className="text-3xl font-light" style={{ color: 'var(--text)' }}>{monthlyPrice}</span>
-            <span className="text-sm ml-1" style={{ color: 'var(--text-3)' }}>{t('month_unit')}</span>
-          </div>
-          <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{t('monthly_desc')}</p>
-        </button>
-      </div>
-
-      {error && <p className="text-xs mb-3 text-center" style={{ color: '#f87171' }}>{error}</p>}
-
-      <div className="rounded-2xl p-5 fade-up-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
-            {plan === 'annual' ? t('plan_annual') : t('plan_monthly')}
-          </p>
-          <p className="text-2xl font-light" style={{ color: 'var(--text)' }}>
-            {plan === 'annual' ? annualPrice : monthlyPrice}
-          </p>
+      <section className="card p-5 sm:p-6 fade-up-2">
+        <div className="flex items-center justify-between gap-4 mb-5">
+          <p className="text-[15px] font-semibold text-ink">{plan === 'annual' ? t('plan_annual') : t('plan_monthly')}</p>
+          <p className="font-serif text-[28px] font-semibold text-ink">{plan === 'annual' ? annualPrice : monthlyPrice}</p>
         </div>
-        <button onClick={handlePurchase} disabled={paying || !offerings}
-          className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2"
-          style={{
-            background: paying ? 'var(--bg-card)' : 'linear-gradient(135deg, #6c33e6, #8b5cf6)',
-            color: paying ? 'var(--text-3)' : '#fff',
-            border: paying ? '1px solid var(--border)' : 'none',
-            boxShadow: paying ? 'none' : '0 4px 20px rgba(108,51,230,0.35)',
-            opacity: !offerings ? 0.6 : 1,
-          }}>
-          {paying ? <><SmallSpinner /> {t('redirecting_payment')}</> : t('subscribe_btn')}
+        <button onClick={handlePurchase} disabled={paying || !offerings} className="btn btn-primary btn-lg w-full">
+          {paying ? <><Spinner size={16} />{t('redirecting_payment')}</> : t('subscribe_btn')}
         </button>
-        <p className="text-xs text-center mt-2" style={{ color: 'var(--text-muted)' }}>
-          {t('auto_renew')}
-        </p>
-      </div>
+        <p className="text-[12px] text-ink-3 text-center mt-3">{t('auto_renew')}</p>
+      </section>
 
-      <button onClick={handleRestore} disabled={restoring}
-        className="w-full mt-4 py-2.5 rounded-xl text-sm transition-all"
-        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-3)', opacity: restoring ? 0.6 : 1 }}>
-        {restoring ? '…' : 'Restore purchases'}
+      <button onClick={handleRestore} disabled={restoring} className="btn btn-secondary w-full mt-4">
+        <RotateCcw size={15} />{restoring ? '…' : 'Restore purchases'}
       </button>
 
-      <p className="text-xs text-center mt-4" style={{ color: 'var(--text-muted)' }}>
+      <p className="text-[12px] text-ink-3 text-center mt-4">
         To cancel go to Settings → your name → Subscriptions on your device.
       </p>
     </div>
-  )
-}
-
-function SmallSpinner() {
-  return (
-    <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
-      style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: '#fff' }} />
   )
 }

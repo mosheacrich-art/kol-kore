@@ -1,258 +1,178 @@
 import { useNavigate } from 'react-router-dom'
-import { useEffect, useRef, useState } from 'react'
-import { useTheme } from '../context/ThemeContext'
+import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
+import { ArrowRight, AudioLines, BookOpen, Check, Moon, Play, Star, Sun, Users } from 'lucide-react'
+import { useTheme } from '../context/ThemeContext'
 import LangToggle from '../components/LangToggle'
 import { useLang } from '../context/LangContext'
+import { Logo } from '../components/ui'
+import { PARASHOT } from '../data/parashot'
 
-const STARS = Array.from({ length: 120 }, (_, i) => ({
-  id: i,
-  x: Math.random() * 100,
-  y: Math.random() * 100,
-  size: Math.random() * 2 + 0.4,
-  duration: Math.random() * 5 + 2,
-  delay: Math.random() * 6,
-}))
-
-const FEATURES_META = [
-  { icon: BookIcon,  heb: 'כָּל הַתּוֹרָה', color: '#6c33e6', k: ['feat1_title', 'feat1_desc'] },
-  { icon: WaveIcon,  heb: 'שִׁמְעוּ וּרְאוּ', color: '#2dd4bf', k: ['feat2_title', 'feat2_desc'] },
-  { icon: LinkIcon,  heb: 'רַב וְתַלְמִיד', color: '#f9b800', k: ['feat3_title', 'feat3_desc'] },
-  { icon: StarIcon,  heb: 'בַּר מִצְוָה',   color: '#f87171', k: ['feat4_title', 'feat4_desc'] },
+const FEATURES = [
+  { icon: BookOpen,   heb: 'כָּל הַתּוֹרָה', k: ['feat1_title', 'feat1_desc'] },
+  { icon: AudioLines, heb: 'שִׁמְעוּ וּרְאוּ', k: ['feat2_title', 'feat2_desc'] },
+  { icon: Users,      heb: 'רַב וְתַלְמִיד', k: ['feat3_title', 'feat3_desc'] },
+  { icon: Star,       heb: 'בַּר מִצְוָה',   k: ['feat4_title', 'feat4_desc'] },
 ]
 
-const STEPS_META = [
-  { n: '01', color: '#6c33e6', k: ['step1_title', 'step1_desc'] },
-  { n: '02', color: '#2dd4bf', k: ['step2_title', 'step2_desc'] },
-  { n: '03', color: '#f9b800', k: ['step3_title', 'step3_desc'] },
+const STEPS = [
+  { n: '01', k: ['step1_title', 'step1_desc'] },
+  { n: '02', k: ['step2_title', 'step2_desc'] },
+  { n: '03', k: ['step3_title', 'step3_desc'] },
 ]
 
-const ROLES_META = [
-  { heb: 'תַּלְמִיד', color: '#6c33e6', bg: 'rgba(108,51,230,0.08)', border: 'rgba(108,51,230,0.2)', labelKey: 'role_student_label', itemsKey: 'role_student_items', ctaKey: 'role_student_cta' },
-  { heb: 'מוֹרֶה',   color: '#f9b800', bg: 'rgba(249,184,0,0.08)',  border: 'rgba(249,184,0,0.2)',  labelKey: 'role_teacher_label', itemsKey: 'role_teacher_items', ctaKey: 'role_teacher_cta' },
+const ROLES = [
+  { heb: 'תַּלְמִיד', labelKey: 'role_student_label', itemsKey: 'role_student_items', ctaKey: 'role_student_cta', primary: false },
+  { heb: 'מוֹרֶה',   labelKey: 'role_teacher_label', itemsKey: 'role_teacher_items', ctaKey: 'role_teacher_cta', primary: true },
 ]
 
-
-function FadeIn({ children, delay = 0, direction = 'up', className = '' }) {
+function FadeIn({ children, delay = 0, className = '' }) {
   const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-80px' })
-  const variants = {
-    hidden: { opacity: 0, y: direction === 'up' ? 30 : direction === 'down' ? -30 : 0, x: direction === 'left' ? 30 : direction === 'right' ? -30 : 0 },
-    visible: { opacity: 1, y: 0, x: 0 },
-  }
+  const inView = useInView(ref, { once: true, margin: '-60px' })
   return (
     <motion.div ref={ref} className={className}
-      variants={variants} initial="hidden"
-      animate={inView ? 'visible' : 'hidden'}
-      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}>
+      initial={{ opacity: 0, y: 16 }} animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}>
       {children}
     </motion.div>
   )
 }
 
+function SectionHead({ eyebrow, title, desc }) {
+  return (
+    <FadeIn className="text-center max-w-2xl mx-auto mb-14">
+      <p className="eyebrow mb-3">{eyebrow}</p>
+      <h2 className="font-serif font-semibold text-ink tracking-[-0.02em]" style={{ fontSize: 'clamp(28px, 4vw, 42px)', lineHeight: 1.1 }}>{title}</h2>
+      {desc && <p className="text-[16px] text-ink-3 mt-4 leading-relaxed">{desc}</p>}
+    </FadeIn>
+  )
+}
+
+/** Product preview built from real data only (names + aliyah refs). */
+function HeroPreview() {
+  const p = PARASHOT[0]
+  const bars = [8, 14, 22, 12, 28, 18, 34, 20, 26, 12, 30, 16, 24, 10, 20, 28, 14, 22, 8, 18, 26, 12, 30, 16]
+  return (
+    <div className="relative" aria-hidden="true">
+      <div className="absolute -inset-6 rounded-[32px] pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at 60% 40%, rgba(var(--gold-rgb),0.16), transparent 70%)' }} />
+      <div className="relative card overflow-hidden shadow-modal">
+        <div className="px-6 pt-6 pb-5" style={{ background: 'linear-gradient(135deg, var(--surface) 30%, var(--parchment) 100%)' }}>
+          <p className="eyebrow mb-2">Parashá · 1</p>
+          <div className="flex items-baseline justify-between gap-4">
+            <p className="font-serif text-[30px] font-semibold text-ink leading-none">{p.name}</p>
+            <p className="hebrew text-[32px] leading-none text-gold-ink" style={{ fontWeight: 400 }}>{p.heb}</p>
+          </div>
+          <p className="text-[13px] text-ink-3 mt-2" dir="ltr" style={{ textAlign: 'start' }}>{p.ref}</p>
+        </div>
+        <div className="px-4 py-3">
+          {p.aliyot.slice(0, 4).map((a, i) => (
+            <div key={i} className="flex items-center gap-3 px-2 py-2.5 rounded-xl" style={i === 0 ? { background: 'rgba(var(--accent-rgb),0.06)' } : undefined}>
+              <span className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-semibold bg-surface-2 text-ink-2">{a.n}</span>
+              <span className="flex-1 min-w-0">
+                <span className="block text-[13px] font-medium text-ink">{a.label}</span>
+                <span className="block text-[12px] text-ink-3" dir="ltr" style={{ textAlign: 'start' }}>{a.ref}</span>
+              </span>
+              {i === 0 && <span className="badge badge-accent h-5 text-[11px]">Audio</span>}
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center gap-3 px-6 py-4" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+          <span className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-fg)' }}>
+            <Play size={15} fill="currentColor" />
+          </span>
+          <div className="flex items-end gap-[3px] h-9 flex-1 overflow-hidden">
+            {bars.map((h, i) => (
+              <span key={i} className="flex-1 rounded-full" style={{ height: h, background: i < 9 ? 'rgb(var(--gold-rgb))' : 'var(--border-strong)' }} />
+            ))}
+          </div>
+          <span className="text-[12px] text-ink-3 tabular-nums">0:42</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Landing() {
   const navigate = useNavigate()
-  const canvasRef = useRef(null)
-  const { isDark: globalIsDark } = useTheme()
-  const [isDark, setIsDark] = useState(false)
-  const toggle = () => setIsDark(d => !d)
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDark)
-  }, [isDark])
-
-  useEffect(() => {
-    return () => { document.documentElement.classList.toggle('dark', globalIsDark) }
-  }, [globalIsDark])
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
-    let frame = 0, animId
-    const particles = Array.from({ length: 35 }, () => ({
-      x: Math.random() * canvas.width, y: Math.random() * canvas.height,
-      vx: (Math.random() - 0.5) * 0.25, vy: (Math.random() - 0.5) * 0.25,
-      r: Math.random() * 1.2 + 0.3, a: Math.random(),
-    }))
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      particles.forEach(p => {
-        p.x += p.vx; p.y += p.vy
-        if (p.x < 0) p.x = canvas.width
-        if (p.x > canvas.width) p.x = 0
-        if (p.y < 0) p.y = canvas.height
-        if (p.y > canvas.height) p.y = 0
-        const pulse = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(frame * 0.018 + p.a * 10))
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctx.fillStyle = isDark ? `rgba(255,202,40,${pulse * 0.5})` : `rgba(140,95,0,${pulse * 0.28})`
-        ctx.fill()
-      })
-      frame++
-      animId = requestAnimationFrame(draw)
-    }
-    draw()
-    const onResize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight }
-    window.addEventListener('resize', onResize)
-    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', onResize) }
-  }, [isDark])
-
+  const { isDark, toggle } = useTheme()
   const { t: tl } = useLang()
 
-  const t = {
-    heroBg: isDark
-      ? 'radial-gradient(ellipse at 25% 15%, #1e0f45 0%, #0d0b1e 45%, #050812 100%)'
-      : 'radial-gradient(ellipse at 25% 15%, #e8dfc8 0%, #f5f0e4 50%, #ece4cc 100%)',
-    sectionBg: isDark ? '#07060f' : '#faf7f0',
-    altBg: isDark ? '#0d0b1e' : '#f5f0e4',
-    text: isDark ? 'rgba(240,239,255,0.92)' : '#1a1200',
-    text2: isDark ? 'rgba(200,190,255,0.65)' : 'rgba(60,40,0,0.55)',
-    gold: isDark ? 'rgba(255,202,40,0.85)' : 'rgba(140,95,0,0.9)',
-    goldSubtle: isDark ? 'rgba(255,202,40,0.5)' : 'rgba(140,95,0,0.55)',
-    border: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)',
-    card: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.7)',
-    toggleBg: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)',
-    toggleBorder: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)',
-    toggleText: isDark ? 'rgba(255,255,255,0.65)' : 'rgba(60,40,0,0.55)',
-    bottomGrad: isDark ? 'rgba(5,8,18,0.9)' : 'rgba(245,240,228,0.9)',
-  }
-
   return (
-    <div style={{ background: t.sectionBg, color: t.text }}>
+    <div className="bg-canvas text-ink min-h-[100svh]">
+      {/* ── NAV ── */}
+      <header className="sticky top-0 z-40 app-header"
+        style={{ background: 'color-mix(in srgb, var(--bg) 86%, transparent)', backdropFilter: 'saturate(1.4) blur(14px)', borderBottom: '1px solid var(--border-subtle)' }}>
+        <div className="max-w-6xl mx-auto flex items-center gap-4 px-4 sm:px-6 h-16">
+          <Logo size={32} />
+          <nav className="hidden md:flex items-center gap-1 ms-6 text-[14px]" aria-label="Sections">
+            <a href="#features" className="btn btn-ghost btn-sm">{tl('landing_features_eyebrow')}</a>
+            <a href="#steps" className="btn btn-ghost btn-sm">{tl('landing_steps_eyebrow')}</a>
+            <a href="#roles" className="btn btn-ghost btn-sm">{tl('landing_roles_eyebrow')}</a>
+          </nav>
+          <div className="ms-auto flex items-center gap-1.5">
+            <LangToggle />
+            <button onClick={toggle} className="btn btn-ghost btn-icon" aria-label={isDark ? tl('light_mode') : tl('dark_mode')}>
+              {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+            <button onClick={() => navigate('/login')} className="btn btn-primary btn-sm ms-1">{tl('enter')}</button>
+          </div>
+        </div>
+      </header>
 
       {/* ── HERO ── */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
-        style={{ background: t.heroBg, transition: 'background 0.4s' }}>
-
-        <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" style={{ opacity: 0.9 }} />
-
-        {STARS.map(s => (
-          <div key={s.id} className="star absolute pointer-events-none"
-            style={{
-              left: `${s.x}%`, top: `${s.y}%`,
-              width: s.size, height: s.size,
-              background: isDark ? 'rgba(255,255,255,0.55)' : 'rgba(140,95,0,0.22)',
-              borderRadius: '50%',
-              '--duration': `${s.duration}s`, '--delay': `${s.delay}s`,
-            }} />
-        ))}
-
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full pointer-events-none"
-          style={{ background: `radial-gradient(circle, ${isDark ? 'rgba(108,51,230,0.14)' : 'rgba(108,51,230,0.07)'} 0%, transparent 70%)`, filter: 'blur(60px)' }} />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full pointer-events-none"
-          style={{ background: `radial-gradient(circle, ${isDark ? 'rgba(249,184,0,0.09)' : 'rgba(249,184,0,0.12)'} 0%, transparent 70%)`, filter: 'blur(50px)' }} />
-
-        {/* Theme + lang toggles */}
-        <div className="absolute top-5 right-5 z-20 flex items-center gap-2">
-          <div style={{ background: t.toggleBg, border: `1px solid ${t.toggleBorder}`, borderRadius: '999px', backdropFilter: 'blur(10px)', padding: '4px' }}>
-            <LangToggle compact />
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-full pointer-events-none" aria-hidden="true"
+          style={{ background: 'radial-gradient(ellipse 60% 50% at 20% 10%, rgba(var(--gold-rgb),0.10), transparent 70%)' }} />
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-20 lg:pt-24 lg:pb-28 grid lg:grid-cols-[1.1fr_1fr] gap-14 items-center">
+          <div>
+            <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+              className="eyebrow flex items-center gap-2 mb-6">
+              <span>{tl('landing_study_label')}</span><span className="text-ink-4">·</span>
+              <span className="hebrew-ui normal-case tracking-normal text-[14px]">לִמּוּד תּוֹרָה</span>
+            </motion.p>
+            <motion.h1 initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+              className="font-serif font-semibold text-ink tracking-[-0.03em]" style={{ fontSize: 'clamp(48px, 7vw, 84px)', lineHeight: 0.98 }}>
+              Parashapp
+              <span className="block mt-3" style={{ fontSize: '0.6em' }}><span className="hebrew text-gold-ink" style={{ fontWeight: 400, letterSpacing: 0 }}>פָּרָשָׁה</span></span>
+            </motion.h1>
+            <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.12 }}
+              className="text-[18px] sm:text-[19px] text-ink-2 leading-relaxed mt-7 max-w-xl">
+              {tl('hero_tagline')}
+            </motion.p>
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.18 }}
+              className="flex flex-wrap items-center gap-3 mt-9">
+              <button onClick={() => navigate('/login')} className="btn btn-primary btn-lg">
+                {tl('start_free')}<ArrowRight size={17} className="rtl:rotate-180" />
+              </button>
+              <a href="#features" className="btn btn-secondary btn-lg">{tl('landing_features_eyebrow')}</a>
+            </motion.div>
           </div>
-          <button onClick={toggle}
-            className="flex items-center gap-2 text-xs px-4 py-2 rounded-full transition-all"
-            style={{ background: t.toggleBg, border: `1px solid ${t.toggleBorder}`, color: t.toggleText, backdropFilter: 'blur(10px)' }}>
-            <span style={{ fontSize: '13px' }}>{isDark ? '☀️' : '🌙'}</span>
-            {isDark ? tl('light_mode') : tl('dark_mode')}
-          </button>
-        </div>
-
-        <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-4xl">
-          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} className="mb-10 animate-float">
-            <HexStar isDark={isDark} />
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}>
+            <HeroPreview />
           </motion.div>
-
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15, duration: 0.6 }}
-            className="text-xs tracking-[0.4em] uppercase mb-5 font-medium"
-            style={{ color: t.goldSubtle }}>
-            {tl('landing_study_label')} · לִמּוּד תּוֹרָה
-          </motion.p>
-
-          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="font-serif leading-none mb-3"
-            style={{ fontSize: 'clamp(64px, 12vw, 120px)', color: t.text, letterSpacing: '-3px', transition: 'color 0.4s' }}>
-            Parashapp
-          </motion.h1>
-
-          <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35, duration: 0.6 }}
-            className="hebrew font-light mb-10"
-            style={{ fontSize: 'clamp(32px, 6vw, 56px)', color: t.gold }}>
-            פָּרָשָׁה
-          </motion.h2>
-
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.45, duration: 0.6 }}
-            className="text-lg md:text-xl font-light max-w-xl leading-relaxed mb-12"
-            style={{ color: t.text2 }}>
-            {tl('hero_tagline')}
-          </motion.p>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.55, duration: 0.6 }}
-            className="flex flex-col sm:flex-row gap-3 items-center">
-            <button className="btn-gold px-10 py-4 rounded-full text-sm font-semibold"
-              onClick={() => navigate('/login')}>
-              {tl('start_free')}
-            </button>
-          </motion.div>
-
-        </div>
-
-        <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
-          style={{ background: `linear-gradient(to top, ${t.bottomGrad}, transparent)` }} />
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-50">
-          <div className="w-px h-10" style={{ background: `linear-gradient(to bottom, ${t.goldSubtle}, transparent)` }} />
         </div>
       </section>
 
       {/* ── FEATURES ── */}
-      <section className="py-28 px-6" style={{ background: t.sectionBg }}>
-        <div className="max-w-5xl mx-auto">
-          <FadeIn className="text-center mb-20">
-            <p className="text-xs tracking-[0.35em] uppercase font-medium mb-3" style={{ color: t.goldSubtle }}>
-              {tl('landing_features_eyebrow')}
-            </p>
-            <h2 className="text-3xl md:text-4xl font-light mb-4" style={{ color: t.text, letterSpacing: '-1px' }}>
-              {tl('landing_features_title')}
-            </h2>
-            <p className="text-base max-w-md mx-auto" style={{ color: t.text2 }}>
-              {tl('landing_features_desc')}
-            </p>
-          </FadeIn>
-
+      <section id="features" className="py-24 px-4 sm:px-6 bg-surface" style={{ borderBlock: '1px solid var(--border-subtle)' }}>
+        <div className="max-w-6xl mx-auto">
+          <SectionHead eyebrow={tl('landing_features_eyebrow')} title={tl('landing_features_title')} desc={tl('landing_features_desc')} />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {FEATURES_META.map((f, i) => {
+            {FEATURES.map((f, i) => {
               const Icon = f.icon
               return (
-                <FadeIn key={i} delay={i * 0.1} direction={i % 2 === 0 ? 'left' : 'right'}>
-                  <div className="p-7 rounded-2xl h-full transition-all duration-300 group"
-                    style={{
-                      background: t.card,
-                      border: `1px solid ${t.border}`,
-                      backdropFilter: 'blur(8px)',
-                    }}
-                    onMouseEnter={e => {
-                      e.currentTarget.style.borderColor = f.color + '45'
-                      e.currentTarget.style.background = isDark ? f.color + '10' : f.color + '08'
-                    }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.borderColor = t.border
-                      e.currentTarget.style.background = t.card
-                    }}>
-                    <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-5"
-                      style={{ background: f.color + '18', border: `1px solid ${f.color}25` }}>
-                      <Icon color={f.color} />
+                <FadeIn key={i} delay={i * 0.06}>
+                  <div className="h-full p-7 rounded-2xl bg-canvas" style={{ border: '1px solid var(--border-subtle)' }}>
+                    <span className="w-11 h-11 rounded-xl flex items-center justify-center mb-5"
+                      style={i % 2 ? { background: 'rgba(var(--gold-rgb),0.12)', color: 'var(--text-gold)' } : { background: 'rgba(var(--accent-rgb),0.07)', color: 'rgb(var(--accent-rgb))' }}>
+                      <Icon size={20} strokeWidth={1.7} />
+                    </span>
+                    <div className="flex items-baseline gap-3 mb-2 flex-wrap">
+                      <h3 className="font-serif text-[21px] font-semibold text-ink">{tl(f.k[0])}</h3>
+                      <span className="hebrew-ui text-[15px] text-gold-ink">{f.heb}</span>
                     </div>
-                    <div className="flex items-baseline gap-3 mb-2">
-                      <h3 className="text-lg font-semibold" style={{ color: t.text }}>{tl(f.k[0])}</h3>
-                      <span className="hebrew text-sm" style={{ color: f.color }}>{f.heb}</span>
-                    </div>
-                    <p className="text-sm leading-relaxed" style={{ color: t.text2 }}>{tl(f.k[1])}</p>
+                    <p className="text-[15px] text-ink-3 leading-relaxed">{tl(f.k[1])}</p>
                   </div>
                 </FadeIn>
               )
@@ -262,74 +182,45 @@ export default function Landing() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section className="py-28 px-6" style={{ background: t.altBg }}>
-        <div className="max-w-4xl mx-auto">
-          <FadeIn className="text-center mb-20">
-            <p className="text-xs tracking-[0.35em] uppercase font-medium mb-3" style={{ color: t.goldSubtle }}>
-              {tl('landing_steps_eyebrow')}
-            </p>
-            <h2 className="text-3xl md:text-4xl font-light" style={{ color: t.text, letterSpacing: '-1px' }}>
-              {tl('landing_steps_title')}
-            </h2>
-          </FadeIn>
-
-          <div className="flex flex-col md:flex-row gap-6 relative">
-            {/* Connecting line */}
-            <div className="hidden md:block absolute top-8 left-[calc(16.6%+20px)] right-[calc(16.6%+20px)] h-px"
-              style={{ background: `linear-gradient(to right, #6c33e6, #2dd4bf, #f9b800)`, opacity: 0.3 }} />
-
-            {STEPS_META.map((s, i) => (
-              <FadeIn key={i} delay={i * 0.15} className="flex-1">
-                <div className="flex flex-col items-center text-center p-6">
-                  <div className="w-16 h-16 rounded-full flex items-center justify-center mb-5 relative"
-                    style={{ background: s.color + '18', border: `2px solid ${s.color}30` }}>
-                    <span className="text-xl font-bold" style={{ color: s.color }}>{s.n}</span>
-                  </div>
-                  <h3 className="text-base font-semibold mb-2" style={{ color: t.text }}>{tl(s.k[0])}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: t.text2 }}>{tl(s.k[1])}</p>
-                </div>
+      <section id="steps" className="py-24 px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto">
+          <SectionHead eyebrow={tl('landing_steps_eyebrow')} title={tl('landing_steps_title')} />
+          <ol className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {STEPS.map((s, i) => (
+              <FadeIn key={i} delay={i * 0.08}>
+                <li className="h-full p-7 rounded-2xl bg-surface list-none" style={{ border: '1px solid var(--border)' }}>
+                  <span className="font-serif text-[40px] font-semibold text-gold-ink leading-none">{s.n}</span>
+                  <h3 className="text-[17px] font-semibold text-ink mt-5">{tl(s.k[0])}</h3>
+                  <p className="text-[15px] text-ink-3 leading-relaxed mt-1.5">{tl(s.k[1])}</p>
+                </li>
               </FadeIn>
             ))}
-          </div>
+          </ol>
         </div>
       </section>
 
       {/* ── ROLES ── */}
-      <section className="py-28 px-6" style={{ background: t.sectionBg }}>
-        <div className="max-w-4xl mx-auto">
-          <FadeIn className="text-center mb-20">
-            <p className="text-xs tracking-[0.35em] uppercase font-medium mb-3" style={{ color: t.goldSubtle }}>
-              {tl('landing_roles_eyebrow')}
-            </p>
-            <h2 className="text-3xl md:text-4xl font-light" style={{ color: t.text, letterSpacing: '-1px' }}>
-              {tl('landing_roles_title')}
-            </h2>
-          </FadeIn>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {ROLES_META.map((r, i) => (
-              <FadeIn key={i} delay={i * 0.15} direction={i === 0 ? 'left' : 'right'}>
-                <div className="p-8 rounded-2xl h-full flex flex-col"
-                  style={{ background: r.bg, border: `1px solid ${r.border}` }}>
+      <section id="roles" className="py-24 px-4 sm:px-6 bg-surface" style={{ borderBlock: '1px solid var(--border-subtle)' }}>
+        <div className="max-w-5xl mx-auto">
+          <SectionHead eyebrow={tl('landing_roles_eyebrow')} title={tl('landing_roles_title')} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {ROLES.map((r, i) => (
+              <FadeIn key={i} delay={i * 0.08}>
+                <div className="h-full p-8 rounded-2xl flex flex-col bg-canvas"
+                  style={{ border: `1px solid ${r.primary ? 'rgba(var(--gold-rgb),0.35)' : 'var(--border)'}` }}>
                   <div className="flex items-baseline gap-3 mb-6">
-                    <h3 className="text-2xl font-semibold" style={{ color: r.color }}>{tl(r.labelKey)}</h3>
-                    <span className="hebrew text-lg" style={{ color: r.color + 'aa' }}>{r.heb}</span>
+                    <h3 className="font-serif text-[28px] font-semibold text-ink">{tl(r.labelKey)}</h3>
+                    <span className="hebrew-ui text-[18px] text-gold-ink">{r.heb}</span>
                   </div>
                   <ul className="flex flex-col gap-3 flex-1 mb-8">
                     {(tl(r.itemsKey) || []).map((item, j) => (
-                      <li key={j} className="flex items-start gap-3 text-sm" style={{ color: t.text2 }}>
-                        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5"
-                          style={{ background: r.color }} />
+                      <li key={j} className="flex items-start gap-3 text-[15px] text-ink-2">
+                        <Check size={17} strokeWidth={2.2} className="flex-shrink-0 mt-0.5" style={{ color: 'rgb(var(--gold-rgb))' }} />
                         {item}
                       </li>
                     ))}
                   </ul>
-                  <button
-                    onClick={() => navigate('/login')}
-                    className="w-full py-3 rounded-xl text-sm font-medium transition-all"
-                    style={{ background: r.color + '20', color: r.color, border: `1px solid ${r.color}30` }}
-                    onMouseEnter={e => { e.currentTarget.style.background = r.color + '30' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = r.color + '20' }}>
+                  <button onClick={() => navigate('/login')} className={`btn btn-lg w-full ${r.primary ? 'btn-primary' : 'btn-secondary'}`}>
                     {tl(r.ctaKey)}
                   </button>
                 </div>
@@ -339,120 +230,34 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── CTA FINAL ── */}
-      <section className="py-32 px-6 relative overflow-hidden"
-        style={{ background: isDark ? '#0d0b1e' : '#f0e8d4' }}>
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ background: `radial-gradient(ellipse at 50% 50%, ${isDark ? 'rgba(108,51,230,0.18)' : 'rgba(108,51,230,0.08)'} 0%, transparent 65%)`, filter: 'blur(40px)' }} />
-
-        <FadeIn className="relative z-10 max-w-2xl mx-auto text-center">
-          <div className="mb-8 flex justify-center animate-float">
-            <HexStar isDark={isDark} size={56} />
-          </div>
-          <p className="text-xs tracking-[0.35em] uppercase font-medium mb-4" style={{ color: t.goldSubtle }}>
-            {tl('landing_cta_eyebrow')}
-          </p>
-          <h2 className="text-3xl md:text-5xl font-light mb-5" style={{ color: t.text, letterSpacing: '-1.5px' }}>
-            {tl('landing_cta_title')}<br />
-            <span className="hebrew" style={{ color: t.gold }}>כָּאן וְעַכְשָׁו</span>
+      {/* ── CTA ── */}
+      <section className="py-28 px-4 sm:px-6 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true"
+          style={{ background: 'radial-gradient(ellipse 50% 60% at 50% 50%, rgba(var(--gold-rgb),0.10), transparent 70%)' }} />
+        <FadeIn className="relative max-w-2xl mx-auto text-center">
+          <p className="eyebrow mb-4">{tl('landing_cta_eyebrow')}</p>
+          <h2 className="font-serif font-semibold text-ink tracking-[-0.02em]" style={{ fontSize: 'clamp(32px, 5vw, 52px)', lineHeight: 1.08 }}>
+            {tl('landing_cta_title')}
+            <span className="block hebrew text-gold-ink mt-2" style={{ fontWeight: 400 }}>כָּאן וְעַכְשָׁו</span>
           </h2>
-          <p className="text-base mb-10 max-w-sm mx-auto" style={{ color: t.text2 }}>
-            {tl('landing_cta_desc')}
-          </p>
-          <button className="btn-gold px-12 py-4 rounded-full text-base font-semibold"
-            onClick={() => navigate('/login')}>
-            {tl('create_account_free')}
+          <p className="text-[16px] text-ink-3 mt-5 max-w-md mx-auto">{tl('landing_cta_desc')}</p>
+          <button onClick={() => navigate('/login')} className="btn btn-gold btn-lg mt-9 px-8">
+            {tl('create_account_free')}<ArrowRight size={17} className="rtl:rotate-180" />
           </button>
         </FadeIn>
       </section>
 
       {/* ── FOOTER ── */}
-      <div className="py-6 px-6 flex items-center justify-between flex-wrap gap-3"
-        style={{ borderTop: `1px solid ${t.border}`, background: t.sectionBg }}>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold" style={{ color: t.text }}>Parashapp</span>
-          <span className="hebrew text-sm" style={{ color: t.goldSubtle }}>פָּרָשָׁה</span>
-        </div>
-        <div className="flex items-center gap-4 flex-wrap">
-          <p className="text-xs" style={{ color: t.text2 }}>
-            {tl('landing_footer_credits')}
-          </p>
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/privacy')}
-              className="text-xs transition-all" style={{ color: t.text2 }}
-              onMouseEnter={e => e.target.style.color = '#6c33e6'}
-              onMouseLeave={e => e.target.style.color = t.text2}>
-              {tl('landing_footer_privacy')}
-            </button>
-            <span style={{ color: t.border }}>·</span>
-            <button onClick={() => navigate('/terms')}
-              className="text-xs transition-all" style={{ color: t.text2 }}
-              onMouseEnter={e => e.target.style.color = '#6c33e6'}
-              onMouseLeave={e => e.target.style.color = t.text2}>
-              {tl('landing_footer_terms')}
-            </button>
+      <footer className="px-4 sm:px-6 py-8" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+        <div className="max-w-6xl mx-auto flex items-center justify-between flex-wrap gap-4">
+          <Logo size={26} />
+          <p className="text-[13px] text-ink-3">{tl('landing_footer_credits')}</p>
+          <div className="flex items-center gap-1">
+            <button onClick={() => navigate('/privacy')} className="btn btn-ghost btn-sm text-ink-3">{tl('landing_footer_privacy')}</button>
+            <button onClick={() => navigate('/terms')} className="btn btn-ghost btn-sm text-ink-3">{tl('landing_footer_terms')}</button>
           </div>
         </div>
-      </div>
+      </footer>
     </div>
-  )
-}
-
-/* ── Icons ── */
-function HexStar({ isDark, size = 72 }) {
-  const stroke = isDark ? 'rgba(255,202,40,0.55)' : 'rgba(140,95,0,0.5)'
-  const fill = isDark ? 'rgba(255,202,40,0.85)' : 'rgba(140,95,0,0.75)'
-  const r1 = isDark ? 'rgba(255,202,40,0.14)' : 'rgba(140,95,0,0.1)'
-  const r2 = isDark ? 'rgba(255,202,40,0.07)' : 'rgba(140,95,0,0.05)'
-  const halo = isDark ? 'rgba(255,202,40,0.28)' : 'rgba(140,95,0,0.2)'
-  const s = size, c = s / 2
-  return (
-    <svg width={s} height={s} viewBox="0 0 72 72" fill="none">
-      <circle cx="36" cy="36" r="35" stroke={r1} strokeWidth="1" />
-      <circle cx="36" cy="36" r="27" stroke={r2} strokeWidth="1" />
-      <polygon points="36,12 44,26 52,26 44,36 52,46 36,40 20,46 28,36 20,26 28,26"
-        fill="none" stroke={stroke} strokeWidth="1.5" strokeLinejoin="round" />
-      <polygon points="36,60 28,46 20,46 28,36 20,26 36,32 52,26 44,36 52,46 44,46"
-        fill="none" stroke={stroke} strokeWidth="1.5" strokeLinejoin="round" />
-      <circle cx="36" cy="36" r="3" fill={fill} />
-      <circle cx="36" cy="36" r="6" stroke={halo} strokeWidth="1" fill="none" />
-    </svg>
-  )
-}
-
-function BookIcon({ color }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <path d="M4 3h5l2 2h5v12H4V3z" stroke={color} strokeWidth="1.4" strokeLinejoin="round"/>
-      <path d="M7 10h6M7 13h4" stroke={color} strokeWidth="1.4" strokeLinecap="round"/>
-    </svg>
-  )
-}
-
-function WaveIcon({ color }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <path d="M2 10c1.5-4 3-4 4.5 0s3 4 4.5 0 3-4 4.5 0" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  )
-}
-
-function LinkIcon({ color }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <circle cx="6" cy="10" r="3" stroke={color} strokeWidth="1.4"/>
-      <circle cx="14" cy="6" r="2.5" stroke={color} strokeWidth="1.4"/>
-      <circle cx="14" cy="14" r="2.5" stroke={color} strokeWidth="1.4"/>
-      <path d="M9 10h2M9 8l3-1.5M9 12l3 1.5" stroke={color} strokeWidth="1.3" strokeLinecap="round"/>
-    </svg>
-  )
-}
-
-function StarIcon({ color }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <polygon points="10,3 12,8 17,8 13,11 15,16 10,13 5,16 7,11 3,8 8,8"
-        stroke={color} strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
-    </svg>
   )
 }

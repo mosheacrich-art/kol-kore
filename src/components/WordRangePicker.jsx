@@ -30,15 +30,14 @@ export default function WordRangePicker({ aliyahRef, onConfirm, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col"
-      style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(14px)' }}>
-      <div className="flex items-center justify-between px-5 py-4 flex-shrink-0"
-        style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+    <div className="fixed inset-0 z-[300] flex flex-col bg-canvas" role="dialog" aria-modal="true">
+      <div className="flex items-center justify-between px-5 sm:px-8 py-4 flex-shrink-0 bg-surface app-header"
+        style={{ borderBottom: '1px solid var(--border-subtle)' }}>
         <div>
-          <p className="text-sm font-semibold text-white">
+          <p className="font-serif text-[18px] font-semibold text-ink">
             {step === 'start' ? t('picker_first_word') : t('picker_last_word')}
           </p>
-          <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
+          <p className="text-[13px] text-ink-3 mt-0.5">
             {step === 'start' ? t('picker_start_hint') : t('picker_end_hint')}
           </p>
         </div>
@@ -46,34 +45,34 @@ export default function WordRangePicker({ aliyahRef, onConfirm, onClose }) {
           {step === 'end' && (
             <button onClick={() => { setStep('start'); setStartIdx(null) }}
               className="px-3 py-1.5 rounded-lg text-xs"
-              style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}>
+              style={{ background: 'var(--surface-2)', color: 'var(--text-2)', border: '1px solid var(--border)' }}>
               {t('picker_back_start')}
             </button>
           )}
           <button onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }}>✕</button>
+            style={{ background: 'var(--surface-2)', color: 'var(--text-2)', border: '1px solid var(--border)' }} aria-label="Close">✕</button>
         </div>
       </div>
 
       <div className="flex items-center gap-3 px-5 py-2 flex-shrink-0">
         {[{ n: 1, label: t('picker_step_start'), active: step === 'start' }, { n: 2, label: t('picker_step_end'), active: step === 'end' }].map((s, idx) => (
           <div key={idx} className="flex items-center gap-1.5">
-            {idx > 0 && <div className="w-8 h-px" style={{ background: 'rgba(255,255,255,0.1)' }} />}
+            {idx > 0 && <div className="w-8 h-px" style={{ background: 'var(--border)' }} />}
             <div className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
-              style={{ background: s.active ? '#f59e0b' : 'rgba(249,184,0,0.15)', color: s.active ? '#000' : '#f59e0b' }}>
+              style={{ background: s.active ? 'rgb(var(--gold-rgb))' : 'rgba(var(--gold-rgb),0.15)', color: s.active ? '#1A1204' : 'var(--text-gold)' }}>
               {s.n}
             </div>
-            <span className="text-xs" style={{ color: s.active ? '#f59e0b' : 'rgba(255,255,255,0.3)' }}>{s.label}</span>
+            <span className="text-xs" style={{ color: s.active ? 'var(--text-gold)' : 'var(--text-muted)' }}>{s.label}</span>
           </div>
         ))}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 py-4">
+      <div className="flex-1 overflow-y-auto px-3 sm:px-8 py-6">
         {loading ? (
-          <p className="text-center text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>{t('loading')}</p>
+          <p className="text-center text-sm" style={{ color: 'var(--text-3)' }}>{t('loading')}</p>
         ) : (
-          <div className="hebrew-reader" style={{ direction: 'rtl', textAlign: 'justify', fontSize: '26px', lineHeight: '2.4', color: 'rgba(255,255,255,0.88)' }}>
+          <div className="hebrew-reader" style={{ direction: 'rtl', textAlign: 'justify', fontSize: '26px', lineHeight: '2.4', color: 'var(--text)', background: 'var(--reader-bg)', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: '28px 32px', maxWidth: 960, margin: '0 auto' }}>
             {allWords.map((word, i) => {
               const highlighted = inRange(i)
               const isStart = step === 'end' && i === startIdx
@@ -86,8 +85,8 @@ export default function WordRangePicker({ aliyahRef, onConfirm, onClose }) {
                     cursor: 'pointer',
                     borderRadius: '3px',
                     padding: '1px 2px',
-                    background: highlighted ? 'rgba(249,184,0,0.3)' : isStart ? 'rgba(249,184,0,0.2)' : 'transparent',
-                    color: highlighted || isStart ? '#fbbf24' : 'rgba(255,255,255,0.88)',
+                    background: highlighted ? 'rgba(var(--gold-rgb),0.3)' : isStart ? 'rgba(var(--gold-rgb),0.2)' : 'transparent',
+                    color: highlighted || isStart ? 'var(--text)' : 'inherit',
                     transition: 'background 0.07s, color 0.07s',
                   }}>
                   {word}{' '}

@@ -1,46 +1,25 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import {
+  ArrowLeft, BookMarked, BookOpen, CalendarDays, Calculator, Check, ChevronRight, ClipboardList,
+  Clock, Copy, Headphones, ListFilter, Plus, Search, Send, Star, UserPlus, Users, X,
+} from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
-import { useTheme } from '../../context/ThemeContext'
-import { PARASHOT, ALL_PARASHOT, COMBINED_PARASHOT } from '../../data/parashot'
+import { PARASHOT } from '../../data/parashot'
 import { ALL_MOADIM, MOADIM_LIST } from '../../data/moadim'
+import { ALL_HAFTAROT } from '../../data/haftarot'
 import { useLang } from '../../context/LangContext'
-import WordRangePicker from '../../components/WordRangePicker'
+import {
+  Avatar, EmptyState, IconTile, Modal, PageHeader, PageSpinner, Progress, SearchInput, Spinner,
+} from '../../components/ui'
+import HomeworkComposer from '../../components/homework/HomeworkComposer'
+import HomeworkItem, { HomeworkEditModal, RowMenu, homeworkStatus } from '../../components/homework/HomeworkItem'
+import { capitalize, daysUntil, displayParashaName, formatDuration, resolveParasha, studentParashot } from '../../utils/parasha'
 
-const COLORS = ['#6c33e6', '#f9b800', '#2dd4bf', '#f87171', '#a78bfa']
-
-function formatTime(seconds) {
-  if (!seconds || seconds < 60) return `${seconds || 0}s`
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  if (h > 0) return `${h}h ${m}m`
-  return `${m}m`
-}
-
-function findParasha(parashaId) {
-  if (!parashaId) return null
-  const lower = parashaId.toLowerCase().replace(/[\s-]/g, '')
-  return PARASHOT.find(p =>
-    p.id.replace(/-/g, '') === lower ||
-    p.name.toLowerCase().replace(/[\s-]/g, '') === lower ||
-    parashaId.toLowerCase() === p.id
-  ) || null
-}
-
-function resolveParasha(idOrName) {
-  if (!idOrName) return null
-  const lower = idOrName.toLowerCase().replace(/[\s-]/g, '')
-  return PARASHOT.find(p =>
-    p.id === idOrName ||
-    p.name.toLowerCase() === idOrName.toLowerCase() ||
-    p.id.replace(/-/g, '') === lower
-  ) || ALL_MOADIM.find(m => m.id === idOrName || m.name === idOrName) || null
-}
-
-function displayParashaName(idOrName) {
-  return resolveParasha(idOrName)?.name || idOrName || ''
-}
-
+/* ══════════════════════════════════════════════════════════════════════════
+   Bar Mitzvah calculation (Hebcal) — logic unchanged
+   ══════════════════════════════════════════════════════════════════════════ */
 function detectSpecialBirthday(hm, hd) {
   if (!hm || !hd) return null
   // Rosh Chodesh: 1st of any month except Tishrei (= Rosh Hashana)
@@ -182,159 +161,96 @@ function BarMitzvahCalc({ student, onAssign, onClose, t }) {
   maxDate.setFullYear(maxDate.getFullYear() - 10)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(10px)' }}>
-      <div className="w-full max-w-md rounded-2xl p-6"
-        style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)' }}>
-
-        {/* Header */}
-        <div className="flex items-start justify-between mb-5">
-          <div>
-            <p className="text-xs mb-0.5" style={{ color: 'var(--text-gold)' }}>חֶשְׁבּוֹן · Calculadora</p>
-            <h2 className="text-base font-semibold" style={{ color: 'var(--text)' }}>{t('bar_mitzvah_of').replace('{name}', student.name?.split(' ')[0])}</h2>
-          </div>
-          <button onClick={onClose}
-            className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: 'var(--bg-card)', color: 'var(--text-3)' }}>✕</button>
-        </div>
-
-        {/* Date input */}
-        <div className="mb-4">
-          <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>
-            {t('birth_date_greg')}
-          </label>
+    <Modal open onClose={onClose} size="sm"
+      title={t('bar_mitzvah_of').replace('{name}', student.name?.split(' ')[0])}
+      subtitle={t('bar_mitzvah_calc')}
+      footer={<>
+        <button onClick={onClose} className="btn btn-secondary">{t('cancel')}</button>
+        {result && (
+          <button onClick={assign} disabled={saving} className="btn btn-primary">
+            {saving ? t('saving') : t('assign_confirm')}
+          </button>
+        )}
+      </>}>
+      <div className="flex flex-col gap-4">
+        <div>
+          <label className="label" htmlFor="bm-birth">{t('birth_date_greg')}</label>
           <div className="flex gap-2">
-            <input
-              type="date"
-              value={birthDate}
+            <input id="bm-birth" type="date" value={birthDate}
               onChange={e => { setBirthDate(e.target.value); setResult(null); setError(null) }}
-              max={maxDate.toISOString().split('T')[0]}
-              min="1980-01-01"
+              max={maxDate.toISOString().split('T')[0]} min="1980-01-01"
               onKeyDown={e => e.key === 'Enter' && calculate()}
-              className="flex-1 px-3 py-2.5 rounded-xl text-sm outline-none"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }}
-            />
-            <button onClick={calculate} disabled={!birthDate || loading}
-              className="px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap"
-              style={{
-                background: birthDate && !loading ? 'rgba(249,184,0,0.18)' : 'var(--bg-card)',
-                color: birthDate && !loading ? '#d97706' : 'var(--text-muted)',
-                border: `1px solid ${birthDate && !loading ? 'rgba(249,184,0,0.35)' : 'var(--border)'}`,
-              }}>
-              {loading ? '…' : t('calc_label')}
+              className="input flex-1" />
+            <button onClick={calculate} disabled={!birthDate || loading} className="btn btn-gold">
+              {loading ? <Spinner size={16} /> : t('calc_label')}
             </button>
           </div>
         </div>
 
         {error && (
-          <div className="p-3 rounded-xl mb-4 text-xs"
-            style={{ background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
-            {error}
-          </div>
+          <p className="text-sm px-4 py-3 rounded-xl" style={{ background: 'rgba(var(--danger-rgb),0.07)', color: 'rgb(var(--danger-rgb))' }}>{error}</p>
         )}
 
         {loading && (
-          <div className="flex flex-col items-center py-8 gap-3">
-            <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin"
-              style={{ borderColor: 'rgba(249,184,0,0.25)', borderTopColor: '#f9b800' }} />
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('heb_calendar_loading')}</p>
+          <div className="flex flex-col items-center py-6 gap-3">
+            <Spinner />
+            <p className="text-xs text-ink-3">{t('heb_calendar_loading')}</p>
           </div>
         )}
 
         {result && (
-          <div className="mb-5 flex flex-col gap-3">
-            {/* Data rows */}
-            <div className="rounded-xl overflow-hidden"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <>
+            <dl className="rounded-xl overflow-hidden bg-surface-2" style={{ border: '1px solid var(--border-subtle)' }}>
               {[
-                { label: t('birth_heb'), value: result.birthHebrewScript, sub: result.birthHebrewLatin },
+                { label: t('birth_heb'), value: result.birthHebrewScript, sub: result.birthHebrewLatin, heb: true },
                 { label: t('bm_heb'), value: result.bmHebrewLatin },
                 { label: t('bm_greg'), value: result.bmGregDisplay },
                 { label: t('reading_shabbat'), value: result.shabbatDisplay },
-              ].map((row, i, arr) => (
-                <div key={row.label}
-                  className="flex items-center justify-between px-4 py-2.5"
-                  style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
-                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{row.label}</span>
-                  <div className="text-right ml-4">
-                    <div className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{row.value}</div>
-                    {row.sub && <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{row.sub}</div>}
-                  </div>
+              ].map((row, i) => (
+                <div key={row.label} className="flex items-center justify-between gap-4 px-4 py-3"
+                  style={i ? { borderTop: '1px solid var(--border-subtle)' } : undefined}>
+                  <dt className="text-[13px] text-ink-3">{row.label}</dt>
+                  <dd className="text-end">
+                    <span className={`block text-[13px] font-medium text-ink ${row.heb ? 'hebrew-ui text-[15px]' : ''}`}>{row.value}</span>
+                    {row.sub && <span className="block text-[12px] text-ink-3">{row.sub}</span>}
+                  </dd>
                 </div>
               ))}
+            </dl>
+
+            <div className="rounded-2xl p-5 text-center"
+              style={{ background: 'linear-gradient(180deg, rgba(var(--gold-rgb),0.1), rgba(var(--gold-rgb),0.04))', border: '1px solid rgba(var(--gold-rgb),0.28)' }}>
+              <p className="eyebrow mb-2">{t('ui_assigned_parasha')}</p>
+              <p className="font-serif text-[26px] font-semibold text-ink">{result.parashaName}</p>
+              {result.parashaHebrew && <p className="hebrew text-[22px] mt-1 text-gold-ink" style={{ fontWeight: 400 }}>{result.parashaHebrew}</p>}
             </div>
 
-            {/* Parasha highlight */}
-            <div className="rounded-xl p-4 text-center"
-              style={{
-                background: 'linear-gradient(135deg, rgba(249,184,0,0.14) 0%, rgba(249,184,0,0.04) 100%)',
-                border: '1px solid rgba(249,184,0,0.35)',
-              }}>
-              <p className="text-xs mb-2" style={{ color: 'var(--text-gold)' }}>פָּרָשַׁת הַשָּׁבוּעַ · Perashá asignada</p>
-              <div className="text-2xl font-medium" style={{ color: '#d97706' }}>{result.parashaName}</div>
-              {result.parashaHebrew && (
-                <div className="text-lg hebrew mt-1" style={{ color: 'rgba(249,184,0,0.75)' }}>
-                  {result.parashaHebrew}
-                </div>
-              )}
-            </div>
-
-            {/* Special birthday banner */}
             {specialDay && (
-              <div className="rounded-xl p-3.5"
-                style={{ background: 'rgba(249,184,0,0.06)', border: '1px solid rgba(249,184,0,0.28)' }}>
-                <p className="text-xs font-semibold mb-1" style={{ color: '#d97706' }}>
-                  ⚠️ Nació en {specialDay.label}
+              <div className="rounded-xl p-4" style={{ background: 'rgba(var(--warning-rgb),0.07)', border: '1px solid rgba(var(--warning-rgb),0.25)' }}>
+                <p className="text-[13px] font-semibold" style={{ color: 'rgb(var(--warning-rgb))' }}>
+                  {t('ui_born_on').replace('{day}', specialDay.label)}
                 </p>
-                <p className="text-xs mb-2.5" style={{ color: 'var(--text-3)' }}>
-                  Se recomienda estudiar también la lectura especial de ese día.
-                </p>
-                <button type="button" onClick={() => setIncludeExtra(v => !v)}
-                  className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-lg"
-                  style={{ background: includeExtra ? 'rgba(249,184,0,0.1)' : 'var(--bg-card)', border: `1px solid ${includeExtra ? 'rgba(249,184,0,0.3)' : 'var(--border)'}` }}>
-                  <div className="w-4 h-4 rounded border flex items-center justify-center flex-shrink-0"
-                    style={{ borderColor: includeExtra ? '#d97706' : 'var(--border)', background: includeExtra ? '#d97706' : 'transparent' }}>
-                    {includeExtra && (
-                      <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                        <path d="M1.5 4l2 2L6.5 2" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    )}
-                  </div>
-                  <span className="text-xs" style={{ color: includeExtra ? '#d97706' : 'var(--text-2)' }}>
-                    Incluir también: {resolveParasha(specialDay.suggestedId)?.name || specialDay.label}
-                  </span>
-                </button>
+                <p className="text-[13px] text-ink-3 mt-1 mb-3">{t('ui_special_reading_hint')}</p>
+                <label className="flex items-center gap-2.5 cursor-pointer text-[13px] text-ink-2">
+                  <input type="checkbox" checked={includeExtra} onChange={() => setIncludeExtra(v => !v)}
+                    className="w-4 h-4 rounded accent-[rgb(var(--accent-rgb))]" />
+                  {t('ui_include_also')} {resolveParasha(specialDay.suggestedId)?.name || specialDay.label}
+                </label>
               </div>
             )}
-          </div>
+          </>
         )}
-
-        <div className="flex gap-2">
-          <button onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl text-xs font-medium"
-            style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-            {t('cancel')}
-          </button>
-          {result && (
-            <button onClick={assign} disabled={saving}
-              className="flex-1 btn-gold py-2.5 rounded-xl text-xs font-semibold"
-              style={{ opacity: saving ? 0.7 : 1 }}>
-              {saving ? t('saving') : t('assign_confirm')}
-            </button>
-          )}
-        </div>
       </div>
-    </div>
+    </Modal>
   )
 }
 
+/* ── Assign parashiot (multi-select) ───────────────────────────────────── */
 function AssignParashaModal({ student, onAssign, onClose, t }) {
   const [search, setSearch] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const currentIds = [student.parasha_id, ...(student.extra_parasha_ids || [])]
-    .filter(Boolean)
-    .map(v => resolveParasha(v)?.id || v)
+  const currentIds = studentParashot(student).map(v => resolveParasha(v)?.id || v)
   const [selectedIds, setSelectedIds] = useState(new Set(currentIds))
 
   const toggle = (id) => {
@@ -359,674 +275,638 @@ function AssignParashaModal({ student, onAssign, onClose, t }) {
   }
 
   const s = search.toLowerCase()
-  const filteredParashot = s
-    ? PARASHOT.filter(p => p.name.toLowerCase().includes(s) || p.heb.includes(search))
-    : PARASHOT
-  const filteredMoadim = s
-    ? ALL_MOADIM.filter(m => m.name.toLowerCase().includes(s) || m.heb.includes(search))
-    : ALL_MOADIM
-
+  const filteredParashot = s ? PARASHOT.filter(p => p.name.toLowerCase().includes(s) || p.heb.includes(search)) : PARASHOT
+  const filteredMoadim = s ? ALL_MOADIM.filter(m => m.name.toLowerCase().includes(s) || m.heb.includes(search)) : ALL_MOADIM
   const moadimByChag = MOADIM_LIST.reduce((acc, chag) => {
     const items = filteredMoadim.filter(m => m.chag === chag.id)
     if (items.length) acc.push({ chag, items })
     return acc
   }, [])
 
-  const checkIcon = (color = 'white') => (
-    <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-      <path d="M1.5 4l2 2L6.5 2" stroke={color} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  )
+  const Row = ({ id, name, heb, num }) => {
+    const sel = selectedIds.has(id)
+    return (
+      <button type="button" onClick={() => toggle(id)} disabled={saving} aria-pressed={sel}
+        className="w-full flex items-center gap-3 px-3 h-11 rounded-xl text-start transition-colors hover:bg-surface-2"
+        style={sel ? { background: 'rgba(var(--accent-rgb),0.06)' } : undefined}>
+        <span className="w-[18px] h-[18px] rounded-[5px] flex items-center justify-center flex-shrink-0 transition-colors"
+          style={{ background: sel ? 'rgb(var(--accent-rgb))' : 'transparent', border: `1.5px solid ${sel ? 'rgb(var(--accent-rgb))' : 'var(--border-strong)'}`, color: 'var(--surface)' }}>
+          {sel && <Check size={12} strokeWidth={3} />}
+        </span>
+        {num != null && <span className="text-[12px] w-5 text-end text-ink-4 tabular-nums">{num}</span>}
+        <span className="text-[14px] flex-1 text-ink-2">{name}</span>
+        <span className="hebrew-ui text-[15px] text-ink-3">{heb}</span>
+      </button>
+    )
+  }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(10px)' }}>
-      <div className="w-full max-w-md rounded-2xl flex flex-col"
-        style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)', maxHeight: '85vh' }}>
-
-        {/* Header */}
-        <div className="flex items-start justify-between p-5 pb-3">
-          <div>
-            <p className="text-xs mb-0.5" style={{ color: 'var(--text-gold)' }}>פָּרָשִׁיּוֹת · Asignar</p>
-            <h2 className="text-base font-semibold" style={{ color: 'var(--text)' }}>{t('parashot_of').replace('{name}', student.name?.split(' ')[0])}</h2>
-          </div>
-          <button onClick={onClose}
-            className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: 'var(--bg-card)', color: 'var(--text-3)' }}>✕</button>
-        </div>
-
-        {/* Search */}
-        <div className="px-5 pb-3">
-          <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar perashá o lectura especial…"
-            autoFocus
-            className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }} />
-        </div>
-
-        {/* List */}
-        <div className="overflow-y-auto flex-1 px-3 pb-2">
-
-          {/* Parashot */}
-          {filteredParashot.length > 0 && (
-            <>
-              <div className="px-2 py-1.5 mb-1">
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>{t('torah_label')}</span>
-              </div>
-              {filteredParashot.map(p => {
-                const sel = selectedIds.has(p.id)
-                return (
-                  <button key={p.id} onClick={() => toggle(p.id)} disabled={saving}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5 text-left transition-all"
-                    style={{ background: sel ? 'rgba(249,184,0,0.1)' : 'transparent', border: `1px solid ${sel ? 'rgba(249,184,0,0.3)' : 'transparent'}` }}
-                    onMouseEnter={e => { if (!sel) e.currentTarget.style.background = 'var(--bg-card)' }}
-                    onMouseLeave={e => { if (!sel) e.currentTarget.style.background = 'transparent' }}>
-                    <div className="w-4 h-4 rounded border flex items-center justify-center flex-shrink-0"
-                      style={{ borderColor: sel ? '#d97706' : 'var(--border-subtle)', background: sel ? '#d97706' : 'transparent' }}>
-                      {sel && checkIcon()}
-                    </div>
-                    <span className="text-xs w-5 text-right flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{p.num}</span>
-                    <span className="text-sm flex-1" style={{ color: 'var(--text-2)' }}>{p.name}</span>
-                    <span className="hebrew text-sm" style={{ color: sel ? '#d97706' : 'var(--text-3)' }}>{p.heb}</span>
-                  </button>
-                )
-              })}
-            </>
-          )}
-
-          {/* Moadim */}
-          {moadimByChag.length > 0 && (
-            <>
-              <div className="px-2 py-1.5 mt-2 mb-1">
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>{t('special_readings')}</span>
-              </div>
-              {moadimByChag.map(({ chag, items }) => (
-                <div key={chag.id} className="mb-2">
-                  <div className="px-3 py-1 flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: chag.color }} />
-                    <span className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>{chag.name}</span>
-                  </div>
-                  {items.map(m => {
-                    const sel = selectedIds.has(m.id)
-                    return (
-                      <button key={m.id} onClick={() => toggle(m.id)} disabled={saving}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5 text-left transition-all"
-                        style={{ background: sel ? `${chag.color}18` : 'transparent', border: `1px solid ${sel ? chag.color + '40' : 'transparent'}` }}
-                        onMouseEnter={e => { if (!sel) e.currentTarget.style.background = 'var(--bg-card)' }}
-                        onMouseLeave={e => { if (!sel) e.currentTarget.style.background = 'transparent' }}>
-                        <div className="w-4 h-4 rounded border flex items-center justify-center flex-shrink-0"
-                          style={{ borderColor: sel ? chag.color : 'var(--border-subtle)', background: sel ? chag.color : 'transparent' }}>
-                          {sel && checkIcon()}
-                        </div>
-                        <span className="text-sm flex-1" style={{ color: 'var(--text-2)' }}>{m.name}</span>
-                        <span className="hebrew text-sm" style={{ color: sel ? chag.color : 'var(--text-3)' }}>{m.heb}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              ))}
-            </>
-          )}
-
-          {filteredParashot.length === 0 && filteredMoadim.length === 0 && (
-            <p className="text-center text-xs py-8" style={{ color: 'var(--text-muted)' }}>{t('no_results')}</p>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 pt-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+    <Modal open onClose={onClose} size="md"
+      title={t('parashot_of').replace('{name}', student.name?.split(' ')[0])}
+      footer={
+        <div className="w-full flex flex-col gap-3">
           {selectedIds.size > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-3">
+            <div className="flex flex-wrap gap-1.5">
               {[...selectedIds].map(id => (
-                <span key={id} className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
-                  style={{ background: 'rgba(249,184,0,0.1)', color: '#d97706', border: '1px solid rgba(249,184,0,0.25)' }}>
+                <span key={id} className="badge badge-accent">
                   {displayParashaName(id)}
-                  <button type="button" onClick={() => toggle(id)}
-                    className="opacity-60 hover:opacity-100 ml-0.5">✕</button>
+                  <button type="button" onClick={() => toggle(id)} aria-label="Remove" className="opacity-60 hover:opacity-100"><X size={12} /></button>
                 </span>
               ))}
             </div>
           )}
-          <div className="flex gap-2">
-            <button onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl text-xs font-medium"
-              style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-              Cancelar
-            </button>
-            <button onClick={assign} disabled={saving}
-              className="flex-1 btn-gold py-2.5 rounded-xl text-xs font-semibold"
-              style={{ opacity: saving ? 0.7 : 1 }}>
-              {saving ? 'Guardando…'
-                : selectedIds.size > 1 ? `Asignar ${selectedIds.size} perashiot`
-                : selectedIds.size === 1 ? 'Asignar perashá'
-                : 'Quitar asignación'}
+          <div className="flex justify-end gap-2.5">
+            <button onClick={onClose} className="btn btn-secondary">{t('cancel')}</button>
+            <button onClick={assign} disabled={saving} className="btn btn-primary">
+              {saving ? t('saving')
+                : selectedIds.size > 1 ? t('ui_assign_n').replace('{n}', selectedIds.size)
+                : selectedIds.size === 1 ? t('assign_parasha')
+                : t('ui_remove_assignment')}
             </button>
           </div>
         </div>
+      }>
+      <SearchInput value={search} onChange={setSearch} placeholder={t('ui_search_parasha_special')} className="mb-3" autoFocus />
+      <div className="max-h-[46vh] overflow-y-auto -mx-2 px-2">
+        {filteredParashot.length > 0 && (
+          <>
+            <p className="eyebrow px-3 pt-2 pb-1.5">{t('torah_label')}</p>
+            {filteredParashot.map(p => <Row key={p.id} id={p.id} name={p.name} heb={p.heb} num={p.num} />)}
+          </>
+        )}
+        {moadimByChag.length > 0 && (
+          <>
+            <p className="eyebrow px-3 pt-4 pb-1.5">{t('special_readings')}</p>
+            {moadimByChag.map(({ chag, items }) => (
+              <div key={chag.id} className="mb-2">
+                <p className="px-3 py-1 flex items-center gap-2 text-[12px] font-medium text-ink-3">
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: chag.color }} />{chag.name}
+                </p>
+                {items.map(m => <Row key={m.id} id={m.id} name={m.name} heb={m.heb} />)}
+              </div>
+            ))}
+          </>
+        )}
+        {filteredParashot.length === 0 && filteredMoadim.length === 0 && (
+          <p className="text-center text-sm text-ink-3 py-8">{t('no_results')}</p>
+        )}
       </div>
-    </div>
+    </Modal>
   )
 }
 
-function SendHomeworkModal({ student, teacherId, onClose, t }) {
-  const { isDark } = useTheme()
-  const [form, setForm] = useState({ task: '', subject: '', due: '', parasha_id: '', aliyah_idx: 0, require_audio: false, word_start: null, word_end: null })
-  const [saving, setSaving] = useState(false)
-  const [showRangePicker, setShowRangePicker] = useState(false)
-  const inputStyle = { background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }
-  const selectedParasha = ALL_PARASHOT.find(p => p.id === form.parasha_id) || ALL_MOADIM.find(p => p.id === form.parasha_id)
-
-  const send = async () => {
-    if (!form.task) return
-    setSaving(true)
-    await supabase.from('homework').insert({
-      teacher_id: teacherId,
-      student_id: student.id,
-      task: form.task,
-      subject: form.subject || null,
-      due: form.due || null,
-      parasha_id: form.parasha_id || null,
-      aliyah_idx: form.parasha_id ? form.aliyah_idx : null,
-      require_audio: form.parasha_id ? form.require_audio : false,
-      word_start: form.parasha_id && form.word_start != null ? form.word_start : null,
-      word_end: form.parasha_id && form.word_end != null ? form.word_end : null,
-      status: 'pending',
-    })
-    setSaving(false)
-    onClose()
+/* ── Add student (students link themselves with the teacher code) ──────── */
+function AddStudentModal({ code, onClose, t }) {
+  const [copied, setCopied] = useState(false)
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(code) } catch { /* unavailable */ }
+    setCopied(true); setTimeout(() => setCopied(false), 1800)
   }
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)' }}>
-      <div className="w-full max-w-md rounded-2xl p-6 max-h-[90vh] overflow-y-auto"
-        style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)' }}>
-        <div className="flex items-center justify-between mb-5">
-          <div>
-            <p className="text-xs mb-0.5" style={{ color: 'var(--text-gold)' }}>שִׁעוּרֵי בַּיִת · Deber</p>
-            <h2 className="text-base font-semibold" style={{ color: 'var(--text)' }}>
-              Enviar deber a {student.name?.split(' ')[0]}
-            </h2>
-          </div>
-          <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center"
-            style={{ background: 'var(--bg-card)', color: 'var(--text-3)' }}>✕</button>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <div>
-            <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('task_label')}</label>
-            <input value={form.task} onChange={e => setForm(f => ({ ...f, task: e.target.value }))}
-              placeholder={t('task_placeholder')} autoFocus
-              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
-          </div>
-
-          <div>
-            <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('parasha_optional')}</label>
-            <select value={form.parasha_id}
-              onChange={e => setForm(f => ({ ...f, parasha_id: e.target.value, aliyah_idx: 0, word_start: null, word_end: null }))}
-              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
-              <option value="">{t('no_parasha_opt')}</option>
-              <optgroup label="── Parashot semanales ──">
-                {PARASHOT.map(p => <option key={p.id} value={p.id}>{p.name} · {p.heb}</option>)}
-              </optgroup>
-              <optgroup label="── Parashot dobles ──">
-                {COMBINED_PARASHOT.map(p => <option key={p.id} value={p.id}>{p.name} · {p.heb}</option>)}
-              </optgroup>
-              {MOADIM_LIST.map(m => {
-                const items = ALL_MOADIM.filter(p => p.chag === m.id)
-                if (!items.length) return null
-                return (
-                  <optgroup key={m.id} label={`── ${m.name} · ${m.heb} ──`}>
-                    {items.map(p => <option key={p.id} value={p.id}>{p.name} · {p.heb}</option>)}
-                  </optgroup>
-                )
-              })}
-            </select>
-          </div>
-
-          {form.parasha_id && (
-            <div>
-              <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('aliyah_label')}</label>
-              <select value={form.aliyah_idx}
-                onChange={e => setForm(f => ({ ...f, aliyah_idx: Number(e.target.value), word_start: null, word_end: null }))}
-                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
-                {(selectedParasha?.aliyot || []).map((a, i) => (
-                  <option key={i} value={i}>{a.n === 8 ? 'Maftir' : `${a.n}ª Aliyá`} — {a.ref}</option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {form.parasha_id && (
-            <div>
-              <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('fragment_label')}</label>
-              {form.word_start != null ? (
-                <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm"
-                  style={{ background: 'rgba(249,184,0,0.1)', border: '1px solid rgba(249,184,0,0.3)' }}>
-                  <span style={{ color: '#d97706' }}>{t('words_range').replace('{s}', form.word_start + 1).replace('{e}', form.word_end + 1)}</span>
-                  <button type="button"
-                    onClick={() => setForm(f => ({ ...f, word_start: null, word_end: null }))}
-                    className="ml-auto text-xs px-2 py-0.5 rounded-md"
-                    style={{ background: 'rgba(249,184,0,0.15)', color: '#92400e' }}>
-                    {t('full_aliyah_btn')}
-                  </button>
-                </div>
-              ) : (
-                <button type="button"
-                  onClick={() => setShowRangePicker(true)}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm transition-all"
-                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-3)' }}>
-                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                    <rect x="1.5" y="1.5" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.1"/>
-                    <path d="M4.5 6.5h4M6.5 4.5v4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
-                  </svg>
-                  {t('select_fragment')}
-                  <span className="ml-auto text-xs opacity-40">{t('full_aliyah_hint')}</span>
-                </button>
-              )}
-            </div>
-          )}
-
-          {form.parasha_id && (
-            <button type="button" onClick={() => setForm(f => ({ ...f, require_audio: !f.require_audio }))}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-left transition-all"
-              style={{
-                background: form.require_audio ? 'rgba(108,51,230,0.1)' : 'var(--bg-card)',
-                border: `1px solid ${form.require_audio ? 'rgba(108,51,230,0.3)' : 'var(--border)'}`,
-              }}>
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ background: form.require_audio ? 'rgba(108,51,230,0.2)' : 'var(--border-subtle)' }}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <rect x="5" y="1" width="4" height="7" rx="2"
-                    stroke={form.require_audio ? '#6c33e6' : 'var(--text-3)'} strokeWidth="1.2"/>
-                  <path d="M2 7c0 2.8 2.2 5 5 5s5-2.2 5-5"
-                    stroke={form.require_audio ? '#6c33e6' : 'var(--text-3)'} strokeWidth="1.2" strokeLinecap="round"/>
-                </svg>
-              </div>
-              <div className="flex-1">
-                <div className="text-xs font-medium" style={{ color: form.require_audio ? '#6c33e6' : 'var(--text)' }}>
-                  {t('require_audio_label')}
-                </div>
-                <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  {form.require_audio ? t('must_record') : t('no_audio_req')}
-                </div>
-              </div>
-              <div className="w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0"
-                style={{ borderColor: form.require_audio ? '#6c33e6' : 'var(--border)', background: form.require_audio ? '#6c33e6' : 'transparent' }}>
-                {form.require_audio && (
-                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                    <path d="M1.5 4l2 2L6.5 2" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
-              </div>
-            </button>
-          )}
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('subject_label')}</label>
-              <input value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
-                placeholder="Ej: Trop"
-                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
-            </div>
-            <div>
-              <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('due_label')}</label>
-              <input type="date" value={form.due} onChange={e => setForm(f => ({ ...f, due: e.target.value }))}
-                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                style={{ ...inputStyle, colorScheme: isDark ? 'dark' : 'light' }} />
-            </div>
-          </div>
-        </div>
-
-        <div className="flex gap-2 mt-5">
-          <button onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl text-xs font-medium"
-            style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-            {t('cancel')}
-          </button>
-          <button onClick={send} disabled={saving || !form.task}
-            className="flex-1 btn-gold py-2.5 rounded-xl text-xs font-semibold"
-            style={{ opacity: saving || !form.task ? 0.6 : 1 }}>
-            {saving ? t('sending') : t('send_hw')}
-          </button>
-        </div>
+    <Modal open onClose={onClose} size="sm" title={t('ui_add_student')} subtitle={t('ui_add_student_desc')}
+      footer={<button onClick={onClose} className="btn btn-secondary">{t('close')}</button>}>
+      <ol className="flex flex-col gap-3 mb-5 text-[14px] text-ink-2">
+        {[t('ui_add_step1'), t('ui_add_step2'), t('ui_add_step3')].map((s, i) => (
+          <li key={i} className="flex gap-3">
+            <span className="w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-semibold flex-shrink-0 bg-surface-2 text-ink-2">{i + 1}</span>
+            <span className="pt-0.5">{s}</span>
+          </li>
+        ))}
+      </ol>
+      <div className="flex items-stretch gap-2.5">
+        <div className="flex-1 flex items-center justify-center h-14 rounded-xl bg-surface-2 font-mono text-[24px] font-semibold text-ink tracking-[0.32em] ps-[0.32em] select-all"
+          style={{ border: '1px solid var(--border)' }} dir="ltr">{code || '—'}</div>
+        <button onClick={copy} className="btn btn-gold h-14 w-14 p-0 rounded-xl" aria-label={t('ui_copy_code')}>
+          {copied ? <Check size={20} /> : <Copy size={19} />}
+        </button>
       </div>
-
-      {showRangePicker && selectedParasha && (
-        <WordRangePicker
-          aliyahRef={selectedParasha.aliyot[form.aliyah_idx]?.ref}
-          onConfirm={(s, e) => { setForm(f => ({ ...f, word_start: s, word_end: e })); setShowRangePicker(false) }}
-          onClose={() => setShowRangePicker(false)}
-        />
-      )}
-    </div>
+    </Modal>
   )
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   Page
+   ══════════════════════════════════════════════════════════════════════════ */
 export default function TeacherStudents() {
   const { profile } = useAuth()
   const { t } = useLang()
+  const [params, setParams] = useSearchParams()
+  const selected = params.get('s')
   const [students, setStudents] = useState([])
-  const [selected, setSelected] = useState(null)
-  const [calcOpen, setCalcOpen] = useState(false)
-  const [assignOpen, setAssignOpen] = useState(false)
-  const [hwOpen, setHwOpen] = useState(false)
+  const [homework, setHomework] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!profile) return
-    supabase
-      .from('profiles')
-      .select('*')
-      .eq('teacher_id', profile.id)
-      .eq('role', 'student')
-      .then(({ data }) => setStudents(data || []))
+    Promise.all([
+      supabase.from('profiles').select('*').eq('teacher_id', profile.id).eq('role', 'student'),
+      supabase.from('homework').select('*, student:student_id(name)').eq('teacher_id', profile.id).order('created_at', { ascending: false }),
+    ]).then(([st, hw]) => {
+      setStudents(st.data || [])
+      setHomework(hw.data || [])
+      setLoading(false)
+    })
   }, [profile])
 
-  const student = students.find(s => s.id === selected)
+  const select = (id) => {
+    const next = new URLSearchParams(params)
+    if (id) next.set('s', id); else next.delete('s')
+    setParams(next)
+    document.getElementById('main')?.scrollTo({ top: 0 })
+  }
 
-  // Per-student tracking data
+  const student = students.find(s => s.id === selected)
+  const updateStudent = (id, updates) => setStudents(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s))
+
+  if (loading) return <div className="page"><PageSpinner /></div>
+
+  if (student) {
+    return (
+      <StudentDetail
+        student={student} teacher={profile} t={t}
+        homework={homework.filter(h => h.student_id === student.id)}
+        setHomework={setHomework}
+        onBack={() => select(null)}
+        onUpdate={(u) => updateStudent(student.id, u)}
+      />
+    )
+  }
+
+  return <StudentList students={students} homework={homework} teacher={profile} t={t} onSelect={select} onUpdate={updateStudent} setHomework={setHomework} />
+}
+
+/* ── List ──────────────────────────────────────────────────────────────── */
+function StudentList({ students, homework, teacher, t, onSelect, onUpdate, setHomework }) {
+  const [query, setQuery] = useState('')
+  const [filter, setFilter] = useState('all')
+  const [sortAsc, setSortAsc] = useState(true)
+  const [addOpen, setAddOpen] = useState(false)
+  const [modal, setModal] = useState(null) // { kind, student }
+
+  const hwByStudent = useMemo(() => {
+    const m = {}
+    homework.forEach(h => {
+      const s = homeworkStatus(h)
+      const e = (m[h.student_id] ||= { pending: 0, overdue: 0, total: 0 })
+      e.total++
+      if (s === 'pending') e.pending++
+      if (s === 'overdue' || s === 'late') e.overdue++
+    })
+    return m
+  }, [homework])
+
+  const visible = students
+    .filter(s => {
+      if (query && !s.name?.toLowerCase().includes(query.toLowerCase())) return false
+      if (filter === 'with' && !s.parasha_id) return false
+      if (filter === 'without' && s.parasha_id) return false
+      if (filter === 'pending' && !((hwByStudent[s.id]?.pending || 0) + (hwByStudent[s.id]?.overdue || 0))) return false
+      return true
+    })
+    .sort((a, b) => (a.name || '').localeCompare(b.name || '') * (sortAsc ? 1 : -1))
+
+  const withParasha = students.filter(s => s.parasha_id).length
+
+  const menuFor = (s) => [
+    { icon: Users, label: t('ui_view_profile'), onClick: () => onSelect(s.id) },
+    { icon: BookOpen, label: t('assign_parasha'), onClick: () => setModal({ kind: 'assign', student: s }) },
+    { icon: Send, label: t('send_hw'), onClick: () => setModal({ kind: 'hw', student: s }) },
+    { icon: Calculator, label: t('bar_mitzvah_calc'), onClick: () => setModal({ kind: 'bm', student: s }) },
+  ]
+
+  return (
+    <div className="page">
+      <PageHeader
+        hebrew="תַּלְמִידִים"
+        eyebrow={t('nav_students')}
+        title={t('students_title')}
+        subtitle={`${students.length} · ${withParasha} ${t('with_parasha_assigned')}`}
+        actions={
+          <button onClick={() => setAddOpen(true)} className="btn btn-primary btn-lg">
+            <UserPlus size={18} strokeWidth={1.9} />{t('ui_add_student')}
+          </button>
+        }
+      />
+
+      <div className="flex flex-col sm:flex-row gap-3 mb-5 fade-up-1">
+        <SearchInput value={query} onChange={setQuery} placeholder={t('ui_search_student')} className="sm:max-w-md flex-1" />
+        <label className="relative sm:ms-auto">
+          <span className="sr-only">{t('ui_filter')}</span>
+          <ListFilter size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-ink-3 pointer-events-none" />
+          <select value={filter} onChange={e => setFilter(e.target.value)} className="input ps-10 min-w-[220px]">
+            <option value="all">{t('ui_all_students')}</option>
+            <option value="with">{t('ui_with_parasha')}</option>
+            <option value="without">{t('ui_without_parasha')}</option>
+            <option value="pending">{t('ui_with_pending_hw')}</option>
+          </select>
+        </label>
+      </div>
+
+      <section className="card fade-up-2">
+        {students.length === 0 ? (
+          <EmptyState icon={Users} title={t('no_students')} description={t('share_code')}
+            action={<button onClick={() => setAddOpen(true)} className="btn btn-secondary"><UserPlus size={16} />{t('ui_add_student')}</button>} />
+        ) : visible.length === 0 ? (
+          <EmptyState icon={Search} title={t('no_results')} />
+        ) : (
+          <div role="table" aria-label={t('students_title')}>
+            <div role="row" className="hidden md:grid table-head px-6 py-3.5 gap-4"
+              style={{ gridTemplateColumns: 'minmax(0,1.5fr) minmax(0,1fr) minmax(0,1.2fr) minmax(0,0.9fr) 40px', borderBottom: '1px solid var(--border-subtle)' }}>
+              <button role="columnheader" onClick={() => setSortAsc(v => !v)} className="text-start inline-flex items-center gap-1 hover:text-ink" aria-sort={sortAsc ? 'ascending' : 'descending'}>
+                {t('ui_student')}<span aria-hidden="true" className="text-ink-4">{sortAsc ? '↑' : '↓'}</span>
+              </button>
+              <span role="columnheader">{t('ui_parasha')}</span>
+              <span role="columnheader">{t('progress')}</span>
+              <span role="columnheader">{t('nav_homework')}</span>
+              <span role="columnheader" className="sr-only">{t('ui_actions')}</span>
+            </div>
+            <ul>
+              {visible.map((s, i) => {
+                const hw = hwByStudent[s.id] || { pending: 0, overdue: 0 }
+                const parashot = studentParashot(s)
+                return (
+                  <li key={s.id} role="row" style={i ? { borderTop: '1px solid var(--border-subtle)' } : undefined}>
+                    <div className="row-hover grid items-center gap-4 px-4 sm:px-6 py-4 cursor-pointer grid-cols-[minmax(0,1fr)_auto] md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,0.9fr)_40px]"
+                      onClick={() => onSelect(s.id)} onKeyDown={e => e.key === 'Enter' && onSelect(s.id)} tabIndex={0}>
+                      <div role="cell" className="flex items-center gap-3.5 min-w-0">
+                        <Avatar name={s.name} size={42} single />
+                        <div className="min-w-0">
+                          <p className="text-[15px] font-medium text-ink truncate">{s.name}</p>
+                          <p className="md:hidden text-[13px] text-ink-3 truncate">
+                            {parashot.length ? parashot.map(displayParashaName).join(' + ') : t('no_parasha')}
+                          </p>
+                          {s.bar_mitzvah && (
+                            <p className="hidden md:block text-[12px] text-ink-3">
+                              {t('bar_mitzvah')} · {new Date(s.bar_mitzvah).toLocaleDateString(t('date_locale') || undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div role="cell" className="hidden md:block min-w-0 text-[14px] truncate">
+                        {parashot.length
+                          ? <span className="text-ink">{parashot.map(displayParashaName).join(' + ')}</span>
+                          : <span className="text-ink-3">{t('no_parasha')}</span>}
+                      </div>
+                      <div role="cell" className="hidden md:flex items-center gap-3 min-w-0">
+                        <Progress value={s.progress || 0} className="flex-1 max-w-[220px]" label={t('progress')} />
+                        <span className="text-[13px] text-ink-3 tabular-nums w-9">{s.progress || 0}%</span>
+                      </div>
+                      <div role="cell" className="flex items-center gap-2 justify-end md:justify-start">
+                        <HomeworkPill hw={hw} t={t} />
+                      </div>
+                      <div role="cell" className="hidden md:flex justify-end">
+                        <RowMenu items={menuFor(s)} label={t('ui_actions')} />
+                      </div>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        )}
+      </section>
+
+      {addOpen && <AddStudentModal code={teacher?.teacher_code} onClose={() => setAddOpen(false)} t={t} />}
+      {modal?.kind === 'assign' && <AssignParashaModal student={modal.student} t={t} onClose={() => setModal(null)} onAssign={u => onUpdate(modal.student.id, u)} />}
+      {modal?.kind === 'bm' && <BarMitzvahCalc student={modal.student} t={t} onClose={() => setModal(null)} onAssign={u => onUpdate(modal.student.id, u)} />}
+      {modal?.kind === 'hw' && (
+        <HomeworkComposer teacherId={teacher.id} fixedStudent={modal.student} students={students}
+          onClose={() => setModal(null)} onCreated={rows => setHomework(prev => [...rows, ...prev])} />
+      )}
+    </div>
+  )
+}
+
+function HomeworkPill({ hw, t }) {
+  if (hw.overdue > 0) return <span className="badge badge-dot badge-danger">{hw.overdue} {t('ui_overdue').toLowerCase()}</span>
+  if (hw.pending > 0) return <span className="badge badge-dot badge-warning">{hw.pending} {t('status_pending').toLowerCase()}</span>
+  return <span className="badge badge-dot badge-success">{t('ui_up_to_date')}</span>
+}
+
+/* ── Detail ────────────────────────────────────────────────────────────── */
+function StudentDetail({ student, teacher, homework, setHomework, onBack, onUpdate, t }) {
+  const navigate = useNavigate()
+  const locale = t('date_locale') || undefined
+  const [tab, setTab] = useState('overview')
+  const [modal, setModal] = useState(null)
+  const [editing, setEditing] = useState(null)
+  const [hwFilter, setHwFilter] = useState('all')
   const [trackData, setTrackData] = useState(null)
+  const [classes, setClasses] = useState(null)
 
   useEffect(() => {
-    if (!selected) { setTrackData(null); return }
     setTrackData(null)
     const today = new Date().toISOString().split('T')[0]
     Promise.all([
-      supabase.from('study_sessions').select('date, seconds').eq('student_id', selected),
+      supabase.from('study_sessions').select('date, seconds').eq('student_id', student.id),
       supabase.from('audio_listens').select('parasha_id, aliyah_idx, count, last_listened_at')
-        .eq('student_id', selected).order('last_listened_at', { ascending: false }),
+        .eq('student_id', student.id).order('last_listened_at', { ascending: false }),
       supabase.from('aliyah_time').select('parasha_id, aliyah_idx, seconds')
-        .eq('student_id', selected).order('seconds', { ascending: false }),
+        .eq('student_id', student.id).order('seconds', { ascending: false }),
     ]).then(([sessions, listens, aliyahTimes]) => {
       const allSeconds = (sessions.data || []).reduce((s, r) => s + r.seconds, 0)
       const todaySeconds = (sessions.data || []).find(r => r.date === today)?.seconds || 0
-      setTrackData({
-        totalSeconds: allSeconds,
-        todaySeconds,
-        listens: listens.data || [],
-        aliyahTimes: aliyahTimes.data || [],
-      })
+      setTrackData({ totalSeconds: allSeconds, todaySeconds, listens: listens.data || [], aliyahTimes: aliyahTimes.data || [] })
     })
-  }, [selected])
+    supabase.from('classes').select('*').eq('teacher_id', teacher.id).eq('student_id', student.id)
+      .order('scheduled_at', { ascending: true })
+      .then(({ data }) => setClasses(data || []))
+  }, [student.id, teacher.id])
 
-  const handleAssign = (updates) => {
-    setStudents(prev => prev.map(s => s.id === selected ? { ...s, ...updates } : s))
+  const parashot = studentParashot(student)
+  const mainParasha = resolveParasha(student.parasha_id)
+  const haftara = mainParasha ? ALL_HAFTAROT.find(h => h.parasha === mainParasha.id) : null
+  const days = daysUntil(student.bar_mitzvah)
+  const upcoming = (classes || []).filter(c => new Date(c.scheduled_at) >= new Date())
+  const past = (classes || []).filter(c => new Date(c.scheduled_at) < new Date()).reverse()
+
+  const hwCounts = { all: homework.length, pending: 0, overdue: 0, submitted: 0 }
+  homework.forEach(h => {
+    const s = homeworkStatus(h)
+    if (s === 'submitted') hwCounts.submitted++
+    else if (s === 'overdue' || s === 'late') hwCounts.overdue++
+    else hwCounts.pending++
+  })
+  const visibleHw = homework.filter(h => {
+    const s = homeworkStatus(h)
+    if (hwFilter === 'pending') return s === 'pending'
+    if (hwFilter === 'overdue') return s === 'overdue' || s === 'late'
+    if (hwFilter === 'submitted') return s === 'submitted'
+    return true
+  })
+
+  const activityRows = useMemo(() => {
+    if (!trackData) return []
+    const keys = new Set([
+      ...trackData.listens.map(l => `${l.parasha_id}|${l.aliyah_idx}`),
+      ...trackData.aliyahTimes.map(x => `${x.parasha_id}|${x.aliyah_idx}`),
+    ])
+    return [...keys].map(k => {
+      const [pid, aidx] = k.split('|')
+      const listen = trackData.listens.find(l => l.parasha_id === pid && String(l.aliyah_idx) === aidx)
+      const time = trackData.aliyahTimes.find(x => x.parasha_id === pid && String(x.aliyah_idx) === aidx)
+      const p = PARASHOT.find(p => p.id === pid)
+      return {
+        key: k,
+        parashaLabel: p?.name || pid,
+        aliyahLabel: p?.aliyot[Number(aidx)]?.label || `Aliyá ${Number(aidx) + 1}`,
+        count: listen?.count || 0,
+        seconds: time?.seconds || 0,
+      }
+    }).sort((a, b) => b.seconds - a.seconds)
+  }, [trackData])
+
+  const fmtClass = (c) => {
+    const d = new Date(c.scheduled_at)
+    return {
+      day: d.toLocaleDateString(locale, { day: '2-digit' }),
+      month: d.toLocaleDateString(locale, { month: 'short' }).replace('.', ''),
+      time: d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
+      weekday: capitalize(d.toLocaleDateString(locale, { weekday: 'long' })),
+    }
   }
 
-  return (
-    <div className="p-8">
-      <div className="mb-10 fade-up-1">
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          תַּלְמִידִים · Alumnos
-        </p>
-        <h1 className="text-3xl font-light" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-          {t('students_title')}
-        </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
-          {students.length} · {students.filter(s => s.parasha_id).length} {t('with_parasha_assigned')}
-        </p>
-      </div>
+  const tabs = [
+    { key: 'overview', label: t('ui_overview') },
+    { key: 'homework', label: t('nav_homework'), count: hwCounts.pending + hwCounts.overdue },
+    { key: 'classes', label: t('nav_schedule'), count: upcoming.length },
+    { key: 'activity', label: t('ui_activity') },
+  ]
 
-      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-        {/* Student list */}
-        <div className={`${selected ? 'xl:col-span-2' : 'xl:col-span-5'} fade-up-2`}>
-          <div className="grid grid-cols-1 gap-3"
-            style={selected ? {} : { gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
-            {students.length === 0 && (
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('no_students')}</p>
-            )}
-            {students.map((s, i) => {
-              const color = COLORS[i % COLORS.length]
-              const isSelected = selected === s.id
-              return (
-                <button key={s.id} onClick={() => setSelected(isSelected ? null : s.id)}
-                  className="text-left p-5 rounded-2xl transition-all duration-300"
-                  style={{
-                    background: isSelected ? `${color}12` : 'var(--bg-card)',
-                    border: `1px solid ${isSelected ? color + '35' : 'var(--border)'}`,
-                  }}>
-                  <div className="flex items-start gap-4">
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center text-base font-bold flex-shrink-0"
-                      style={{ background: `${color}20`, color, border: `2px solid ${color}40` }}>
-                      {s.name?.charAt(0)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-0.5">
-                        <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>{s.name}</span>
-                        <span className="text-xs" style={{ color }}>{s.streak || 0}🔥</span>
-                      </div>
-                      <div className="flex items-center gap-2 mb-3 flex-wrap">
-                        {(() => {
-                          const all = [s.parasha_id, ...(s.extra_parasha_ids || [])].filter(Boolean)
-                          if (!all.length) return <span className="text-xs" style={{ color: 'var(--text-3)' }}>{t('no_parasha')}</span>
-                          return all.map((id, idx) => (
-                            <span key={id} className="text-xs" style={{ color: idx === 0 ? 'var(--text-3)' : 'var(--text-muted)' }}>
-                              {idx > 0 && <span style={{ color: 'var(--border)' }}> + </span>}
-                              {displayParashaName(id)}
-                            </span>
-                          ))
-                        })()}
-                        {!s.parasha_id && (
-                          <span className="text-xs px-1.5 py-0.5 rounded-md"
-                            style={{ background: 'rgba(249,184,0,0.1)', color: '#d97706', border: '1px solid rgba(249,184,0,0.2)' }}>
-                            {t('pending_label')}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 rounded-full" style={{ background: 'var(--border)' }}>
-                          <div className="h-full rounded-full"
-                            style={{ width: `${s.progress || 0}%`, background: `linear-gradient(90deg, ${color}60, ${color})` }} />
-                        </div>
-                        <span className="text-xs" style={{ color }}>{s.progress || 0}%</span>
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              )
-            })}
+  return (
+    <div className="page">
+      <button onClick={onBack} className="btn btn-ghost btn-sm -ms-3 mb-5 text-ink-3">
+        <ArrowLeft size={16} className="rtl:rotate-180" />{t('students_title')}
+      </button>
+
+      {/* Header */}
+      <section className="card p-5 sm:p-7 mb-6 fade-up-1">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-5 lg:gap-8">
+          <div className="flex items-center gap-4 sm:gap-5 min-w-0 flex-1">
+            <Avatar name={student.name} size={68} />
+            <div className="min-w-0">
+              <p className="eyebrow mb-1.5">{t('role_student_label')}</p>
+              <h1 className="font-serif text-[30px] sm:text-[34px] font-semibold text-ink tracking-[-0.02em] leading-tight truncate">{student.name}</h1>
+              <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                {parashot.length ? parashot.map(id => (
+                  <span key={id} className="badge badge-accent"><BookOpen size={12} />{displayParashaName(id)}</span>
+                )) : <span className="badge badge-warning badge-dot">{t('no_parasha')}</span>}
+                {student.bar_mitzvah && (
+                  <span className="badge badge-gold"><Star size={12} />{t('bar_mitzvah')} · {new Date(student.bar_mitzvah).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2.5">
+            <button onClick={() => setModal('hw')} className="btn btn-primary"><Send size={16} />{t('send_hw')}</button>
+            <button onClick={() => setModal('assign')} className="btn btn-secondary"><BookOpen size={16} />{t('assign_parasha')}</button>
+            <button onClick={() => setModal('bm')} className="btn btn-secondary"><Calculator size={16} />{t('bar_mitzvah_calc')}</button>
           </div>
         </div>
+      </section>
 
-        {/* Student detail */}
-        {student && (
-          <div className="xl:col-span-3 fade-up-3">
-            {(() => {
-              const i = students.findIndex(s => s.id === student.id)
-              const color = COLORS[i % COLORS.length]
-              return (
-                <div className="rounded-2xl p-6 sticky top-6"
-                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold"
-                        style={{ background: `${color}20`, color, border: `2px solid ${color}40` }}>
-                        {student.name?.charAt(0)}
-                      </div>
-                      <div>
-                        <h2 className="text-lg font-medium" style={{ color: 'var(--text)' }}>{student.name}</h2>
-                        <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
-                          {[student.parasha_id, ...(student.extra_parasha_ids || [])].filter(Boolean).map(displayParashaName).join(' · ') || t('no_parasha')}
-                        </p>
-                      </div>
-                    </div>
-                    <button onClick={() => setSelected(null)}
-                      className="w-7 h-7 rounded-full flex items-center justify-center"
-                      style={{ background: 'var(--border)', color: 'var(--text-3)' }}>✕</button>
-                  </div>
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-3 gap-3 mb-6">
-                    {[
-                      { label: t('listens'), value: student.listens || 0, color },
-                      { label: t('progress'), value: `${student.progress || 0}%`, color },
-                      { label: t('streak'), value: `${student.streak || 0}d`, color: '#f9b800' },
-                    ].map(stat => (
-                      <div key={stat.label} className="rounded-xl p-3 text-center"
-                        style={{ background: `${stat.color}10`, border: `1px solid ${stat.color}20` }}>
-                        <div className="text-xl font-light" style={{ color: stat.color }}>{stat.value}</div>
-                        <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{stat.label}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Info rows */}
-                  <div className="mb-6">
-                    {[
-                      { label: t('bar_mitzvah'), value: student.bar_mitzvah ? new Date(student.bar_mitzvah).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) : '—' },
-                      { label: t('my_parasha'), value: [student.parasha_id, ...(student.extra_parasha_ids || [])].filter(Boolean).map(displayParashaName).join(' + ') || '—' },
-                      { label: t('next_class'), value: student.next_class || '—' },
-                    ].map(item => (
-                      <div key={item.label} className="flex justify-between items-center py-2"
-                        style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{item.label}</span>
-                        <span className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{item.value}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Tracking stats */}
-                  {trackData && (
-                    <div className="mb-5 flex flex-col gap-3">
-                      {/* Time */}
-                      <div className="rounded-xl p-4"
-                        style={{ background: 'rgba(45,212,191,0.07)', border: '1px solid rgba(45,212,191,0.18)' }}>
-                        <p className="text-xs mb-2" style={{ color: '#0d9488' }}>{t('app_time')}</p>
-                        <div className="flex items-center gap-4">
-                          <div>
-                            <div className="text-2xl font-light" style={{ color: '#0d9488' }}>
-                              {formatTime(trackData.totalSeconds)}
-                            </div>
-                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('total_acc')}</div>
-                          </div>
-                          <div className="w-px h-8 self-center" style={{ background: 'rgba(45,212,191,0.2)' }} />
-                          <div>
-                            <div className="text-lg font-light" style={{ color: '#2dd4bf' }}>
-                              {formatTime(trackData.todaySeconds)}
-                            </div>
-                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('today_label')}</div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Escuchas + tiempo por aliyá */}
-                      {(() => {
-                        // Combinar listen counts y aliyah_time por clave parasha+aliyah
-                        const keys = new Set([
-                          ...trackData.listens.map(l => `${l.parasha_id}|${l.aliyah_idx}`),
-                          ...trackData.aliyahTimes.map(t => `${t.parasha_id}|${t.aliyah_idx}`),
-                        ])
-                        const rows = [...keys].map(k => {
-                          const [pid, aidx] = k.split('|')
-                          const listen = trackData.listens.find(l => l.parasha_id === pid && String(l.aliyah_idx) === aidx)
-                          const time = trackData.aliyahTimes.find(t => t.parasha_id === pid && String(t.aliyah_idx) === aidx)
-                          const p = PARASHOT.find(p => p.id === pid)
-                          return {
-                            key: k,
-                            parashaLabel: p?.name || pid,
-                            aliyahLabel: p?.aliyot[Number(aidx)]?.label || `Aliyá ${Number(aidx) + 1}`,
-                            count: listen?.count || 0,
-                            seconds: time?.seconds || 0,
-                          }
-                        }).sort((a, b) => b.seconds - a.seconds)
-
-                        if (!rows.length) return (
-                          <div className="rounded-xl p-4 text-center"
-                            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('no_activity')}</p>
-                          </div>
-                        )
-
-                        return (
-                          <div className="rounded-xl overflow-hidden"
-                            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                            <div className="grid grid-cols-4 px-3 py-2 text-xs"
-                              style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border-subtle)', background: 'var(--overlay)' }}>
-                              <span className="col-span-2">{t('section')}</span>
-                              <span className="text-center">{t('listens')}</span>
-                              <span className="text-right">{t('time')}</span>
-                            </div>
-                            {rows.map(row => (
-                              <div key={row.key}
-                                className="grid grid-cols-4 px-3 py-2 text-xs items-center"
-                                style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                                <span className="col-span-2 truncate" style={{ color: 'var(--text-2)' }}>
-                                  {row.parashaLabel} · {row.aliyahLabel}
-                                </span>
-                                <span className="text-center font-medium" style={{ color: '#6c33e6' }}>
-                                  {row.count > 0 ? `${row.count}×` : '—'}
-                                </span>
-                                <span className="text-right font-medium" style={{ color: '#0d9488' }}>
-                                  {row.seconds > 0 ? formatTime(row.seconds) : '—'}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )
-                      })()}
-                    </div>
-                  )}
-
-                  {/* Assign perasha actions */}
-                  <div className="grid grid-cols-2 gap-2 mb-2">
-                    <button onClick={() => setAssignOpen(true)}
-                      className="py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5"
-                      style={{ background: 'linear-gradient(135deg, rgba(108,51,230,0.18), rgba(108,51,230,0.06))', border: '1px solid rgba(108,51,230,0.3)', color: '#8b5cf6' }}>
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.2"/>
-                        <path d="M4 6h4M6 4v4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                      </svg>
-                      {t('assign_parasha')}
-                    </button>
-                    <button onClick={() => setCalcOpen(true)}
-                      className="py-2.5 rounded-xl text-xs font-medium"
-                      style={{ background: 'rgba(249,184,0,0.1)', color: '#d97706', border: '1px solid rgba(249,184,0,0.2)' }}>
-                      {t('bar_mitzvah_calc')}
-                    </button>
-                  </div>
-
-                  {/* Quick actions */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => setHwOpen(true)}
-                      className="py-2.5 rounded-xl text-xs font-medium"
-                      style={{ background: `${color}15`, color, border: `1px solid ${color}25` }}>
-                      {t('send_hw')}
-                    </button>
-                    <button className="py-2.5 rounded-xl text-xs font-medium"
-                      style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-                      {t('view_history')}
-                    </button>
-                  </div>
-                </div>
-              )
-            })()}
-          </div>
-        )}
+      {/* Tabs */}
+      <div className="tabs mb-6" role="tablist">
+        {tabs.map(tb => (
+          <button key={tb.key} role="tab" aria-selected={tab === tb.key} onClick={() => setTab(tb.key)}>
+            {tb.label}
+            {tb.count > 0 && <span className="ms-2 badge h-5 px-1.5 text-[11px]">{tb.count}</span>}
+          </button>
+        ))}
       </div>
 
-      {calcOpen && student && (
-        <BarMitzvahCalc
-          student={student}
-          onAssign={handleAssign}
-          onClose={() => setCalcOpen(false)}
-          t={t}
-        />
+      {tab === 'overview' && (
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 fade-up-1">
+          <div className="xl:col-span-2 flex flex-col gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { icon: Headphones, label: t('listens'), value: student.listens || 0 },
+                { icon: BookOpen, label: t('progress'), value: `${student.progress || 0}%` },
+                { icon: Star, label: t('streak'), value: `${student.streak || 0}d` },
+                { icon: Clock, label: t('app_time'), value: trackData ? formatDuration(trackData.totalSeconds) : '—' },
+              ].map(s => (
+                <div key={s.label} className="card-flat p-4">
+                  <s.icon size={17} strokeWidth={1.7} className="text-ink-3" />
+                  <p className="text-[24px] font-semibold text-ink mt-3 leading-none tabular-nums">{s.value}</p>
+                  <p className="text-[12px] text-ink-3 mt-1.5">{s.label}</p>
+                </div>
+              ))}
+            </div>
+
+            <section className="card p-5 sm:p-6">
+              <h2 className="section-title mb-4">{t('ui_study_plan')}</h2>
+              <dl>
+                {[
+                  { label: t('my_parasha'), value: parashot.map(displayParashaName).join(' + ') || '—',
+                    action: mainParasha && { label: t('ui_open'), onClick: () => navigate(`/teacher/study/${mainParasha.id}`) } },
+                  { label: t('nav_haftara'), value: haftara ? `${haftara.name}${haftara.aliyot?.[0]?.ref ? ' · ' + haftara.aliyot[0].ref : ''}` : '—',
+                    action: haftara && { label: t('ui_open'), onClick: () => navigate(`/teacher/haftara/${haftara.id}`) } },
+                  { label: t('bar_mitzvah'), value: student.bar_mitzvah ? new Date(student.bar_mitzvah).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) : '—',
+                    sub: days != null && days >= 0 ? t('ui_in_days').replace('{n}', days) : null },
+                  { label: t('next_class'), value: upcoming[0] ? `${fmtClass(upcoming[0]).weekday} ${fmtClass(upcoming[0]).day} ${fmtClass(upcoming[0]).month} · ${fmtClass(upcoming[0]).time}` : '—' },
+                ].map((row, i) => (
+                  <div key={row.label} className="flex items-center justify-between gap-4 py-3.5" style={i ? { borderTop: '1px solid var(--border-subtle)' } : undefined}>
+                    <dt className="text-[14px] text-ink-3">{row.label}</dt>
+                    <dd className="flex items-center gap-3 text-end min-w-0">
+                      <span className="min-w-0">
+                        <span className="block text-[14px] font-medium text-ink truncate">{row.value}</span>
+                        {row.sub && <span className="block text-[12px] text-gold-ink">{row.sub}</span>}
+                      </span>
+                      {row.action && (
+                        <button onClick={row.action.onClick} className="btn btn-ghost btn-sm text-accent">
+                          {row.action.label}<ChevronRight size={14} className="rtl:rotate-180" />
+                        </button>
+                      )}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          </div>
+
+          <section className="card p-5 sm:p-6 self-start">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="section-title">{t('nav_homework')}</h2>
+              <button onClick={() => setTab('homework')} className="btn btn-ghost btn-sm text-ink-3">{t('ui_view_all')}</button>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              {[
+                { label: t('ui_pending_plural'), value: hwCounts.pending, color: 'var(--text)' },
+                { label: t('ui_overdue_plural'), value: hwCounts.overdue, color: 'rgb(var(--danger-rgb))' },
+                { label: t('ui_submitted_plural'), value: hwCounts.submitted, color: 'rgb(var(--success-rgb))' },
+              ].map(s => (
+                <div key={s.label} className="rounded-xl bg-surface-2 p-3 text-center">
+                  <p className="text-[20px] font-semibold tabular-nums" style={{ color: s.color }}>{s.value}</p>
+                  <p className="text-[11px] text-ink-3 mt-0.5">{s.label}</p>
+                </div>
+              ))}
+            </div>
+            {homework.filter(h => homeworkStatus(h) !== 'submitted').slice(0, 3).map(h => (
+              <button key={h.id} onClick={() => setTab('homework')} className="w-full flex items-center gap-3 py-2.5 text-start group"
+                style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                <ClipboardList size={16} className="text-ink-4 flex-shrink-0" />
+                <span className="flex-1 min-w-0 text-[14px] text-ink-2 truncate group-hover:text-ink">{h.task}</span>
+                {homeworkStatus(h) !== 'pending' && <span className="w-1.5 h-1.5 rounded-full bg-danger" />}
+              </button>
+            ))}
+            <button onClick={() => setModal('hw')} className="btn btn-secondary w-full mt-3"><Plus size={16} />{t('new_hw')}</button>
+          </section>
+        </div>
       )}
-      {assignOpen && student && (
-        <AssignParashaModal
-          student={student}
-          onAssign={handleAssign}
-          onClose={() => setAssignOpen(false)}
-          t={t}
-        />
+
+      {tab === 'homework' && (
+        <div className="fade-up-1">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+            <div className="segmented" role="tablist">
+              {[['all', t('ui_all')], ['pending', t('ui_pending_plural')], ['overdue', t('ui_overdue_plural')], ['submitted', t('ui_submitted_plural')]].map(([k, l]) => (
+                <button key={k} role="tab" aria-selected={hwFilter === k} onClick={() => setHwFilter(k)}>
+                  {l}<span className="ms-1.5 text-ink-4 tabular-nums">{hwCounts[k]}</span>
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setModal('hw')} className="btn btn-primary sm:ms-auto"><Plus size={16} />{t('new_hw')}</button>
+          </div>
+          <section className="card">
+            {visibleHw.length === 0 ? (
+              <EmptyState icon={ClipboardList} title={t('no_hw_sent')} />
+            ) : (
+              <ul>
+                {visibleHw.map((h, i) => (
+                  <li key={h.id} style={i ? { borderTop: '1px solid var(--border-subtle)' } : undefined}>
+                    <HomeworkItem item={h} showStudent={false} teacherId={teacher.id}
+                      onChange={next => setHomework(prev => prev.map(x => x.id === next.id ? next : x))}
+                      onDelete={id => setHomework(prev => prev.filter(x => x.id !== id))}
+                      onEdit={setEditing} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
       )}
-      {hwOpen && student && (
-        <SendHomeworkModal
-          student={student}
-          teacherId={profile.id}
-          onClose={() => setHwOpen(false)}
-          t={t}
-        />
+
+      {tab === 'classes' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 fade-up-1">
+          {[{ title: t('ui_upcoming_classes'), list: upcoming }, { title: t('ui_past_classes'), list: past }].map(group => (
+            <section key={group.title} className="card p-5 sm:p-6">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="section-title">{group.title}</h2>
+                {group.list === upcoming && (
+                  <button onClick={() => navigate(`/teacher/schedule?new=1&student=${student.id}`)} className="btn btn-secondary btn-sm"><Plus size={14} />{t('new_class')}</button>
+                )}
+              </div>
+              {classes === null ? <div className="py-8 flex justify-center"><Spinner /></div>
+                : group.list.length === 0 ? <EmptyState icon={CalendarDays} title={t('no_classes')} className="py-8" />
+                : group.list.map(c => {
+                  const f = fmtClass(c)
+                  return (
+                    <div key={c.id} className="flex items-center gap-4 py-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                      <div className="w-12 h-12 rounded-xl bg-surface-2 flex flex-col items-center justify-center flex-shrink-0">
+                        <span className="text-[16px] font-semibold text-ink leading-none">{f.day}</span>
+                        <span className="text-[10px] uppercase text-ink-3 mt-0.5">{f.month}</span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[14px] font-medium text-ink">{c.type} · {f.time}</p>
+                        <p className="text-[13px] text-ink-3 truncate">{f.weekday} · {c.duration_min} min{c.notes ? ` · ${c.notes}` : ''}</p>
+                      </div>
+                    </div>
+                  )
+                })}
+            </section>
+          ))}
+        </div>
+      )}
+
+      {tab === 'activity' && (
+        <div className="flex flex-col gap-6 fade-up-1">
+          <div className="grid grid-cols-2 gap-3 max-w-xl">
+            <div className="card-flat p-5">
+              <IconTile icon={Clock} tone="accent" size={38} />
+              <p className="text-[26px] font-semibold text-ink mt-3 tabular-nums">{trackData ? formatDuration(trackData.totalSeconds) : '—'}</p>
+              <p className="text-[13px] text-ink-3">{t('total_acc')}</p>
+            </div>
+            <div className="card-flat p-5">
+              <IconTile icon={CalendarDays} tone="gold" size={38} />
+              <p className="text-[26px] font-semibold text-ink mt-3 tabular-nums">{trackData ? formatDuration(trackData.todaySeconds) : '—'}</p>
+              <p className="text-[13px] text-ink-3">{t('today_label')}</p>
+            </div>
+          </div>
+          <section className="card overflow-hidden">
+            {!trackData ? <PageSpinner /> : activityRows.length === 0 ? (
+              <EmptyState icon={Headphones} title={t('no_activity')} />
+            ) : (
+              <table className="w-full text-[14px]">
+                <thead>
+                  <tr className="table-head text-start" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                    <th className="text-start font-medium px-5 sm:px-6 py-3">{t('section')}</th>
+                    <th className="text-center font-medium px-3 py-3">{t('listens')}</th>
+                    <th className="text-end font-medium px-5 sm:px-6 py-3">{t('time')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activityRows.map(row => (
+                    <tr key={row.key} className="row-hover" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                      <td className="px-5 sm:px-6 py-3 text-ink-2">{row.parashaLabel} · {row.aliyahLabel}</td>
+                      <td className="px-3 py-3 text-center font-medium text-ink tabular-nums">{row.count > 0 ? `${row.count}×` : '—'}</td>
+                      <td className="px-5 sm:px-6 py-3 text-end font-medium text-ink tabular-nums">{row.seconds > 0 ? formatDuration(row.seconds) : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </section>
+        </div>
+      )}
+
+      {modal === 'bm' && <BarMitzvahCalc student={student} onAssign={onUpdate} onClose={() => setModal(null)} t={t} />}
+      {modal === 'assign' && <AssignParashaModal student={student} onAssign={onUpdate} onClose={() => setModal(null)} t={t} />}
+      {modal === 'hw' && (
+        <HomeworkComposer teacherId={teacher.id} fixedStudent={student} onClose={() => setModal(null)}
+          onCreated={rows => setHomework(prev => [...rows, ...prev])} />
+      )}
+      {editing && (
+        <HomeworkEditModal item={editing} teacherId={teacher.id} onClose={() => setEditing(null)}
+          onSaved={next => setHomework(prev => prev.map(x => x.id === next.id ? next : x))} />
       )}
     </div>
   )

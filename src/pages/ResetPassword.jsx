@@ -1,30 +1,20 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { CheckCircle2, KeyRound } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { useTheme } from '../context/ThemeContext'
 import { useLang } from '../context/LangContext'
+import { Logo, Spinner } from '../components/ui'
 
 export default function ResetPassword() {
   const navigate = useNavigate()
   const { clearRecovery } = useAuth()
-  const { isDark } = useTheme()
   const { t } = useLang()
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [done, setDone] = useState(false)
-
-  const bg = isDark
-    ? 'radial-gradient(ellipse at 50% 0%, #1a0f3e 0%, #0d0b1e 100%)'
-    : 'radial-gradient(ellipse at 50% 0%, #e0d5be 0%, #f5f0e4 100%)'
-
-  const inputStyle = {
-    background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.9)',
-    border: `1px solid ${isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'}`,
-    color: 'var(--text)',
-  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -44,50 +34,36 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: bg }}>
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <p className="text-xs hebrew mb-2" style={{ color: 'var(--text-gold)' }}>שִׁנּוּי סִיסְמָה</p>
-          <h1 className="text-2xl font-light" style={{ color: 'var(--text)', letterSpacing: '-0.5px' }}>
-            {t('new_password_title')}
-          </h1>
-        </div>
-
-        <div className="rounded-2xl p-6"
-          style={{ background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.8)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` }}>
+    <div className="min-h-[100svh] flex flex-col items-center justify-center px-4 bg-canvas relative">
+      <div className="absolute inset-x-0 top-0 h-[50vh] pointer-events-none" aria-hidden="true"
+        style={{ background: 'radial-gradient(ellipse 60% 60% at 50% 0%, rgba(var(--gold-rgb),0.1), transparent 70%)' }} />
+      <div className="relative w-full max-w-sm">
+        <div className="flex justify-center mb-8"><Logo size={34} /></div>
+        <div className="card p-7">
           {done ? (
-            <div className="flex flex-col items-center gap-3 py-4">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)' }}>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <circle cx="10" cy="10" r="8" stroke="#16a34a" strokeWidth="1.5"/>
-                  <path d="M6 10l3 3 5-5" stroke="#16a34a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <p className="text-sm font-semibold" style={{ color: '#16a34a' }}>{t('password_updated')}</p>
-              <p className="text-xs text-center" style={{ color: 'var(--text-3)' }}>{t('redirecting_profile')}</p>
+            <div className="flex flex-col items-center gap-3 py-4 text-center">
+              <CheckCircle2 size={40} strokeWidth={1.5} style={{ color: 'rgb(var(--success-rgb))' }} />
+              <p className="text-[15px] font-semibold text-ink">{t('password_updated')}</p>
+              <p className="text-[13px] text-ink-3">{t('redirecting_profile')}</p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                placeholder={t('new_password')} required autoFocus
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none"
-                style={inputStyle} />
-              <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)}
-                placeholder={t('repeat_password')} required
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none"
-                style={inputStyle} />
-              {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
-              <button type="submit" disabled={loading}
-                className="w-full py-3 rounded-xl font-semibold text-sm mt-1 transition-all"
-                style={{
-                  background: loading ? 'var(--bg-card)' : 'linear-gradient(135deg, #6c33e6, #8b5cf6)',
-                  color: loading ? 'var(--text-3)' : '#fff',
-                  border: loading ? '1px solid var(--border)' : 'none',
-                }}>
-                {loading ? '…' : t('save_password')}
-              </button>
-            </form>
+            <>
+              <span className="w-11 h-11 rounded-xl flex items-center justify-center mb-5" style={{ background: 'rgba(var(--accent-rgb),0.07)', color: 'rgb(var(--accent-rgb))' }}>
+                <KeyRound size={20} strokeWidth={1.7} />
+              </span>
+              <p className="hebrew-ui text-[14px] text-gold-ink mb-1">שִׁנּוּי סִיסְמָה</p>
+              <h1 className="font-serif text-[26px] font-semibold text-ink tracking-[-0.01em] mb-5">{t('new_password_title')}</h1>
+              <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete="new-password"
+                  placeholder={t('new_password')} aria-label={t('new_password')} required autoFocus className="input" />
+                <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} autoComplete="new-password"
+                  placeholder={t('repeat_password')} aria-label={t('repeat_password')} required className="input" />
+                {error && <p role="alert" className="text-[13px] text-danger">{error}</p>}
+                <button type="submit" disabled={loading} className="btn btn-primary btn-lg w-full mt-1">
+                  {loading ? <Spinner size={16} /> : t('save_password')}
+                </button>
+              </form>
+            </>
           )}
         </div>
       </div>
