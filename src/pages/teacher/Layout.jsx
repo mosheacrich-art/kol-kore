@@ -143,7 +143,7 @@ export default function TeacherLayout() {
         {!isNative && !isLandscape && (
           <div className="hidden md:flex sticky top-0 z-30 items-center gap-3 px-4 flex-shrink-0 app-header"
             style={{ background: '#ffffff', borderBottom: '1px solid var(--border)', minHeight: '3.5rem' }}>
-            <Logo size={26} />
+            <span className="md:hidden"><Logo size={26} /></span>
             <div className="ml-auto flex items-center gap-2">
               <LangToggle />
               <button onClick={() => setContactOpen(true)}

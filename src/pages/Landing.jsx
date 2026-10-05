@@ -27,16 +27,20 @@ function SyncDemo() {
     return () => clearInterval(id)
   }, [])
   return (
-    <div style={{ border: `1px solid ${NAVY}`, borderRadius: 4, background: '#fff', boxShadow: `8px 8px 0 ${GOLD}` }}>
-      <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: '1px solid #e5e7eb' }}>
+    <div style={{ border: `1px solid ${NAVY}`, borderRadius: 4, background: '#fff', boxShadow: `6px 6px 0 ${GOLD}`, maxWidth: 420 }}>
+      <div className="flex items-center justify-between px-5 py-2.5" style={{ borderBottom: '1px solid #e5e7eb' }}>
         <span className="eyebrow">Bereshit · 1:1</span>
         <span className="text-xs tabular-nums" style={{ color: '#6b7280' }}>0:0{Math.min(i, 9)}</span>
       </div>
-      <p dir="rtl" className="hebrew px-6 py-8 text-3xl sm:text-4xl leading-[1.9]" style={{ color: NAVY }}>
+      <p dir="rtl" className="hebrew px-5 py-6 text-2xl sm:text-3xl leading-[1.8]" style={{ color: NAVY }}>
         {VERSE.map((w, k) => (
-          <span key={k} style={{
-            marginInlineStart: 10,
-            padding: '0 4px',
+          <span key={k} role="button" tabIndex={0}
+            onClick={() => setI(k)}
+            onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setI(k)}
+            style={{
+            cursor: 'pointer',
+            marginInlineStart: 8,
+            padding: '0 3px',
             borderBottom: `3px solid ${k === i ? GOLD : 'transparent'}`,
             color: k < i ? '#9ca3af' : NAVY,
             transition: 'all .2s',

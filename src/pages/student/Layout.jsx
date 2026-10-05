@@ -140,7 +140,7 @@ export default function StudentLayout() {
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-2)' }}>
               <HamburgerIcon />
             </button>
-            <Logo size={26} />
+            <span className="md:hidden"><Logo size={26} /></span>
             <div className="ml-auto flex items-center gap-2">
               <div className="hidden md:flex items-center gap-2">
                 <LangToggle />
