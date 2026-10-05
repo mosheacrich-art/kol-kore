@@ -120,7 +120,6 @@ export default function TeacherDashboard() {
             Shalom, {profile?.name || 'Profesor'}
           </h1>
         </div>
-        <p className="hebrew text-3xl" style={{ color: GOLD, direction: 'ltr' }}>לוּחַ</p>
       </header>
 
       {/* Figures: one ruled strip */}
