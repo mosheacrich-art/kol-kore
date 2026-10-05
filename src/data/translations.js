@@ -636,6 +636,12 @@ export const translations = {
     ui_previous: "Anterior",
     ui_next: "Siguiente",
     ui_read_haftara: "Leer haftará",
+    ui_navigation: "Navegación",
+    ui_open_menu: "Abrir menú",
+    ui_section_main: "Principal",
+    ui_section_other: "Otros",
+    ui_home: "Inicio",
+    language: "Idioma",
   },
 
   en: {
@@ -1275,6 +1281,12 @@ export const translations = {
     ui_previous: "Previous",
     ui_next: "Next",
     ui_read_haftara: "Read haftarah",
+    ui_navigation: "Navigation",
+    ui_open_menu: "Open menu",
+    ui_section_main: "Main",
+    ui_section_other: "Other",
+    ui_home: "Home",
+    language: "Language",
   },
 
   fr: {
@@ -1913,6 +1925,12 @@ export const translations = {
     ui_previous: "Précédent",
     ui_next: "Suivant",
     ui_read_haftara: "Lire la haftara",
+    ui_navigation: "Navigation",
+    ui_open_menu: "Ouvrir le menu",
+    ui_section_main: "Principal",
+    ui_section_other: "Autres",
+    ui_home: "Accueil",
+    language: "Langue",
   },
 
   it: {
@@ -2551,6 +2569,12 @@ export const translations = {
     ui_previous: "Precedente",
     ui_next: "Successivo",
     ui_read_haftara: "Leggi haftarà",
+    ui_navigation: "Navigazione",
+    ui_open_menu: "Apri menu",
+    ui_section_main: "Principale",
+    ui_section_other: "Altro",
+    ui_home: "Home",
+    language: "Lingua",
   },
 
   he: {
@@ -3189,6 +3213,12 @@ export const translations = {
     ui_previous: "הקודם",
     ui_next: "הבא",
     ui_read_haftara: "קרא הפטרה",
+    ui_navigation: "ניווט",
+    ui_open_menu: "פתח תפריט",
+    ui_section_main: "ראשי",
+    ui_section_other: "אחר",
+    ui_home: "בית",
+    language: "שפה",
   },
 
   de: {
@@ -3827,5 +3857,11 @@ export const translations = {
     ui_previous: "Zurück",
     ui_next: "Weiter",
     ui_read_haftara: "Haftara lesen",
+    ui_navigation: "Navigation",
+    ui_open_menu: "Menü öffnen",
+    ui_section_main: "Übersicht",
+    ui_section_other: "Sonstiges",
+    ui_home: "Start",
+    language: "Sprache",
   },
 }
