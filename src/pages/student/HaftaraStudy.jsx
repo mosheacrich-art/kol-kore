@@ -6,10 +6,8 @@ import { BOOK_COLORS, SEFARIM_LIST, PARASHOT } from '../../data/parashot'
 import { MOADIM_LIST } from '../../data/moadim'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
-import { useAliyahText } from '../../hooks/useSefaria'
-import { processVerse } from '../../utils/hebrew'
 import ParashaReader from '../../components/ParashaReader'
-import { EmptyState, PageHeader, SearchInput, Spinner } from '../../components/ui'
+import { EmptyState, PageHeader, SearchInput } from '../../components/ui'
 import { Section, ItemCard } from './Study'
 
 const ADMIN_USER_ID = '1f4d0329-ddf5-48a4-965f-5f37d7416447'
@@ -131,16 +129,13 @@ function ListView({ basePath }) {
 
 function HaftaraPreview({ haftara, t, onOpen, onPick }) {
   const ref = haftara.aliyot?.[0]?.ref
-  const { verses, loading } = useAliyahText(ref, true, null)
-  const [mode, setMode] = useState('nikkud')
-  const color = haftara.color || BOOK_COLORS[haftara.book] || '#2F5E93'
   const parasha = PARASHOT.find(p => p.id === haftara.parasha)
   const idx = WEEKLY.findIndex(h => h.id === haftara.id)
   const prev = idx > 0 ? WEEKLY[idx - 1] : null
   const next = idx >= 0 && idx < WEEKLY.length - 1 ? WEEKLY[idx + 1] : null
 
   return (
-    <section className="card overflow-hidden flex flex-col max-h-[calc(100svh-120px)]">
+    <section className="card overflow-hidden flex flex-col">
       <div className="relative px-6 pt-6 pb-5 overflow-hidden flex-shrink-0"
         style={{ background: 'linear-gradient(135deg, var(--surface) 40%, var(--parchment) 100%)' }}>
         <div className="flex items-start justify-between gap-3">
@@ -160,30 +155,6 @@ function HaftaraPreview({ haftara, t, onOpen, onPick }) {
         <h2 className="hebrew text-[32px] mt-2 leading-tight" style={{ color: 'var(--text)', fontWeight: 400 }}>{haftara.heb}</h2>
         <p className="font-serif text-[18px] text-ink-2 mt-1">{haftara.name}</p>
         <p className="text-[14px] text-ink-3 mt-0.5" dir="ltr" style={{ textAlign: 'start' }}>{ref}</p>
-      </div>
-
-      <div className="flex items-center justify-between gap-3 px-6 py-3 flex-shrink-0" style={{ borderTop: '1px solid var(--border-subtle)', borderBottom: '1px solid var(--border-subtle)' }}>
-        <div className="segmented">
-          <button aria-pressed={mode === 'nikkud'} onClick={() => setMode('nikkud')}>{t('mode_nikkud') || 'Nikud'}</button>
-          <button aria-pressed={mode === 'plain'} onClick={() => setMode('plain')}>{t('mode_plain') || 'Texto'}</button>
-        </div>
-        <span className="text-[12px] text-ink-4">Sefaria</span>
-      </div>
-
-      {/* Authoritative text from Sefaria — rendered as received, never edited */}
-      <div className="flex-1 overflow-y-auto px-6 py-4" style={{ background: 'var(--parchment)' }}>
-        {loading ? (
-          <div className="flex justify-center py-10"><Spinner /></div>
-        ) : (
-          <ol className="hebrew-reader" dir="rtl" style={{ color: 'var(--parchment-ink)', fontSize: 21, lineHeight: 2 }}>
-            {verses.map((v, i) => (
-              <li key={i} className="flex gap-3 py-1" style={i ? { borderTop: '1px solid var(--parchment-line)' } : undefined}>
-                <span className="text-[12px] font-sans pt-2 flex-shrink-0 w-5 tabular-nums" style={{ color: color }}>{i + 1}</span>
-                <span className="flex-1">{processVerse(v, mode)}</span>
-              </li>
-            ))}
-          </ol>
-        )}
       </div>
 
       <div className="flex items-center gap-2.5 px-6 py-4 flex-shrink-0" style={{ borderTop: '1px solid var(--border-subtle)' }}>
