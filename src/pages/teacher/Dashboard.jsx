@@ -1,30 +1,22 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import {
+  ArrowRight, BookOpen, CalendarDays, Check, ChevronRight, ClipboardList, Copy, Plus, Users,
+} from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
-
-const NAVY = '#1b2f6b'
-const GOLD = '#c8941f'
-
-function daysUntil(dateStr) {
-  if (!dateStr) return null
-  const today = new Date(); today.setHours(0, 0, 0, 0)
-  const bm = new Date(dateStr); bm.setHours(0, 0, 0, 0)
-  return Math.round((bm - today) / (1000 * 60 * 60 * 24))
-}
-
-function bmLabel(days) {
-  if (days === null) return null
-  if (days === 0) return { text: '¡Hoy!', color: '#c8941f' }
-  if (days > 0) return { text: `en ${days}d`, color: days < 30 ? '#b42318' : days < 90 ? '#9a6f12' : '#6b7280' }
-  return { text: `hace ${Math.abs(days)}d`, color: 'var(--text-muted)' }
-}
+import { useWeeklyParasha } from '../../hooks/useWeeklyParasha'
+import { Avatar, CardHeader, EmptyState, IconTile, PageHeader, Spinner } from '../../components/ui'
+import { capitalize, daysUntil, displayParashaName } from '../../utils/parasha'
 
 export default function TeacherDashboard() {
   const { profile } = useAuth()
   const navigate = useNavigate()
   const { t } = useLang()
+  const locale = t('date_locale') || 'es-ES'
+  const { parasha: weekly } = useWeeklyParasha()
+
   const [students, setStudents] = useState([])
   const [pendingHw, setPendingHw] = useState(0)
   const [pendingPerStudent, setPendingPerStudent] = useState({})
@@ -46,7 +38,6 @@ export default function TeacherDashboard() {
 
       if (studentList.length > 0) {
         const ids = studentList.map(s => s.id)
-
         const { data: hwRows } = await supabase
           .from('homework')
           .select('student_id')
@@ -74,21 +65,20 @@ export default function TeacherDashboard() {
     load()
   }, [profile])
 
-  const nextClassLabel = nextClass
+  const nextClassInfo = nextClass
     ? (() => {
         const d = new Date(nextClass.scheduled_at)
-        const today = new Date()
-        const isToday = d.toDateString() === today.toDateString()
-        const h = d.getHours().toString().padStart(2, '0')
-        const m = d.getMinutes().toString().padStart(2, '0')
-        return { time: `${h}:${m}`, sub: isToday ? `${t('today')} · ${nextClass.student_name}` : `${d.toLocaleDateString('es', { weekday: 'short', day: 'numeric' })} · ${nextClass.student_name}` }
+        const isToday = d.toDateString() === new Date().toDateString()
+        const time = d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
+        const when = isToday ? t('today') : capitalize(d.toLocaleDateString(locale, { weekday: 'short', day: 'numeric' }))
+        return { value: time, sub: `${when} · ${nextClass.student_name}` }
       })()
-    : { time: '—', sub: t('no_classes') }
+    : { value: '—', sub: t('no_classes') }
 
   const sortedStudents = [...students].sort((a, b) => {
     const da = daysUntil(a.bar_mitzvah)
     const db = daysUntil(b.bar_mitzvah)
-    if (da === null && db === null) return 0
+    if (da === null && db === null) return (a.name || '').localeCompare(b.name || '')
     if (da === null) return 1
     if (db === null) return -1
     const fa = da >= 0 ? da : Infinity
@@ -97,127 +87,242 @@ export default function TeacherDashboard() {
     return da - db
   })
 
-  const today = new Date().toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' })
-  const stats = [
-    { label: t('active_students'), value: students.length, sub: t('registered') },
-    { label: t('pending_hw_kpi'), value: pendingHw, sub: t('not_sent') },
-    { label: t('next_class'), value: nextClassLabel.time, sub: nextClassLabel.sub },
-  ]
-  const links = [
-    { label: 'Perashiot', path: '/teacher/study' },
-    { label: 'Nueva clase', path: '/teacher/schedule' },
-    { label: 'Ver deberes', path: '/teacher/homework' },
-    { label: 'Alumnos', path: '/teacher/students' },
+  const today = capitalize(new Date().toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))
+
+  const kpis = [
+    { icon: Users, tone: 'accent', value: students.length, label: t('active_students'), sub: t('registered'), to: '/teacher/students' },
+    { icon: ClipboardList, tone: 'gold', value: pendingHw, label: t('pending_hw_kpi'), sub: t('not_sent'), to: '/teacher/homework' },
+    { icon: CalendarDays, tone: 'accent', value: nextClassInfo.value, label: t('next_class'), sub: nextClassInfo.sub, to: '/teacher/schedule' },
   ]
 
   return (
-    <div className="px-5 sm:px-10 py-8 max-w-6xl w-full mx-auto">
-      {/* Masthead */}
-      <header className="flex flex-wrap items-end justify-between gap-4 pb-2 mb-8">
-        <div>
-          <p className="eyebrow mb-2 capitalize">{today}</p>
-          <h1 className="serif text-4xl sm:text-5xl" style={{ color: NAVY, fontWeight: 600 }}>
-            Shalom, {profile?.name || 'Profesor'}
-          </h1>
-        </div>
-      </header>
+    <div className="page">
+      <PageHeader
+        eyebrow="Dashboard"
+        title={`Shalom, ${profile?.name || ''}`}
+        subtitle={t('ui_dash_subtitle')}
+        aside={<p className="hidden sm:block text-sm text-ink-3 pb-1">{today}</p>}
+      />
 
-      {/* Figures: one ruled strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 mb-12">
-        {stats.map((k, n) => (
-          <div key={k.label} className="py-5 sm:px-6 first:sm:ps-0" >
-            <p className="eyebrow" style={{ color: 'var(--text-3)' }}>{k.label}</p>
-            <div className="serif text-5xl mt-3" style={{ color: NAVY, fontWeight: 600 }}>{k.value}</div>
-            <p className="text-xs mt-2" style={{ color: 'var(--text-3)' }}>{k.sub}</p>
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        {/* ── Main column ──────────────────────────────────────────── */}
+        <div className="xl:col-span-8 flex flex-col gap-6 min-w-0">
+          {/* KPIs */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 fade-up-1">
+            {kpis.map(k => (
+              <button key={k.label} onClick={() => navigate(k.to)}
+                className="card card-interactive group p-4 sm:p-5 text-start flex items-center gap-4 min-w-0">
+                <IconTile icon={k.icon} tone={k.tone} size={48} />
+                <span className="flex-1 min-w-0">
+                  <span className="block text-[28px] leading-none font-semibold text-ink tracking-tight tabular-nums">
+                    {loading ? <span className="inline-block w-8 h-6 rounded-md bg-surface-2 animate-pulse align-middle" /> : k.value}
+                  </span>
+                  <span className="block text-[14px] font-medium text-ink-2 mt-2 truncate">{k.label}</span>
+                  <span className="block text-[12px] text-ink-3 mt-0.5 truncate">{k.sub}</span>
+                </span>
+                <span className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-ink-3 transition-colors group-hover:text-ink"
+                  style={{ border: '1px solid var(--border)' }}>
+                  <ArrowRight size={15} strokeWidth={1.8} className="rtl:rotate-180" />
+                </span>
+              </button>
+            ))}
           </div>
-        ))}
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-12">
-        {/* Students ledger */}
-        <section>
-          <div className="flex items-baseline justify-between mb-4">
-            <h2 className="serif text-2xl" style={{ color: NAVY, fontWeight: 600 }}>{t('my_students')}</h2>
-            <button onClick={() => navigate('/teacher/students')} className="text-sm underline underline-offset-4" style={{ color: NAVY }}>
-              Ver todos →
-            </button>
-          </div>
-
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="w-5 h-5 rounded-full border-2 animate-spin" style={{ borderColor: '#e5e7eb', borderTopColor: NAVY }} />
-            </div>
-          ) : sortedStudents.length === 0 ? (
-            <p className="text-sm py-10" style={{ color: 'var(--text-3)', borderTop: '1px solid var(--border)' }}>{t('no_students_yet')}</p>
-          ) : (
-            <table className="w-full text-sm" style={{ borderCollapse: 'collapse' }}>
-              <thead>
-                <tr className="text-left" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                  {[t('nav_students'), t('my_parasha'), t('bar_mitzvah'), t('nav_homework')].map(h => (
-                    <th key={h} className="eyebrow py-2 pe-3 font-medium" style={{ color: 'var(--text-3)' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {sortedStudents.map(s => {
-                  const bm = bmLabel(daysUntil(s.bar_mitzvah))
-                  const hw = pendingPerStudent[s.id] || 0
-                  return (
-                    <tr key={s.id} onClick={() => navigate('/teacher/students')}
-                      className="cursor-pointer transition-colors hover:bg-[var(--bg-deep)]"
-                      style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <td className="py-4 pe-3 serif text-lg" style={{ color: NAVY, fontWeight: 600 }}>{s.name}</td>
-                      <td className="py-4 pe-3" style={{ color: s.parasha_id ? 'var(--text-2)' : 'var(--text-muted)' }}>{s.parasha_id || '—'}</td>
-                      <td className="py-4 pe-3">
-                        {s.bar_mitzvah ? (
-                          <>
-                            <span style={{ color: 'var(--text-2)' }}>{new Date(s.bar_mitzvah).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                            {bm && <span className="ms-2 text-xs font-medium" style={{ color: bm.color }}>{bm.text}</span>}
-                          </>
-                        ) : <span style={{ color: 'var(--text-muted)' }}>—</span>}
-                      </td>
-                      <td className="py-4 tabular-nums" style={{ color: hw > 0 ? GOLD : 'var(--text-muted)', fontWeight: hw > 0 ? 600 : 400 }}>
-                        {hw > 0 ? hw : '✓'}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          )}
-        </section>
-
-        {/* Margin column */}
-        <aside className="flex flex-col gap-10">
-          {profile?.teacher_code && (
-            <div className="p-6" style={{ background: NAVY, color: '#fff', borderRadius: 4, boxShadow: `6px 6px 0 ${GOLD}` }}>
-              <p className="eyebrow" style={{ color: '#e3b448' }}>{t('teacher_code')}</p>
-              <div className="flex items-center justify-between mt-3">
-                <span className="serif text-4xl" style={{ letterSpacing: '0.12em', fontWeight: 600 }}>{profile.teacher_code}</span>
-                <button onClick={() => navigator.clipboard.writeText(profile.teacher_code)}
-                  className="text-xs underline underline-offset-4" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                  Copiar
+          {/* Students */}
+          <section className="card p-5 sm:p-6 fade-up-2" aria-labelledby="dash-students">
+            <CardHeader
+              title={<span id="dash-students">{t('my_students')}</span>}
+              subtitle={`${t('my_parasha')} · ${t('bar_mitzvah')} · ${t('nav_homework')}`}
+              action={
+                <button onClick={() => navigate('/teacher/students')} className="btn btn-secondary btn-sm">
+                  {t('ui_view_all')}
+                  <ArrowRight size={14} className="rtl:rotate-180" />
                 </button>
-              </div>
-              <p className="text-xs mt-4" style={{ color: 'rgba(255,255,255,0.6)' }}>{t('share_code')}</p>
-            </div>
-          )}
+              }
+              className="mb-5"
+            />
 
-          <div>
-            <h2 className="serif text-2xl mb-2" style={{ color: NAVY, fontWeight: 600 }}>{t('quick_actions')}</h2>
-            <ul>
-              {links.map(a => (
-                <li key={a.label} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                  <button onClick={() => navigate(a.path)} className="w-full flex items-center justify-between py-3.5 text-sm group" style={{ color: 'var(--text)' }}>
-                    {a.label}
-                    <span className="transition-transform group-hover:translate-x-1" style={{ color: GOLD }}>→</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+            {loading ? (
+              <div className="flex justify-center py-12"><Spinner /></div>
+            ) : sortedStudents.length === 0 ? (
+              <EmptyState icon={Users} title={t('no_students_yet')} description={t('share_code')} />
+            ) : (
+              <div role="table" aria-labelledby="dash-students">
+                <div role="row" className="hidden md:grid table-head px-3 pb-3"
+                  style={{ gridTemplateColumns: 'minmax(0,1.6fr) minmax(0,1fr) minmax(0,1.1fr) 72px', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <span role="columnheader">{t('nav_students')}</span>
+                  <span role="columnheader">{t('my_parasha')}</span>
+                  <span role="columnheader">{t('bar_mitzvah')}</span>
+                  <span role="columnheader" className="text-center">{t('nav_homework')}</span>
+                </div>
+                <ul>
+                  {sortedStudents.map(s => {
+                    const days = daysUntil(s.bar_mitzvah)
+                    const hw = pendingPerStudent[s.id] || 0
+                    return (
+                      <li key={s.id} role="row" style={{ borderBottom: '1px solid var(--border-subtle)' }} className="last:border-0">
+                        <button onClick={() => navigate(`/teacher/students?s=${s.id}`)}
+                          className="row-hover w-full grid items-center gap-3 px-3 py-3.5 rounded-xl text-start grid-cols-[minmax(0,1fr)_auto] md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1.1fr)_72px]">
+                          <span role="cell" className="flex items-center gap-3 min-w-0">
+                            <Avatar name={s.name} size={36} single />
+                            <span className="min-w-0">
+                              <span className="block text-[14px] font-medium text-ink truncate">{s.name}</span>
+                              <span className="block md:hidden text-[12px] text-ink-3 truncate">
+                                {s.parasha_id ? displayParashaName(s.parasha_id) : '—'}
+                              </span>
+                            </span>
+                          </span>
+                          <span role="cell" className="hidden md:block text-[14px] truncate" style={{ color: s.parasha_id ? 'var(--text-2)' : 'var(--text-muted)' }}>
+                            {s.parasha_id ? displayParashaName(s.parasha_id) : '—'}
+                          </span>
+                          <span role="cell" className="hidden md:flex flex-col min-w-0">
+                            {s.bar_mitzvah ? (
+                              <>
+                                <span className="text-[13px] text-ink-2">
+                                  {new Date(s.bar_mitzvah).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                </span>
+                                <BarMitzvahCountdown days={days} t={t} />
+                              </>
+                            ) : <span className="text-ink-4">—</span>}
+                          </span>
+                          <span role="cell" className="flex justify-center">
+                            <HomeworkIndicator count={hw} t={t} />
+                          </span>
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            )}
+          </section>
+
+          {/* Editorial study banner */}
+          <WeeklyStudyBanner parasha={weekly} t={t} onOpen={() => navigate(weekly ? `/teacher/study/${weekly.id}` : '/teacher/study')} />
+        </div>
+
+        {/* ── Right column ─────────────────────────────────────────── */}
+        <aside className="xl:col-span-4 flex flex-col gap-6 fade-up-3">
+          {profile?.teacher_code && <TeacherCodeCard code={profile.teacher_code} t={t} />}
+
+          <section className="card p-5 sm:p-6">
+            <h2 className="section-title mb-4">{t('quick_actions')}</h2>
+            <div className="flex flex-col gap-2">
+              <QuickAction primary icon={Plus} label={t('new_class')} onClick={() => navigate('/teacher/schedule?new=1')} />
+              <QuickAction icon={ClipboardList} label={t('ui_view_homework')} onClick={() => navigate('/teacher/homework')} />
+              <QuickAction icon={BookOpen} label={t('nav_parashot')} onClick={() => navigate('/teacher/study')} />
+              <QuickAction icon={Users} label={t('nav_students')} onClick={() => navigate('/teacher/students')} />
+            </div>
+          </section>
         </aside>
       </div>
     </div>
+  )
+}
+
+function BarMitzvahCountdown({ days, t }) {
+  if (days === null) return null
+  if (days === 0) return <span className="text-[12px] font-medium text-gold-ink">{t('ui_today_excl')}</span>
+  if (days > 0) {
+    const cls = days < 30 ? 'text-danger' : days < 90 ? 'text-gold-ink' : 'text-ink-3'
+    return <span className={`text-[12px] font-medium ${cls}`}>{t('ui_in_days').replace('{n}', days)}</span>
+  }
+  return <span className="text-[12px] text-ink-4">{t('ui_days_ago').replace('{n}', Math.abs(days))}</span>
+}
+
+export function HomeworkIndicator({ count, t }) {
+  if (count > 0) {
+    return (
+      <span className="min-w-[26px] h-[26px] px-2 rounded-full flex items-center justify-center text-[12px] font-semibold"
+        style={{ background: 'rgba(var(--danger-rgb), 0.09)', color: 'rgb(var(--danger-rgb))' }}
+        aria-label={`${count} ${t('pending_hw_kpi')}`}>
+        {count}
+      </span>
+    )
+  }
+  return (
+    <span className="w-[26px] h-[26px] rounded-full flex items-center justify-center"
+      style={{ background: 'rgba(var(--success-rgb), 0.1)', color: 'rgb(var(--success-rgb))' }}
+      aria-label={t('ui_up_to_date')}>
+      <Check size={14} strokeWidth={2.4} />
+    </span>
+  )
+}
+
+function TeacherCodeCard({ code, t }) {
+  const [copied, setCopied] = useState(false)
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(code) } catch { /* clipboard unavailable */ }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1800)
+  }
+  return (
+    <section className="rounded-2xl p-5 sm:p-6"
+      style={{
+        background: 'linear-gradient(180deg, rgba(var(--gold-rgb), 0.09), rgba(var(--gold-rgb), 0.04))',
+        border: '1px solid rgba(var(--gold-rgb), 0.22)',
+      }}>
+      <div className="flex items-start gap-3 mb-5">
+        <IconTile icon={Users} tone="gold" size={40} />
+        <div className="min-w-0">
+          <h2 className="text-[15px] font-semibold text-ink">{t('teacher_code')}</h2>
+          <p className="text-[13px] text-ink-3 mt-1 leading-snug">{t('share_code')}</p>
+        </div>
+      </div>
+      <div className="flex items-stretch gap-2.5">
+        <div className="flex-1 flex items-center justify-center h-14 rounded-xl bg-surface font-mono text-[24px] font-semibold text-ink tracking-[0.32em] ps-[0.32em] select-all"
+          style={{ border: '1px solid var(--border)' }} dir="ltr">
+          {code}
+        </div>
+        <button onClick={copy} className="btn btn-gold h-14 w-14 p-0 rounded-xl" aria-label={t('ui_copy_code')} title={t('ui_copy_code')}>
+          {copied ? <Check size={20} strokeWidth={2.2} /> : <Copy size={19} strokeWidth={1.9} />}
+        </button>
+      </div>
+      <p className={`text-[12px] mt-2 h-4 transition-opacity ${copied ? 'opacity-100' : 'opacity-0'}`} style={{ color: 'rgb(var(--success-rgb))' }} aria-live="polite">
+        {copied ? t('ui_copied') : ''}
+      </p>
+    </section>
+  )
+}
+
+function QuickAction({ icon: Icon, label, onClick, primary = false }) {
+  return (
+    <button onClick={onClick}
+      className={`group flex items-center gap-3.5 h-[52px] px-4 rounded-xl text-[14px] font-medium transition-colors ${primary ? '' : 'hover:bg-surface-2'}`}
+      style={primary
+        ? { background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-fg)' }
+        : { border: '1px solid var(--border)', color: 'var(--text)' }}>
+      <Icon size={18} strokeWidth={1.8} className={primary ? '' : 'text-ink-3'} />
+      <span className="flex-1 text-start">{label}</span>
+      <ChevronRight size={16} strokeWidth={1.8} className={`rtl:rotate-180 transition-transform group-hover:translate-x-0.5 ${primary ? 'opacity-80' : 'text-ink-4'}`} />
+    </button>
+  )
+}
+
+function WeeklyStudyBanner({ parasha, t, onOpen }) {
+  return (
+    <section className="card overflow-hidden fade-up-3">
+      <button onClick={onOpen} className="group w-full grid grid-cols-1 sm:grid-cols-[1fr_minmax(0,1.05fr)] text-start">
+        <div className="p-6 sm:p-7 flex flex-col justify-center gap-1.5">
+          <p className="eyebrow">{t('ui_continue_study')}</p>
+          <h2 className="font-serif text-[26px] font-semibold text-ink tracking-[-0.015em] leading-tight">{t('ui_weekly_parasha')}</h2>
+          <p className="text-[15px] text-ink-3">{parasha?.name || '—'}</p>
+          <span className="mt-4 w-11 h-11 rounded-full btn-gold inline-flex items-center justify-center transition-transform group-hover:translate-x-0.5">
+            <ArrowRight size={18} strokeWidth={2} className="rtl:rotate-180" />
+          </span>
+        </div>
+        {/* Typographic panel — only the parasha's real Hebrew name, no generated text */}
+        <div className="relative min-h-[150px] sm:min-h-full overflow-hidden mask-fade-start"
+          style={{ background: 'linear-gradient(135deg, var(--parchment) 0%, var(--parchment-2) 100%)' }} aria-hidden="true">
+          <div className="absolute inset-0 opacity-[0.55]"
+            style={{ backgroundImage: 'repeating-linear-gradient(180deg, transparent 0 25px, var(--parchment-line) 25px 26px)', maskImage: 'linear-gradient(90deg, transparent, #000 30%, #000 85%, transparent)' }} />
+          <div className="relative h-full flex items-center justify-center px-6 py-8">
+            <span className="hebrew text-[clamp(44px,6vw,72px)] leading-none" style={{ color: '#7A5A1C', fontWeight: 400 }}>
+              {parasha?.heb || 'פָּרָשָׁה'}
+            </span>
+          </div>
+        </div>
+      </button>
+    </section>
   )
 }

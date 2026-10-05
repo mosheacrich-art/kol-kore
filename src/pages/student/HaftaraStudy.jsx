@@ -1,20 +1,23 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { ALL_HAFTAROT } from '../../data/haftarot'
-import { BOOK_COLORS, SEFARIM_LIST } from '../../data/parashot'
+import { BOOK_COLORS, SEFARIM_LIST, PARASHOT } from '../../data/parashot'
 import { MOADIM_LIST } from '../../data/moadim'
-import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
+import { useAliyahText } from '../../hooks/useSefaria'
+import { processVerse } from '../../utils/hebrew'
 import ParashaReader from '../../components/ParashaReader'
+import { EmptyState, PageHeader, SearchInput, Spinner } from '../../components/ui'
+import { Section, ItemCard } from './Study'
 
 const ADMIN_USER_ID = '1f4d0329-ddf5-48a4-965f-5f37d7416447'
 
-const HAFTARA_BOOKS = SEFARIM_LIST.map(s => s.id)
+const WEEKLY = ALL_HAFTAROT.filter(h => !h.chag)
 
 export default function HaftaraStudy({ basePath = '/student/haftara' }) {
   const { haftaraId } = useParams()
-  const { profile } = useAuth()
   const haftara = haftaraId ? ALL_HAFTAROT.find(h => h.id === haftaraId) : null
 
   if (haftara) return <ReaderView haftara={haftara} basePath={basePath} />
@@ -23,219 +26,174 @@ export default function HaftaraStudy({ basePath = '/student/haftara' }) {
 
 function ListView({ basePath }) {
   const navigate = useNavigate()
-  const { isDark } = useTheme()
   const { t } = useLang()
   const [search, setSearch] = useState('')
+  const [scope, setScope] = useState('all')
   const [openBook, setOpenBook] = useState('bereshit')
   const [openChag, setOpenChag] = useState(null)
+  const [previewId, setPreviewId] = useState(WEEKLY[0]?.id)
 
-  const weeklyHaftarot = useMemo(() => ALL_HAFTAROT.filter(h => !h.chag), [])
-  const holidayHaftarot = useMemo(() => ALL_HAFTAROT.filter(h => !!h.chag), [])
+  const [isWide, setIsWide] = useState(() => window.matchMedia('(min-width: 1280px)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1280px)')
+    const on = () => setIsWide(mq.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
 
-  const filteredWeekly = useMemo(() => {
-    if (!search) return weeklyHaftarot
-    const q = search.toLowerCase()
-    return weeklyHaftarot.filter(h =>
-      h.name.toLowerCase().includes(q) || h.heb.includes(search)
-    )
-  }, [search, weeklyHaftarot])
+  const match = (h) => !search || h.name.toLowerCase().includes(search.toLowerCase()) || h.heb.includes(search)
+  const byBook = useMemo(() => SEFARIM_LIST.map(s => ({ ...s, haftarot: WEEKLY.filter(h => h.book === s.id && match(h)) }))
+    .filter(s => s.haftarot.length > 0), [search]) // eslint-disable-line react-hooks/exhaustive-deps
+  const byChag = useMemo(() => MOADIM_LIST.map(m => ({ ...m, haftarot: ALL_HAFTAROT.filter(h => h.chag === m.id && match(h)) }))
+    .filter(m => m.haftarot.length > 0), [search]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const filteredHoliday = useMemo(() => {
-    if (!search) return holidayHaftarot
-    const q = search.toLowerCase()
-    return holidayHaftarot.filter(h =>
-      h.name.toLowerCase().includes(q) || h.heb.includes(search)
-    )
-  }, [search, holidayHaftarot])
-
-  const byBook = useMemo(() => {
-    return SEFARIM_LIST.map(s => ({
-      ...s,
-      haftarot: filteredWeekly.filter(h => h.book === s.id),
-    })).filter(s => s.haftarot.length > 0)
-  }, [filteredWeekly])
-
-  const byChag = useMemo(() => {
-    return MOADIM_LIST.map(m => ({
-      ...m,
-      haftarot: filteredHoliday.filter(h => h.chag === m.id),
-    })).filter(m => m.haftarot.length > 0)
-  }, [filteredHoliday])
-
-  const cardDefault = isDark
-    ? { bg: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.05)' }
-    : { bg: 'rgba(0,0,0,0.03)', border: 'rgba(0,0,0,0.07)' }
+  const open = (id) => navigate(`${basePath}/${id}`)
+  const pick = (id) => (isWide ? setPreviewId(id) : open(id))
+  const preview = ALL_HAFTAROT.find(h => h.id === previewId)
+  const showWeekly = scope === 'all' || SEFARIM_LIST.some(s => s.id === scope)
+  const showHoliday = scope === 'all' || scope === 'special'
 
   return (
-    <div className="p-4 sm:p-8 max-w-3xl">
-      <div className="mb-10 fade-up-1">
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          הַפְטָרָה · {t('nav_haftara')}
-        </p>
-        <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-          {t('nav_haftara')}
-        </h1>
-        <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-          {t('haftara_subtitle')}
-        </p>
+    <div className="page">
+      <PageHeader
+        hebrew="הַפְטָרָה"
+        eyebrow={t('ui_section_study')}
+        title={t('nav_haftara')}
+        subtitle={t('haftara_subtitle')}
+      />
+
+      <div className="flex flex-col sm:flex-row gap-3 mb-6 fade-up-1">
+        <SearchInput value={search} onChange={setSearch} placeholder={t('haftara_search')} className="flex-1 sm:max-w-md" />
+        <select value={scope} onChange={e => setScope(e.target.value)} className="input sm:w-auto sm:min-w-[220px]" aria-label={t('ui_sections')}>
+          <option value="all">{t('ui_all_sections')}</option>
+          {SEFARIM_LIST.map(s => <option key={s.id} value={s.id}>{s.name} · {s.heb}</option>)}
+          <option value="special">{t('haftara_holiday_section')}</option>
+        </select>
       </div>
 
-      <div className="relative mb-7 fade-up-2">
-        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-            <circle cx="6.5" cy="6.5" r="4" stroke="var(--text-3)" strokeWidth="1.3"/>
-            <path d="M9.5 9.5L12 12" stroke="var(--text-3)" strokeWidth="1.3" strokeLinecap="round"/>
-          </svg>
-        </div>
-        <input value={search} onChange={e => setSearch(e.target.value)}
-          placeholder={t('haftara_search')}
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }} />
-      </div>
-
-      {/* ── Haftarot semanales por libro ─────────────────────────────────── */}
-      <div className="flex flex-col gap-2.5 fade-up-3">
-        {byBook.map(book => {
-          const isOpen = openBook === book.id || !!search
-          const color = BOOK_COLORS[book.id] || '#1b2f6b'
-          return (
-            <div key={book.id} className="rounded-2xl overflow-hidden transition-all"
-              style={{ border: `1px solid ${isOpen ? color + '30' : 'var(--border)'}` }}>
-              <button onClick={() => !search && setOpenBook(isOpen ? null : book.id)}
-                className="w-full flex items-center justify-between px-5 py-4 text-left"
-                style={{ background: isOpen ? `${color}0d` : 'var(--bg-card)' }}>
-                <div className="flex items-center gap-3">
-                  <div className="w-1 h-10 flex-shrink-0" style={{ background: color }} />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>{book.name}</span>
-                      <span className="hebrew text-sm" style={{ color }}>{book.heb}</span>
-                    </div>
-                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {book.haftarot.length} {t('haftara_count')}
-                    </p>
-                  </div>
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+        <div className="xl:col-span-7 flex flex-col gap-3 fade-up-2 min-w-0">
+          {showWeekly && byBook.filter(b => scope === 'all' || b.id === scope).map(book => {
+            const color = BOOK_COLORS[book.id]
+            return (
+              <Section key={book.id} color={color} title={book.name} heb={book.heb}
+                subtitle={`${book.haftarot.length} ${t('haftara_count')}`}
+                count={book.haftarot.length}
+                open={openBook === book.id} forceOpen={!!search || scope === book.id}
+                onToggle={() => setOpenBook(openBook === book.id ? null : book.id)}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {book.haftarot.map(h => (
+                    <ItemCard key={h.id} color={color} heb={h.heb} name={h.name}
+                      num={PARASHOT.find(p => p.id === h.parasha)?.num}
+                      meta={h.aliyot[0]?.ref} active={isWide && previewId === h.id}
+                      onClick={() => pick(h.id)} />
+                  ))}
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs px-2 py-0.5 rounded-sm"
-                    style={{ background: `${color}15`, color, border: `1px solid ${color}20` }}>
-                    {book.haftarot.length}
-                  </span>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
-                    style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s', color: 'var(--text-muted)' }}>
-                    <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-              </button>
+              </Section>
+            )
+          })}
 
-              {isOpen && (
-                <div className="px-4 pb-3 pt-1" style={{ background: 'var(--bg-card)' }}>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mt-2">
-                    {book.haftarot.map(h => (
-                      <button key={h.id} onClick={() => navigate(`${basePath}/${h.id}`)}
-                        className="text-left p-3 rounded-xl transition-all duration-200"
-                        style={{ background: cardDefault.bg, border: `1px solid ${cardDefault.border}` }}
-                        onMouseEnter={e => {
-                          e.currentTarget.style.background = `${color}12`
-                          e.currentTarget.style.borderColor = `${color}30`
-                        }}
-                        onMouseLeave={e => {
-                          e.currentTarget.style.background = cardDefault.bg
-                          e.currentTarget.style.borderColor = cardDefault.border
-                        }}>
-                        <div className="hebrew text-sm mb-1" style={{ color }}>{h.heb}</div>
-                        <div className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{h.name}</div>
-                        <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                          {h.aliyot[0]?.ref}
-                        </div>
-                      </button>
+          {showHoliday && byChag.length > 0 && (
+            <>
+              <div className="flex items-center gap-4 mt-6 mb-1 px-1">
+                <span className="h-px flex-1" style={{ background: 'var(--border)' }} />
+                <p className="eyebrow flex items-center gap-2">
+                  <span className="hebrew-ui normal-case tracking-normal text-[13px]">מוֹעֲדִים</span>·<span>{t('haftara_holiday_section')}</span>
+                </p>
+                <span className="h-px flex-1" style={{ background: 'var(--border)' }} />
+              </div>
+              {byChag.map(chag => (
+                <Section key={chag.id} color={chag.color} title={chag.name} heb={chag.heb}
+                  subtitle={`${chag.haftarot.length} ${t('haftara_count')}`} count={chag.haftarot.length}
+                  open={openChag === chag.id} forceOpen={!!search}
+                  onToggle={() => setOpenChag(openChag === chag.id ? null : chag.id)}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {chag.haftarot.map(h => (
+                      <ItemCard key={h.id} color={chag.color} heb={h.heb} name={h.name}
+                        meta={h.aliyot[0]?.ref} active={isWide && previewId === h.id} onClick={() => pick(h.id)} />
                     ))}
                   </div>
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
+                </Section>
+              ))}
+            </>
+          )}
 
-      {/* ── Haftarot de festividades ─────────────────────────────────────── */}
-      {byChag.length > 0 && (
-        <div className="mt-6 fade-up-3">
-          <div className="flex items-center gap-3 mb-3 px-1">
-            <div className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
-            <p className="text-xs tracking-widest uppercase" style={{ color: 'var(--text-gold)' }}>
-              מוֹעֲדִים · {t('haftara_holiday_section')}
-            </p>
-            <div className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
-          </div>
-          <div className="flex flex-col gap-2.5">
-            {byChag.map(chag => {
-              const isOpen = openChag === chag.id || !!search
-              return (
-                <div key={chag.id} className="rounded-2xl overflow-hidden transition-all"
-                  style={{ border: `1px solid ${isOpen ? chag.color + '30' : 'var(--border)'}` }}>
-                  <button onClick={() => !search && setOpenChag(isOpen ? null : chag.id)}
-                    className="w-full flex items-center justify-between px-5 py-4 text-left"
-                    style={{ background: isOpen ? `${chag.color}0d` : 'var(--bg-card)' }}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-1 h-10 flex-shrink-0" style={{ background: chag.color }} />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>{chag.name}</span>
-                          <span className="hebrew text-sm" style={{ color: chag.color }}>{chag.heb}</span>
-                        </div>
-                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          {chag.haftarot.length} {t('haftara_count')}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs px-2 py-0.5 rounded-sm"
-                        style={{ background: `${chag.color}15`, color: chag.color, border: `1px solid ${chag.color}20` }}>
-                        {chag.haftarot.length}
-                      </span>
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
-                        style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s', color: 'var(--text-muted)' }}>
-                        <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                  </button>
-
-                  {isOpen && (
-                    <div className="px-4 pb-3 pt-1" style={{ background: 'var(--bg-card)' }}>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mt-2">
-                        {chag.haftarot.map(h => (
-                          <button key={h.id} onClick={() => navigate(`${basePath}/${h.id}`)}
-                            className="text-left p-3 rounded-xl transition-all duration-200"
-                            style={{ background: cardDefault.bg, border: `1px solid ${cardDefault.border}` }}
-                            onMouseEnter={e => {
-                              e.currentTarget.style.background = `${chag.color}12`
-                              e.currentTarget.style.borderColor = `${chag.color}30`
-                            }}
-                            onMouseLeave={e => {
-                              e.currentTarget.style.background = cardDefault.bg
-                              e.currentTarget.style.borderColor = cardDefault.border
-                            }}>
-                            <div className="hebrew text-sm mb-1" style={{ color: chag.color }}>{h.heb}</div>
-                            <div className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{h.name}</div>
-                            <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                              {h.aliyot[0]?.ref}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+          {byBook.length === 0 && byChag.length === 0 && <div className="card"><EmptyState title={t('no_results')} /></div>}
         </div>
-      )}
+
+        <aside className="hidden xl:block xl:col-span-5 sticky top-6 fade-up-3">
+          {preview && <HaftaraPreview haftara={preview} t={t} onOpen={() => open(preview.id)} onPick={setPreviewId} />}
+        </aside>
+      </div>
     </div>
   )
 }
 
+function HaftaraPreview({ haftara, t, onOpen, onPick }) {
+  const ref = haftara.aliyot?.[0]?.ref
+  const { verses, loading } = useAliyahText(ref, true, null)
+  const [mode, setMode] = useState('nikkud')
+  const color = haftara.color || BOOK_COLORS[haftara.book] || '#2F5E93'
+  const parasha = PARASHOT.find(p => p.id === haftara.parasha)
+  const idx = WEEKLY.findIndex(h => h.id === haftara.id)
+  const prev = idx > 0 ? WEEKLY[idx - 1] : null
+  const next = idx >= 0 && idx < WEEKLY.length - 1 ? WEEKLY[idx + 1] : null
+
+  return (
+    <section className="card overflow-hidden flex flex-col max-h-[calc(100svh-120px)]">
+      <div className="relative px-6 pt-6 pb-5 overflow-hidden flex-shrink-0"
+        style={{ background: 'linear-gradient(135deg, var(--surface) 40%, var(--parchment) 100%)' }}>
+        <div className="flex items-start justify-between gap-3">
+          <p className="eyebrow">
+            <span className="hebrew-ui normal-case tracking-normal text-[13px]">{parasha?.heb || 'הַפְטָרָה'}</span>
+            {parasha?.num ? ` · ${parasha.num}` : ''}
+          </p>
+          <div className="flex gap-1.5">
+            <button onClick={() => prev && onPick(prev.id)} disabled={!prev} className="btn btn-secondary btn-sm btn-icon" aria-label={t('ui_previous')}>
+              <ChevronLeft size={16} className="rtl:rotate-180" />
+            </button>
+            <button onClick={() => next && onPick(next.id)} disabled={!next} className="btn btn-secondary btn-sm btn-icon" aria-label={t('ui_next')}>
+              <ChevronRight size={16} className="rtl:rotate-180" />
+            </button>
+          </div>
+        </div>
+        <h2 className="hebrew text-[32px] mt-2 leading-tight" style={{ color: 'var(--text)', fontWeight: 400 }}>{haftara.heb}</h2>
+        <p className="font-serif text-[18px] text-ink-2 mt-1">{haftara.name}</p>
+        <p className="text-[14px] text-ink-3 mt-0.5" dir="ltr" style={{ textAlign: 'start' }}>{ref}</p>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 px-6 py-3 flex-shrink-0" style={{ borderTop: '1px solid var(--border-subtle)', borderBottom: '1px solid var(--border-subtle)' }}>
+        <div className="segmented">
+          <button aria-pressed={mode === 'nikkud'} onClick={() => setMode('nikkud')}>{t('mode_nikkud') || 'Nikud'}</button>
+          <button aria-pressed={mode === 'plain'} onClick={() => setMode('plain')}>{t('mode_plain') || 'Texto'}</button>
+        </div>
+        <span className="text-[12px] text-ink-4">Sefaria</span>
+      </div>
+
+      {/* Authoritative text from Sefaria — rendered as received, never edited */}
+      <div className="flex-1 overflow-y-auto px-6 py-4" style={{ background: 'var(--parchment)' }}>
+        {loading ? (
+          <div className="flex justify-center py-10"><Spinner /></div>
+        ) : (
+          <ol className="hebrew-reader" dir="rtl" style={{ color: 'var(--parchment-ink)', fontSize: 21, lineHeight: 2 }}>
+            {verses.map((v, i) => (
+              <li key={i} className="flex gap-3 py-1" style={i ? { borderTop: '1px solid var(--parchment-line)' } : undefined}>
+                <span className="text-[12px] font-sans pt-2 flex-shrink-0 w-5 tabular-nums" style={{ color: color }}>{i + 1}</span>
+                <span className="flex-1">{processVerse(v, mode)}</span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2.5 px-6 py-4 flex-shrink-0" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+        <button onClick={onOpen} className="btn btn-primary flex-1">{t('ui_read_haftara')}<ArrowRight size={16} className="rtl:rotate-180" /></button>
+      </div>
+    </section>
+  )
+}
+
+/* ── Reader (unchanged from main) ───────────────────────────────────────── */
 function ReaderView({ haftara, basePath }) {
   const navigate = useNavigate()
   const { t } = useLang()
