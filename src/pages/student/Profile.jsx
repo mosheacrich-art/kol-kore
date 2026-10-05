@@ -58,7 +58,7 @@ function AccountSection({ user }) {
 
   return (
     <section>
-      <p className="eyebrow pb-3 mb-1" style={{ borderBottom: '2px solid #1b2f6b' }}>{t('account')}</p>
+      <p className="eyebrow pb-3 mb-1">{t('account')}</p>
 
       {msg && (
         <div className="mb-3 p-2.5 text-xs"
@@ -253,7 +253,7 @@ export default function StudentProfile() {
       </header>
 
       {/* Stats strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 mb-10 fade-up-2" style={{ borderTop: `2px solid ${NAVY}`, borderBottom: '1px solid var(--border)' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-3 mb-10 fade-up-2">
         <div className="py-6 sm:pr-6">
           <p className="eyebrow mb-3">{t('bar_mitzvah')}</p>
           {days !== null ? (
@@ -271,7 +271,7 @@ export default function StudentProfile() {
           )}
         </div>
 
-        <div className="py-6 sm:px-6" style={{ borderInlineStart: '1px solid var(--border)' }}>
+        <div className="py-6 sm:px-6">
           <p className="eyebrow mb-3">{t('my_parasha')}</p>
           {resolved.length ? resolved.map((p, i) => (
             <div key={p.id} className={i ? 'mt-3' : ''}>
@@ -282,7 +282,7 @@ export default function StudentProfile() {
           <p className="text-xs mt-4" style={{ color: '#6b7280' }}>{t('assigned_parasha')}</p>
         </div>
 
-        <div className="py-6 sm:pl-6" style={{ borderInlineStart: '1px solid var(--border)' }}>
+        <div className="py-6 sm:pl-6">
           <p className="eyebrow mb-3">{t('hw_done')}</p>
           <div className="flex items-baseline gap-2">
             <span className="serif text-6xl leading-none" style={{ color: NAVY }}>{progress}%</span>
@@ -315,7 +315,7 @@ export default function StudentProfile() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
         {/* Homework ledger */}
         <section className="lg:col-span-3 fade-up-3">
-          <div className="flex items-baseline justify-between pb-3" style={{ borderBottom: `2px solid ${NAVY}` }}>
+          <div className="flex items-baseline justify-between pb-3">
             <h2 className="serif text-2xl">{t('my_homework')}</h2>
             <span className="text-xs" style={{ color: GOLD }}>{pending} {t('pending')}</span>
           </div>
@@ -357,7 +357,7 @@ export default function StudentProfile() {
         {/* Side column */}
         <aside className="lg:col-span-2 flex flex-col gap-10 fade-up-4">
           <section>
-            <p className="eyebrow pb-3" style={{ borderBottom: `2px solid ${NAVY}` }}>{t('my_data')}</p>
+            <p className="eyebrow pb-3">{t('my_data')}</p>
             {[
               { label: t('name'), value: profile.name },
               { label: t('bar_mitzvah'), value: profile.bar_mitzvah ? new Date(profile.bar_mitzvah).toLocaleDateString(t('date_locale'), dateFmt) : '—' },
@@ -373,7 +373,7 @@ export default function StudentProfile() {
           </section>
 
           <section>
-            <p className="eyebrow pb-3" style={{ borderBottom: `2px solid ${NAVY}` }}>{t('my_teacher')}</p>
+            <p className="eyebrow pb-3">{t('my_teacher')}</p>
             {teacherName ? (
               <div className="py-4">
                 <div className="serif text-xl" style={{ color: NAVY }}>{teacherName}</div>
@@ -404,7 +404,7 @@ export default function StudentProfile() {
           </section>
 
           <section>
-            <p className="eyebrow pb-3" style={{ borderBottom: `2px solid ${NAVY}` }}>{t('study_streak')}</p>
+            <p className="eyebrow pb-3">{t('study_streak')}</p>
             <div className="flex items-baseline gap-3 py-4">
               <span className="serif text-5xl leading-none" style={{ color: NAVY }}>{profile.streak || 0}</span>
               <span className="text-sm" style={{ color: GOLD }}>{t('days')}</span>
@@ -417,7 +417,7 @@ export default function StudentProfile() {
           <AccountSection user={user} />
 
           <section>
-            <p className="eyebrow pb-3" style={{ borderBottom: `2px solid ${NAVY}` }}>{t('achievements')}</p>
+            <p className="eyebrow pb-3">{t('achievements')}</p>
             <div className="grid grid-cols-3 py-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
               <StatPill value={totalListens} label="escuchas" />
               <StatPill value={done} label="deberes" />

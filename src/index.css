@@ -290,7 +290,7 @@ body {
 }
 
 /* ── Parashapp editorial system ───────────────────────────────────────────── */
-.serif { font-family: 'Fraunces', Georgia, 'Times New Roman', serif; letter-spacing: -0.02em; }
+.serif { font-family: 'Nunito', system-ui, sans-serif; font-weight: 700; letter-spacing: -0.01em; }
 .eyebrow { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #c8941f; font-weight: 600; }
 .rule { border: 0; border-top: 1px solid var(--border); }
 .btn-navy { background:#1b2f6b; color:#fff; font-weight:500; border-radius:4px; transition:background .15s; }
@@ -299,8 +299,8 @@ body {
 .btn-line:hover { background:#1b2f6b; color:#fff; }
 
 /* Headings share the editorial voice across every page */
-h1, h2 { font-family: 'Fraunces', Georgia, serif; font-weight: 600 !important; letter-spacing: -0.02em !important; color: #1b2f6b; }
-h3 { font-family: 'Fraunces', Georgia, serif; font-weight: 600; letter-spacing: -0.01em; }
+h1, h2 { font-family: 'Nunito', system-ui, sans-serif; font-weight: 800 !important; letter-spacing: -0.01em !important; color: #1b2f6b; }
+h3 { font-family: 'Nunito', system-ui, sans-serif; font-weight: 700; letter-spacing: 0; }
 .hebrew, [dir="rtl"] h1, [dir="rtl"] h2 { font-family: inherit; }
 button, input, select, textarea { border-radius: 4px; }
 input:focus, select:focus, textarea:focus { outline: 2px solid #c8941f; outline-offset: 1px; }

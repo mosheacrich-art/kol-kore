@@ -94,13 +94,9 @@ export default function Login() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-[5fr_6fr]" style={{ background: '#fff' }}>
-      <aside className="hidden lg:flex flex-col justify-between p-12" style={{ background: '#1b2f6b', color: '#fff' }}>
-        <Logo size={34} color="#fff" />
-        <div>
-          <p dir="rtl" className="hebrew text-5xl leading-[1.8]" style={{ color: '#e3b448' }}>בְּרֵאשִׁית בָּרָא אֱלֹהִים</p>
-          <p className="serif text-2xl mt-6 max-w-sm" style={{ fontWeight: 400, color: 'rgba(255,255,255,0.85)' }}>{tl('hero_tagline')}</p>
-        </div>
-        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>Sefaria · Tikkun</p>
+      <aside className="hidden lg:block relative" style={{ background: '#e9e2d3' }}>
+        <img src="/login-photo.jpg" alt="" className="absolute inset-0 w-full h-full" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+        <div className="absolute top-10 left-10"><Logo size={34} word={false} color="#fff" /></div>
       </aside>
 
       <main className="flex flex-col px-6 sm:px-14 py-8">

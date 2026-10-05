@@ -113,7 +113,7 @@ export default function TeacherDashboard() {
   return (
     <div className="px-5 sm:px-10 py-8 max-w-6xl w-full mx-auto">
       {/* Masthead */}
-      <header className="flex flex-wrap items-end justify-between gap-4 pb-6 mb-8" style={{ borderBottom: `2px solid ${NAVY}` }}>
+      <header className="flex flex-wrap items-end justify-between gap-4 pb-2 mb-8">
         <div>
           <p className="eyebrow mb-2 capitalize">{today}</p>
           <h1 className="serif text-4xl sm:text-5xl" style={{ color: NAVY, fontWeight: 600 }}>
@@ -124,9 +124,9 @@ export default function TeacherDashboard() {
       </header>
 
       {/* Figures: one ruled strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 mb-12" style={{ borderBottom: '1px solid var(--border)' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-3 mb-12">
         {stats.map((k, n) => (
-          <div key={k.label} className="py-5 sm:px-6 first:sm:ps-0" style={{ borderInlineStart: n ? '1px solid var(--border)' : 'none' }}>
+          <div key={k.label} className="py-5 sm:px-6 first:sm:ps-0" >
             <p className="eyebrow" style={{ color: 'var(--text-3)' }}>{k.label}</p>
             <div className="serif text-5xl mt-3" style={{ color: NAVY, fontWeight: 600 }}>{k.value}</div>
             <p className="text-xs mt-2" style={{ color: 'var(--text-3)' }}>{k.sub}</p>
@@ -153,7 +153,7 @@ export default function TeacherDashboard() {
           ) : (
             <table className="w-full text-sm" style={{ borderCollapse: 'collapse' }}>
               <thead>
-                <tr className="text-left" style={{ borderBottom: '1px solid var(--text)' }}>
+                <tr className="text-left" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                   {[t('nav_students'), t('my_parasha'), t('bar_mitzvah'), t('nav_homework')].map(h => (
                     <th key={h} className="eyebrow py-2 pe-3 font-medium" style={{ color: 'var(--text-3)' }}>{h}</th>
                   ))}
@@ -166,7 +166,7 @@ export default function TeacherDashboard() {
                   return (
                     <tr key={s.id} onClick={() => navigate('/teacher/students')}
                       className="cursor-pointer transition-colors hover:bg-[var(--bg-deep)]"
-                      style={{ borderBottom: '1px solid var(--border)' }}>
+                      style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                       <td className="py-4 pe-3 serif text-lg" style={{ color: NAVY, fontWeight: 600 }}>{s.name}</td>
                       <td className="py-4 pe-3" style={{ color: s.parasha_id ? 'var(--text-2)' : 'var(--text-muted)' }}>{s.parasha_id || '—'}</td>
                       <td className="py-4 pe-3">
@@ -206,9 +206,9 @@ export default function TeacherDashboard() {
 
           <div>
             <h2 className="serif text-2xl mb-2" style={{ color: NAVY, fontWeight: 600 }}>{t('quick_actions')}</h2>
-            <ul style={{ borderTop: '1px solid var(--border)' }}>
+            <ul>
               {links.map(a => (
-                <li key={a.label} style={{ borderBottom: '1px solid var(--border)' }}>
+                <li key={a.label} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                   <button onClick={() => navigate(a.path)} className="w-full flex items-center justify-between py-3.5 text-sm group" style={{ color: 'var(--text)' }}>
                     {a.label}
                     <span className="transition-transform group-hover:translate-x-1" style={{ color: GOLD }}>→</span>

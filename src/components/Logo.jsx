@@ -10,7 +10,7 @@ export default function Logo({ size = 28, color = '#1b2f6b', word = true }) {
     <span className="inline-flex items-center gap-2.5">
       <LogoMark size={size} tile={color === '#fff'} />
       {word && (
-        <span style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, fontSize: size * 0.7, letterSpacing: '-0.01em', color }}>
+        <span style={{ fontFamily: "'Nunito', system-ui, sans-serif", fontWeight: 800, fontSize: size * 0.7, letterSpacing: '-0.01em', color }}>
           Parashapp
         </span>
       )}
