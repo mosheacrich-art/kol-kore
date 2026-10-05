@@ -91,7 +91,7 @@ html {
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
@@ -290,7 +290,7 @@ body {
 }
 
 /* ── Parashapp editorial system ───────────────────────────────────────────── */
-.serif { font-family: 'Nunito', system-ui, sans-serif; font-weight: 700; letter-spacing: -0.01em; }
+.serif { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-weight: 600; letter-spacing: -0.015em; }
 .eyebrow { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #c8941f; font-weight: 600; }
 .rule { border: 0; border-top: 1px solid var(--border); }
 .btn-navy { background:#1b2f6b; color:#fff; font-weight:500; border-radius:4px; transition:background .15s; }
@@ -299,8 +299,8 @@ body {
 .btn-line:hover { background:#1b2f6b; color:#fff; }
 
 /* Headings share the editorial voice across every page */
-h1, h2 { font-family: 'Nunito', system-ui, sans-serif; font-weight: 800 !important; letter-spacing: -0.01em !important; color: #1b2f6b; }
-h3 { font-family: 'Nunito', system-ui, sans-serif; font-weight: 700; letter-spacing: 0; }
+h1, h2 { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-weight: 600 !important; letter-spacing: -0.02em !important; color: #1b2f6b; }
+h3 { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-weight: 600; letter-spacing: -0.01em; }
 .hebrew, [dir="rtl"] h1, [dir="rtl"] h2 { font-family: inherit; }
 button, input, select, textarea { border-radius: 4px; }
 input:focus, select:focus, textarea:focus { outline: 2px solid #c8941f; outline-offset: 1px; }
@@ -353,10 +353,10 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #c8941f; outline-
 @layer components {
   .page { @apply w-full mx-auto px-4 pt-6 pb-16 sm:px-8 sm:pt-9 lg:px-10; max-width: 1440px; }
   .page-narrow { max-width: 960px; }
-  .page-title { font-family: 'Nunito', system-ui, sans-serif; font-weight: 800; color: #1b2f6b; font-size: clamp(28px, 3vw, 38px); line-height: 1.1; letter-spacing: -0.01em; }
+  .page-title { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-weight: 600; color: #1b2f6b; font-size: clamp(28px, 3vw, 38px); line-height: 1.1; letter-spacing: -0.022em; }
   .dark .page-title { color: var(--text); }
   .page-subtitle { @apply text-[15px] mt-2; color: var(--text-3); line-height: 1.5; }
-  .section-title { font-family: 'Nunito', system-ui, sans-serif; font-weight: 800; font-size: 19px; color: var(--text); }
+  .section-title { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-weight: 600; letter-spacing: -0.01em; font-size: 19px; color: var(--text); }
 
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow-sm); }
   .card-flat { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
@@ -439,3 +439,6 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #c8941f; outline-
   background: rgb(var(--gold-rgb)); border-radius: 0 3px 3px 0;
 }
 [dir='rtl'] .nav-item[aria-current='page']::before { border-radius: 3px 0 0 3px; }
+
+/* Numbers read in SF Pro Display: tabular, slightly tighter */
+.tabular-nums { font-variant-numeric: tabular-nums; }

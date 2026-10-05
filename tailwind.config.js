@@ -34,7 +34,8 @@ export default {
         },
       },
       fontFamily: {
-        serif: ['Nunito', 'system-ui', 'sans-serif'],
+        sans:  ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', 'system-ui', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'],
+        serif: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', 'system-ui', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'],
       },
       boxShadow: {
         card: 'var(--shadow-sm)',
