@@ -311,16 +311,11 @@ function WeeklyStudyBanner({ parasha, t, onOpen }) {
             <ArrowRight size={18} strokeWidth={2} className="rtl:rotate-180" />
           </span>
         </div>
-        {/* Typographic panel — only the parasha's real Hebrew name, no generated text */}
-        <div className="relative min-h-[150px] sm:min-h-full overflow-hidden mask-fade-start"
-          style={{ background: 'linear-gradient(135deg, var(--parchment) 0%, var(--parchment-2) 100%)' }} aria-hidden="true">
-          <div className="absolute inset-0 opacity-[0.55]"
-            style={{ backgroundImage: 'repeating-linear-gradient(180deg, transparent 0 25px, var(--parchment-line) 25px 26px)', maskImage: 'linear-gradient(90deg, transparent, #000 30%, #000 85%, transparent)' }} />
-          <div className="relative h-full flex items-center justify-center px-6 py-8">
-            <span className="hebrew text-[clamp(44px,6vw,72px)] leading-none" style={{ color: '#7A5A1C', fontWeight: 400 }}>
-              {parasha?.heb || 'פָּרָשָׁה'}
-            </span>
-          </div>
+        {/* Decorative photo (Torah reading with yad) */}
+        <div className="relative min-h-[150px] sm:min-h-full overflow-hidden mask-fade-start" aria-hidden="true">
+          <img src="/banner-torah.webp" alt="" draggable="false"
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            style={{ objectPosition: '60% 55%' }} />
         </div>
       </button>
     </section>

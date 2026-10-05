@@ -314,9 +314,10 @@ function ParashaPreview({ parasha, onOpen, t, hasAudio }) {
   return (
     <section className="card overflow-hidden">
       <div className="relative px-6 pt-6 pb-5 overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, var(--surface) 40%, var(--parchment) 100%)' }}>
-        <div className="absolute inset-0 opacity-50 pointer-events-none" aria-hidden="true"
-          style={{ backgroundImage: 'repeating-linear-gradient(180deg, transparent 0 23px, var(--parchment-line) 23px 24px)', maskImage: 'linear-gradient(90deg, transparent 35%, #000 100%)' }} />
+        style={{ background: 'var(--surface)' }}>
+        <img src="/banner-torah.webp" alt="" aria-hidden="true" draggable="false"
+          className="absolute inset-y-0 end-0 h-full w-[62%] object-cover mask-fade-start pointer-events-none"
+          style={{ objectPosition: '55% 55%', opacity: 0.55 }} />
         <p className="relative eyebrow mb-2">
           <span className="hebrew-ui normal-case tracking-normal text-[13px]">פָּרָשָׁה</span>
           {parasha.num ? ` · ${parasha.num}` : ''}

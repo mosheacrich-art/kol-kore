@@ -137,8 +137,11 @@ function HaftaraPreview({ haftara, t, onOpen, onPick }) {
   return (
     <section className="card overflow-hidden flex flex-col">
       <div className="relative px-6 pt-6 pb-5 overflow-hidden flex-shrink-0"
-        style={{ background: 'linear-gradient(135deg, var(--surface) 40%, var(--parchment) 100%)' }}>
-        <div className="flex items-start justify-between gap-3">
+        style={{ background: 'var(--surface)' }}>
+        <img src="/banner-torah.webp" alt="" aria-hidden="true" draggable="false"
+          className="absolute inset-y-0 end-0 h-full w-[62%] object-cover mask-fade-start pointer-events-none"
+          style={{ objectPosition: '55% 55%', opacity: 0.55 }} />
+        <div className="relative flex items-start justify-between gap-3">
           <p className="eyebrow">
             <span className="hebrew-ui normal-case tracking-normal text-[13px]">{parasha?.heb || 'הַפְטָרָה'}</span>
             {parasha?.num ? ` · ${parasha.num}` : ''}
@@ -152,9 +155,11 @@ function HaftaraPreview({ haftara, t, onOpen, onPick }) {
             </button>
           </div>
         </div>
-        <h2 className="hebrew text-[32px] mt-2 leading-tight" style={{ color: 'var(--text)', fontWeight: 400 }}>{haftara.heb}</h2>
-        <p className="font-serif text-[18px] text-ink-2 mt-1">{haftara.name}</p>
-        <p className="text-[14px] text-ink-3 mt-0.5" dir="ltr" style={{ textAlign: 'start' }}>{ref}</p>
+        <div className="relative">
+          <h2 className="hebrew text-[32px] mt-2 leading-tight" style={{ color: 'var(--text)', fontWeight: 400 }}>{haftara.heb}</h2>
+          <p className="font-serif text-[18px] text-ink-2 mt-1">{haftara.name}</p>
+          <p className="text-[14px] text-ink-3 mt-0.5" dir="ltr" style={{ textAlign: 'start' }}>{ref}</p>
+        </div>
       </div>
 
       <div className="flex items-center gap-2.5 px-6 py-4 flex-shrink-0" style={{ borderTop: '1px solid var(--border-subtle)' }}>
