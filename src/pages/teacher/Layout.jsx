@@ -207,6 +207,12 @@ function SidebarContent({ profile, location, go, unreadCount, showClose, onClose
         </div>
       )}
 
+      <div className="px-3 mb-6">
+        <button onClick={() => go('/teacher')} className="flex items-center gap-2">
+          <Logo size={26} />
+        </button>
+      </div>
+
       <div className="mx-3 mb-8 mt-2 p-3 rounded"
         style={{ background: 'transparent', borderBottom: '1px solid var(--border)', borderRadius: 0 }}>
         <div className="flex items-center gap-3">

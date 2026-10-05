@@ -24,11 +24,7 @@ export default function GuestLayout() {
       <div className="px-3 mb-10 flex items-center justify-between"
         style={{ paddingTop: showClose ? '0' : undefined }}>
         <button onClick={() => go('/')} className="flex items-center gap-3">
-          <Logo size={28} word={false} />
-          <div>
-            <div className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</div>
-            <div className="text-xs hebrew" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</div>
-          </div>
+          <Logo size={26} />
         </button>
         {showClose && (
           <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg"
@@ -140,9 +136,7 @@ export default function GuestLayout() {
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-2)' }}>
             <HamburgerIcon />
           </button>
-          <Logo size={24} word={false} />
-          <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</span>
-          <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
+          <Logo size={24} />
           <span className="ml-auto text-xs px-2 py-0.5 rounded-sm"
             style={{ background: '#f6f7f9', color: '#1b2f6b', border: '1px solid rgba(27,47,107,0.2)' }}>
             {t('guest')}
