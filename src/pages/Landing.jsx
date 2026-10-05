@@ -27,12 +27,12 @@ function SyncDemo() {
     return () => clearInterval(id)
   }, [])
   return (
-    <div style={{ border: `1px solid ${NAVY}`, borderRadius: 4, background: '#fff', boxShadow: `6px 6px 0 ${GOLD}`, maxWidth: 420 }}>
+    <div style={{ border: `1px solid ${NAVY}`, borderRadius: 4, background: '#fff', boxShadow: `6px 6px 0 ${GOLD}`, maxWidth: 340, width: '100%', overflow: 'hidden', justifySelf: 'center' }}>
       <div className="flex items-center justify-between px-5 py-2.5" style={{ borderBottom: '1px solid #e5e7eb' }}>
         <span className="eyebrow">Bereshit · 1:1</span>
         <span className="text-xs tabular-nums" style={{ color: '#6b7280' }}>0:0{Math.min(i, 9)}</span>
       </div>
-      <p dir="rtl" className="hebrew px-5 py-6 text-2xl sm:text-3xl leading-[1.8]" style={{ color: NAVY }}>
+      <p dir="rtl" className="hebrew px-4 py-4 text-xl leading-[1.7] flex flex-wrap justify-center gap-y-1" style={{ color: NAVY }}>
         {VERSE.map((w, k) => (
           <span key={k} role="button" tabIndex={0}
             onClick={() => setI(k)}
@@ -71,10 +71,12 @@ export default function Landing() {
       </header>
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-16 pb-24 grid lg:grid-cols-[1.1fr_1fr] gap-14 items-center">
+      <div className="relative overflow-hidden">
+        <div aria-hidden className="absolute inset-0" style={{ backgroundImage: 'url(/entrada-bg.webp)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.09 }} />
+      <section className="relative max-w-6xl mx-auto px-6 pt-14 pb-20 grid lg:grid-cols-[1.2fr_1fr] gap-10 items-center">
         <div>
           <p className="eyebrow mb-6">{t('landing_study_label')}</p>
-          <h1 className="serif text-5xl sm:text-6xl lg:text-7xl leading-[1.02]" style={{ color: NAVY, fontWeight: 600 }}>
+          <h1 className="serif text-5xl sm:text-6xl lg:text-6xl leading-[1.02]" style={{ color: NAVY, fontWeight: 600 }}>
             Parashapp
           </h1>
           <p className="hebrew text-3xl mt-3" style={{ color: GOLD, textAlign: "left", direction: "ltr" }}>פָּרָשָׁה</p>
@@ -86,6 +88,7 @@ export default function Landing() {
         </div>
         <SyncDemo />
       </section>
+      </div>
 
       {/* Features: numbered ledger */}
       <section id="features" className="max-w-6xl mx-auto px-6 py-20" style={{ borderTop: '1px solid #e5e7eb' }}>
