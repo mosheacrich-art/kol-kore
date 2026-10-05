@@ -91,6 +91,12 @@ function ListView({ basePath }) {
     })).filter(m => m.readings.length > 0)
   }, [filteredMoadim])
 
+  const [picked, setPicked] = useState(null)
+  const openParasha = (p) => {
+    if (p.aliyot?.length > 1) setPicked(p)
+    else navigate(`${basePath}/${p.id}`)
+  }
+
   const [openChag, setOpenChag] = useState(null)
   const [openBerajot, setOpenBerajot] = useState(false)
 
@@ -244,7 +250,7 @@ function ListView({ basePath }) {
                     {book.parashot.map(p => {
                       const hasAudio = hasAny(p.id)
                       return (
-                        <button key={p.id} onClick={() => navigate(`${basePath}/${p.id}`)}
+                        <button key={p.id} onClick={() => openParasha(p)}
                           className="text-left p-3 rounded-xl transition-all duration-200 group relative"
                           style={{ background: cardDefault.bg, border: `1px solid ${cardDefault.border}` }}
                           onMouseEnter={e => {
@@ -336,7 +342,7 @@ function ListView({ basePath }) {
                     <div className="px-4 pb-3 pt-1" style={{ background: 'var(--bg-card)' }}>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mt-2">
                         {chag.readings.map(p => (
-                          <button key={p.id} onClick={() => navigate(`${basePath}/${p.id}`)}
+                          <button key={p.id} onClick={() => openParasha(p)}
                             className="text-left p-3 rounded-xl transition-all duration-200"
                             style={{ background: cardDefault.bg, border: `1px solid ${cardDefault.border}` }}
                             onMouseEnter={e => {
@@ -364,6 +370,36 @@ function ListView({ basePath }) {
               )
             })}
           </div>
+        </div>
+      )}
+      {picked && (
+        <div className="fixed inset-0 z-[200]" onClick={() => setPicked(null)}>
+          <div className="absolute inset-0" style={{ background: 'rgba(17,24,39,0.35)' }} />
+          <aside onClick={e => e.stopPropagation()}
+            className="absolute top-0 right-0 h-full w-full max-w-sm flex flex-col"
+            style={{ background: '#fff', borderLeft: '1px solid var(--border)', boxShadow: '-12px 0 32px rgba(17,24,39,0.12)' }}>
+            <div className="flex items-start justify-between p-6 pb-4">
+              <div>
+                <p className="eyebrow mb-2">{picked.heb}</p>
+                <h2 className="text-2xl">{picked.name}</h2>
+                {picked.ref && <p className="text-xs mt-1" style={{ color: '#6b7280' }}>{picked.ref}</p>}
+              </div>
+              <button onClick={() => setPicked(null)} aria-label="Cerrar" className="text-xl leading-none px-2" style={{ color: '#6b7280' }}>×</button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-3 pb-6">
+              {picked.aliyot.map((a, i) => (
+                <button key={i} onClick={() => navigate(`${basePath}/${picked.id}?aliyah=${i}`)}
+                  className="w-full flex items-center justify-between gap-3 px-3 py-3.5 text-left rounded transition-colors hover:bg-[#f6f7f9]"
+                  style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                  <span>
+                    <span className="block text-sm font-medium" style={{ color: '#1b2f6b' }}>{a.label || (a.n === 8 ? 'Maftir' : `${a.n}ª Aliyá`)}</span>
+                    {a.ref && <span className="block text-xs mt-0.5" style={{ color: '#6b7280' }}>{a.ref}</span>}
+                  </span>
+                  <span style={{ color: '#c8941f' }}>→</span>
+                </button>
+              ))}
+            </div>
+          </aside>
         </div>
       )}
     </div>
