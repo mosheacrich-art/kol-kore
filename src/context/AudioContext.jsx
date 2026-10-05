@@ -5,7 +5,7 @@ import { useLang } from './LangContext'
 
 const AudioCtx = createContext(null)
 
-async function callSyncApi(audioUrl, fileType, aliyahRef, prompt) {
+async function callSyncApi(audioUrl, fileType, aliyahRef, prompt, words) {
   const { data: { session } } = await supabase.auth.getSession()
   const res = await fetch('/api/generate-sync', {
     method: 'POST',
@@ -13,7 +13,7 @@ async function callSyncApi(audioUrl, fileType, aliyahRef, prompt) {
       'Content-Type': 'application/json',
       ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
     },
-    body: JSON.stringify({ audioUrl, fileType, ...(aliyahRef ? { aliyahRef } : {}), ...(prompt ? { prompt } : {}) }),
+    body: JSON.stringify({ audioUrl, fileType, ...(aliyahRef ? { aliyahRef } : {}), ...(prompt ? { prompt } : {}), ...(words ? { words } : {}) }),
   })
   const json = await res.json()
   if (!res.ok) throw new Error(json.error || `Error ${res.status}`)
@@ -98,7 +98,7 @@ export function AudioProvider({ children }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  const upload = useCallback(async (parashaId, aliyahIdx, file, aliyahRef, manualTimestamps = null) => {
+  const upload = useCallback(async (parashaId, aliyahIdx, file, aliyahRef, manualTimestamps = null, syncRange = null) => {
     const key = `${parashaId}-${aliyahIdx}`
 
     const { data: { session } } = await supabase.auth.getSession()
@@ -159,8 +159,25 @@ export function AudioProvider({ children }) {
       },
     }))
 
-    // Manual range sync: timestamps already known, skip Whisper
-    if (manualTimestamps) return true
+    // Manual range sync: proportional timestamps are the fallback; refine with Whisper when a text range is given
+    if (manualTimestamps) {
+      if (syncRange) {
+        setSyncingKeys(prev => new Set([...prev, key]))
+        callSyncApi(publicUrl, contentType, null, null, syncRange.words)
+          .then(async ({ words: res, anchorPct, needsReview }) => {
+            if (!res.length || needsReview) return
+            const full = new Array(syncRange.size).fill(null)
+            res.forEach((x, i) => { if (x && syncRange.indices[i] != null) full[syncRange.indices[i]] = { start: x.start, end: x.end } })
+            await supabase.from('audio_files')
+              .update({ word_timestamps: full, anchor_pct: anchorPct, needs_review: false })
+              .eq('parasha_id', parashaId).eq('aliyah_idx', aliyahIdx).eq('teacher_id', teacherId)
+            setAudios(prev => ({ ...prev, [key]: { ...prev[key], wordTimestamps: full, anchorPct, needsReview: false } }))
+          })
+          .catch(err => console.error('Range auto-sync failed (keeping manual timing):', err))
+          .finally(() => setSyncingKeys(prev => { const s = new Set([...prev]); s.delete(key); return s }))
+      }
+      return true
+    }
 
     // Auto-sync via server-side Vercel API (avoids CORS with OpenAI)
     setSyncingKeys(prev => new Set([...prev, key]))

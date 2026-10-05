@@ -183,7 +183,9 @@
         if (cancelled) { reset(); return; }
         var dur = (Date.now() - t0) / 1000, type = rec.mimeType || 'audio/webm';
         closeBar(); bar = mk('<span>Guardando…</span>');
-        post({ type: 'sidur:save', secId: sel.sec.id, ts: stamps(sel, dur), blob: new Blob(chunks, { type: type }), mime: type });
+        var rw = [];
+        for (var k = sel.a; k <= sel.b; k++) rw.push({ i: k, t: sel.sec._words[k].textContent });
+        post({ type: 'sidur:save', secId: sel.sec.id, ts: stamps(sel, dur), rw: rw, size: sel.sec._words.length, blob: new Blob(chunks, { type: type }), mime: type });
       };
       t0 = Date.now(); secs = 0; rec.start();
       closeBar();

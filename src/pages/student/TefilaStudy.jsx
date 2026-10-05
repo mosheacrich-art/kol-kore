@@ -31,7 +31,9 @@ export default function TefilaStudy() {
       if (m.type === 'sidur:save' && isTeacher) {
         const first = m.ts.findIndex(Boolean)
         const file = new File([m.blob], 'audio', { type: m.mime || 'audio/webm' })
-        const ok = first >= 0 && await upload(`sidur:${m.secId}`, first, file, null, m.ts)
+        const he = (m.rw || []).filter(x => /[א-ת]/.test(x.t))
+        const range = he.length ? { words: he.map(x => x.t), indices: he.map(x => x.i), size: m.size } : null
+        const ok = first >= 0 && await upload(`sidur:${m.secId}`, first, file, null, m.ts, range)
         e.source.postMessage(ok ? { type: 'sidur:saved' } : { type: 'sidur:error', error: 'No se pudo guardar el audio' }, window.location.origin)
       }
     }

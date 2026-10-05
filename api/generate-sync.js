@@ -356,7 +356,7 @@ export default async function handler(req, res) {
   const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token)
   if (authErr || !user) return res.status(401).json({ error: 'Unauthorized' })
 
-  const { audioUrl, fileType, aliyahRef, prompt } = req.body ?? {}
+  const { audioUrl, fileType, aliyahRef, prompt, words: givenWords } = req.body ?? {}
   if (!audioUrl) return res.status(400).json({ error: 'audioUrl required' })
 
   if (!isAllowedAudioUrl(audioUrl)) return res.status(400).json({ error: 'Invalid audio URL' })
@@ -366,7 +366,9 @@ export default async function handler(req, res) {
 
   try {
     let sefariaWords = []
-    const sefariaPromise = aliyahRef
+    const sefariaPromise = Array.isArray(givenWords) && givenWords.length
+      ? Promise.resolve(givenWords.slice(0, 600).map(w => String(w)).filter(w => /[א-ת]/.test(w)))
+      : aliyahRef
       ? fetch(`https://www.sefaria.org/api/texts/${encodeURIComponent(aliyahRef)}?commentary=0&context=0&pad=0&wrapLinks=0`)
           .then(r => r.ok ? r.json() : null)
           .then(data => {
