@@ -65,7 +65,7 @@ export default function HomeworkQuickModal({ onClose, preType, preRef, preName, 
     color: 'var(--text)',
   }
 
-  const typeColor = preType === 'tefila' ? '#8b5cf6' : preType === 'haftara' ? '#10b981' : '#f59e0b'
+  const typeColor = preType === 'tefila' ? '#1b2f6b' : preType === 'haftara' ? '#1b2f6b' : '#c8941f'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -97,10 +97,10 @@ export default function HomeworkQuickModal({ onClose, preType, preRef, preName, 
         {sent ? (
           <div className="flex flex-col items-center gap-3 py-4 text-center">
             <div className="w-12 h-12 rounded-full flex items-center justify-center"
-              style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)' }}>
+              style={{ background: '#f6f7f9', border: '1px solid rgba(200,148,31,0.25)' }}>
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                <circle cx="11" cy="11" r="9" stroke="#22c55e" strokeWidth="1.5"/>
-                <path d="M6.5 11l3 3L15.5 8" stroke="#22c55e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="11" cy="11" r="9" stroke="#c8941f" strokeWidth="1.5"/>
+                <path d="M6.5 11l3 3L15.5 8" stroke="#c8941f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
             <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>{t('hw_assigned')}</p>

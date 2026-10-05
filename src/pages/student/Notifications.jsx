@@ -83,14 +83,14 @@ export default function StudentNotifications() {
           onClick={() => setTab('homework')}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
           style={{
-            background: tab === 'homework' ? 'rgba(108,51,230,0.13)' : 'var(--bg-card)',
-            color: tab === 'homework' ? '#8b5cf6' : 'var(--text-3)',
-            border: `1px solid ${tab === 'homework' ? 'rgba(108,51,230,0.3)' : 'var(--border)'}`,
+            background: tab === 'homework' ? 'rgba(27,47,107,0.13)' : 'var(--bg-card)',
+            color: tab === 'homework' ? '#1b2f6b' : 'var(--text-3)',
+            border: `1px solid ${tab === 'homework' ? 'rgba(27,47,107,0.3)' : 'var(--border)'}`,
           }}>
           Deberes
           {hwUnread > 0 && (
             <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
-              style={{ background: '#ef4444', color: '#fff' }}>
+              style={{ background: '#b42318', color: '#fff' }}>
               {hwUnread > 9 ? '9+' : hwUnread}
             </span>
           )}
@@ -99,14 +99,14 @@ export default function StudentNotifications() {
           onClick={() => setTab('evaluations')}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
           style={{
-            background: tab === 'evaluations' ? 'rgba(108,51,230,0.13)' : 'var(--bg-card)',
-            color: tab === 'evaluations' ? '#8b5cf6' : 'var(--text-3)',
-            border: `1px solid ${tab === 'evaluations' ? 'rgba(108,51,230,0.3)' : 'var(--border)'}`,
+            background: tab === 'evaluations' ? 'rgba(27,47,107,0.13)' : 'var(--bg-card)',
+            color: tab === 'evaluations' ? '#1b2f6b' : 'var(--text-3)',
+            border: `1px solid ${tab === 'evaluations' ? 'rgba(27,47,107,0.3)' : 'var(--border)'}`,
           }}>
           Evaluaciones
           {evUnread > 0 && (
             <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
-              style={{ background: '#ef4444', color: '#fff' }}>
+              style={{ background: '#b42318', color: '#fff' }}>
               {evUnread > 9 ? '9+' : evUnread}
             </span>
           )}
@@ -116,7 +116,7 @@ export default function StudentNotifications() {
       {loading && (
         <div className="flex items-center justify-center py-16">
           <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin"
-            style={{ borderColor: 'rgba(108,51,230,0.2)', borderTopColor: '#6c33e6' }} />
+            style={{ borderColor: 'rgba(27,47,107,0.2)', borderTopColor: '#1b2f6b' }} />
         </div>
       )}
 
@@ -137,11 +137,11 @@ export default function StudentNotifications() {
           {homework.length === 0 && (
             <div className="text-center py-20">
               <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
-                style={{ background: 'rgba(108,51,230,0.08)', border: '1px solid rgba(108,51,230,0.15)' }}>
+                style={{ background: '#f6f7f9', border: '1px solid rgba(27,47,107,0.15)' }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" stroke="rgba(108,51,230,0.5)" strokeWidth="1.5" strokeLinecap="round"/>
-                  <rect x="9" y="3" width="6" height="4" rx="1" stroke="rgba(108,51,230,0.5)" strokeWidth="1.5"/>
-                  <path d="M9 12h6M9 16h4" stroke="rgba(108,51,230,0.5)" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" stroke="rgba(27,47,107,0.5)" strokeWidth="1.5" strokeLinecap="round"/>
+                  <rect x="9" y="3" width="6" height="4" rx="1" stroke="rgba(27,47,107,0.5)" strokeWidth="1.5"/>
+                  <path d="M9 12h6M9 16h4" stroke="rgba(27,47,107,0.5)" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
               </div>
               <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin deberes por ahora</p>
@@ -158,7 +158,7 @@ export default function StudentNotifications() {
                 className={`rounded-2xl p-5 flex flex-col gap-2 relative${canNavigate ? ' cursor-pointer' : ''}`}
                 style={{
                   background: 'var(--bg-card)',
-                  border: `1px solid ${!hw.read ? 'rgba(108,51,230,0.3)' : 'var(--border-subtle)'}`,
+                  border: `1px solid ${!hw.read ? 'rgba(27,47,107,0.3)' : 'var(--border-subtle)'}`,
                 }}
                 onClick={canNavigate ? () => {
                   if (!hw.read) markRead(hw.id, setHomework)
@@ -174,7 +174,7 @@ export default function StudentNotifications() {
                 {/* Unread dot */}
                 {!hw.read && (
                   <span className="absolute top-4 right-4 w-2 h-2 rounded-full"
-                    style={{ background: '#8b5cf6' }} />
+                    style={{ background: '#1b2f6b' }} />
                 )}
 
                 <p className="text-sm font-medium pr-5" style={{ color: 'var(--text)' }}>{hw.message}</p>
@@ -183,13 +183,13 @@ export default function StudentNotifications() {
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {hw.parasha_id && (
                       <span className="text-xs px-2 py-0.5 rounded-md"
-                        style={{ background: 'rgba(245,158,11,0.1)', color: '#d97706', border: '1px solid rgba(245,158,11,0.2)' }}>
+                        style={{ background: 'rgba(200,148,31,0.1)', color: '#c8941f', border: '1px solid rgba(200,148,31,0.2)' }}>
                         {hw.parasha_id}
                       </span>
                     )}
                     {hw.aliyah_label && (
                       <span className="text-xs px-2 py-0.5 rounded-md"
-                        style={{ background: 'rgba(245,158,11,0.08)', color: '#d97706', border: '1px solid rgba(245,158,11,0.15)' }}>
+                        style={{ background: 'rgba(200,148,31,0.08)', color: '#c8941f', border: '1px solid rgba(200,148,31,0.15)' }}>
                         {hw.aliyah_label}
                       </span>
                     )}
@@ -202,7 +202,7 @@ export default function StudentNotifications() {
                     <button
                       onClick={e => { e.stopPropagation(); markRead(hw.id, setHomework) }}
                       className="text-xs px-3 py-1 rounded-lg transition-all"
-                      style={{ background: 'rgba(108,51,230,0.08)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)' }}>
+                      style={{ background: '#f6f7f9', color: '#1b2f6b', border: '1px solid rgba(27,47,107,0.2)' }}>
                       Marcar como leída
                     </button>
                   )}
@@ -231,10 +231,10 @@ export default function StudentNotifications() {
           {evals.length === 0 && (
             <div className="text-center py-20">
               <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
-                style={{ background: 'rgba(108,51,230,0.08)', border: '1px solid rgba(108,51,230,0.15)' }}>
+                style={{ background: '#f6f7f9', border: '1px solid rgba(27,47,107,0.15)' }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 11l3 3L22 4" stroke="rgba(108,51,230,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="rgba(108,51,230,0.5)" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M9 11l3 3L22 4" stroke="rgba(27,47,107,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="rgba(27,47,107,0.5)" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
               </div>
               <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('no_notifs')}</p>
@@ -253,13 +253,13 @@ export default function StudentNotifications() {
                   className="rounded-2xl p-5 flex flex-col gap-3 relative"
                   style={{
                     background: 'var(--bg-card)',
-                    border: `1px solid ${!ev.read ? 'rgba(108,51,230,0.3)' : 'var(--border-subtle)'}`,
+                    border: `1px solid ${!ev.read ? 'rgba(27,47,107,0.3)' : 'var(--border-subtle)'}`,
                   }}>
 
                   {/* Unread dot */}
                   {!ev.read && (
                     <span className="absolute top-4 right-4 w-2 h-2 rounded-full"
-                      style={{ background: '#8b5cf6' }} />
+                      style={{ background: '#1b2f6b' }} />
                   )}
 
                   <div className="flex items-start justify-between gap-2 pr-5">
@@ -273,7 +273,7 @@ export default function StudentNotifications() {
                     </div>
                     {sortedErrors.length > 0 && (
                       <span className="text-xs px-2 py-0.5 rounded-md flex-shrink-0"
-                        style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
+                        style={{ background: '#fdf3f2', color: '#b42318', border: '1px solid rgba(180,35,24,0.2)' }}>
                         {sortedErrors.length} {sortedErrors.length === 1 ? 'error' : 'errores'}
                       </span>
                     )}
@@ -294,11 +294,11 @@ export default function StudentNotifications() {
                         {sortedErrors.map((err, i) => (
                           <div key={i}
                             className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg"
-                            style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)' }}>
+                            style={{ background: '#fdf3f2', border: '1px solid rgba(180,35,24,0.18)' }}>
                             <span className="text-xs font-mono tabular-nums" style={{ color: 'var(--text-muted)' }}>
                               {err.label}
                             </span>
-                            <span className="hebrew text-base font-medium" style={{ color: '#ef4444' }}>{err.word}</span>
+                            <span className="hebrew text-base font-medium" style={{ color: '#b42318' }}>{err.word}</span>
                           </div>
                         ))}
                       </div>
@@ -307,8 +307,8 @@ export default function StudentNotifications() {
 
                   {parsed.comment && (
                     <div className="px-3.5 py-3 rounded-xl"
-                      style={{ background: 'rgba(108,51,230,0.06)', border: '1px solid rgba(108,51,230,0.14)' }}>
-                      <p className="text-xs font-semibold mb-1" style={{ color: '#8b5cf6' }}>{t('comment_label')}</p>
+                      style={{ background: '#f6f7f9', border: '1px solid rgba(27,47,107,0.14)' }}>
+                      <p className="text-xs font-semibold mb-1" style={{ color: '#1b2f6b' }}>{t('comment_label')}</p>
                       <p className="text-sm leading-relaxed" style={{ color: 'var(--text-2)', whiteSpace: 'pre-wrap' }}>
                         {parsed.comment}
                       </p>
@@ -320,7 +320,7 @@ export default function StudentNotifications() {
                       <button
                         onClick={() => markRead(ev.id, setEvals)}
                         className="text-xs px-3 py-1 rounded-lg transition-all"
-                        style={{ background: 'rgba(108,51,230,0.08)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)' }}>
+                        style={{ background: '#f6f7f9', color: '#1b2f6b', border: '1px solid rgba(27,47,107,0.2)' }}>
                         Marcar como leída
                       </button>
                     </div>

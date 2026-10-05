@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useLang } from '../../context/LangContext'
+import Logo from '../../components/Logo'
 import LangToggle from '../../components/LangToggle'
 
 export default function GuestLayout() {
@@ -23,7 +24,7 @@ export default function GuestLayout() {
       <div className="px-3 mb-10 flex items-center justify-between"
         style={{ paddingTop: showClose ? '0' : undefined }}>
         <button onClick={() => go('/')} className="flex items-center gap-3">
-          <StarSvg />
+          <Logo size={28} word={false} />
           <div>
             <div className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</div>
             <div className="text-xs hebrew" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</div>
@@ -37,25 +38,25 @@ export default function GuestLayout() {
         )}
       </div>
 
-      <div className="mx-3 mb-8 p-3 rounded-xl"
-        style={{ background: 'rgba(45,212,191,0.1)', border: '1px solid rgba(45,212,191,0.18)' }}>
+      <div className="mx-3 mb-8 p-3 rounded"
+        style={{ background: '#f6f7f9', border: '1px solid rgba(27,47,107,0.18)' }}>
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
-            style={{ background: 'rgba(45,212,191,0.2)', color: '#0d9488' }}>?</div>
+            style={{ background: '#f6f7f9', color: '#1b2f6b' }}>?</div>
           <div>
             <div className="text-xs font-medium" style={{ color: 'var(--text)' }}>{t('guest')}</div>
-            <div className="text-xs hebrew" style={{ color: 'rgba(45,212,191,0.7)' }}>אוֹרֵחַ</div>
+            <div className="text-xs hebrew" style={{ color: 'rgba(27,47,107,0.7)' }}>אוֹרֵחַ</div>
           </div>
         </div>
       </div>
 
       <nav className="flex flex-col gap-1">
         <button onClick={() => go('/guest/study')}
-          className="sidebar-item flex items-center gap-3 px-3 py-3 rounded-xl text-left"
+          className="sidebar-item flex items-center gap-3 px-3 py-3 rounded text-left"
           style={{
-            background: activeStudy ? 'rgba(45,212,191,0.1)' : 'transparent',
-            borderInlineStart: activeStudy ? '2px solid #2dd4bf' : '2px solid transparent',
-            color: activeStudy ? '#0d9488' : 'var(--text-3)',
+            background: activeStudy ? 'rgba(27,47,107,0.1)' : 'transparent',
+            borderInlineStart: activeStudy ? '2px solid #1b2f6b' : '2px solid transparent',
+            color: activeStudy ? '#1b2f6b' : 'var(--text-3)',
           }}>
           <StudyIcon active={activeStudy} />
           <div>
@@ -65,11 +66,11 @@ export default function GuestLayout() {
         </button>
 
         <button onClick={() => go('/guest/haftara')}
-          className="sidebar-item flex items-center gap-3 px-3 py-3 rounded-xl text-left"
+          className="sidebar-item flex items-center gap-3 px-3 py-3 rounded text-left"
           style={{
-            background: activeHaftara ? 'rgba(16,185,129,0.1)' : 'transparent',
-            borderInlineStart: activeHaftara ? '2px solid #10b981' : '2px solid transparent',
-            color: activeHaftara ? '#10b981' : 'var(--text-3)',
+            background: activeHaftara ? 'rgba(27,47,107,0.1)' : 'transparent',
+            borderInlineStart: activeHaftara ? '2px solid #1b2f6b' : '2px solid transparent',
+            color: activeHaftara ? '#1b2f6b' : 'var(--text-3)',
           }}>
           <HaftaraIcon active={activeHaftara} />
           <div>
@@ -79,11 +80,11 @@ export default function GuestLayout() {
         </button>
 
         <button onClick={() => go('/guest/tefila')}
-          className="sidebar-item flex items-center gap-3 px-3 py-3 rounded-xl text-left"
+          className="sidebar-item flex items-center gap-3 px-3 py-3 rounded text-left"
           style={{
-            background: activeTefila ? 'rgba(139,92,246,0.1)' : 'transparent',
-            borderInlineStart: activeTefila ? '2px solid #8b5cf6' : '2px solid transparent',
-            color: activeTefila ? '#8b5cf6' : 'var(--text-3)',
+            background: activeTefila ? 'rgba(27,47,107,0.1)' : 'transparent',
+            borderInlineStart: activeTefila ? '2px solid #1b2f6b' : '2px solid transparent',
+            color: activeTefila ? '#1b2f6b' : 'var(--text-3)',
           }}>
           <TefilaIcon active={activeTefila} />
           <div>
@@ -94,15 +95,9 @@ export default function GuestLayout() {
       </nav>
 
       <div className="mt-auto px-3 flex flex-col gap-2">
-        <button onClick={toggle}
-          className="w-full flex items-center gap-2 text-xs py-2.5 px-3 rounded-xl transition-all"
-          style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
-          <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
-          {isDark ? t('light_mode') : t('dark_mode')}
-        </button>
         <LangToggle />
         <button onClick={() => navigate('/login')}
-          className="w-full text-xs py-2.5 px-3 rounded-xl text-left transition-all"
+          className="w-full text-xs py-2.5 px-3 rounded text-left transition-all"
           style={{ color: 'var(--text-muted)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
           {t('back_to_home')}
         </button>
@@ -122,7 +117,7 @@ export default function GuestLayout() {
 
       {/* Desktop sidebar */}
       <aside className="hidden md:flex w-64 flex-shrink-0 flex-col py-8 px-4 h-screen sticky top-0"
-        style={{ background: 'var(--bg-deep)', borderInlineEnd: '1px solid var(--border-subtle)' }}>
+        style={{ background: '#ffffff', borderInlineEnd: '1px solid var(--border-subtle)' }}>
         <SidebarInner showClose={false} />
       </aside>
 
@@ -130,7 +125,7 @@ export default function GuestLayout() {
       <aside className={`md:hidden fixed inset-y-0 z-50 w-64 flex flex-col px-4 transition-transform duration-300 ease-in-out sidebar-drawer
         ${isRTL ? 'right-0' : 'left-0'}
         ${sidebarOpen ? 'translate-x-0' : isRTL ? 'translate-x-full' : '-translate-x-full'}`}
-        style={{ background: 'var(--bg-deep)', borderInlineEnd: '1px solid var(--border-subtle)' }}>
+        style={{ background: '#ffffff', borderInlineEnd: '1px solid var(--border-subtle)' }}>
         <SidebarInner showClose />
       </aside>
 
@@ -139,17 +134,17 @@ export default function GuestLayout() {
 
         {/* Mobile header */}
         <div className="md:hidden sticky top-0 z-30 flex items-center gap-3 px-4 flex-shrink-0 app-header"
-          style={{ background: 'var(--bg-deep)', borderBottom: '1px solid var(--border-subtle)', minHeight: '3.5rem' }}>
+          style={{ background: '#ffffff', borderBottom: '1px solid var(--border)', minHeight: '3.5rem' }}>
           <button onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-xl"
+            className="p-2 rounded"
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-2)' }}>
             <HamburgerIcon />
           </button>
-          <StarSvg size={24} />
+          <Logo size={24} word={false} />
           <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashá</span>
           <span className="text-xs hebrew ml-1" style={{ color: 'var(--text-gold)' }}>פָּרָשָׁה</span>
-          <span className="ml-auto text-xs px-2 py-0.5 rounded-full"
-            style={{ background: 'rgba(45,212,191,0.1)', color: '#0d9488', border: '1px solid rgba(45,212,191,0.2)' }}>
+          <span className="ml-auto text-xs px-2 py-0.5 rounded-sm"
+            style={{ background: '#f6f7f9', color: '#1b2f6b', border: '1px solid rgba(27,47,107,0.2)' }}>
             {t('guest')}
           </span>
         </div>
@@ -164,9 +159,9 @@ function StarSvg({ size = 28 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
       <polygon points="14,3 18,10 22,10 18,14 22,18 14,15 6,18 10,14 6,10 10,10"
-        fill="none" stroke="rgba(255,202,40,0.6)" strokeWidth="1.2" strokeLinejoin="round"/>
+        fill="none" stroke="rgba(200,148,31,0.6)" strokeWidth="1.2" strokeLinejoin="round"/>
       <polygon points="14,25 10,18 6,18 10,14 6,10 14,13 22,10 18,14 22,18 18,18"
-        fill="none" stroke="rgba(255,202,40,0.6)" strokeWidth="1.2" strokeLinejoin="round"/>
+        fill="none" stroke="rgba(200,148,31,0.6)" strokeWidth="1.2" strokeLinejoin="round"/>
     </svg>
   )
 }
@@ -188,7 +183,7 @@ function XIcon() {
 }
 
 function StudyIcon({ active }) {
-  const c = active ? '#0d9488' : 'var(--text-3)'
+  const c = active ? '#1b2f6b' : 'var(--text-3)'
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <path d="M3 3h5l3 3h4v9H3V3z" stroke={c} strokeWidth="1.3" strokeLinejoin="round"/>
@@ -198,7 +193,7 @@ function StudyIcon({ active }) {
 }
 
 function HaftaraIcon({ active }) {
-  const c = active ? '#10b981' : 'var(--text-3)'
+  const c = active ? '#1b2f6b' : 'var(--text-3)'
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <path d="M4 14V4l5 2.5L14 4v10l-5-2.5L4 14z" stroke={c} strokeWidth="1.3" strokeLinejoin="round"/>
@@ -207,7 +202,7 @@ function HaftaraIcon({ active }) {
 }
 
 function TefilaIcon({ active }) {
-  const c = active ? '#8b5cf6' : 'var(--text-3)'
+  const c = active ? '#1b2f6b' : 'var(--text-3)'
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <rect x="3" y="4" width="12" height="10" rx="1.5" stroke={c} strokeWidth="1.3"/>

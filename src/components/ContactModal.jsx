@@ -37,10 +37,10 @@ export default function ContactModal({ onClose }) {
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
           <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(108,51,230,0.12)', border: '1px solid rgba(108,51,230,0.2)' }}>
+            style={{ background: '#f6f7f9', border: '1px solid rgba(27,47,107,0.2)' }}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="1" y="3" width="12" height="8" rx="1.5" stroke="#8b5cf6" strokeWidth="1.2"/>
-              <path d="M1 5l6 4 6-4" stroke="#8b5cf6" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <rect x="1" y="3" width="12" height="8" rx="1.5" stroke="#1b2f6b" strokeWidth="1.2"/>
+              <path d="M1 5l6 4 6-4" stroke="#1b2f6b" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
           <div className="min-w-0">

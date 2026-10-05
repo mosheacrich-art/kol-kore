@@ -97,7 +97,7 @@ function ListView({ basePath }) {
       <div className="flex flex-col gap-2.5 fade-up-3">
         {byBook.map(book => {
           const isOpen = openBook === book.id || !!search
-          const color = BOOK_COLORS[book.id] || '#6c33e6'
+          const color = BOOK_COLORS[book.id] || '#1b2f6b'
           return (
             <div key={book.id} className="rounded-2xl overflow-hidden transition-all"
               style={{ border: `1px solid ${isOpen ? color + '30' : 'var(--border)'}` }}>
@@ -105,7 +105,7 @@ function ListView({ basePath }) {
                 className="w-full flex items-center justify-between px-5 py-4 text-left"
                 style={{ background: isOpen ? `${color}0d` : 'var(--bg-card)' }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ background: color }} />
+                  <div className="w-1 h-10 flex-shrink-0" style={{ background: color }} />
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>{book.name}</span>
@@ -117,7 +117,7 @@ function ListView({ basePath }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs px-2 py-0.5 rounded-full"
+                  <span className="text-xs px-2 py-0.5 rounded-sm"
                     style={{ background: `${color}15`, color, border: `1px solid ${color}20` }}>
                     {book.haftarot.length}
                   </span>
@@ -178,7 +178,7 @@ function ListView({ basePath }) {
                     className="w-full flex items-center justify-between px-5 py-4 text-left"
                     style={{ background: isOpen ? `${chag.color}0d` : 'var(--bg-card)' }}>
                     <div className="flex items-center gap-3">
-                      <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ background: chag.color }} />
+                      <div className="w-1 h-10 flex-shrink-0" style={{ background: chag.color }} />
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>{chag.name}</span>
@@ -190,7 +190,7 @@ function ListView({ basePath }) {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs px-2 py-0.5 rounded-full"
+                      <span className="text-xs px-2 py-0.5 rounded-sm"
                         style={{ background: `${chag.color}15`, color: chag.color, border: `1px solid ${chag.color}20` }}>
                         {chag.haftarot.length}
                       </span>
@@ -246,7 +246,7 @@ function ReaderView({ haftara, basePath }) {
     Math.max(0, parseInt(searchParams.get('aliyah') || '0', 10)),
     haftara.aliyot.length - 1
   )
-  const color = haftara.color || BOOK_COLORS[haftara.book] || '#6c33e6'
+  const color = haftara.color || BOOK_COLORS[haftara.book] || '#1b2f6b'
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden" style={{ height: '100%' }}>

@@ -91,9 +91,9 @@ export default function AccountSettings() {
     }
   }
 
-  const accent = isTeacher ? '#f9b800' : '#8b5cf6'
-  const accentBg = isTeacher ? 'rgba(249,184,0,0.1)' : 'rgba(108,51,230,0.1)'
-  const accentBorder = isTeacher ? 'rgba(249,184,0,0.2)' : 'rgba(108,51,230,0.2)'
+  const accent = isTeacher ? '#c8941f' : '#1b2f6b'
+  const accentBg = isTeacher ? 'rgba(200,148,31,0.1)' : 'rgba(27,47,107,0.1)'
+  const accentBorder = isTeacher ? 'rgba(200,148,31,0.2)' : 'rgba(27,47,107,0.2)'
 
   return (
     <div className="flex-1 overflow-auto px-4 py-6 max-w-lg mx-auto w-full">
@@ -121,9 +121,9 @@ export default function AccountSettings() {
           {nameMsg && (
             <p className="text-xs px-3 py-2 rounded-lg"
               style={{
-                color: nameMsg.ok ? '#22c55e' : '#ef4444',
-                background: nameMsg.ok ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.08)',
-                border: `1px solid ${nameMsg.ok ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.15)'}`,
+                color: nameMsg.ok ? '#c8941f' : '#b42318',
+                background: nameMsg.ok ? 'rgba(200,148,31,0.1)' : 'rgba(180,35,24,0.08)',
+                border: `1px solid ${nameMsg.ok ? 'rgba(200,148,31,0.2)' : 'rgba(180,35,24,0.15)'}`,
               }}>
               {nameMsg.text}
             </p>
@@ -132,7 +132,7 @@ export default function AccountSettings() {
           <button type="submit" disabled={nameLoading || !displayName.trim()}
             className="py-2.5 rounded-xl text-sm font-semibold transition-all"
             style={{
-              background: nameLoading || !displayName.trim() ? 'var(--bg)' : `linear-gradient(135deg, ${accent}, ${accent}cc)`,
+              background: nameLoading || !displayName.trim() ? 'var(--bg)' : `${accent}`,
               color: nameLoading || !displayName.trim() ? 'var(--text-3)' : isTeacher ? '#0d0b1e' : '#fff',
               border: `1px solid ${nameLoading || !displayName.trim() ? 'var(--border)' : accent}`,
             }}>
@@ -169,9 +169,9 @@ export default function AccountSettings() {
           {pwdMsg && (
             <p className="text-xs px-3 py-2 rounded-lg"
               style={{
-                color: pwdMsg.ok ? '#22c55e' : '#ef4444',
-                background: pwdMsg.ok ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.08)',
-                border: `1px solid ${pwdMsg.ok ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.15)'}`,
+                color: pwdMsg.ok ? '#c8941f' : '#b42318',
+                background: pwdMsg.ok ? 'rgba(200,148,31,0.1)' : 'rgba(180,35,24,0.08)',
+                border: `1px solid ${pwdMsg.ok ? 'rgba(200,148,31,0.2)' : 'rgba(180,35,24,0.15)'}`,
               }}>
               {pwdMsg.text}
             </p>
@@ -180,7 +180,7 @@ export default function AccountSettings() {
           <button type="submit" disabled={pwdLoading || !newPwd}
             className="py-2.5 rounded-xl text-sm font-semibold transition-all"
             style={{
-              background: pwdLoading || !newPwd ? 'var(--bg)' : `linear-gradient(135deg, ${accent}, ${accent}cc)`,
+              background: pwdLoading || !newPwd ? 'var(--bg)' : `${accent}`,
               color: pwdLoading || !newPwd ? 'var(--text-3)' : isTeacher ? '#0d0b1e' : '#fff',
               border: `1px solid ${pwdLoading || !newPwd ? 'var(--border)' : accent}`,
             }}>
@@ -191,8 +191,8 @@ export default function AccountSettings() {
 
       {/* ── Danger zone: delete account ─────────────────────────────────── */}
       <section className="rounded-2xl p-5"
-        style={{ background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.15)' }}>
-        <h2 className="text-sm font-semibold mb-1" style={{ color: '#ef4444' }}>
+        style={{ background: '#fdf3f2', border: '1px solid rgba(180,35,24,0.15)' }}>
+        <h2 className="text-sm font-semibold mb-1" style={{ color: '#b42318' }}>
           {t('delete_account')}
         </h2>
         <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>
@@ -202,7 +202,7 @@ export default function AccountSettings() {
         {deletePhase === 'idle' && (
           <button onClick={() => setDeletePhase('confirm')}
             className="px-4 py-2 rounded-xl text-xs font-semibold transition-all"
-            style={{ color: '#ef4444', background: 'rgba(239,68,68,0.09)', border: '1px solid rgba(239,68,68,0.2)' }}>
+            style={{ color: '#b42318', background: '#fdf3f2', border: '1px solid rgba(180,35,24,0.2)' }}>
             {t('delete_account')}
           </button>
         )}
@@ -218,10 +218,10 @@ export default function AccountSettings() {
               value={deleteConfirm}
               onChange={e => { setDeleteConfirm(e.target.value); setDeleteError(null) }}
               className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-              style={{ background: 'var(--bg)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--text)' }}
+              style={{ background: 'var(--bg)', border: '1px solid rgba(180,35,24,0.3)', color: 'var(--text)' }}
             />
             {deleteError && (
-              <p className="text-xs" style={{ color: '#ef4444' }}>{deleteError}</p>
+              <p className="text-xs" style={{ color: '#b42318' }}>{deleteError}</p>
             )}
             <div className="flex gap-2">
               <button onClick={() => { setDeletePhase('idle'); setDeleteConfirm(''); setDeleteError(null) }}
@@ -233,7 +233,7 @@ export default function AccountSettings() {
               <button onClick={handleDeleteAccount}
                 disabled={deletePhase === 'deleting'}
                 className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
-                style={{ color: '#fff', background: '#ef4444', border: '1px solid #ef4444' }}>
+                style={{ color: '#fff', background: '#b42318', border: '1px solid #b42318' }}>
                 {deletePhase === 'deleting' ? '…' : t('delete_account_btn')}
               </button>
             </div>

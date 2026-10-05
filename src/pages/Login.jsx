@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext'
 import { useLang } from '../context/LangContext'
 import { supabase } from '../lib/supabase'
 import LangToggle from '../components/LangToggle'
+import Logo from '../components/Logo'
 import { Capacitor } from '@capacitor/core'
 
 
@@ -44,16 +45,16 @@ export default function Login() {
   }, [profile, navigate])
 
   const t = isDark ? {
-    bg: 'radial-gradient(ellipse at 50% 0%, #1a0f3e 0%, #0d0b1e 50%, #050812 100%)',
+    bg: '#0d0b1e',
     title: 'rgba(255,255,255,0.95)',
-    subtitle: 'rgba(255,202,40,0.7)',
-    desc: 'rgba(180,170,220,0.6)',
+    subtitle: 'rgba(200,148,31,0.7)',
+    desc: 'rgba(27,47,107,0.6)',
     cardBg: 'rgba(255,255,255,0.04)',
     cardBorder: 'rgba(255,255,255,0.07)',
     cardText: 'rgba(255,255,255,0.9)',
-    cardDesc: 'rgba(180,170,220,0.55)',
+    cardDesc: 'rgba(27,47,107,0.55)',
     cardCta: 'rgba(255,255,255,0.3)',
-    hebrewCard: 'rgba(255,202,40,0.5)',
+    hebrewCard: 'rgba(200,148,31,0.5)',
     inputBg: 'rgba(255,255,255,0.07)',
     inputBorder: 'rgba(255,255,255,0.12)',
     inputText: 'rgba(255,255,255,0.9)',
@@ -65,74 +66,66 @@ export default function Login() {
     backBg: 'rgba(255,255,255,0.07)',
     backBorder: 'rgba(255,255,255,0.1)',
     backText: 'rgba(255,255,255,0.55)',
-    starColor: 'rgba(255,255,255,0.6)',
     iconDefault: 'rgba(200,190,255,0.6)',
   } : {
-    bg: 'radial-gradient(ellipse at 50% 0%, #e0d5be 0%, #f5f0e4 50%, #ece4cc 100%)',
-    title: '#1a1200',
-    subtitle: 'rgba(140,95,0,0.8)',
-    desc: 'rgba(60,40,0,0.5)',
-    cardBg: 'rgba(255,255,255,0.75)',
-    cardBorder: 'rgba(0,0,0,0.08)',
-    cardText: '#1a1200',
-    cardDesc: 'rgba(60,40,0,0.5)',
+    bg: '#ffffff',
+    title: '#111827',
+    subtitle: '#9a6f12',
+    desc: '#6b7280',
+    cardBg: '#ffffff',
+    cardBorder: '#e5e7eb',
+    cardText: '#111827',
+    cardDesc: '#6b7280',
     cardCta: 'rgba(0,0,0,0.3)',
-    hebrewCard: 'rgba(140,95,0,0.6)',
-    inputBg: 'rgba(255,255,255,0.9)',
-    inputBorder: 'rgba(0,0,0,0.12)',
-    inputText: '#1a1200',
+    hebrewCard: '#9a6f12',
+    inputBg: '#ffffff',
+    inputBorder: '#d1d5db',
+    inputText: '#111827',
     inputPlaceholder: 'rgba(0,0,0,0.3)',
     cancelBg: 'rgba(0,0,0,0.05)',
     cancelText: 'rgba(0,0,0,0.4)',
     switchText: 'rgba(0,0,0,0.35)',
     footer: 'rgba(0,0,0,0.2)',
-    backBg: 'rgba(255,255,255,0.6)',
-    backBorder: 'rgba(0,0,0,0.1)',
-    backText: 'rgba(60,40,0,0.6)',
-    starColor: 'rgba(140,95,0,0.2)',
-    iconDefault: 'rgba(140,95,0,0.45)',
+    backBg: '#ffffff',
+    backBorder: '#e5e7eb',
+    backText: '#6b7280',
+    iconDefault: '#9ca3af',
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16 relative"
-      style={{ background: t.bg, transition: 'background 0.4s' }}>
-
-      <StarField color={t.starColor} />
-
-      <button onClick={() => navigate('/')}
-        className="absolute top-6 left-6 text-xs px-4 py-2 rounded-full flex items-center gap-2 z-10 transition-all"
-        style={{ background: t.backBg, border: `1px solid ${t.backBorder}`, color: t.backText, backdropFilter: 'blur(8px)' }}>
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        {tl('back')}
-      </button>
-      <div className="absolute top-6 right-6 z-10"
-        style={{ background: t.backBg, border: `1px solid ${t.backBorder}`, borderRadius: '999px', backdropFilter: 'blur(8px)', padding: '4px' }}>
-        <LangToggle compact />
-      </div>
-
-      <div className="relative z-10 w-full max-w-4xl">
-        <div className="text-center mb-14 fade-up-1">
-          <div className="hebrew text-2xl mb-3" style={{ color: t.subtitle }}>בְּחַר אֶת תַּפְקִידְךָ</div>
-          <h1 className="text-4xl md:text-5xl font-light" style={{ letterSpacing: '-1.5px', color: t.title }}>
-            {tl('how_enter')}
-          </h1>
-          <p className="mt-3 text-sm" style={{ color: t.desc }}>
-            {tl('choose_role')}
-          </p>
+    <div className="min-h-screen grid lg:grid-cols-[5fr_6fr]" style={{ background: '#fff' }}>
+      <aside className="hidden lg:flex flex-col justify-between p-12" style={{ background: '#1b2f6b', color: '#fff' }}>
+        <Logo size={34} color="#fff" />
+        <div>
+          <p dir="rtl" className="hebrew text-5xl leading-[1.8]" style={{ color: '#e3b448' }}>בְּרֵאשִׁית בָּרָא אֱלֹהִים</p>
+          <p className="serif text-2xl mt-6 max-w-sm" style={{ fontWeight: 400, color: 'rgba(255,255,255,0.85)' }}>{tl('hero_tagline')}</p>
         </div>
+        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>Sefaria · Tikkun</p>
+      </aside>
+
+      <main className="flex flex-col px-6 sm:px-14 py-8">
+        <div className="flex items-center justify-between mb-14">
+          <button onClick={() => navigate('/')} className="text-sm flex items-center gap-2" style={{ color: '#1b2f6b' }}>
+            <span>←</span>{tl('back')}
+          </button>
+          <LangToggle compact />
+        </div>
+
+        <div className="w-full max-w-md my-auto">
+          <div className="lg:hidden mb-10"><Logo size={30} /></div>
+          <p className="eyebrow mb-3">{tl('choose_role')}</p>
+          <h1 className="serif text-4xl sm:text-5xl mb-10" style={{ color: '#1b2f6b', fontWeight: 600 }}>{tl('how_enter')}</h1>
 
         {/* Role-conflict error banner (email/password or Google) */}
         {conflictError && (
           <div className="mb-6 p-4 rounded-2xl text-sm fade-up-2 flex items-start gap-3"
-            style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)' }}>
+            style={{ background: '#fdf3f2', border: '1px solid rgba(180,35,24,0.3)' }}>
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
-              <circle cx="9" cy="9" r="7.5" stroke="#f87171" strokeWidth="1.3"/>
-              <path d="M9 5.5v4M9 12.5v.5" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round"/>
+              <circle cx="9" cy="9" r="7.5" stroke="#b42318" strokeWidth="1.3"/>
+              <path d="M9 5.5v4M9 12.5v.5" stroke="#b42318" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
             <div>
-              <p className="font-semibold mb-0.5" style={{ color: '#f87171' }}>
+              <p className="font-semibold mb-0.5" style={{ color: '#b42318' }}>
                 {tl('oauth_conflict_title')}
               </p>
               <p className="text-xs" style={{ color: 'rgba(252,165,165,0.85)' }}>
@@ -144,37 +137,44 @@ export default function Login() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 fade-up-2">
-          {/* Teacher card — inline expand as before */}
-          <RoleCard id="teacher" label={tl('role_teacher')} hebrew="מּוֹרֶה"
-            description={tl('teacher_desc')}
-            color="#f9b800" glow="rgba(249,184,0,0.25)" icon={TeacherIcon}
-            expanded={expanded === 'teacher'} onExpand={() => setExpanded(expanded === 'teacher' ? null : 'teacher')}
-            t={t} tl={tl} isDark={isDark}>
-            {expanded === 'teacher' && (
-              <SimpleAuthForm
-                role="teacher" color="#f9b800"
-                onCancel={() => setExpanded(null)}
-                onDone={() => {}} t={t} tl={tl}
-              />
-            )}
-          </RoleCard>
-
-          {/* Student card — opens modal */}
-          <RoleCard id="student" label={tl('role_student')} hebrew="תַּלְמִיד"
-            description={tl('student_desc')}
-            color="#6c33e6" glow="rgba(108,51,230,0.25)" icon={StudentIcon}
-            expanded={false} onExpand={() => setModal('student')}
-            t={t} tl={tl} isDark={isDark} />
-
+          <div style={{ borderTop: '1px solid #e5e7eb' }}>
+            <RoleCard label={tl('role_teacher')} hebrew="מּוֹרֶה"
+              description={tl('teacher_desc')}
+              color="#c8941f" icon={TeacherIcon}
+              expanded={false} onExpand={() => setModal('teacher')} />
+            <RoleCard label={tl('role_student')} hebrew="תַּלְמִיד"
+              description={tl('student_desc')}
+              color="#1b2f6b" icon={StudentIcon}
+              expanded={false} onExpand={() => setModal('student')} />
+          </div>
         </div>
+      </main>
 
-        <p className="text-center mt-10 text-xs fade-up-3" style={{ color: t.footer }}>
-          Sistema de estudio de Torá · Kehilá
-        </p>
-      </div>
-
-      {/* Student modal */}
+      {modal === 'teacher' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}
+          onClick={e => { if (e.target === e.currentTarget) setModal(null) }}>
+          <div className="w-full max-w-md rounded-3xl overflow-hidden shadow-2xl"
+            style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.1)', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="flex items-center justify-between px-6 pt-6 pb-4" style={{ borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
+              <div>
+                <p className="text-xs hebrew" style={{ color: 'var(--text-gold)' }}>מּוֹרֶה</p>
+                <h2 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>{tl('role_teacher')}</h2>
+              </div>
+              <button onClick={() => setModal(null)}
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
+                style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="pt-4">
+              <SimpleAuthForm role="teacher" color="#c8941f" onCancel={() => setModal(null)} onDone={() => {}} t={t} tl={tl} />
+            </div>
+          </div>
+        </div>
+      )}
       {modal === 'student' && (
         <StudentModal onClose={() => setModal(null)} isDark={isDark} t={t} tl={tl} />
       )}
@@ -248,7 +248,7 @@ function StudentModal({ onClose, isDark, t, tl }) {
 
       <div className="w-full max-w-md rounded-3xl overflow-hidden shadow-2xl"
         style={{
-          background: isDark ? '#0d0b1e' : '#f5f0e4',
+          background: isDark ? '#0d0b1e' : '#ffffff',
           border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
           maxHeight: '90vh',
           overflowY: 'auto',
@@ -276,10 +276,10 @@ function StudentModal({ onClose, isDark, t, tl }) {
         {confirmationSent ? (
           <div className="px-6 py-8 flex flex-col items-center gap-4 text-center">
             <div className="w-14 h-14 rounded-full flex items-center justify-center"
-              style={{ background: 'rgba(108,51,230,0.12)', border: '1px solid rgba(108,51,230,0.2)' }}>
+              style={{ background: '#f6f7f9', border: '1px solid rgba(27,47,107,0.2)' }}>
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                <path d="M3 8l9 6 9-6" stroke="#6c33e6" strokeWidth="1.5" strokeLinecap="round"/>
-                <rect x="2" y="5" width="20" height="14" rx="2" stroke="#6c33e6" strokeWidth="1.5"/>
+                <path d="M3 8l9 6 9-6" stroke="#1b2f6b" strokeWidth="1.5" strokeLinecap="round"/>
+                <rect x="2" y="5" width="20" height="14" rx="2" stroke="#1b2f6b" strokeWidth="1.5"/>
               </svg>
             </div>
             <div>
@@ -287,7 +287,7 @@ function StudentModal({ onClose, isDark, t, tl }) {
               <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
                 {tl('confirm_sent_desc')}
               </p>
-              <p className="text-xs mt-2 font-medium" style={{ color: '#6c33e6' }}>{email}</p>
+              <p className="text-xs mt-2 font-medium" style={{ color: '#1b2f6b' }}>{email}</p>
             </div>
             <button type="button" onClick={onClose}
               className="mt-2 text-xs px-4 py-2 rounded-xl transition-all"
@@ -300,18 +300,18 @@ function StudentModal({ onClose, isDark, t, tl }) {
             {forgotSent ? (
               <div className="flex flex-col items-center gap-3 py-4 text-center">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(34,197,94,0.15)' }}>
+                  style={{ background: '#f6f7f9' }}>
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                    <circle cx="9" cy="9" r="7.5" stroke="#16a34a" strokeWidth="1.3"/>
-                    <path d="M5.5 9l2.5 2.5L12.5 7" stroke="#16a34a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="9" cy="9" r="7.5" stroke="#1b2f6b" strokeWidth="1.3"/>
+                    <path d="M5.5 9l2.5 2.5L12.5 7" stroke="#1b2f6b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <p className="text-sm font-semibold" style={{ color: '#16a34a' }}>{tl('email_sent')}</p>
+                <p className="text-sm font-semibold" style={{ color: '#1b2f6b' }}>{tl('email_sent')}</p>
                 <p className="text-xs" style={{ color: 'var(--text-3)' }}>
                   {tl('email_sent_desc')}
                 </p>
                 <button type="button" onClick={() => { setIsForgot(false); setForgotSent(false) }}
-                  className="text-xs mt-1" style={{ color: '#6c33e6' }}>
+                  className="text-xs mt-1" style={{ color: '#1b2f6b' }}>
                   {tl('forgot_back')}
                 </button>
               </div>
@@ -325,10 +325,10 @@ function StudentModal({ onClose, isDark, t, tl }) {
                   placeholder={tl('email')} required autoFocus
                   className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none"
                   style={inputStyle} />
-                {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
+                {error && <p className="text-xs" style={{ color: '#b42318' }}>{error}</p>}
                 <button type="submit" disabled={loading}
                   className="w-full py-3 rounded-xl font-semibold text-sm transition-all"
-                  style={{ background: loading ? 'var(--bg-card)' : 'linear-gradient(135deg,#6c33e6,#8b5cf6)', color: loading ? 'var(--text-3)' : '#fff', border: loading ? '1px solid var(--border)' : 'none' }}>
+                  style={{ background: loading ? 'var(--bg-card)' : '#1b2f6b', color: loading ? 'var(--text-3)' : '#fff', border: loading ? '1px solid var(--border)' : 'none' }}>
                   {loading ? '…' : tl('send_link')}
                 </button>
                 <button type="button" onClick={() => { setIsForgot(false); setError('') }}
@@ -361,28 +361,28 @@ function StudentModal({ onClose, isDark, t, tl }) {
           {!isLogin && (
             <label className="flex items-start gap-2.5 cursor-pointer mt-1">
               <input type="checkbox" checked={marketingConsent} onChange={e => setMarketingConsent(e.target.checked)}
-                className="mt-0.5 flex-shrink-0 accent-[#6c33e6]" />
+                className="mt-0.5 flex-shrink-0 accent-[#1b2f6b]" />
               <span className="text-xs leading-relaxed" style={{ color: t.switchText }}>
                 {tl('marketing_consent_label')}
               </span>
             </label>
           )}
 
-          {error && <p className="text-xs px-1" style={{ color: '#f87171' }}>{error}</p>}
+          {error && <p className="text-xs px-1" style={{ color: '#b42318' }}>{error}</p>}
 
           {/* Submit */}
           <button type="submit" disabled={loading}
             className="w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 mt-1"
             style={{
-              background: loading ? 'var(--bg-card)' : 'linear-gradient(135deg, #6c33e6, #8b5cf6)',
+              background: loading ? 'var(--bg-card)' : '#1b2f6b',
               color: loading ? 'var(--text-3)' : '#fff',
               border: loading ? '1px solid var(--border)' : 'none',
-              boxShadow: loading ? 'none' : '0 4px 20px rgba(108,51,230,0.35)',
+              boxShadow: loading ? 'none' : '0 4px 20px rgba(27,47,107,0.35)',
             }}>
             {loading ? (
               <>
                 <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
-                  style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#8b5cf6' }} />
+                  style={{ borderColor: 'rgba(27,47,107,0.3)', borderTopColor: '#1b2f6b' }} />
                 {isLogin ? tl('logging_in') : tl('registering')}
               </>
             ) : isLogin ? tl('login_tab') : tl('register_btn')
@@ -416,7 +416,7 @@ function StudentModal({ onClose, isDark, t, tl }) {
             <button type="button"
               onClick={() => { setIsForgot(true); setError('') }}
               className="text-xs text-center"
-              style={{ color: '#6c33e6' }}>
+              style={{ color: '#1b2f6b' }}>
               {tl('forgot_password')}
             </button>
           )}
@@ -515,13 +515,13 @@ function SimpleAuthForm({ role, color, onCancel, onDone, t, tl }) {
       {isRegister && (
         <label className="flex items-start gap-2.5 cursor-pointer">
           <input type="checkbox" checked={marketingConsent} onChange={e => setMarketingConsent(e.target.checked)}
-            className="mt-0.5 flex-shrink-0 accent-[#6c33e6]" />
+            className="mt-0.5 flex-shrink-0 accent-[#1b2f6b]" />
           <span className="text-xs leading-relaxed" style={{ color: t.switchText }}>
             {tl('marketing_consent_label')}
           </span>
         </label>
       )}
-      {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
+      {error && <p className="text-xs" style={{ color: '#b42318' }}>{error}</p>}
       <div className="flex gap-2">
         <button type="button" onClick={onCancel}
           className="flex-1 py-2 rounded-xl text-xs transition-all"
@@ -567,74 +567,27 @@ function SimpleAuthForm({ role, color, onCancel, onDone, t, tl }) {
 
 // ── Role card ────────────────────────────────────────────────────────────────
 
-function RoleCard({ label, hebrew, description, color, glow, icon: Icon, expanded, onExpand, children, t, tl, isDark }) {
+function RoleCard({ label, hebrew, description, color, icon: Icon, expanded, onExpand, children }) {
   return (
-    <div className="relative rounded-2xl overflow-hidden transition-all duration-300"
-      style={{
-        background: expanded
-          ? isDark
-            ? `radial-gradient(ellipse at 30% 20%, ${glow} 0%, rgba(255,255,255,0.04) 60%)`
-            : `radial-gradient(ellipse at 30% 20%, ${glow} 0%, rgba(255,255,255,0.8) 60%)`
-          : t.cardBg,
-        border: `1px solid ${expanded ? color + '40' : t.cardBorder}`,
-        backdropFilter: 'blur(16px)',
-      }}>
-
-      <div className="absolute top-0 left-0 right-0 h-px transition-opacity duration-300"
-        style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)`, opacity: expanded ? 1 : 0 }} />
-
-      <button onClick={onExpand} className="w-full text-left p-7 flex flex-col gap-5">
-        <div className="w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300"
-          style={{
-            background: expanded ? `${color}20` : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-            border: `1px solid ${expanded ? color + '50' : t.cardBorder}`,
-          }}>
-          <Icon color={expanded ? color : t.iconDefault} />
-        </div>
-        <div>
-          <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-xl font-medium" style={{ color: expanded ? color : t.cardText }}>{label}</span>
-            <span className="hebrew text-sm" style={{ color: t.hebrewCard }}>{hebrew}</span>
+    <div style={{ borderBottom: '1px solid #e5e7eb' }}>
+      <button onClick={onExpand} className="w-full text-left py-6 flex items-center gap-5 group">
+        <Icon color={expanded ? color : '#1b2f6b'} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-3">
+            <span className="serif text-2xl" style={{ color: '#1b2f6b', fontWeight: 600 }}>{label}</span>
+            <span className="hebrew text-base" style={{ color: '#c8941f' }}>{hebrew}</span>
           </div>
-          <p className="text-xs leading-relaxed" style={{ color: t.cardDesc }}>{description}</p>
+          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>{description}</p>
         </div>
-        {!expanded && (
-          <div className="mt-auto flex items-center gap-2 text-xs font-medium" style={{ color: t.cardCta }}>
-            {tl('enter')}
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-        )}
+        <span className="text-xl transition-transform group-hover:translate-x-1" style={{ color: '#1b2f6b' }}>{expanded ? '−' : '→'}</span>
       </button>
-
-      {children}
+      {children && <div className="pb-6">{children}</div>}
     </div>
   )
 }
 
 // ── Misc ─────────────────────────────────────────────────────────────────────
 
-function StarField({ color }) {
-  const stars = Array.from({ length: 60 }, (_, i) => ({
-    id: i, x: Math.random() * 100, y: Math.random() * 100,
-    size: Math.random() * 2 + 0.5, dur: Math.random() * 4 + 2, del: Math.random() * 5,
-  }))
-  return (
-    <>
-      {stars.map(s => (
-        <div key={s.id} className="star absolute pointer-events-none"
-          style={{
-            left: `${s.x}%`, top: `${s.y}%`,
-            width: s.size, height: s.size,
-            background: color,
-            borderRadius: '50%',
-            '--duration': `${s.dur}s`, '--delay': `${s.del}s`,
-          }} />
-      ))}
-    </>
-  )
-}
 
 function StudentIcon({ color }) {
   return (

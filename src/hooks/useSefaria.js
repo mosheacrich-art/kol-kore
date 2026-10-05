@@ -114,14 +114,14 @@ async function fetchSiddurRaw(slug) {
 
 const SERVICE_META = {
   // Ashkenaz — services are children of a "Weekday" wrapper node
-  Shacharit: { id: 'shacharit', heb: 'שַׁחֲרִית', color: '#f59e0b', name: 'Shajarit' },
-  Minchah:   { id: 'mincha',    heb: 'מִנְחָה',    color: '#8b5cf6', name: 'Minjá'   },
-  Mincha:    { id: 'mincha',    heb: 'מִנְחָה',    color: '#8b5cf6', name: 'Minjá'   },
-  Maariv:    { id: 'maariv',   heb: 'עַרְבִית',   color: '#1e40af', name: 'Arvit'   },
+  Shacharit: { id: 'shacharit', heb: 'שַׁחֲרִית', color: '#c8941f', name: 'Shajarit' },
+  Minchah:   { id: 'mincha',    heb: 'מִנְחָה',    color: '#1b2f6b', name: 'Minjá'   },
+  Mincha:    { id: 'mincha',    heb: 'מִנְחָה',    color: '#1b2f6b', name: 'Minjá'   },
+  Maariv:    { id: 'maariv',   heb: 'עַרְבִית',   color: '#1b2f6b', name: 'Arvit'   },
   // Sefard — combined titles at root level (no "Weekday" wrapper)
-  'Weekday Shacharit': { id: 'shacharit', heb: 'שַׁחֲרִית', color: '#f59e0b', name: 'Shajarit' },
-  'Weekday Mincha':    { id: 'mincha',    heb: 'מִנְחָה',    color: '#8b5cf6', name: 'Minjá'   },
-  'Weekday Maariv':    { id: 'maariv',   heb: 'עַרְבִית',   color: '#1e40af', name: 'Arvit'   },
+  'Weekday Shacharit': { id: 'shacharit', heb: 'שַׁחֲרִית', color: '#c8941f', name: 'Shajarit' },
+  'Weekday Mincha':    { id: 'mincha',    heb: 'מִנְחָה',    color: '#1b2f6b', name: 'Minjá'   },
+  'Weekday Maariv':    { id: 'maariv',   heb: 'עַרְבִית',   color: '#1b2f6b', name: 'Arvit'   },
 }
 
 // Collect all leaves under a node; track the immediate child of the service as subGroup
@@ -285,7 +285,7 @@ function makeBerajotService() {
     { title: 'Birjot HaTorá',  heTitle: 'בִּרְכוֹת הַתּוֹרָה',  ref: 'berajot:birjot-hatora' },
   ]
   return {
-    id: 'berajot', name: 'Berajot', heb: 'בְּרָכוֹת', color: '#10b981',
+    id: 'berajot', name: 'Berajot', heb: 'בְּרָכוֹת', color: '#1b2f6b',
     total: 2,
     subsections: [{ name: '', items }],
     allSections: items.map(i => ({ ...i, subGroup: '' })),
@@ -328,12 +328,12 @@ const SHABBAT_SEFARD_BOOKNAME = 'Shabbat Siddur Sefard Linear'
 
 // Node titles in Shabbat_Siddur_Sefard_Linear → service metadata
 const SHABBAT_SEFARD_META = {
-  'Kabbalas Shabbos':                        { id: 'kabbalat',         heb: 'קַבָּלַת שַׁבָּת',  color: '#6366f1', name: 'Kabalat Shabat',    order: 1 },
-  'Maariv Service for Shabbos and Yom Tov': { id: 'arvit-shabat',     heb: 'עַרְבִית שַׁבָּת',  color: '#1e40af', name: 'Arvit de Shabat',   order: 2 },
-  'The Morning Prayers':                     { id: 'shacharit-shabat', heb: 'שַׁחֲרִית שַׁבָּת', color: '#f59e0b', name: 'Shajarit de Shabat', order: 3 },
-  'Reading of the Torah':                    { id: 'kriat-tora',       heb: 'קְרִיאַת הַתּוֹרָה', color: '#d97706', name: 'Kriat HaTorá',      order: 4 },
-  'Musaf Service':                           { id: 'musaf-shabat',     heb: 'מוּסָף שַׁבָּת',    color: '#10b981', name: 'Musaf de Shabat',   order: 5 },
-  'Mincha Service for Shabbos and Yom Tov': { id: 'mincha-shabat',    heb: 'מִנְחָה שַׁבָּת',   color: '#8b5cf6', name: 'Minjá de Shabat',   order: 6 },
+  'Kabbalas Shabbos':                        { id: 'kabbalat',         heb: 'קַבָּלַת שַׁבָּת',  color: '#1b2f6b', name: 'Kabalat Shabat',    order: 1 },
+  'Maariv Service for Shabbos and Yom Tov': { id: 'arvit-shabat',     heb: 'עַרְבִית שַׁבָּת',  color: '#1b2f6b', name: 'Arvit de Shabat',   order: 2 },
+  'The Morning Prayers':                     { id: 'shacharit-shabat', heb: 'שַׁחֲרִית שַׁבָּת', color: '#c8941f', name: 'Shajarit de Shabat', order: 3 },
+  'Reading of the Torah':                    { id: 'kriat-tora',       heb: 'קְרִיאַת הַתּוֹרָה', color: '#c8941f', name: 'Kriat HaTorá',      order: 4 },
+  'Musaf Service':                           { id: 'musaf-shabat',     heb: 'מוּסָף שַׁבָּת',    color: '#1b2f6b', name: 'Musaf de Shabat',   order: 5 },
+  'Mincha Service for Shabbos and Yom Tov': { id: 'mincha-shabat',    heb: 'מִנְחָה שַׁבָּת',   color: '#1b2f6b', name: 'Minjá de Shabat',   order: 6 },
 }
 
 function buildServiceFromMeta(srvNode, pathPrefix, bookName, meta) {
@@ -360,11 +360,11 @@ function parseShabbatSefard(data) {
 // Structure: root → Shabbat → direct service nodes
 
 const SHABBAT_ASHKENAZ_META = {
-  'Kabbalat Shabbat': { id: 'kabbalat',         heb: 'קַבָּלַת שַׁבָּת',  color: '#6366f1', name: 'Kabalat Shabat',    order: 1 },
-  'Maariv Arvit':     { id: 'arvit-shabat',     heb: 'עַרְבִית שַׁבָּת',  color: '#1e40af', name: 'Arvit de Shabat',   order: 2 },
-  'Shacharit':        { id: 'shacharit-shabat', heb: 'שַׁחֲרִית שַׁבָּת', color: '#f59e0b', name: 'Shajarit de Shabat', order: 3 },
-  'Musaf LeShabbat':  { id: 'musaf-shabat',     heb: 'מוּסָף לְשַׁבָּת',  color: '#10b981', name: 'Musaf leShabbat',   order: 4 },
-  'Minchah':          { id: 'mincha-shabat',    heb: 'מִנְחָה שַׁבָּת',   color: '#8b5cf6', name: 'Minjá de Shabat',   order: 5 },
+  'Kabbalat Shabbat': { id: 'kabbalat',         heb: 'קַבָּלַת שַׁבָּת',  color: '#1b2f6b', name: 'Kabalat Shabat',    order: 1 },
+  'Maariv Arvit':     { id: 'arvit-shabat',     heb: 'עַרְבִית שַׁבָּת',  color: '#1b2f6b', name: 'Arvit de Shabat',   order: 2 },
+  'Shacharit':        { id: 'shacharit-shabat', heb: 'שַׁחֲרִית שַׁבָּת', color: '#c8941f', name: 'Shajarit de Shabat', order: 3 },
+  'Musaf LeShabbat':  { id: 'musaf-shabat',     heb: 'מוּסָף לְשַׁבָּת',  color: '#1b2f6b', name: 'Musaf leShabbat',   order: 4 },
+  'Minchah':          { id: 'mincha-shabat',    heb: 'מִנְחָה שַׁבָּת',   color: '#1b2f6b', name: 'Minjá de Shabat',   order: 5 },
 }
 
 function parseShabbatAshkenaz(data, bookName) {

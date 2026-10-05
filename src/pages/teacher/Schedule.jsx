@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 
-const COLORS = ['#6c33e6', '#f9b800', '#2dd4bf', '#f87171', '#a78bfa', '#34d399']
+const COLORS = ['#1b2f6b', '#c8941f', '#1b2f6b', '#b42318', '#1b2f6b', '#34d399']
 const TIME_SLOTS = ['09:00', '10:00', '11:00', '12:00', '13:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00']
 
 function getWeekStart(date) {
@@ -97,7 +97,7 @@ export default function TeacherSchedule() {
           </div>
           <button onClick={() => setShowModal(true)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
-            style={{ background: 'linear-gradient(135deg, #f9b800, #ffd54f)', color: '#0d0b1e', boxShadow: '0 4px 16px rgba(249,184,0,0.3)' }}>
+            style={{ background: '#c8941f', color: '#ffffff' }}>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
             </svg>
@@ -118,8 +118,8 @@ export default function TeacherSchedule() {
             </svg>
           </button>
           <button onClick={() => { setWeekStart(getWeekStart(new Date())); const td = new Date().getDay(); setSelectedDay(td === 0 ? 6 : td - 1) }}
-            className="text-xs px-3 py-1.5 rounded-full transition-all"
-            style={{ background: 'rgba(108,51,230,0.1)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)' }}>
+            className="text-xs px-3 py-1.5 rounded-sm transition-all"
+            style={{ background: '#f6f7f9', color: '#1b2f6b', border: '1px solid rgba(27,47,107,0.2)' }}>
             {t('today_btn')}
           </button>
           <button onClick={() => setWeekStart(w => addDays(w, 7))}
@@ -143,11 +143,11 @@ export default function TeacherSchedule() {
               <button key={i} onClick={() => setSelectedDay(i)}
                 className="flex flex-col items-center gap-1.5 py-3 rounded-xl transition-all"
                 style={{
-                  background: isSelected ? 'rgba(249,184,0,0.15)' : isToday ? 'var(--overlay)' : 'transparent',
-                  border: `1px solid ${isSelected ? 'rgba(249,184,0,0.35)' : isToday ? 'var(--border)' : 'transparent'}`,
+                  background: isSelected ? 'rgba(200,148,31,0.15)' : isToday ? 'var(--overlay)' : 'transparent',
+                  border: `1px solid ${isSelected ? 'rgba(200,148,31,0.35)' : isToday ? 'var(--border)' : 'transparent'}`,
                 }}>
-                <span className="text-xs" style={{ color: isSelected ? '#f9b800' : 'var(--text-3)' }}>{WEEK_DAYS[i]}</span>
-                <span className="text-base font-light" style={{ color: isSelected ? '#f9b800' : isToday ? 'var(--text)' : 'var(--text-2)' }}>
+                <span className="text-xs" style={{ color: isSelected ? '#c8941f' : 'var(--text-3)' }}>{WEEK_DAYS[i]}</span>
+                <span className="text-base font-light" style={{ color: isSelected ? '#c8941f' : isToday ? 'var(--text)' : 'var(--text-2)' }}>
                   {d.getDate()}
                 </span>
                 {dayClsCount.length > 0 ? (
@@ -171,13 +171,13 @@ export default function TeacherSchedule() {
               <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
                 {WEEK_DAYS[selectedDay]} {weekDays[selectedDay]?.getDate()} · {weekDays[selectedDay]?.toLocaleDateString(locale, { month: 'long' })}
                 {weekDays[selectedDay]?.toDateString() === today.toDateString() && (
-                  <span className="ml-2 text-xs px-2 py-0.5 rounded-full"
-                    style={{ background: 'rgba(45,212,191,0.15)', color: '#0d9488' }}>{t('today')}</span>
+                  <span className="ml-2 text-xs px-2 py-0.5 rounded-sm"
+                    style={{ background: '#f6f7f9', color: '#1b2f6b' }}>{t('today')}</span>
                 )}
               </h2>
               <button onClick={() => setShowModal(true)}
                 className="text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all"
-                style={{ background: 'rgba(249,184,0,0.12)', color: '#d97706', border: '1px solid rgba(249,184,0,0.25)' }}>
+                style={{ background: '#fbf7ec', color: '#c8941f', border: '1px solid rgba(200,148,31,0.25)' }}>
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                   <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
                 </svg>
@@ -188,7 +188,7 @@ export default function TeacherSchedule() {
             {loading ? (
               <div className="flex items-center justify-center py-16">
                 <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin"
-                  style={{ borderColor: 'rgba(108,51,230,0.2)', borderTopColor: '#6c33e6' }} />
+                  style={{ borderColor: 'rgba(27,47,107,0.2)', borderTopColor: '#1b2f6b' }} />
               </div>
             ) : dayClasses.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3">
@@ -202,7 +202,7 @@ export default function TeacherSchedule() {
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('no_classes_day')}</p>
                 <button onClick={() => setShowModal(true)}
                   className="text-xs px-4 py-2 rounded-lg transition-all"
-                  style={{ background: 'rgba(249,184,0,0.1)', color: '#d97706', border: '1px solid rgba(249,184,0,0.2)' }}>
+                  style={{ background: '#fbf7ec', color: '#c8941f', border: '1px solid rgba(200,148,31,0.2)' }}>
                   {t('add_class_btn')}
                 </button>
               </div>
@@ -226,7 +226,7 @@ export default function TeacherSchedule() {
                           const mm = time.getMinutes().toString().padStart(2, '0')
                           return (
                             <div key={cls.id} className="rounded-xl p-4 mb-2"
-                              style={{ background: `linear-gradient(135deg, ${color}20, ${color}08)`, border: `1px solid ${color}30` }}>
+                              style={{ background: `${color}10`, border: `1px solid ${color}30` }}>
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                   <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0"
@@ -241,7 +241,7 @@ export default function TeacherSchedule() {
                                 </div>
                                 <button onClick={() => handleDelete(cls.id)}
                                   className="p-1.5 rounded-lg transition-all"
-                                  style={{ background: 'rgba(239,68,68,0.08)', color: '#f87171', border: '1px solid rgba(239,68,68,0.15)' }}>
+                                  style={{ background: '#fdf3f2', color: '#b42318', border: '1px solid rgba(180,35,24,0.15)' }}>
                                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                                     <path d="M1.5 3h7M3.5 3V2h3v1M4 5v2.5M6 5v2.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
                                     <path d="M2.5 3l.5 5h4l.5-5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
@@ -266,10 +266,10 @@ export default function TeacherSchedule() {
             <h2 className="text-sm font-semibold mb-5" style={{ color: 'var(--text)' }}>{t('week_summary')}</h2>
             <div className="grid grid-cols-2 gap-3 mb-5">
               {[
-                { label: t('classes_label'), value: classes.length, color: '#f9b800' },
-                { label: t('hours_label'), value: `${(totalMinutes / 60).toFixed(1)}h`, color: '#6c33e6' },
-                { label: t('students_label'), value: uniqueStudents.length, color: '#2dd4bf' },
-                { label: t('today'), value: classes.filter(c => new Date(c.scheduled_at).toDateString() === today.toDateString()).length, color: '#a78bfa' },
+                { label: t('classes_label'), value: classes.length, color: '#c8941f' },
+                { label: t('hours_label'), value: `${(totalMinutes / 60).toFixed(1)}h`, color: '#1b2f6b' },
+                { label: t('students_label'), value: uniqueStudents.length, color: '#1b2f6b' },
+                { label: t('today'), value: classes.filter(c => new Date(c.scheduled_at).toDateString() === today.toDateString()).length, color: '#1b2f6b' },
               ].map(s => (
                 <div key={s.label} className="rounded-xl p-3 text-center"
                   style={{ background: `${s.color}10`, border: `1px solid ${s.color}18` }}>
@@ -414,11 +414,11 @@ function AddClassModal({ profile, students, defaultDay, classTypes, t, onClose, 
             <div className="flex flex-wrap gap-1.5">
               {classTypes.map(ct => (
                 <button key={ct} type="button" onClick={() => setType(ct)}
-                  className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+                  className="px-3 py-1.5 rounded-sm text-xs font-medium transition-all"
                   style={{
-                    background: type === ct ? '#f9b800' : 'var(--bg-card)',
+                    background: type === ct ? '#c8941f' : 'var(--bg-card)',
                     color: type === ct ? '#0d0b1e' : 'var(--text-3)',
-                    border: `1px solid ${type === ct ? '#f9b800' : 'var(--border)'}`,
+                    border: `1px solid ${type === ct ? '#c8941f' : 'var(--border)'}`,
                   }}>{ct}</button>
               ))}
             </div>
@@ -446,9 +446,9 @@ function AddClassModal({ profile, students, defaultDay, classTypes, t, onClose, 
                 <button key={d} type="button" onClick={() => setDuration(d)}
                   className="flex-1 py-2 rounded-xl text-xs font-medium transition-all"
                   style={{
-                    background: duration === d ? '#6c33e6' : 'var(--bg-card)',
+                    background: duration === d ? '#1b2f6b' : 'var(--bg-card)',
                     color: duration === d ? '#fff' : 'var(--text-3)',
-                    border: `1px solid ${duration === d ? '#6c33e6' : 'var(--border)'}`,
+                    border: `1px solid ${duration === d ? '#1b2f6b' : 'var(--border)'}`,
                   }}>{d}min</button>
               ))}
             </div>
@@ -462,15 +462,15 @@ function AddClassModal({ profile, students, defaultDay, classTypes, t, onClose, 
               className="w-full px-3.5 py-2.5 rounded-xl text-sm" style={inputStyle} />
           </div>
 
-          {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
+          {error && <p className="text-xs" style={{ color: '#b42318' }}>{error}</p>}
 
           <button type="submit" disabled={saving}
             className="w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 mt-1"
             style={{
-              background: saving ? 'var(--bg-card)' : 'linear-gradient(135deg, #6c33e6, #8b5cf6)',
+              background: saving ? 'var(--bg-card)' : '#1b2f6b',
               color: saving ? 'var(--text-3)' : '#fff',
               border: saving ? '1px solid var(--border)' : 'none',
-              boxShadow: saving ? 'none' : '0 4px 16px rgba(108,51,230,0.3)',
+              boxShadow: saving ? 'none' : '0 4px 16px rgba(27,47,107,0.3)',
             }}>
             {saving ? t('saving') : t('save_class')}
           </button>

@@ -11,13 +11,13 @@ import { tSef } from '../../data/sefariaTitles'
 const ADMIN_USER_ID = '1f4d0329-ddf5-48a4-965f-5f37d7416447'
 
 const IMPRESCINDIBLES = [
-  { ref: 'I Chronicles 16:8-36',  name: 'Hodu',      heTitle: 'הוֹדוּ',      color: '#d97706' },
-  { ref: 'Psalms 145',            name: 'Ashrei',     heTitle: 'אַשְׁרֵי',     color: '#d97706' },
-  { ref: 'Psalms 150',            name: 'Halleluyah', heTitle: 'הַלְלוּיָהּ', color: '#d97706' },
-  { ref: 'Exodus 15:1-19',        name: 'Az Yashir',  heTitle: 'אָז יָשִׁיר', color: '#d97706' },
-  { ref: 'Deuteronomy 6:5-9',     name: "Ve'ahavta",  heTitle: 'וְאָהַבְתָּ', color: '#10b981' },
-  { ref: 'Deuteronomy 11:13-21',  name: 'Vehaya',     heTitle: 'וְהָיָה',     color: '#10b981' },
-  { ref: 'Numbers 15:37-41',      name: 'Vayomer',    heTitle: 'וַיֹּאמֶר',   color: '#10b981' },
+  { ref: 'I Chronicles 16:8-36',  name: 'Hodu',      heTitle: 'הוֹדוּ',      color: '#c8941f' },
+  { ref: 'Psalms 145',            name: 'Ashrei',     heTitle: 'אַשְׁרֵי',     color: '#c8941f' },
+  { ref: 'Psalms 150',            name: 'Halleluyah', heTitle: 'הַלְלוּיָהּ', color: '#c8941f' },
+  { ref: 'Exodus 15:1-19',        name: 'Az Yashir',  heTitle: 'אָז יָשִׁיר', color: '#c8941f' },
+  { ref: 'Deuteronomy 6:5-9',     name: "Ve'ahavta",  heTitle: 'וְאָהַבְתָּ', color: '#1b2f6b' },
+  { ref: 'Deuteronomy 11:13-21',  name: 'Vehaya',     heTitle: 'וְהָיָה',     color: '#1b2f6b' },
+  { ref: 'Numbers 15:37-41',      name: 'Vayomer',    heTitle: 'וַיֹּאמֶר',   color: '#1b2f6b' },
 ]
 const IMPRESCINDIBLES_MAP = Object.fromEntries(IMPRESCINDIBLES.map(s => [s.ref, s]))
 
@@ -82,19 +82,19 @@ function DayChooser({ onPick }) {
         <NusachCard
           title={t('siddur_semana_title')} heb="יְמוֹת הַשָּׁבוּעַ" subtitle="Shajarit · Minjá · Arvit"
           desc={t('siddur_semana_desc')}
-          color="#f59e0b" onClick={() => onPick('semana')}
+          color="#c8941f" onClick={() => onPick('semana')}
         />
         <NusachCard
           title={t('siddur_shabat_title')} heb="שַׁבָּת קֹדֶשׁ" subtitle="Arvit · Shajarit · Musaf · Minjá"
           desc={t('siddur_shabat_desc')}
-          color="#6366f1" onClick={() => onPick('shabat')}
+          color="#1b2f6b" onClick={() => onPick('shabat')}
         />
       </div>
       <div className="mt-4 fade-up-3">
         <NusachCard
           title="Imprescindibles" heb="עִקָּרִים" subtitle="Ve'ahavta · Vehaya · Vayomer · Az Yashir"
           desc="Los textos bíblicos fundamentales con taamim: los tres párrafos del Shemá y la Canción del Mar."
-          color="#10b981" onClick={() => onPick('imprescindibles')}
+          color="#1b2f6b" onClick={() => onPick('imprescindibles')}
         />
       </div>
     </div>
@@ -210,7 +210,7 @@ function SiddurListView({ nusach, onSelectRef, onChangeNusach, onChangeDay, init
       {loading && (
         <div className="flex flex-col items-center gap-3 py-16 fade-up-3">
           <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin"
-            style={{ borderColor: 'rgba(245,158,11,0.25)', borderTopColor: '#f59e0b' }} />
+            style={{ borderColor: 'rgba(200,148,31,0.25)', borderTopColor: '#c8941f' }} />
           <p className="text-sm" style={{ color: 'var(--text-3)' }}>{t('siddur_loading')}</p>
         </div>
       )}
@@ -238,7 +238,7 @@ function SiddurListView({ nusach, onSelectRef, onChangeNusach, onChangeDay, init
                   className="w-full flex items-center justify-between px-5 py-4 text-left"
                   style={{ background: isOpen ? `${srv.color}0d` : 'var(--bg-card)' }}>
                   <div className="flex items-center gap-3">
-                    <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ background: srv.color }} />
+                    <div className="w-1 h-10 flex-shrink-0" style={{ background: srv.color }} />
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>{srv.name}</span>
@@ -248,7 +248,7 @@ function SiddurListView({ nusach, onSelectRef, onChangeNusach, onChangeDay, init
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs px-2 py-0.5 rounded-full"
+                    <span className="text-xs px-2 py-0.5 rounded-sm"
                       style={{ background: `${srv.color}15`, color: srv.color, border: `1px solid ${srv.color}20` }}>
                       {srv.total}
                     </span>
@@ -380,7 +380,7 @@ function SiddurShabbatListView({ nusach, onSelectRef, onChangeNusach, onChangeDa
         </p>
         <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>{t('nav_tefila')}</h1>
         <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-          {t('siddur_nusach_label')} <span className="hebrew">{nusachHeb}</span> · {nusachLabel} · <span style={{ color: '#6366f1' }}>{t('siddur_shabat_title')}</span>
+          {t('siddur_nusach_label')} <span className="hebrew">{nusachHeb}</span> · {nusachLabel} · <span style={{ color: '#1b2f6b' }}>{t('siddur_shabat_title')}</span>
         </p>
       </div>
 
@@ -401,7 +401,7 @@ function SiddurShabbatListView({ nusach, onSelectRef, onChangeNusach, onChangeDa
       {loading && (
         <div className="flex flex-col items-center gap-3 py-16 fade-up-3">
           <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin"
-            style={{ borderColor: 'rgba(99,102,241,0.25)', borderTopColor: '#6366f1' }} />
+            style={{ borderColor: 'rgba(27,47,107,0.25)', borderTopColor: '#1b2f6b' }} />
           <p className="text-sm" style={{ color: 'var(--text-3)' }}>{t('siddur_loading')}</p>
         </div>
       )}
@@ -431,7 +431,7 @@ function SiddurShabbatListView({ nusach, onSelectRef, onChangeNusach, onChangeDa
                   className="w-full flex items-center justify-between px-5 py-4 text-left"
                   style={{ background: isOpen ? `${srv.color}0d` : 'var(--bg-card)' }}>
                   <div className="flex items-center gap-3">
-                    <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ background: srv.color }} />
+                    <div className="w-1 h-10 flex-shrink-0" style={{ background: srv.color }} />
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>{srv.name}</span>
@@ -441,7 +441,7 @@ function SiddurShabbatListView({ nusach, onSelectRef, onChangeNusach, onChangeDa
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs px-2 py-0.5 rounded-full"
+                    <span className="text-xs px-2 py-0.5 rounded-sm"
                       style={{ background: `${srv.color}15`, color: srv.color, border: `1px solid ${srv.color}20` }}>
                       {srv.total}
                     </span>
@@ -587,7 +587,7 @@ function SiddurReaderView({ nusach, day, sefRef, onBack, onNavigate, isTeacher }
   const hasTaamim   = isShema || !!impMeta
   const displayName = berajotData?.name || impMeta?.name || tSef(section?.title, lang) || sefRef.split(', ').pop()
   const displayHeb  = berajotData?.heTitle || impMeta?.heTitle || section?.heTitle || ''
-  const color       = impMeta?.color || service?.color || '#10b981'
+  const color       = impMeta?.color || service?.color || '#1b2f6b'
 
   const aliyot = useMemo(() => {
     if (berajotData) return berajotData.aliyot
@@ -630,7 +630,7 @@ function SiddurReaderView({ nusach, day, sefRef, onBack, onNavigate, isTeacher }
           {isTeacher && !isBerajot && (
             <button onClick={() => setHwOpen(true)}
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
-              style={{ background: 'rgba(108,51,230,0.12)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.3)' }}>
+              style={{ background: '#f6f7f9', color: '#1b2f6b', border: '1px solid rgba(27,47,107,0.3)' }}>
               <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
                 <path d="M1 10l1.5-3.5L9 2 9.5 2.5 3 9.5 1 10z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
                 <path d="M7 2.5l1.5 1.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>

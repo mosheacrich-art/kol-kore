@@ -83,7 +83,7 @@ export default function TikkunView({
 
   if (error) return (
     <div className="flex-1 flex items-center justify-center px-6">
-      <p className="text-sm" style={{ color: '#f87171' }}>{t('tikkun_no_data').replace('{error}', error)}</p>
+      <p className="text-sm" style={{ color: '#b42318' }}>{t('tikkun_no_data').replace('{error}', error)}</p>
     </div>
   )
 
@@ -121,7 +121,7 @@ export default function TikkunView({
                 key={w.id}
                 ref={el => { wordRefs.current[i] = el }}
                 style={{
-                  color: active ? '#3b82f6' : 'inherit',
+                  color: active ? '#1b2f6b' : 'inherit',
                   transition: 'color 0.12s',
                 }}
               >

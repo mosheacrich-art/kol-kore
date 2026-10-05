@@ -12,8 +12,8 @@ import WordRangePicker from '../../components/WordRangePicker'
 
 const statusStyle = {
   pending:   { bg: 'var(--bg-card)', color: 'var(--text-3)' },
-  submitted: { bg: 'rgba(45,212,191,0.1)', color: '#0d9488' },
-  late:      { bg: 'rgba(239,68,68,0.1)', color: '#ef4444' },
+  submitted: { bg: 'rgba(27,47,107,0.1)', color: '#1b2f6b' },
+  late:      { bg: 'rgba(180,35,24,0.1)', color: '#b42318' },
 }
 
 const ALIYAH_LABELS = ['1ª Aliyá', '2ª Aliyá', '3ª Aliyá', '4ª Aliyá', '5ª Aliyá', '6ª Aliyá', '7ª Aliyá', 'Maftir']
@@ -36,31 +36,31 @@ function RepeatDatesPanel({ dates, onAdd, onRemove, isDark }) {
     new Date(d + 'T00:00').toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(108,51,230,0.25)' }}>
+    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(27,47,107,0.25)' }}>
       <div className="flex items-center gap-2 px-3 py-2"
-        style={{ background: 'rgba(108,51,230,0.1)', borderBottom: dates.length ? '1px solid rgba(108,51,230,0.15)' : 'none' }}>
+        style={{ background: '#f6f7f9', borderBottom: dates.length ? '1px solid rgba(27,47,107,0.15)' : 'none' }}>
         <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-          <rect x="1" y="2" width="9" height="8" rx="1.5" stroke="#8b5cf6" strokeWidth="1.1"/>
-          <path d="M3.5 1v2M7.5 1v2" stroke="#8b5cf6" strokeWidth="1.1" strokeLinecap="round"/>
-          <path d="M1 5h9" stroke="#8b5cf6" strokeWidth="1.1"/>
+          <rect x="1" y="2" width="9" height="8" rx="1.5" stroke="#1b2f6b" strokeWidth="1.1"/>
+          <path d="M3.5 1v2M7.5 1v2" stroke="#1b2f6b" strokeWidth="1.1" strokeLinecap="round"/>
+          <path d="M1 5h9" stroke="#1b2f6b" strokeWidth="1.1"/>
         </svg>
-        <span className="text-xs font-medium" style={{ color: '#8b5cf6' }}>
+        <span className="text-xs font-medium" style={{ color: '#1b2f6b' }}>
           Fechas de entrega{dates.length > 0 ? ` (${dates.length})` : ''}
         </span>
       </div>
 
       {dates.length > 0 && (
-        <div className="px-3 pt-2 pb-1 flex flex-col gap-1" style={{ background: 'rgba(108,51,230,0.04)' }}>
+        <div className="px-3 pt-2 pb-1 flex flex-col gap-1" style={{ background: '#f6f7f9' }}>
           {dates.map(d => (
             <div key={d} className="flex items-center justify-between px-2.5 py-1.5 rounded-lg"
-              style={{ background: 'rgba(108,51,230,0.09)', border: '1px solid rgba(108,51,230,0.15)' }}>
+              style={{ background: '#f6f7f9', border: '1px solid rgba(27,47,107,0.15)' }}>
               <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#8b5cf6' }} />
+                <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#1b2f6b' }} />
                 <span className="text-xs capitalize" style={{ color: 'var(--text-2)' }}>{fmtDate(d)}</span>
               </div>
               <button type="button" onClick={() => onRemove(d)}
                 className="w-5 h-5 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(239,68,68,0.08)', color: '#ef4444' }}>
+                style={{ background: '#fdf3f2', color: '#b42318' }}>
                 <svg width="7" height="7" viewBox="0 0 8 8" fill="none">
                   <path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
                 </svg>
@@ -70,7 +70,7 @@ function RepeatDatesPanel({ dates, onAdd, onRemove, isDark }) {
         </div>
       )}
 
-      <div className="flex gap-2 px-3 py-2.5" style={{ background: 'rgba(108,51,230,0.04)' }}>
+      <div className="flex gap-2 px-3 py-2.5" style={{ background: '#f6f7f9' }}>
         <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
           className="flex-1 px-2.5 py-2 rounded-lg text-xs outline-none"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)', colorScheme: isDark ? 'dark' : 'light' }} />
@@ -78,9 +78,9 @@ function RepeatDatesPanel({ dates, onAdd, onRemove, isDark }) {
           disabled={!newDate || dates.includes(newDate)}
           className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold transition-all flex-shrink-0"
           style={{
-            background: newDate && !dates.includes(newDate) ? 'rgba(108,51,230,0.15)' : 'var(--bg-card)',
-            color: newDate && !dates.includes(newDate) ? '#8b5cf6' : 'var(--text-muted)',
-            border: `1px solid ${newDate && !dates.includes(newDate) ? 'rgba(108,51,230,0.3)' : 'var(--border)'}`,
+            background: newDate && !dates.includes(newDate) ? 'rgba(27,47,107,0.15)' : 'var(--bg-card)',
+            color: newDate && !dates.includes(newDate) ? '#1b2f6b' : 'var(--text-muted)',
+            border: `1px solid ${newDate && !dates.includes(newDate) ? 'rgba(27,47,107,0.3)' : 'var(--border)'}`,
           }}>
           <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
             <path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
@@ -291,9 +291,9 @@ export default function TeacherHomework() {
                 <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('hw_type_label')}</label>
                 <div className="grid grid-cols-3 gap-1.5">
                   {[
-                    { key: 'parasha', label: t('nav_study'),   color: '#f59e0b' },
-                    { key: 'haftara', label: t('nav_haftara'), color: '#10b981' },
-                    { key: 'tefila',  label: t('nav_tefila'),  color: '#8b5cf6' },
+                    { key: 'parasha', label: t('nav_study'),   color: '#c8941f' },
+                    { key: 'haftara', label: t('nav_haftara'), color: '#1b2f6b' },
+                    { key: 'tefila',  label: t('nav_tefila'),  color: '#1b2f6b' },
                   ].map(opt => (
                     <button key={opt.key} type="button"
                       onClick={() => setForm(f => ({ ...f, type: opt.key, parasha_id: '', aliyah_idx: 0, haftara_id: '', require_audio: false, word_start: null, word_end: null, subject: '', tefila_ref: '', tefila_name: '' }))}
@@ -364,16 +364,16 @@ export default function TeacherHomework() {
                   <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('fragment_label')}</label>
                   {form.word_start != null ? (
                     <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm"
-                      style={{ background: 'rgba(249,184,0,0.1)', border: '1px solid rgba(249,184,0,0.3)' }}>
+                      style={{ background: '#fbf7ec', border: '1px solid rgba(200,148,31,0.3)' }}>
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <circle cx="6" cy="6" r="5" stroke="#d97706" strokeWidth="1.1"/>
-                        <path d="M3.5 6h5M6 3.5v5" stroke="#d97706" strokeWidth="1.1" strokeLinecap="round"/>
+                        <circle cx="6" cy="6" r="5" stroke="#c8941f" strokeWidth="1.1"/>
+                        <path d="M3.5 6h5M6 3.5v5" stroke="#c8941f" strokeWidth="1.1" strokeLinecap="round"/>
                       </svg>
-                      <span style={{ color: '#d97706' }}>{t('words_range').replace('{s}', form.word_start + 1).replace('{e}', form.word_end + 1)}</span>
+                      <span style={{ color: '#c8941f' }}>{t('words_range').replace('{s}', form.word_start + 1).replace('{e}', form.word_end + 1)}</span>
                       <button type="button"
                         onClick={() => setForm(f => ({ ...f, word_start: null, word_end: null }))}
                         className="ml-auto text-xs px-2 py-0.5 rounded-md"
-                        style={{ background: 'rgba(249,184,0,0.15)', color: '#92400e' }}>
+                        style={{ background: '#fbf7ec', color: '#92400e' }}>
                         {t('full_aliyah_btn')}
                       </button>
                     </div>
@@ -434,22 +434,22 @@ export default function TeacherHomework() {
                   onClick={() => setForm(f => ({ ...f, require_audio: !f.require_audio }))}
                   className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-left transition-all"
                   style={{
-                    background: form.require_audio ? 'rgba(108,51,230,0.1)' : 'var(--bg-card)',
-                    border: `1px solid ${form.require_audio ? 'rgba(108,51,230,0.3)' : 'var(--border)'}`,
+                    background: form.require_audio ? 'rgba(27,47,107,0.1)' : 'var(--bg-card)',
+                    border: `1px solid ${form.require_audio ? 'rgba(27,47,107,0.3)' : 'var(--border)'}`,
                     color: 'var(--text)',
                   }}>
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ background: form.require_audio ? 'rgba(108,51,230,0.2)' : 'var(--border-subtle)' }}>
+                    style={{ background: form.require_audio ? 'rgba(27,47,107,0.2)' : 'var(--border-subtle)' }}>
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                       <rect x="5" y="1" width="4" height="7" rx="2"
-                        stroke={form.require_audio ? '#6c33e6' : 'var(--text-3)'} strokeWidth="1.2"/>
+                        stroke={form.require_audio ? '#1b2f6b' : 'var(--text-3)'} strokeWidth="1.2"/>
                       <path d="M2 7c0 2.8 2.2 5 5 5s5-2.2 5-5"
-                        stroke={form.require_audio ? '#6c33e6' : 'var(--text-3)'} strokeWidth="1.2" strokeLinecap="round"/>
-                      <path d="M7 12v1" stroke={form.require_audio ? '#6c33e6' : 'var(--text-3)'} strokeWidth="1.2" strokeLinecap="round"/>
+                        stroke={form.require_audio ? '#1b2f6b' : 'var(--text-3)'} strokeWidth="1.2" strokeLinecap="round"/>
+                      <path d="M7 12v1" stroke={form.require_audio ? '#1b2f6b' : 'var(--text-3)'} strokeWidth="1.2" strokeLinecap="round"/>
                     </svg>
                   </div>
                   <div>
-                    <div className="text-xs font-medium" style={{ color: form.require_audio ? '#6c33e6' : 'var(--text)' }}>
+                    <div className="text-xs font-medium" style={{ color: form.require_audio ? '#1b2f6b' : 'var(--text)' }}>
                       {t('require_audio_label')}
                     </div>
                     <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
@@ -457,7 +457,7 @@ export default function TeacherHomework() {
                     </div>
                   </div>
                   <div className="ml-auto w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0"
-                    style={{ borderColor: form.require_audio ? '#6c33e6' : 'var(--border)', background: form.require_audio ? '#6c33e6' : 'transparent' }}>
+                    style={{ borderColor: form.require_audio ? '#1b2f6b' : 'var(--border)', background: form.require_audio ? '#1b2f6b' : 'transparent' }}>
                     {form.require_audio && (
                       <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
                         <path d="M1.5 4l2 2L6.5 2" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
@@ -506,9 +506,9 @@ export default function TeacherHomework() {
                     <button type="button" onClick={toggleRepeat}
                       className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-md transition-all"
                       style={{
-                        background: repeatMode ? 'rgba(108,51,230,0.12)' : 'transparent',
-                        color: repeatMode ? '#8b5cf6' : 'var(--text-3)',
-                        border: `1px solid ${repeatMode ? 'rgba(108,51,230,0.3)' : 'var(--border-subtle)'}`,
+                        background: repeatMode ? 'rgba(27,47,107,0.12)' : 'transparent',
+                        color: repeatMode ? '#1b2f6b' : 'var(--text-3)',
+                        border: `1px solid ${repeatMode ? 'rgba(27,47,107,0.3)' : 'var(--border-subtle)'}`,
                       }}>
                       <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
                         <path d="M1.5 5C1.5 3 3 1.5 5 1.5c1.2 0 2.2.5 3 1.3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
@@ -524,7 +524,7 @@ export default function TeacherHomework() {
                       style={{ ...inputStyle, colorScheme: isDark ? 'dark' : 'light' }} />
                   ) : (
                     <div className="px-3 py-2.5 rounded-xl text-xs text-center"
-                      style={{ background: 'rgba(108,51,230,0.08)', border: '1px solid rgba(108,51,230,0.2)', color: '#8b5cf6' }}>
+                      style={{ background: '#f6f7f9', border: '1px solid rgba(27,47,107,0.2)', color: '#1b2f6b' }}>
                       {repeatDates.length === 0 ? 'Sin fechas' : `${repeatDates.length} ${repeatDates.length === 1 ? 'fecha' : 'fechas'}`}
                     </div>
                   )}
@@ -584,9 +584,9 @@ export default function TeacherHomework() {
             : null
           const haftara = item.haftara_id ? ALL_HAFTAROT.find(h => h.id === item.haftara_id) : null
           const tefilaSectionName = hwType === 'tefila' && item.subject ? item.subject : null
-          const typeColors = { parasha: '#f59e0b', haftara: '#10b981', tefila: '#8b5cf6' }
+          const typeColors = { parasha: '#c8941f', haftara: '#1b2f6b', tefila: '#1b2f6b' }
           const typeLabels = { parasha: t('nav_study'), haftara: t('nav_haftara'), tefila: t('nav_tefila') }
-          const typeColor = typeColors[hwType] || '#f59e0b'
+          const typeColor = typeColors[hwType] || '#c8941f'
 
           return (
             <div key={item.id}
@@ -603,13 +603,13 @@ export default function TeacherHomework() {
                 style={{
                   opacity: hoverItem === item.id ? 1 : 0,
                   pointerEvents: hoverItem === item.id ? 'auto' : 'none',
-                  background: 'rgba(239,68,68,0.08)',
-                  border: '1px solid rgba(239,68,68,0.15)',
-                  color: '#ef4444',
+                  background: '#fdf3f2',
+                  border: '1px solid rgba(180,35,24,0.15)',
+                  color: '#b42318',
                 }}>
                 {deleting === item.id ? (
                   <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin"
-                    style={{ borderColor: 'rgba(239,68,68,0.3)', borderTopColor: '#ef4444' }} />
+                    style={{ borderColor: 'rgba(180,35,24,0.3)', borderTopColor: '#b42318' }} />
                 ) : (
                   <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
                     <path d="M1.5 3h8M3.5 3V2h4v1M4 5v3M7 5v3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
@@ -618,7 +618,7 @@ export default function TeacherHomework() {
                 )}
               </button>
               <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 mt-0.5"
-                style={{ background: 'rgba(108,51,230,0.15)', color: '#6c33e6' }}>
+                style={{ background: '#f6f7f9', color: '#1b2f6b' }}>
                 {item.student?.name?.charAt(0) || '?'}
               </div>
               <div className="flex-1 min-w-0">
@@ -626,7 +626,7 @@ export default function TeacherHomework() {
                   <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>
                     {item.student?.name || 'Todos'}
                   </span>
-                  <span className="text-xs px-2 py-0.5 rounded-full"
+                  <span className="text-xs px-2 py-0.5 rounded-sm"
                     style={{ background: s.bg, color: s.color }}>{statusLabel}</span>
                 </div>
                 <p className="text-xs" style={{ color: 'var(--text-2)' }}>{item.task}</p>
@@ -647,7 +647,7 @@ export default function TeacherHomework() {
                   )}
                   {item.word_start != null && (
                     <span className="text-xs px-2 py-0.5 rounded-md flex items-center gap-1"
-                      style={{ background: 'rgba(249,184,0,0.1)', color: '#d97706', border: '1px solid rgba(249,184,0,0.25)' }}>
+                      style={{ background: '#fbf7ec', color: '#c8941f', border: '1px solid rgba(200,148,31,0.25)' }}>
                       Palabras {item.word_start + 1}–{item.word_end + 1}
                     </span>
                   )}
@@ -665,7 +665,7 @@ export default function TeacherHomework() {
                   )}
                   {item.require_audio && (
                     <span className="text-xs px-2 py-0.5 rounded-md flex items-center gap-1"
-                      style={{ background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.15)' }}>
+                      style={{ background: '#fdf3f2', color: '#b42318', border: '1px solid rgba(180,35,24,0.15)' }}>
                       <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
                         <rect x="3" y="0.5" width="3" height="5" rx="1.5" stroke="currentColor" strokeWidth="1"/>
                         <path d="M1 4.5c0 1.9 1.6 3.5 3.5 3.5S8 6.4 8 4.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>

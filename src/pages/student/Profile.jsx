@@ -57,15 +57,15 @@ function AccountSection({ user }) {
   }
 
   return (
-    <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-      <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{t('account')}</p>
+    <section>
+      <p className="eyebrow pb-3 mb-1" style={{ borderBottom: '2px solid #1b2f6b' }}>{t('account')}</p>
 
       {msg && (
-        <div className="mb-3 p-2.5 rounded-xl text-xs"
+        <div className="mb-3 p-2.5 text-xs"
           style={{
-            background: msg.type === 'ok' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-            color: msg.type === 'ok' ? '#16a34a' : '#ef4444',
-            border: `1px solid ${msg.type === 'ok' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`,
+            background: '#fff',
+            color: msg.type === 'ok' ? '#1b2f6b' : '#b42318',
+            borderLeft: `3px solid ${msg.type === 'ok' ? '#c8941f' : '#b42318'}`,
           }}>
           {msg.text}
         </div>
@@ -79,7 +79,7 @@ function AccountSection({ user }) {
         </div>
         <button onClick={() => show(section === 'email' ? null : 'email')}
           className="text-xs px-2.5 py-1 rounded-lg transition-all"
-          style={{ background: 'rgba(108,51,230,0.1)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)' }}>
+          style={{ color: '#1b2f6b', border: '1px solid var(--border)' }}>
           {t('change')}
         </button>
       </div>
@@ -88,11 +88,11 @@ function AccountSection({ user }) {
         <form onSubmit={handleEmail} className="flex flex-col gap-2 pt-3">
           <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)}
             placeholder={t('new_email')} required autoFocus
-            className="w-full px-3 py-2 rounded-xl text-xs outline-none"
+            className="w-full px-3 py-2 text-xs outline-none"
             style={inputStyle} />
           <button type="submit" disabled={loading}
-            className="w-full py-2 rounded-xl text-xs font-semibold transition-all"
-            style={{ background: loading ? 'var(--bg-card)' : '#6c33e6', color: loading ? 'var(--text-3)' : '#fff', border: loading ? '1px solid var(--border)' : 'none' }}>
+            className="w-full py-2 text-xs font-semibold transition-all"
+            style={{ background: loading ? 'var(--bg-card)' : '#1b2f6b', color: loading ? 'var(--text-3)' : '#fff', border: loading ? '1px solid var(--border)' : 'none' }}>
             {loading ? '…' : t('send_confirm')}
           </button>
         </form>
@@ -106,7 +106,7 @@ function AccountSection({ user }) {
         </div>
         <button onClick={() => show(section === 'password' ? null : 'password')}
           className="text-xs px-2.5 py-1 rounded-lg transition-all"
-          style={{ background: 'rgba(108,51,230,0.1)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)' }}>
+          style={{ color: '#1b2f6b', border: '1px solid var(--border)' }}>
           {t('change')}
         </button>
       </div>
@@ -115,20 +115,20 @@ function AccountSection({ user }) {
         <form onSubmit={handlePassword} className="flex flex-col gap-2 pt-1">
           <input type="password" value={newPass} onChange={e => setNewPass(e.target.value)}
             placeholder={t('new_password')} required autoFocus
-            className="w-full px-3 py-2 rounded-xl text-xs outline-none"
+            className="w-full px-3 py-2 text-xs outline-none"
             style={inputStyle} />
           <input type="password" value={confirmPass} onChange={e => setConfirmPass(e.target.value)}
             placeholder={t('repeat_password')} required
-            className="w-full px-3 py-2 rounded-xl text-xs outline-none"
+            className="w-full px-3 py-2 text-xs outline-none"
             style={inputStyle} />
           <button type="submit" disabled={loading}
-            className="w-full py-2 rounded-xl text-xs font-semibold transition-all"
-            style={{ background: loading ? 'var(--bg-card)' : '#6c33e6', color: loading ? 'var(--text-3)' : '#fff', border: loading ? '1px solid var(--border)' : 'none' }}>
+            className="w-full py-2 text-xs font-semibold transition-all"
+            style={{ background: loading ? 'var(--bg-card)' : '#1b2f6b', color: loading ? 'var(--text-3)' : '#fff', border: loading ? '1px solid var(--border)' : 'none' }}>
             {loading ? '…' : t('save_password')}
           </button>
         </form>
       )}
-    </div>
+    </section>
   )
 }
 
@@ -136,12 +136,6 @@ function daysUntil(dateStr) {
   if (!dateStr) return null
   const diff = new Date(dateStr) - new Date()
   return Math.ceil(diff / (1000 * 60 * 60 * 24))
-}
-
-const priorityColors = {
-  high:   { bg: 'rgba(239,68,68,0.1)',  border: 'rgba(239,68,68,0.2)',  text: '#dc2626', dot: '#ef4444' },
-  medium: { bg: 'rgba(249,184,0,0.1)',  border: 'rgba(249,184,0,0.2)',  text: '#d97706', dot: '#f9b800' },
-  low:    { bg: 'rgba(45,212,191,0.1)', border: 'rgba(45,212,191,0.2)', text: '#0d9488', dot: '#2dd4bf' },
 }
 
 const ACHIEVEMENTS = [
@@ -235,325 +229,224 @@ export default function StudentProfile() {
 
   if (!profile) return null
 
-  return (
-    <div className="p-4 sm:p-8 max-w-5xl">
-      <div className="mb-10 fade-up-1">
-        <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          פְּרוֹפִיל · {t('profile_title')}
-        </p>
-        <h1 className="text-3xl font-light" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-          Shalom, {profile.name?.split(' ')[0] || 'Alumno'} 👋
-        </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
-          {[profile.parasha_id, ...(profile.extra_parasha_ids || [])].filter(Boolean).map((id, i) => {
-            const p = resolveAnyParasha(id)
-            return <span key={id}>{i > 0 && <span style={{ color: 'var(--border)' }}> · </span>}<span className="hebrew" style={{ color: 'var(--text-gold)' }}>{p?.name || id}</span></span>
-          })}
-          {!profile.parasha_id && <span className="hebrew" style={{ color: 'var(--text-gold)' }}>—</span>}
-        </p>
-      </div>
+  const NAVY = '#1b2f6b'
+  const GOLD = '#c8941f'
+  const allIds = [profile.parasha_id, ...(profile.extra_parasha_ids || [])].filter(Boolean)
+  const resolved = allIds.map(id => resolveAnyParasha(id)).filter(Boolean)
+  const pending = deberes.filter(d => d.status !== 'submitted').length
+  const dateFmt = { day: 'numeric', month: 'long', year: 'numeric' }
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 fade-up-2">
-        <div className="rounded-2xl p-6 relative overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, rgba(108,51,230,0.2) 0%, rgba(108,51,230,0.06) 100%)', border: '1px solid rgba(108,51,230,0.25)' }}>
-          <div className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-20 pointer-events-none"
-            style={{ background: 'radial-gradient(circle, #6c33e6, transparent)', filter: 'blur(20px)', transform: 'translate(30%, -30%)' }} />
-          <p className="text-xs mb-2" style={{ color: 'rgba(108,51,230,0.7)' }}>{t('bar_mitzvah')}</p>
+  return (
+    <div className="p-4 sm:p-10 max-w-5xl">
+      <header className="mb-10 fade-up-1">
+        <p className="eyebrow mb-3">פְּרוֹפִיל · {t('profile_title')}</p>
+        <h1 className="serif text-4xl sm:text-5xl" style={{ color: NAVY }}>
+          Shalom, {profile.name?.split(' ')[0] || 'Alumno'}
+        </h1>
+        <p className="text-sm mt-2" style={{ color: GOLD }}>
+          {allIds.length
+            ? allIds.map((id, i) => (
+                <span key={id}>{i > 0 && <span style={{ color: '#9ca3af' }}> · </span>}{resolveAnyParasha(id)?.name || id}</span>
+              ))
+            : '—'}
+        </p>
+      </header>
+
+      {/* Stats strip */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 mb-10 fade-up-2" style={{ borderTop: `2px solid ${NAVY}`, borderBottom: '1px solid var(--border)' }}>
+        <div className="py-6 sm:pr-6">
+          <p className="eyebrow mb-3">{t('bar_mitzvah')}</p>
           {days !== null ? (
             <>
-              <div className="text-5xl font-light mb-1" style={{ color: '#6c33e6' }}>{days}</div>
-              <p className="text-xs" style={{ color: 'rgba(108,51,230,0.5)' }}>{t('days_left')}</p>
+              <div className="serif text-6xl leading-none" style={{ color: NAVY }}>{days}</div>
+              <p className="text-xs mt-2" style={{ color: '#6b7280' }}>{t('days_left')}</p>
             </>
           ) : (
-            <div className="text-2xl font-light" style={{ color: '#6c33e6' }}>—</div>
+            <div className="serif text-4xl" style={{ color: NAVY }}>—</div>
           )}
           {profile.bar_mitzvah && (
-            <div className="mt-3 pt-2.5" style={{ borderTop: '1px solid rgba(108,51,230,0.15)' }}>
-              <p className="text-xs mb-0.5" style={{ color: 'rgba(108,51,230,0.5)' }}>{t('bar_mitzvah_date')}</p>
-              <p className="text-sm font-semibold" style={{ color: '#8b5cf6' }}>
-                {new Date(profile.bar_mitzvah).toLocaleDateString(t('date_locale'), { day: 'numeric', month: 'long', year: 'numeric' })}
-              </p>
-            </div>
+            <p className="text-sm mt-4" style={{ color: NAVY }}>
+              {new Date(profile.bar_mitzvah).toLocaleDateString(t('date_locale'), dateFmt)}
+            </p>
           )}
         </div>
 
-        <div className="rounded-2xl p-6 relative overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, rgba(249,184,0,0.12) 0%, rgba(249,184,0,0.04) 100%)', border: '1px solid rgba(249,184,0,0.2)' }}>
-          <p className="text-xs mb-2" style={{ color: 'var(--text-gold)' }}>{t('my_parasha')}</p>
-          {(() => {
-            const all = [profile.parasha_id, ...(profile.extra_parasha_ids || [])].filter(Boolean)
-            if (!all.length) return <div className="text-3xl font-light mb-1" style={{ color: '#d97706' }}>—</div>
-            return all.map((id, i) => {
-              const p = resolveAnyParasha(id)
-              return (
-                <div key={id} className={i > 0 ? 'mt-1 pt-1' : ''} style={i > 0 ? { borderTop: '1px solid rgba(249,184,0,0.15)' } : {}}>
-                  <div className={`font-light`} style={{ color: '#d97706', fontSize: all.length > 1 ? '1.35rem' : '1.875rem' }}>{p?.name || id}</div>
-                  {p?.heb && <div className="hebrew text-xs mt-0.5" style={{ color: 'rgba(249,184,0,0.55)' }}>{p.heb}</div>}
-                </div>
-              )
-            })
-          })()}
-          <p className="text-xs mt-2" style={{ color: 'var(--text-3)' }}>{t('assigned_parasha')}</p>
+        <div className="py-6 sm:px-6" style={{ borderInlineStart: '1px solid var(--border)' }}>
+          <p className="eyebrow mb-3">{t('my_parasha')}</p>
+          {resolved.length ? resolved.map((p, i) => (
+            <div key={p.id} className={i ? 'mt-3' : ''}>
+              <div className="serif leading-tight" style={{ color: NAVY, fontSize: resolved.length > 1 ? '1.5rem' : '2.5rem' }}>{p.name}</div>
+              {p.heb && <div className="hebrew text-base mt-1" style={{ color: GOLD, textAlign: 'left', direction: 'ltr' }}>{p.heb}</div>}
+            </div>
+          )) : <div className="serif text-4xl" style={{ color: NAVY }}>—</div>}
+          <p className="text-xs mt-4" style={{ color: '#6b7280' }}>{t('assigned_parasha')}</p>
         </div>
 
-        <div className="rounded-2xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{t('hw_done')}</p>
-          <div className="flex items-end gap-2 mb-3">
-            <span className="text-4xl font-light" style={{ color: '#0d9488' }}>{progress}%</span>
-            <span className="text-xs pb-1.5" style={{ color: 'var(--text-muted)' }}>{done}/{deberes.length}</span>
+        <div className="py-6 sm:pl-6" style={{ borderInlineStart: '1px solid var(--border)' }}>
+          <p className="eyebrow mb-3">{t('hw_done')}</p>
+          <div className="flex items-baseline gap-2">
+            <span className="serif text-6xl leading-none" style={{ color: NAVY }}>{progress}%</span>
+            <span className="text-xs" style={{ color: '#6b7280' }}>{done}/{deberes.length}</span>
           </div>
-          <div className="w-full h-1.5 rounded-full" style={{ background: 'var(--border)' }}>
-            <div className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #6c33e6, #2dd4bf)' }} />
+          <div className="w-full h-1 mt-5" style={{ background: '#eef0f3' }}>
+            <div className="h-full transition-all duration-700" style={{ width: `${progress}%`, background: NAVY }} />
           </div>
         </div>
       </div>
 
-      {(() => {
-        const allIds = [profile.parasha_id, ...(profile.extra_parasha_ids || [])].filter(Boolean)
-        const resolved = allIds.map(id => resolveAnyParasha(id)).filter(Boolean)
-        if (!resolved.length) return null
+      {/* Go to parasha */}
+      {resolved.length > 0 && (
+        <div className={`mb-10 fade-up-3 ${resolved.length > 1 ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : ''}`}>
+          {resolved.map((p, i) => (
+            <button key={p.id} onClick={() => navigate(`/student/study/${p.id}`)}
+              className="btn-navy w-full flex items-center justify-between gap-4 px-6 py-5 text-left">
+              <span>
+                <span className="block text-xs uppercase tracking-widest" style={{ color: '#e3b448' }}>
+                  {i === 0 ? t('go_my_parasha') : 'Ir a mi perashá'}
+                </span>
+                <span className="serif block text-2xl mt-1">{p.name}</span>
+              </span>
+              <span className="text-xl" style={{ color: '#e3b448' }}>→</span>
+            </button>
+          ))}
+        </div>
+      )}
 
-        const arrowIcon = (color) => (
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-            <path d="M6 4l4 4-4 4" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        )
-
-        // Colors cycle for extra parashiot
-        const PCOLS = [
-          { bg: 'rgba(108,51,230,0.18)', bgHover: 'rgba(108,51,230,0.28)', border: 'rgba(108,51,230,0.3)', icon: 'rgba(108,51,230,0.2)', iconBorder: 'rgba(108,51,230,0.3)', text: '#8b5cf6', stroke: '#8b5cf6' },
-          { bg: 'rgba(249,184,0,0.12)',   bgHover: 'rgba(249,184,0,0.22)',   border: 'rgba(249,184,0,0.3)',   icon: 'rgba(249,184,0,0.2)',  iconBorder: 'rgba(249,184,0,0.3)',  text: '#d97706', stroke: '#d97706' },
-          { bg: 'rgba(45,212,191,0.1)',   bgHover: 'rgba(45,212,191,0.18)',  border: 'rgba(45,212,191,0.28)', icon: 'rgba(45,212,191,0.2)', iconBorder: 'rgba(45,212,191,0.3)', text: '#0d9488', stroke: '#0d9488' },
-        ]
-
-        return (
-          <div className={`mb-6 fade-up-3 ${resolved.length > 1 ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : ''}`}>
-            {resolved.map((p, i) => {
-              const c = PCOLS[i % PCOLS.length]
-              const label = i === 0 ? t('go_my_parasha') : 'Ir a mi perashá'
-              return (
-                <button key={p.id}
-                  onClick={() => navigate(`/student/study/${p.id}`)}
-                  className="w-full flex items-center justify-between gap-4 p-4 rounded-2xl transition-all text-left"
-                  style={{ background: `linear-gradient(135deg, ${c.bg} 0%, rgba(0,0,0,0) 100%)`, border: `1px solid ${c.border}` }}
-                  onMouseEnter={e => { e.currentTarget.style.background = `linear-gradient(135deg, ${c.bgHover} 0%, rgba(0,0,0,0) 100%)` }}
-                  onMouseLeave={e => { e.currentTarget.style.background = `linear-gradient(135deg, ${c.bg} 0%, rgba(0,0,0,0) 100%)` }}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: c.icon, border: `1px solid ${c.iconBorder}` }}>
-                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                        <path d="M3 9h12M9 3l6 6-6 6" stroke={c.stroke} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                    <div className="text-left">
-                      <p className="text-xs font-semibold" style={{ color: c.text }}>{label}</p>
-                      <p className="text-xs mt-0.5">
-                        <span className="hebrew" style={{ color: 'var(--text-gold)' }}>{p.name}</span>
-                      </p>
-                      {p.heb && <p className="hebrew text-xs" style={{ color: 'var(--text-muted)', fontSize: '10px' }}>{p.heb}</p>}
-                    </div>
-                  </div>
-                  {arrowIcon(c.stroke)}
-                </button>
-              )
-            })}
-          </div>
-        )
-      })()}
-
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-3 fade-up-3">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{t('my_homework')}</h2>
-            <span className="text-xs px-2.5 py-1 rounded-full"
-              style={{ background: 'rgba(108,51,230,0.12)', color: '#6c33e6', border: '1px solid rgba(108,51,230,0.2)' }}>
-              {deberes.filter(d => d.status !== 'submitted').length} {t('pending')}
-            </span>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
+        {/* Homework ledger */}
+        <section className="lg:col-span-3 fade-up-3">
+          <div className="flex items-baseline justify-between pb-3" style={{ borderBottom: `2px solid ${NAVY}` }}>
+            <h2 className="serif text-2xl">{t('my_homework')}</h2>
+            <span className="text-xs" style={{ color: GOLD }}>{pending} {t('pending')}</span>
           </div>
           {deberes.length === 0 && (
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('no_hw')}</p>
+            <p className="text-sm py-6" style={{ color: '#6b7280' }}>{t('no_hw')}</p>
           )}
-          <div className="flex flex-col gap-2.5">
-            {deberes.map(deber => {
+          <ol>
+            {deberes.map((deber, n) => {
               const isDone = deber.status === 'submitted'
-              const p = priorityColors.medium
+              const parasha = deber.parasha_id ? PARASHOT.find(p => p.id === deber.parasha_id) : null
+              const aliyahN = parasha && deber.aliyah_idx != null ? parasha.aliyot[deber.aliyah_idx]?.n : null
               return (
-                <div key={deber.id}
+                <li key={deber.id}
                   onClick={() => handleDeberClick(deber)}
-                  className={`flex items-start gap-3.5 p-4 rounded-xl transition-all duration-200 ${deber.parasha_id ? 'cursor-pointer' : ''}`}
-                  style={{
-                    background: 'var(--bg-card)',
-                    border: `1px solid ${isDone ? 'var(--border-subtle)' : 'var(--border)'}`,
-                    opacity: isDone ? 0.55 : 1,
-                  }}>
-                  <div className="mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-all"
-                    style={{ borderColor: isDone ? '#6c33e6' : 'var(--border)', background: isDone ? '#6c33e6' : 'transparent' }}>
-                    {isDone && (
-                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                        <path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium" style={{ color: 'var(--text)', textDecoration: isDone ? 'line-through' : 'none' }}>
-                      {deber.task}
+                  className={`grid grid-cols-[32px_1fr_auto] gap-3 py-4 items-start ${deber.parasha_id ? 'cursor-pointer hover:bg-[#f6f7f9]' : ''}`}
+                  style={{ borderBottom: '1px solid var(--border-subtle)', opacity: isDone ? 0.5 : 1 }}>
+                  <span className="serif text-sm pt-0.5" style={{ color: GOLD }}>{String(n + 1).padStart(2, '0')}</span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium" style={{ color: '#111827', textDecoration: isDone ? 'line-through' : 'none' }}>{deber.task}</p>
+                    <p className="text-xs mt-1.5" style={{ color: '#6b7280' }}>
+                      {parasha && (
+                        <span>
+                          <span className="hebrew" style={{ color: NAVY }}>{parasha.heb}</span>
+                          {aliyahN != null && <span> · {aliyahN === 8 ? 'Maftir' : `${aliyahN}ª`}</span>}
+                          {deber.require_audio && !isDone && <span> · 🎙</span>}
+                        </span>
+                      )}
+                      {deber.subject && <span>{parasha ? ' · ' : ''}{deber.subject}</span>}
+                      {deber.due && <span>{(parasha || deber.subject) ? ' · ' : ''}{t('hw_due_short')}: {new Date(deber.due).toLocaleDateString(t('date_locale'), { day: 'numeric', month: 'short' })}</span>}
                     </p>
-                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      {(() => {
-                        const parasha = deber.parasha_id ? PARASHOT.find(p => p.id === deber.parasha_id) : null
-                        const aliyahN = parasha && deber.aliyah_idx != null ? parasha.aliyot[deber.aliyah_idx]?.n : null
-                        if (!parasha) return null
-                        return (
-                          <span className="text-xs px-2 py-0.5 rounded-md flex items-center gap-1"
-                            style={{ background: 'rgba(108,51,230,0.1)', color: '#6c33e6', border: '1px solid rgba(108,51,230,0.2)' }}>
-                            <span className="hebrew">{parasha.heb}</span>
-                            {aliyahN != null && <span>· {aliyahN === 8 ? 'Maftir' : `${aliyahN}ª`}</span>}
-                            {deber.require_audio && !isDone && (
-                              <svg width="9" height="9" viewBox="0 0 9 9" fill="none" style={{ marginLeft: 2 }}>
-                                <rect x="3" y="0.5" width="3" height="5" rx="1.5" stroke="currentColor" strokeWidth="1"/>
-                                <path d="M1 4.5c0 1.9 1.6 3.5 3.5 3.5S8 6.4 8 4.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-                              </svg>
-                            )}
-                          </span>
-                        )
-                      })()}
-                      {deber.subject && (
-                        <span className="text-xs px-2 py-0.5 rounded-md"
-                          style={{ background: p.bg, border: `1px solid ${p.border}`, color: p.text }}>
-                          {deber.subject}
-                        </span>
-                      )}
-                      {deber.due && (
-                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          {t('hw_due_short')}: {new Date(deber.due).toLocaleDateString(t('date_locale'), { day: 'numeric', month: 'short' })}
-                        </span>
-                      )}
-                    </div>
                   </div>
-                </div>
+                  <span className="text-xs pt-0.5" style={{ color: isDone ? NAVY : '#9ca3af' }}>{isDone ? '✓' : '○'}</span>
+                </li>
               )
             })}
-          </div>
-        </div>
+          </ol>
+        </section>
 
-        <div className="lg:col-span-2 flex flex-col gap-5 fade-up-4">
-          <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>{t('my_data')}</p>
-            <div className="flex flex-col gap-0">
-              {[
-                { label: t('name'), value: profile.name },
-                { label: t('bar_mitzvah'), value: profile.bar_mitzvah ? new Date(profile.bar_mitzvah).toLocaleDateString(t('date_locale'), { day: 'numeric', month: 'long', year: 'numeric' }) : '—' },
-                { label: 'Perashá', value: [profile.parasha_id, ...(profile.extra_parasha_ids || [])].filter(Boolean).map(id => resolveAnyParasha(id)?.name || id).join(' + ') || '—' },
-                { label: t('progress'), value: `${profile.progress || 0}%` },
-                { label: t('streak'), value: `${profile.streak || 0} ${t('days')} 🔥` },
-              ].map(item => (
-                <div key={item.label} className="flex justify-between items-center py-2"
-                  style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{item.label}</span>
-                  <span className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{item.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* Side column */}
+        <aside className="lg:col-span-2 flex flex-col gap-10 fade-up-4">
+          <section>
+            <p className="eyebrow pb-3" style={{ borderBottom: `2px solid ${NAVY}` }}>{t('my_data')}</p>
+            {[
+              { label: t('name'), value: profile.name },
+              { label: t('bar_mitzvah'), value: profile.bar_mitzvah ? new Date(profile.bar_mitzvah).toLocaleDateString(t('date_locale'), dateFmt) : '—' },
+              { label: 'Perashá', value: resolved.map(p => p.name).join(' + ') || '—' },
+              { label: t('progress'), value: `${profile.progress || 0}%` },
+              { label: t('streak'), value: `${profile.streak || 0} ${t('days')}` },
+            ].map(item => (
+              <div key={item.label} className="flex justify-between items-baseline py-2.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                <span className="text-xs" style={{ color: '#6b7280' }}>{item.label}</span>
+                <span className="text-sm text-right" style={{ color: NAVY }}>{item.value}</span>
+              </div>
+            ))}
+          </section>
 
-          <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{t('my_teacher')}</p>
+          <section>
+            <p className="eyebrow pb-3" style={{ borderBottom: `2px solid ${NAVY}` }}>{t('my_teacher')}</p>
             {teacherName ? (
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                  style={{ background: 'rgba(249,184,0,0.2)', color: '#d97706' }}>
-                  {teacherName.charAt(0)}
-                </div>
-                <div>
-                  <div className="text-sm font-medium" style={{ color: 'var(--text)' }}>{teacherName}</div>
-                  <div className="text-xs" style={{ color: 'var(--text-gold)' }}>מוֹרֶה · {t('linked')}</div>
-                </div>
+              <div className="py-4">
+                <div className="serif text-xl" style={{ color: NAVY }}>{teacherName}</div>
+                <div className="text-xs mt-0.5" style={{ color: GOLD }}>מוֹרֶה · {t('linked')}</div>
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  {t('link_teacher')}
-                </p>
+              <div className="flex flex-col gap-2 pt-4">
+                <p className="text-xs" style={{ color: '#6b7280' }}>{t('link_teacher')}</p>
                 <div className="flex gap-2">
                   <input
                     value={teacherCode}
                     onChange={e => { setTeacherCode(e.target.value.toUpperCase()); setLinkStatus(null) }}
                     placeholder="Ej: AB3X7K"
                     maxLength={6}
-                    className="flex-1 px-3 py-2 rounded-xl text-sm font-mono tracking-widest outline-none"
-                    style={{ background: 'var(--bg-card)', border: `1px solid ${linkStatus === 'error' ? '#ef4444' : 'var(--border)'}`, color: 'var(--text)' }}
+                    className="flex-1 px-3 py-2 text-sm font-mono tracking-widest outline-none"
+                    style={{ background: '#fff', border: `1px solid ${linkStatus === 'error' ? '#b42318' : 'var(--border)'}`, color: '#111827' }}
                     onKeyDown={e => e.key === 'Enter' && linkTeacher()}
                   />
                   <button onClick={linkTeacher} disabled={linkStatus === 'loading' || !teacherCode}
-                    className="px-3 py-2 rounded-xl text-xs font-semibold"
-                    style={{ background: 'rgba(108,51,230,0.15)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.25)', opacity: !teacherCode ? 0.5 : 1 }}>
+                    className="btn-navy px-4 py-2 text-xs"
+                    style={{ opacity: !teacherCode ? 0.4 : 1 }}>
                     {linkStatus === 'loading' ? '…' : t('join')}
                   </button>
                 </div>
-                {linkStatus === 'error' && (
-                  <p className="text-xs" style={{ color: '#ef4444' }}>{t('code_not_found')}</p>
-                )}
+                {linkStatus === 'error' && <p className="text-xs" style={{ color: '#b42318' }}>{t('code_not_found')}</p>}
               </div>
             )}
-          </div>
+          </section>
 
-          <div className="rounded-2xl p-5"
-            style={{ background: 'linear-gradient(135deg, rgba(249,184,0,0.1), rgba(249,184,0,0.03))', border: '1px solid rgba(249,184,0,0.15)' }}>
-            <p className="text-xs mb-3" style={{ color: 'var(--text-gold)' }}>{t('study_streak')}</p>
-            <div className="flex items-center gap-2">
-              <span className="text-3xl">🔥</span>
-              <div>
-                <span className="text-2xl font-light" style={{ color: '#d97706' }}>{profile.streak || 0} {t('days')}</span>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
-                  {(profile.streak || 0) > 5 ? t('keep_going') : t('start_streak')}
-                </p>
-              </div>
+          <section>
+            <p className="eyebrow pb-3" style={{ borderBottom: `2px solid ${NAVY}` }}>{t('study_streak')}</p>
+            <div className="flex items-baseline gap-3 py-4">
+              <span className="serif text-5xl leading-none" style={{ color: NAVY }}>{profile.streak || 0}</span>
+              <span className="text-sm" style={{ color: GOLD }}>{t('days')}</span>
             </div>
-          </div>
+            <p className="text-xs" style={{ color: '#6b7280' }}>
+              {(profile.streak || 0) > 5 ? t('keep_going') : t('start_streak')}
+            </p>
+          </section>
 
           <AccountSection user={user} />
 
-          {/* Achievements */}
-          <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{t('achievements')}</p>
-            <div className="flex items-center gap-4 mb-4 mt-3">
-              <StatPill icon="🎧" value={totalListens} label="escuchas" />
-              <StatPill icon="✅" value={done} label="deberes" />
-              <StatPill icon="🔥" value={profile.streak || 0} label="días racha" />
+          <section>
+            <p className="eyebrow pb-3" style={{ borderBottom: `2px solid ${NAVY}` }}>{t('achievements')}</p>
+            <div className="grid grid-cols-3 py-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+              <StatPill value={totalListens} label="escuchas" />
+              <StatPill value={done} label="deberes" />
+              <StatPill value={profile.streak || 0} label="días racha" />
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <ul className="mt-2">
               {ACHIEVEMENTS.map(a => {
                 const unlocked = a.check({ totalListens, homeworkDone: done, streak: profile.streak || 0 })
                 return (
-                  <div key={a.id} title={t(a.descKey)}
-                    className="flex flex-col items-center gap-1 p-2.5 rounded-xl transition-all"
-                    style={{
-                      background: unlocked ? 'rgba(108,51,230,0.1)' : 'var(--bg)',
-                      border: `1px solid ${unlocked ? 'rgba(108,51,230,0.25)' : 'var(--border-subtle)'}`,
-                      opacity: unlocked ? 1 : 0.4,
-                    }}>
-                    <span style={{ fontSize: '20px', filter: unlocked ? 'none' : 'grayscale(1)' }}>{a.icon}</span>
-                    <span className="text-center leading-tight" style={{ fontSize: '9px', color: unlocked ? 'var(--text-2)' : 'var(--text-muted)' }}>
-                      {t(a.labelKey)}
-                    </span>
-                  </div>
+                  <li key={a.id} title={t(a.descKey)} className="flex items-center gap-3 py-2"
+                    style={{ borderBottom: '1px solid var(--border-subtle)', opacity: unlocked ? 1 : 0.4 }}>
+                    <span className="w-2 h-2 rotate-45 flex-shrink-0" style={{ background: unlocked ? GOLD : 'transparent', border: `1px solid ${unlocked ? GOLD : '#9ca3af'}` }} />
+                    <span className="text-xs" style={{ color: unlocked ? NAVY : '#6b7280' }}>{t(a.labelKey)}</span>
+                  </li>
                 )
               })}
-            </div>
-          </div>
-        </div>
+            </ul>
+          </section>
+        </aside>
       </div>
     </div>
   )
 }
 
-function StatPill({ icon, value, label }) {
+function StatPill({ value, label }) {
   return (
-    <div className="flex flex-col items-center gap-0.5">
-      <span style={{ fontSize: '16px' }}>{icon}</span>
-      <span className="text-lg font-light" style={{ color: 'var(--text)' }}>{value}</span>
-      <span className="text-xs" style={{ color: 'var(--text-muted)', fontSize: '9px' }}>{label}</span>
+    <div className="flex flex-col items-start">
+      <span className="serif text-3xl" style={{ color: '#1b2f6b' }}>{value}</span>
+      <span className="text-xs" style={{ color: '#6b7280' }}>{label}</span>
     </div>
   )
 }

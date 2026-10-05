@@ -55,7 +55,7 @@ export default function TeacherAudioPanel() {
         id: selectedParasha.id,
         aliyahIdx: selectedAliyah,
         ref: selectedParasha.aliyot[selectedAliyah]?.ref,
-        color: BOOK_COLORS[selectedParasha.book] || '#6c33e6',
+        color: BOOK_COLORS[selectedParasha.book] || '#1b2f6b',
         aliyot: selectedParasha.aliyot,
         heb: selectedParasha.heb,
         name: selectedParasha.name,
@@ -66,7 +66,7 @@ export default function TeacherAudioPanel() {
         id: selectedHaftara.id,
         aliyahIdx: 0,
         ref: selectedHaftara.aliyot[0]?.ref,
-        color: BOOK_COLORS[selectedHaftara.book] || '#8b5cf6',
+        color: BOOK_COLORS[selectedHaftara.book] || '#1b2f6b',
         aliyot: [selectedHaftara.aliyot[0]],
         heb: selectedHaftara.heb,
         name: selectedHaftara.name,
@@ -78,7 +78,7 @@ export default function TeacherAudioPanel() {
       id: selectedTefila.id,
       aliyahIdx: 0,
       ref: selectedTefila.id.startsWith('berajot:') ? null : selectedTefila.id,
-      color: selectedTefila.color || '#10b981',
+      color: selectedTefila.color || '#1b2f6b',
       aliyot: [{ n: 1, label: selectedTefila.name, ref: selectedTefila.id.startsWith('berajot:') ? null : selectedTefila.id }],
       heb: selectedTefila.heb,
       name: selectedTefila.name,
@@ -87,7 +87,7 @@ export default function TeacherAudioPanel() {
 
   const entity = getEntity()
   const currentAudio = entity ? get(entity.id, entity.aliyahIdx) : null
-  const color = entity?.color || '#6c33e6'
+  const color = entity?.color || '#1b2f6b'
   const currentKey = entity ? `${entity.id}-${entity.aliyahIdx}` : ''
   const isSyncing = currentKey ? syncingKeys.has(currentKey) : false
 
@@ -147,7 +147,7 @@ export default function TeacherAudioPanel() {
           </div>
           {totalAudios > 0 && (
             <div className="px-3 py-2 rounded-xl text-xs"
-              style={{ background: 'rgba(249,184,0,0.1)', border: '1px solid rgba(249,184,0,0.2)', color: '#b8860b' }}>
+              style={{ background: '#fbf7ec', border: '1px solid rgba(200,148,31,0.2)', color: '#9a6f12' }}>
               {totalAudios} audio{totalAudios > 1 ? 's' : ''} subido{totalAudios > 1 ? 's' : ''}
             </div>
           )}
@@ -158,7 +158,7 @@ export default function TeacherAudioPanel() {
       <div className="mb-6 flex gap-2 fade-up-2">
         {SECTION_TABS.map(tab => (
           <button key={tab.id} onClick={() => setSectionType(tab.id)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-sm text-sm transition-all"
             style={{
               background: sectionType === tab.id ? 'var(--border)' : 'transparent',
               color: sectionType === tab.id ? 'var(--text)' : 'var(--text-3)',
@@ -184,7 +184,7 @@ export default function TeacherAudioPanel() {
                 <div className="p-3 flex gap-1.5 flex-wrap"
                   style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                   <button onClick={() => setBookFilter('all')}
-                    className="text-xs px-2.5 py-1 rounded-full transition-all"
+                    className="text-xs px-2.5 py-1 rounded-sm transition-all"
                     style={{
                       background: bookFilter === 'all' ? 'var(--border)' : 'transparent',
                       color: bookFilter === 'all' ? 'var(--text)' : 'var(--text-3)',
@@ -196,7 +196,7 @@ export default function TeacherAudioPanel() {
                     const c = BOOK_COLORS[s.id]
                     return (
                       <button key={s.id} onClick={() => setBookFilter(s.id)}
-                        className="text-xs px-2.5 py-1 rounded-full transition-all"
+                        className="text-xs px-2.5 py-1 rounded-sm transition-all"
                         style={{
                           background: bookFilter === s.id ? `${c}20` : 'transparent',
                           color: bookFilter === s.id ? c : 'var(--text-3)',
@@ -248,7 +248,7 @@ export default function TeacherAudioPanel() {
             {sectionType === 'haftara' && (
               <div className="overflow-y-auto" style={{ maxHeight: '60vh' }}>
                 {ALL_HAFTAROT.map(h => {
-                  const c = BOOK_COLORS[h.book] || '#8b5cf6'
+                  const c = BOOK_COLORS[h.book] || '#1b2f6b'
                   const isSelected = selectedHaftara.id === h.id
                   const hAudios = Object.keys(audios).filter(k => k.startsWith(`${h.id}-`)).length
                   return (
@@ -281,7 +281,7 @@ export default function TeacherAudioPanel() {
                 <div className="p-3 flex gap-2 flex-wrap" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                   {['ashkenaz', 'sefard'].map(n => (
                     <button key={n} onClick={() => setTefilaNusach(n)}
-                      className="text-xs px-2.5 py-1 rounded-full transition-all capitalize"
+                      className="text-xs px-2.5 py-1 rounded-sm transition-all capitalize"
                       style={{
                         background: tefilaNusach === n ? 'var(--border)' : 'transparent',
                         color: tefilaNusach === n ? 'var(--text)' : 'var(--text-3)',
@@ -293,11 +293,11 @@ export default function TeacherAudioPanel() {
                   <div className="flex gap-1 ml-auto">
                     {[{ id: 'weekday', label: 'Semana' }, { id: 'shabbat', label: 'Shabat' }].map(tab => (
                       <button key={tab.id} onClick={() => setTefilaTab(tab.id)}
-                        className="text-xs px-2.5 py-1 rounded-full transition-all"
+                        className="text-xs px-2.5 py-1 rounded-sm transition-all"
                         style={{
-                          background: tefilaTab === tab.id ? '#10b98120' : 'transparent',
-                          color: tefilaTab === tab.id ? '#10b981' : 'var(--text-3)',
-                          border: `1px solid ${tefilaTab === tab.id ? '#10b98130' : 'var(--border)'}`,
+                          background: tefilaTab === tab.id ? '#1b2f6b20' : 'transparent',
+                          color: tefilaTab === tab.id ? '#1b2f6b' : 'var(--text-3)',
+                          border: `1px solid ${tefilaTab === tab.id ? '#1b2f6b30' : 'var(--border)'}`,
                         }}>
                         {tab.label}
                       </button>
@@ -309,7 +309,7 @@ export default function TeacherAudioPanel() {
                   {tefilaLoading && (
                     <div className="flex items-center justify-center py-8 text-xs" style={{ color: 'var(--text-muted)' }}>
                       <span className="inline-block w-4 h-4 rounded-full border border-t-transparent animate-spin mr-2"
-                        style={{ borderColor: 'var(--border)', borderTopColor: '#10b981' }} />
+                        style={{ borderColor: 'var(--border)', borderTopColor: '#1b2f6b' }} />
                       Cargando...
                     </div>
                   )}
@@ -427,7 +427,7 @@ export default function TeacherAudioPanel() {
                         const currentIdx = selectedAliyah
                         return (
                           <button key={i} onClick={() => setSelectedAliyah(i)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-medium transition-all"
                             style={{
                               background: currentIdx === i ? color : 'var(--bg-card)',
                               color: currentIdx === i ? '#fff' : 'var(--text-3)',
@@ -440,7 +440,7 @@ export default function TeacherAudioPanel() {
                             )}
                             {!syncing && hasAudio && (
                               <span className="w-1.5 h-1.5 rounded-full"
-                                style={{ background: currentIdx === i ? 'rgba(255,255,255,0.7)' : '#2dd4bf' }} />
+                                style={{ background: currentIdx === i ? 'rgba(255,255,255,0.7)' : '#1b2f6b' }} />
                             )}
                           </button>
                         )
@@ -463,7 +463,7 @@ export default function TeacherAudioPanel() {
                       </span>
                       <button onClick={() => remove(entity.id, entity.aliyahIdx)}
                         className="text-xs px-2.5 py-1 rounded-lg transition-all"
-                        style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
+                        style={{ background: '#fdf3f2', color: '#b42318', border: '1px solid rgba(180,35,24,0.2)' }}>
                         {t('delete')}
                       </button>
                     </div>
@@ -547,7 +547,7 @@ export default function TeacherAudioPanel() {
                               <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{audio.name.slice(0, 20)}{audio.name.length > 20 ? '…' : ''}</span>
                               {syncing
                                 ? (
-                                  <span className="text-xs px-1.5 py-0.5 rounded-full flex items-center gap-1"
+                                  <span className="text-xs px-1.5 py-0.5 rounded-sm flex items-center gap-1"
                                     style={{ background: `${color}15`, color, border: `1px solid ${color}30` }}>
                                     <span className="inline-block w-2.5 h-2.5 rounded-full border border-t-transparent animate-spin"
                                       style={{ borderColor: `${color}50`, borderTopColor: color }} />
@@ -559,10 +559,10 @@ export default function TeacherAudioPanel() {
                                       const pct = audio.anchorPct != null ? Math.round(audio.anchorPct * 100) : null
                                       const bad = audio.needsReview || (pct !== null && pct < 40)
                                       const mid = !bad && pct !== null && pct < 75
-                                      const badgeColor = bad ? '#ef4444' : mid ? '#f59e0b' : '#16a34a'
+                                      const badgeColor = bad ? '#b42318' : mid ? '#c8941f' : '#1b2f6b'
                                       return (
                                         <div className="flex items-center gap-1.5">
-                                          <span className="text-xs px-1.5 py-0.5 rounded-full flex items-center gap-1"
+                                          <span className="text-xs px-1.5 py-0.5 rounded-sm flex items-center gap-1"
                                             style={{ background: `${badgeColor}20`, color: badgeColor, border: `1px solid ${badgeColor}4d` }}
                                             title={pct !== null ? `${pct}% de las palabras están ancladas al audio real; el resto son estimadas` : undefined}>
                                             {bad ? '⚠️' : '✓'} sync {pct !== null ? `${pct}%` : ''}
@@ -570,7 +570,7 @@ export default function TeacherAudioPanel() {
                                           {bad && (
                                             <button
                                               onClick={async () => { await generateSync(entity.id, i, entity.aliyot[i].ref) }}
-                                              className="text-xs px-1.5 py-0.5 rounded-full transition-all"
+                                              className="text-xs px-1.5 py-0.5 rounded-sm transition-all"
                                               style={{ background: `${color}15`, color, border: `1px solid ${color}30` }}>
                                               {t('retry_sync')}
                                             </button>
@@ -582,12 +582,12 @@ export default function TeacherAudioPanel() {
                                     <div className="flex flex-col gap-1 items-start">
                                       <button
                                         onClick={async () => { await generateSync(entity.id, i, entity.aliyot[i].ref) }}
-                                        className="text-xs px-1.5 py-0.5 rounded-full transition-all"
+                                        className="text-xs px-1.5 py-0.5 rounded-sm transition-all"
                                         style={{ background: `${color}15`, color, border: `1px solid ${color}30` }}>
                                         {t('retry_sync')}
                                       </button>
                                       {syncErrors[key] && (
-                                        <span className="text-xs max-w-xs" style={{ color: '#ef4444' }} title={syncErrors[key]}>
+                                        <span className="text-xs max-w-xs" style={{ color: '#b42318' }} title={syncErrors[key]}>
                                           {t('error_prefix')} {syncErrors[key].length > 60 ? syncErrors[key].slice(0, 60) + '…' : syncErrors[key]}
                                         </span>
                                       )}
@@ -597,7 +597,7 @@ export default function TeacherAudioPanel() {
                             </div>
                             <button onClick={() => remove(entity.id, i)}
                               className="w-6 h-6 rounded-full flex items-center justify-center transition-all"
-                              style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444' }}>
+                              style={{ background: '#fdf3f2', color: '#b42318' }}>
                               <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
                                 <path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
                               </svg>
@@ -625,10 +625,10 @@ export default function TeacherAudioPanel() {
           {anySyncing ? (
             <>
               <div className="w-14 h-14 rounded-full flex items-center justify-center mb-5"
-                style={{ background: 'rgba(108,51,230,0.12)', border: '1px solid rgba(108,51,230,0.25)' }}>
+                style={{ background: '#f6f7f9', border: '1px solid rgba(27,47,107,0.25)' }}>
                 <svg className="animate-spin" width="26" height="26" viewBox="0 0 26 26" fill="none">
-                  <circle cx="13" cy="13" r="10" stroke="rgba(108,51,230,0.2)" strokeWidth="2.5"/>
-                  <path d="M13 3a10 10 0 0 1 10 10" stroke="#8b5cf6" strokeWidth="2.5" strokeLinecap="round"/>
+                  <circle cx="13" cy="13" r="10" stroke="rgba(27,47,107,0.2)" strokeWidth="2.5"/>
+                  <path d="M13 3a10 10 0 0 1 10 10" stroke="#1b2f6b" strokeWidth="2.5" strokeLinecap="round"/>
                 </svg>
               </div>
               <p className="text-base font-semibold mb-1.5" style={{ color: 'var(--text)' }}>
@@ -636,16 +636,16 @@ export default function TeacherAudioPanel() {
               </p>
               <p className="text-sm leading-relaxed" style={{ color: 'var(--text-3)' }}>
                 La IA está alineando el audio con el texto.<br/>
-                Puede tardar entre <span style={{ color: '#8b5cf6' }}>5 y 50 segundos</span>.
+                Puede tardar entre <span style={{ color: '#1b2f6b' }}>5 y 50 segundos</span>.
               </p>
             </>
           ) : (
             <>
               <div className="w-14 h-14 rounded-full flex items-center justify-center mb-5"
-                style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)' }}>
+                style={{ background: '#f6f7f9', border: '1px solid rgba(200,148,31,0.25)' }}>
                 <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-                  <circle cx="13" cy="13" r="10" stroke="#22c55e" strokeWidth="2"/>
-                  <path d="M8 13l3.5 3.5L18 9" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="13" cy="13" r="10" stroke="#c8941f" strokeWidth="2"/>
+                  <path d="M8 13l3.5 3.5L18 9" stroke="#c8941f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
               <p className="text-base font-semibold mb-1.5" style={{ color: 'var(--text)' }}>
@@ -656,7 +656,7 @@ export default function TeacherAudioPanel() {
               </p>
               <button onClick={() => setJustFinished(false)}
                 className="px-7 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                style={{ background: 'rgba(34,197,94,0.12)', color: '#16a34a', border: '1px solid rgba(34,197,94,0.3)' }}>
+                style={{ background: '#f6f7f9', color: '#1b2f6b', border: '1px solid rgba(200,148,31,0.3)' }}>
                 Cerrar
               </button>
             </>

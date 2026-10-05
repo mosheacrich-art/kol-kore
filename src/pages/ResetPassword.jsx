@@ -17,8 +17,8 @@ export default function ResetPassword() {
   const [done, setDone] = useState(false)
 
   const bg = isDark
-    ? 'radial-gradient(ellipse at 50% 0%, #1a0f3e 0%, #0d0b1e 100%)'
-    : 'radial-gradient(ellipse at 50% 0%, #e0d5be 0%, #f5f0e4 100%)'
+    ? '#0d0b1e'
+    : '#ffffff'
 
   const inputStyle = {
     background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.9)',
@@ -58,13 +58,13 @@ export default function ResetPassword() {
           {done ? (
             <div className="flex flex-col items-center gap-3 py-4">
               <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)' }}>
+                style={{ background: '#f6f7f9', border: '1px solid rgba(200,148,31,0.3)' }}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <circle cx="10" cy="10" r="8" stroke="#16a34a" strokeWidth="1.5"/>
-                  <path d="M6 10l3 3 5-5" stroke="#16a34a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="10" cy="10" r="8" stroke="#1b2f6b" strokeWidth="1.5"/>
+                  <path d="M6 10l3 3 5-5" stroke="#1b2f6b" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
-              <p className="text-sm font-semibold" style={{ color: '#16a34a' }}>{t('password_updated')}</p>
+              <p className="text-sm font-semibold" style={{ color: '#1b2f6b' }}>{t('password_updated')}</p>
               <p className="text-xs text-center" style={{ color: 'var(--text-3)' }}>{t('redirecting_profile')}</p>
             </div>
           ) : (
@@ -77,11 +77,11 @@ export default function ResetPassword() {
                 placeholder={t('repeat_password')} required
                 className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none"
                 style={inputStyle} />
-              {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
+              {error && <p className="text-xs" style={{ color: '#b42318' }}>{error}</p>}
               <button type="submit" disabled={loading}
                 className="w-full py-3 rounded-xl font-semibold text-sm mt-1 transition-all"
                 style={{
-                  background: loading ? 'var(--bg-card)' : 'linear-gradient(135deg, #6c33e6, #8b5cf6)',
+                  background: loading ? 'var(--bg-card)' : '#1b2f6b',
                   color: loading ? 'var(--text-3)' : '#fff',
                   border: loading ? '1px solid var(--border)' : 'none',
                 }}>

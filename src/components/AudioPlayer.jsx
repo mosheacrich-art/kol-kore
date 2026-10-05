@@ -191,7 +191,7 @@ const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTi
 
   return (
     <div className="flex items-center gap-3 px-4 py-3 rounded-2xl"
-      style={{ background: 'rgba(108,51,230,0.1)', border: '1px solid rgba(108,51,230,0.2)' }}>
+      style={{ background: '#f6f7f9', border: '1px solid rgba(27,47,107,0.2)' }}>
       <audio
         ref={audioRef}
         src={audio.url}
@@ -206,7 +206,7 @@ const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTi
 
       <button onClick={toggle} disabled={error}
         className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
-        style={{ background: error ? 'rgba(220,38,38,0.3)' : playing ? '#6c33e6' : 'rgba(108,51,230,0.3)', opacity: error ? 0.6 : 1, cursor: error ? 'not-allowed' : 'pointer' }}>
+        style={{ background: error ? 'rgba(220,38,38,0.3)' : playing ? '#1b2f6b' : 'rgba(27,47,107,0.3)', opacity: error ? 0.6 : 1, cursor: error ? 'not-allowed' : 'pointer' }}>
         {error ? (
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M6 2.5v4M6 8.5h.01" stroke="white" strokeWidth="1.4" strokeLinecap="round"/>
@@ -225,7 +225,7 @@ const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTi
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-xs font-medium truncate" style={{ color: error ? '#f87171' : 'var(--text-2)' }}>
+          <span className="text-xs font-medium truncate" style={{ color: error ? '#b42318' : 'var(--text-2)' }}>
             {error ? '⚠️ Audio no disponible' : `🎧 ${label}`}
           </span>
           <span className="text-xs flex-shrink-0 ml-2" style={{ color: 'var(--text-muted)' }}>
@@ -236,16 +236,16 @@ const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTi
           onClick={seek} onTouchStart={seek}>
           <div className="w-full h-1.5 rounded-full relative" style={{ background: 'var(--bg-card)' }}>
             <div className="h-full rounded-full transition-none"
-              style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #6c33e6, #a78bfa)' }} />
+              style={{ width: `${progress}%`, background: '#1b2f6b' }} />
             <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full -translate-x-1/2 transition-none"
-              style={{ left: `${progress}%`, background: '#a78bfa', boxShadow: '0 0 6px rgba(167,139,250,0.5)' }} />
+              style={{ left: `${progress}%`, background: '#1b2f6b', boxShadow: '0 0 6px rgba(167,139,250,0.5)' }} />
           </div>
         </div>
       </div>
 
       <button onClick={cycleSpeed}
         className="text-xs flex-shrink-0 px-2 py-1 rounded-lg font-mono font-medium transition-all"
-        style={{ background: 'rgba(108,51,230,0.15)', color: '#a78bfa', border: '1px solid rgba(108,51,230,0.25)', minWidth: '38px' }}>
+        style={{ background: '#f6f7f9', color: '#1b2f6b', border: '1px solid rgba(27,47,107,0.25)', minWidth: '38px' }}>
         {SPEEDS[speedIdx]}×
       </button>
     </div>

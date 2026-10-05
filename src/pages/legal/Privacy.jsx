@@ -11,11 +11,11 @@ function getSections(lang) {
       body: es
         ? <p>El responsable del tratamiento de los datos personales recogidos a través de esta aplicación es{' '}
             <strong style={{ color: 'var(--text)' }}>PerashApp</strong> (perashapp.com).
-            Contacto: <a href="mailto:contact.perashapp@gmail.com" style={{ color: '#6c33e6' }}>contact.perashapp@gmail.com</a>.
+            Contacto: <a href="mailto:contact.perashapp@gmail.com" style={{ color: '#1b2f6b' }}>contact.perashapp@gmail.com</a>.
           </p>
         : <p>The data controller for personal data collected through this application is{' '}
             <strong style={{ color: 'var(--text)' }}>PerashApp</strong> (perashapp.com).
-            Contact: <a href="mailto:contact.perashapp@gmail.com" style={{ color: '#6c33e6' }}>contact.perashapp@gmail.com</a>.
+            Contact: <a href="mailto:contact.perashapp@gmail.com" style={{ color: '#1b2f6b' }}>contact.perashapp@gmail.com</a>.
           </p>
     },
     {
@@ -130,7 +130,7 @@ function getSections(lang) {
               <li><strong>Oposición y limitación:</strong> limitar ciertos tratamientos.</li>
             </ul>
             <p className="mt-2">Para ejercer tus derechos, escríbenos a{' '}
-              <a href="mailto:contact.perashapp@gmail.com" style={{ color: '#6c33e6' }}>contact.perashapp@gmail.com</a>.
+              <a href="mailto:contact.perashapp@gmail.com" style={{ color: '#1b2f6b' }}>contact.perashapp@gmail.com</a>.
               También puedes reclamar ante la <strong>Agencia Española de Protección de Datos</strong> (aepd.es).
             </p></>
         : <><p>As a resident in the EU you have the right to:</p>
@@ -142,7 +142,7 @@ function getSections(lang) {
               <li><strong>Objection and restriction:</strong> limit certain processing.</li>
             </ul>
             <p className="mt-2">To exercise your rights, contact us at{' '}
-              <a href="mailto:contact.perashapp@gmail.com" style={{ color: '#6c33e6' }}>contact.perashapp@gmail.com</a>.
+              <a href="mailto:contact.perashapp@gmail.com" style={{ color: '#1b2f6b' }}>contact.perashapp@gmail.com</a>.
               You may also lodge a complaint with the <strong>Spanish Data Protection Agency</strong> (aepd.es).
             </p></>
     },
@@ -171,7 +171,7 @@ export default function Privacy() {
   const navigate = useNavigate()
   const { isDark } = useTheme()
   const { lang } = useLang()
-  const bg = isDark ? '#07060f' : '#f5f0e4'
+  const bg = isDark ? '#07060f' : '#ffffff'
   const es = lang === 'es'
 
   const sections = getSections(lang)
@@ -181,7 +181,7 @@ export default function Privacy() {
       <div className="max-w-3xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-10">
           <button onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-xs px-4 py-2 rounded-full transition-all"
+            className="flex items-center gap-2 text-xs px-4 py-2 rounded-sm transition-all"
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-3)' }}>
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
               <path d="M8 2L3 6.5l5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>

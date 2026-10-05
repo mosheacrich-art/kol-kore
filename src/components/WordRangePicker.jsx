@@ -61,10 +61,10 @@ export default function WordRangePicker({ aliyahRef, onConfirm, onClose }) {
           <div key={idx} className="flex items-center gap-1.5">
             {idx > 0 && <div className="w-8 h-px" style={{ background: 'rgba(255,255,255,0.1)' }} />}
             <div className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
-              style={{ background: s.active ? '#f59e0b' : 'rgba(249,184,0,0.15)', color: s.active ? '#000' : '#f59e0b' }}>
+              style={{ background: s.active ? '#c8941f' : 'rgba(200,148,31,0.15)', color: s.active ? '#000' : '#c8941f' }}>
               {s.n}
             </div>
-            <span className="text-xs" style={{ color: s.active ? '#f59e0b' : 'rgba(255,255,255,0.3)' }}>{s.label}</span>
+            <span className="text-xs" style={{ color: s.active ? '#c8941f' : 'rgba(255,255,255,0.3)' }}>{s.label}</span>
           </div>
         ))}
       </div>
@@ -86,7 +86,7 @@ export default function WordRangePicker({ aliyahRef, onConfirm, onClose }) {
                     cursor: 'pointer',
                     borderRadius: '3px',
                     padding: '1px 2px',
-                    background: highlighted ? 'rgba(249,184,0,0.3)' : isStart ? 'rgba(249,184,0,0.2)' : 'transparent',
+                    background: highlighted ? 'rgba(200,148,31,0.3)' : isStart ? 'rgba(200,148,31,0.2)' : 'transparent',
                     color: highlighted || isStart ? '#fbbf24' : 'rgba(255,255,255,0.88)',
                     transition: 'background 0.07s, color 0.07s',
                   }}>

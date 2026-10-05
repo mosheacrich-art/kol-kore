@@ -149,9 +149,9 @@ export default function AdminPage() {
   const parashaName = (id) => PARASHOT.find(p => p.id === id)?.name || id
   const anchorColor = (pct) => {
     if (pct == null) return 'var(--text-muted)'
-    if (pct >= 0.7) return '#22c55e'
-    if (pct >= 0.4) return '#f59e0b'
-    return '#ef4444'
+    if (pct >= 0.7) return '#c8941f'
+    if (pct >= 0.4) return '#c8941f'
+    return '#b42318'
   }
 
   const selectedParasha = PARASHOT.find(p => p.id === upParasha)
@@ -189,9 +189,9 @@ export default function AdminPage() {
             <button key={id} onClick={() => setTab(id)}
               className="text-xs px-4 py-2 rounded-lg font-medium transition-all"
               style={{
-                background: tab === id ? 'rgba(108,51,230,0.15)' : 'transparent',
-                color: tab === id ? '#8b5cf6' : 'var(--text-3)',
-                border: tab === id ? '1px solid rgba(108,51,230,0.25)' : '1px solid transparent',
+                background: tab === id ? 'rgba(27,47,107,0.15)' : 'transparent',
+                color: tab === id ? '#1b2f6b' : 'var(--text-3)',
+                border: tab === id ? '1px solid rgba(27,47,107,0.25)' : '1px solid transparent',
               }}>
               {label}
             </button>
@@ -252,7 +252,7 @@ export default function AdminPage() {
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2.5">
                               <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                                style={{ background: 'rgba(108,51,230,0.2)', color: '#a78bfa' }}>
+                                style={{ background: '#f6f7f9', color: '#1b2f6b' }}>
                                 {u.name?.[0]?.toUpperCase() ?? '?'}
                               </div>
                               <span className="font-medium text-xs" style={{ color: 'var(--text)' }}>{u.name ?? '—'}</span>
@@ -260,14 +260,14 @@ export default function AdminPage() {
                           </td>
                           <td className="px-4 py-3"><span className="text-xs" style={{ color: 'var(--text-3)' }}>{u.email ?? '—'}</span></td>
                           <td className="px-4 py-3">
-                            <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                              style={{ background: u.role === 'teacher' ? 'rgba(34,197,94,0.1)' : 'rgba(108,51,230,0.1)', color: u.role === 'teacher' ? '#22c55e' : '#8b5cf6' }}>
+                            <span className="text-xs px-2 py-0.5 rounded-sm font-medium"
+                              style={{ background: u.role === 'teacher' ? 'rgba(200,148,31,0.1)' : 'rgba(27,47,107,0.1)', color: u.role === 'teacher' ? '#c8941f' : '#1b2f6b' }}>
                               {u.role === 'teacher' ? t('role_teacher_label') : t('role_student_label')}
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                              style={{ background: isActive ? 'rgba(34,197,94,0.1)' : 'rgba(100,100,100,0.1)', color: isActive ? '#22c55e' : 'var(--text-muted)' }}>
+                            <span className="text-xs px-2 py-0.5 rounded-sm font-medium"
+                              style={{ background: isActive ? 'rgba(200,148,31,0.1)' : 'rgba(100,100,100,0.1)', color: isActive ? '#c8941f' : 'var(--text-muted)' }}>
                               {u.subscription_status ?? t('admin_no_subscription')}
                             </span>
                           </td>
@@ -277,11 +277,11 @@ export default function AdminPage() {
                               <div className="flex items-center gap-2">
                                 <button disabled={sending[u.id]} onClick={() => sendWelcome(u.id, u.subscription_plan || 'monthly')}
                                   className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5"
-                                  style={{ background: sending[u.id] ? 'var(--bg-deep)' : 'rgba(108,51,230,0.1)', color: sending[u.id] ? 'var(--text-muted)' : '#8b5cf6', border: '1px solid rgba(108,51,230,0.2)', opacity: sending[u.id] ? 0.7 : 1 }}>
+                                  style={{ background: sending[u.id] ? 'var(--bg-deep)' : 'rgba(27,47,107,0.1)', color: sending[u.id] ? 'var(--text-muted)' : '#1b2f6b', border: '1px solid rgba(27,47,107,0.2)', opacity: sending[u.id] ? 0.7 : 1 }}>
                                   {sending[u.id] ? <><MiniSpinner /> {t('admin_sending')}</> : <>✉️ {t('admin_send_welcome')}</>}
                                 </button>
-                                {result === 'ok' && <span className="text-xs" style={{ color: '#22c55e' }}>{t('admin_sent_ok')}</span>}
-                                {result === 'error' && <span className="text-xs" style={{ color: '#ef4444' }}>✗ Error</span>}
+                                {result === 'ok' && <span className="text-xs" style={{ color: '#c8941f' }}>{t('admin_sent_ok')}</span>}
+                                {result === 'error' && <span className="text-xs" style={{ color: '#b42318' }}>✗ Error</span>}
                               </div>
                             ) : <span className="text-xs" style={{ color: 'var(--text-muted)' }}>—</span>}
                           </td>
@@ -352,15 +352,15 @@ export default function AdminPage() {
                   {upFile && <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{upFile.name} — {(upFile.size / 1e6).toFixed(1)} MB</p>}
                 </div>
 
-                {upError && <p className="text-xs px-1" style={{ color: '#ef4444' }}>{upError}</p>}
-                {upSuccess && <p className="text-xs px-1" style={{ color: '#22c55e' }}>{upSuccess}</p>}
+                {upError && <p className="text-xs px-1" style={{ color: '#b42318' }}>{upError}</p>}
+                {upSuccess && <p className="text-xs px-1" style={{ color: '#c8941f' }}>{upSuccess}</p>}
 
                 <button type="submit" disabled={uploading || !upFile || !upParasha}
                   className="self-start text-xs px-5 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2"
                   style={{
-                    background: uploading || !upFile || !upParasha ? 'var(--bg-deep)' : 'rgba(108,51,230,0.15)',
-                    color: uploading || !upFile || !upParasha ? 'var(--text-muted)' : '#8b5cf6',
-                    border: '1px solid rgba(108,51,230,0.25)',
+                    background: uploading || !upFile || !upParasha ? 'var(--bg-deep)' : 'rgba(27,47,107,0.15)',
+                    color: uploading || !upFile || !upParasha ? 'var(--text-muted)' : '#1b2f6b',
+                    border: '1px solid rgba(27,47,107,0.25)',
                     opacity: uploading || !upFile || !upParasha ? 0.6 : 1,
                   }}>
                   {uploading ? <><MiniSpinner /> {t('admin_uploading')}</> : t('admin_upload_btn')}
@@ -414,8 +414,8 @@ export default function AdminPage() {
                           </span>
                         </td>
                         <td className="px-4 py-2.5">
-                          <span className="text-xs px-2 py-0.5 rounded-full"
-                            style={{ background: 'rgba(108,51,230,0.1)', color: '#8b5cf6', border: '1px solid rgba(108,51,230,0.15)' }}>
+                          <span className="text-xs px-2 py-0.5 rounded-sm"
+                            style={{ background: '#f6f7f9', color: '#1b2f6b', border: '1px solid rgba(27,47,107,0.15)' }}>
                             {a.label}
                           </span>
                         </td>
@@ -426,8 +426,8 @@ export default function AdminPage() {
                         </td>
                         <td className="px-4 py-2.5">
                           {a.needs_review
-                            ? <span className="text-xs" style={{ color: '#f59e0b' }}>⚠ Revisar</span>
-                            : <span className="text-xs" style={{ color: '#22c55e' }}>✓ OK</span>}
+                            ? <span className="text-xs" style={{ color: '#c8941f' }}>⚠ Revisar</span>
+                            : <span className="text-xs" style={{ color: '#c8941f' }}>✓ OK</span>}
                         </td>
                         <td className="px-4 py-2.5">
                           <a href={a.public_url} target="_blank" rel="noopener noreferrer"
@@ -454,14 +454,14 @@ export default function AdminPage() {
 function Spinner() {
   return (
     <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin"
-      style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#6c33e6' }} />
+      style={{ borderColor: 'rgba(27,47,107,0.3)', borderTopColor: '#1b2f6b' }} />
   )
 }
 
 function MiniSpinner() {
   return (
     <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin"
-      style={{ borderColor: 'rgba(139,92,246,0.4)', borderTopColor: '#8b5cf6' }} />
+      style={{ borderColor: 'rgba(27,47,107,0.4)', borderTopColor: '#1b2f6b' }} />
   )
 }
 

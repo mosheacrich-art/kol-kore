@@ -16,7 +16,7 @@ if ('serviceWorker' in navigator) {
 if (Capacitor.isNativePlatform()) {
   StatusBar.setStyle({ style: Style.Dark })
   if (Capacitor.getPlatform() === 'android') {
-    StatusBar.setBackgroundColor({ color: '#07060f' })
+    StatusBar.setBackgroundColor({ color: '#ffffff' })
   }
 
   // Push notifications

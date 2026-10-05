@@ -5,6 +5,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
+import Logo from '../../components/Logo'
 import LangToggle from '../../components/LangToggle'
 import ContactModal from '../../components/ContactModal'
 
@@ -94,7 +95,7 @@ export default function TeacherLayout() {
 
       {/* ── Desktop sidebar ───────────────────────────────────────────────── */}
       <aside className={`${isLandscape ? 'hidden' : 'hidden md:flex'} flex-shrink-0 flex-col py-8 px-4 w-64 sticky top-0 h-screen`}
-        style={{ background: 'var(--bg-deep)', borderInlineEnd: '1px solid var(--border-subtle)' }}>
+        style={{ background: '#ffffff', borderInlineEnd: '1px solid var(--border-subtle)' }}>
         <SidebarContent profile={profile} location={location}
           go={go} unreadCount={unreadCount} showClose={false} allNavItems={allNavItems}
           isDark={isDark} toggle={toggle} onContactOpen={() => setContactOpen(true)} signOut={signOut} navigate={navigate} />
@@ -105,7 +106,7 @@ export default function TeacherLayout() {
         transition-transform duration-300 ease-in-out sidebar-drawer
         ${isRTL ? 'right-0' : 'left-0'}
         ${sidebarOpen ? 'translate-x-0' : isRTL ? 'translate-x-full' : '-translate-x-full'}`}
-        style={{ background: 'var(--bg-deep)', borderInlineEnd: '1px solid var(--border-subtle)' }}>
+        style={{ background: '#ffffff', borderInlineEnd: '1px solid var(--border-subtle)' }}>
         <SidebarContent profile={profile} location={location}
           go={go} unreadCount={unreadCount} showClose onClose={() => setSidebarOpen(false)} allNavItems={allNavItems}
           isDark={isDark} toggle={toggle} onContactOpen={() => setContactOpen(true)} signOut={signOut} navigate={navigate} />
@@ -114,7 +115,7 @@ export default function TeacherLayout() {
       {/* Mobile: floating hamburger — outside <main> to fix iOS Safari touch bug
            (fixed elements inside overflow-auto lose touch events on iOS) */}
       {!isLandscape && !sidebarOpen && (
-        <button className="fixed z-50 md:hidden p-2.5 rounded-xl"
+        <button className="fixed z-50 md:hidden p-2.5 rounded"
           style={{
             top: isNative ? 'calc(env(safe-area-inset-top, 0px) + 8px)' : '8px',
             left: '16px',
@@ -126,7 +127,7 @@ export default function TeacherLayout() {
           <HamburgerIcon />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-white flex items-center justify-center"
-              style={{ background: '#6c33e6', fontSize: '8px' }}>
+              style={{ background: '#1b2f6b', fontSize: '8px' }}>
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
@@ -141,13 +142,12 @@ export default function TeacherLayout() {
         {/* Desktop only: full header bar */}
         {!isNative && !isLandscape && (
           <div className="hidden md:flex sticky top-0 z-30 items-center gap-3 px-4 flex-shrink-0 app-header"
-            style={{ background: 'var(--bg-deep)', borderBottom: '1px solid var(--border-subtle)', minHeight: '3.5rem' }}>
-            <StarSvg />
-            <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashapp</span>
+            style={{ background: '#ffffff', borderBottom: '1px solid var(--border)', minHeight: '3.5rem' }}>
+            <Logo size={26} />
             <div className="ml-auto flex items-center gap-2">
               <LangToggle />
               <button onClick={() => setContactOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all"
                 style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}
                 title={t('contact_us')}>
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -156,16 +156,10 @@ export default function TeacherLayout() {
                 </svg>
                 {t('contact_us')}
               </button>
-              <button onClick={toggle}
-                className="p-2 rounded-xl text-xs transition-all"
-                style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
-                title={isDark ? t('light_mode') : t('dark_mode')}>
-                <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
-              </button>
               <button onClick={async () => { await signOut(); navigate('/login') }}
-                className="p-2 rounded-xl transition-all"
+                className="p-2 rounded transition-all"
                 title={t('logout')}
-                style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
+                style={{ color: '#1b2f6b', background: 'transparent', border: '1px solid var(--border)' }}>
                 <LogoutIcon />
               </button>
             </div>
@@ -176,7 +170,7 @@ export default function TeacherLayout() {
         <Outlet />
         {/* Bottom-center fallback menu button for mobile web (iOS touch fix) */}
         {!isLandscape && !sidebarOpen && (
-          <button className="fixed md:hidden z-50 flex items-center gap-2 px-4 py-2.5 rounded-full shadow-lg"
+          <button className="fixed md:hidden z-50 flex items-center gap-2 px-4 py-2.5 rounded-sm shadow-lg"
             style={{
               bottom: '20px',
               left: '50%',
@@ -189,7 +183,7 @@ export default function TeacherLayout() {
             <HamburgerIcon />
             {unreadCount > 0 && (
               <span className="w-4 h-4 rounded-full text-white flex items-center justify-center flex-shrink-0"
-                style={{ background: '#6c33e6', fontSize: '8px' }}>
+                style={{ background: '#1b2f6b', fontSize: '8px' }}>
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
@@ -213,11 +207,11 @@ function SidebarContent({ profile, location, go, unreadCount, showClose, onClose
         </div>
       )}
 
-      <div className="mx-3 mb-8 mt-2 p-3 rounded-xl"
-        style={{ background: 'rgba(249,184,0,0.1)', border: '1px solid rgba(249,184,0,0.18)' }}>
+      <div className="mx-3 mb-8 mt-2 p-3 rounded"
+        style={{ background: 'transparent', borderBottom: '1px solid var(--border)', borderRadius: 0 }}>
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-            style={{ background: 'rgba(249,184,0,0.25)', color: '#92610a' }}>
+            style={{ background: '#1b2f6b', color: '#fff' }}>
             {profile?.name?.[0]?.toUpperCase() ?? 'M'}
           </div>
           <div className="min-w-0">
@@ -234,19 +228,19 @@ function SidebarContent({ profile, location, go, unreadCount, showClose, onClose
           const active = isActive(item.path)
           return (
             <button key={item.path} onClick={() => go(item.path)}
-              className="sidebar-item flex items-center gap-3 px-3 py-3 rounded-xl text-left"
+              className="sidebar-item flex items-center gap-3 px-3 py-3 rounded text-left"
               style={{
-                background: active ? 'rgba(249,184,0,0.1)' : 'transparent',
-                borderInlineStart: active ? '2px solid #f9b800' : '2px solid transparent',
-                color: active ? '#b8860b' : 'var(--text-3)',
+                background: 'transparent',
+                borderInlineStart: active ? '3px solid #c8941f' : '3px solid transparent',
+                color: active ? '#1b2f6b' : 'var(--text-3)', fontWeight: active ? 600 : 400,
               }}>
               <NavDot active={active} />
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-medium">{item.label}</div>
               </div>
               {item.badge && unreadCount > 0 && (
-                <span className="ml-auto text-xs min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ background: '#6c33e6', color: 'white', fontSize: '9px' }}>
+                <span className="ml-auto text-xs min-w-[18px] h-[18px] px-1 rounded-sm flex items-center justify-center flex-shrink-0"
+                  style={{ background: '#1b2f6b', color: 'white', fontSize: '9px' }}>
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
@@ -260,15 +254,9 @@ function SidebarContent({ profile, location, go, unreadCount, showClose, onClose
         {/* Mobile-only: lang, dark mode, contact */}
         <div className="md:hidden flex flex-col gap-2 pb-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
           <TeacherLangButton t={t} />
-          <button onClick={toggle}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs text-left transition-all"
-            style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
-            <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
-            {isDark ? (t ? t('light_mode') ?? 'Modo claro' : 'Modo claro') : (t ? t('dark_mode') ?? 'Modo oscuro' : 'Modo oscuro')}
-          </button>
           {onContactOpen && (
             <button onClick={() => { onContactOpen(); onClose?.() }}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs text-left transition-all"
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded text-xs text-left transition-all"
               style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ flexShrink: 0 }}>
                 <rect x="1" y="2.5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
@@ -279,8 +267,8 @@ function SidebarContent({ profile, location, go, unreadCount, showClose, onClose
           )}
         </div>
         <button onClick={async () => { await signOut(); navigate('/login') }}
-          className="w-full text-xs py-2.5 px-3 rounded-xl text-left transition-all"
-          style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
+          className="w-full text-xs py-2.5 px-3 rounded text-left transition-all"
+          style={{ color: '#1b2f6b', background: 'transparent', border: '1px solid var(--border)' }}>
           → {t('logout')}
         </button>
       </div>
@@ -300,19 +288,8 @@ function LogoutIcon() {
 
 function NavDot({ active }) {
   return (
-    <span className="w-4 h-4 rounded-full flex-shrink-0"
-      style={{ background: active ? '#f9b800' : 'transparent', border: `1px solid ${active ? '#f9b800' : 'var(--text-3)'}` }} />
-  )
-}
-
-function StarSvg() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <polygon points="14,3 18,10 22,10 18,14 22,18 14,15 6,18 10,14 6,10 10,10"
-        fill="none" stroke="rgba(255,202,40,0.6)" strokeWidth="1.2" strokeLinejoin="round"/>
-      <polygon points="14,25 10,18 6,18 10,14 6,10 14,13 22,10 18,14 22,18 18,18"
-        fill="none" stroke="rgba(255,202,40,0.6)" strokeWidth="1.2" strokeLinejoin="round"/>
-    </svg>
+    <span className="w-4 h-4 flex-shrink-0"
+      style={{ background: active ? '#c8941f' : 'transparent', border: `1px solid ${active ? '#c8941f' : 'var(--text-muted)'}`, transform: 'rotate(45deg) scale(.55)' }} />
   )
 }
 
@@ -346,7 +323,7 @@ function TeacherLangButton({ t }) {
   const current = LANGS_T.find(l => l.code === lang) || LANGS_T[0]
   return (
     <button onClick={() => window.__teacherLangSheetOpen?.()}
-      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all"
+      className="w-full flex items-center justify-between px-3 py-2.5 rounded text-xs transition-all"
       style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
       <span>{t ? t('language') ?? 'Idioma' : 'Idioma'}</span>
       <span>{current.flag} {current.label}</span>
@@ -370,17 +347,17 @@ function TeacherLangSheet({ t }) {
         </p>
         {LANGS_T.map(l => (
           <button key={l.code} onClick={() => { setLang(l.code); setOpen(false) }}
-            className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all"
+            className="flex items-center gap-3 px-3 py-3 rounded text-sm transition-all"
             style={{
-              background: lang === l.code ? 'rgba(249,184,0,0.1)' : 'var(--bg-card)',
-              border: `1px solid ${lang === l.code ? 'rgba(249,184,0,0.3)' : 'var(--border-subtle)'}`,
-              color: lang === l.code ? '#b8860b' : 'var(--text)',
+              background: lang === l.code ? 'rgba(200,148,31,0.1)' : 'var(--bg-card)',
+              border: `1px solid ${lang === l.code ? 'rgba(200,148,31,0.3)' : 'var(--border-subtle)'}`,
+              color: lang === l.code ? '#9a6f12' : 'var(--text)',
             }}>
             <span style={{ fontSize: '20px' }}>{l.flag}</span>
             <span className="font-medium">{l.label}</span>
             {lang === l.code && (
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="ml-auto">
-                <path d="M2.5 7l3 3L11.5 4" stroke="#b8860b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M2.5 7l3 3L11.5 4" stroke="#9a6f12" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             )}
           </button>

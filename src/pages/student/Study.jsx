@@ -14,7 +14,7 @@ const TAAMIM = {
   id: 'taamim',
   name: 'Taamim',
   heb: 'טַעֲמֵי הַמִּקְרָא',
-  color: '#6c33e6',
+  color: '#1b2f6b',
   availableModes: ['taamim'],
   aliyot: [{
     n: 1,
@@ -40,7 +40,7 @@ export default function StudentStudy({ basePath = '/student/study' }) {
           const key = parashaId.replace('berajot--', 'berajot:')
           const data = BERAJOT_INLINE[key]
           if (!data) return null
-          return { id: parashaId, name: data.name, heb: data.heTitle, color: '#10b981', aliyot: data.aliyot }
+          return { id: parashaId, name: data.name, heb: data.heTitle, color: '#1b2f6b', aliyot: data.aliyot }
         })()
       : parashaId
         ? (ALL_PARASHOT.find(p => p.id === parashaId) || ALL_MOADIM.find(p => p.id === parashaId))
@@ -133,23 +133,23 @@ function ListView({ basePath }) {
         {/* ── Berajot ── */}
         {!search && (
           <div className="rounded-2xl overflow-hidden mb-1 transition-all"
-            style={{ border: `1px solid ${openBerajot ? 'rgba(16,185,129,0.3)' : 'var(--border)'}` }}>
+            style={{ border: `1px solid ${openBerajot ? 'rgba(27,47,107,0.3)' : 'var(--border)'}` }}>
             <button onClick={() => setOpenBerajot(o => !o)}
               className="w-full flex items-center justify-between px-5 py-4 text-left"
-              style={{ background: openBerajot ? 'rgba(16,185,129,0.06)' : 'var(--bg-card)' }}>
+              style={{ background: openBerajot ? 'rgba(27,47,107,0.06)' : 'var(--bg-card)' }}>
               <div className="flex items-center gap-3">
-                <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ background: '#10b981' }} />
+                <div className="w-1 h-10 flex-shrink-0" style={{ background: '#1b2f6b' }} />
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>Berajot</span>
-                    <span className="hebrew text-sm" style={{ color: '#10b981' }}>בְּרָכוֹת</span>
+                    <span className="hebrew text-sm" style={{ color: '#1b2f6b' }}>בְּרָכוֹת</span>
                   </div>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('berajot_sections').replace('{n}', Object.keys(BERAJOT_INLINE).length)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs px-2 py-0.5 rounded-full"
-                  style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)' }}>
+                <span className="text-xs px-2 py-0.5 rounded-sm"
+                  style={{ background: 'rgba(27,47,107,0.15)', color: '#1b2f6b', border: '1px solid rgba(27,47,107,0.2)' }}>
                   {Object.keys(BERAJOT_INLINE).length}
                 </span>
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
@@ -166,10 +166,10 @@ function ListView({ basePath }) {
                     return (
                       <button key={key} onClick={() => navigate(`${basePath}/${studyId}`)}
                         className="text-left p-3 rounded-xl transition-all duration-200"
-                        style={{ background: 'rgba(16,185,129,0.04)', border: '1px solid rgba(16,185,129,0.12)' }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.1)'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.28)' }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.04)'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.12)' }}>
-                        <div className="hebrew text-sm mb-1 leading-tight" style={{ color: '#10b981' }}>{data.heTitle}</div>
+                        style={{ background: 'rgba(27,47,107,0.04)', border: '1px solid rgba(27,47,107,0.12)' }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,47,107,0.1)'; e.currentTarget.style.borderColor = 'rgba(27,47,107,0.28)' }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(27,47,107,0.04)'; e.currentTarget.style.borderColor = 'rgba(27,47,107,0.12)' }}>
+                        <div className="hebrew text-sm mb-1 leading-tight" style={{ color: '#1b2f6b' }}>{data.heTitle}</div>
                         <div className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{data.name}</div>
                         <div className="text-xs mt-0.5 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
                           <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
@@ -191,13 +191,13 @@ function ListView({ basePath }) {
           <button onClick={() => navigate(`${basePath}/taamim`)}
             className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left transition-all duration-200 mb-1"
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(108,51,230,0.3)'; e.currentTarget.style.background = 'rgba(108,51,230,0.05)' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(27,47,107,0.3)'; e.currentTarget.style.background = 'rgba(27,47,107,0.05)' }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.background = 'var(--bg-card)' }}>
-            <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ background: '#6c33e6' }} />
+            <div className="w-1 h-10 flex-shrink-0" style={{ background: '#1b2f6b' }} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
                 <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>Taamim</span>
-                <span className="hebrew text-sm" style={{ color: '#6c33e6' }}>טַעֲמֵי הַמִּקְרָא</span>
+                <span className="hebrew text-sm" style={{ color: '#1b2f6b' }}>טַעֲמֵי הַמִּקְרָא</span>
               </div>
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>סִימָנִים · {t('trop_subtitle')}</p>
             </div>
@@ -209,7 +209,7 @@ function ListView({ basePath }) {
 
         {byBook.map(book => {
           const isOpen = openBook === book.id || !!search
-          const color = BOOK_COLORS[book.id] || '#6c33e6'
+          const color = BOOK_COLORS[book.id] || '#1b2f6b'
           return (
             <div key={book.id} className="rounded-2xl overflow-hidden transition-all"
               style={{ border: `1px solid ${isOpen ? color + '30' : 'var(--border)'}` }}>
@@ -217,7 +217,7 @@ function ListView({ basePath }) {
                 className="w-full flex items-center justify-between px-5 py-4 text-left"
                 style={{ background: isOpen ? `${color}0d` : 'var(--bg-card)' }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ background: color }} />
+                  <div className="w-1 h-10 flex-shrink-0" style={{ background: color }} />
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>{book.name}</span>
@@ -227,7 +227,7 @@ function ListView({ basePath }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs px-2 py-0.5 rounded-full"
+                  <span className="text-xs px-2 py-0.5 rounded-sm"
                     style={{ background: `${color}15`, color, border: `1px solid ${color}20` }}>
                     {book.parashot.length}
                   </span>
@@ -261,13 +261,13 @@ function ListView({ basePath }) {
                               {hasAudio && (
                                 <span title="Audio disponible">
                                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                                    <path d="M2 3.5v3L5 8V2L2 3.5z" fill="#6c33e6"/>
-                                    <path d="M7 3.5c.6.4 1 1.1 1 1.5s-.4 1.1-1 1.5" stroke="#6c33e6" strokeWidth="0.8" strokeLinecap="round"/>
+                                    <path d="M2 3.5v3L5 8V2L2 3.5z" fill="#1b2f6b"/>
+                                    <path d="M7 3.5c.6.4 1 1.1 1 1.5s-.4 1.1-1 1.5" stroke="#1b2f6b" strokeWidth="0.8" strokeLinecap="round"/>
                                   </svg>
                                 </span>
                               )}
                               {p.combined
-                                ? <span className="text-xs px-1.5 py-0.5 rounded-full font-medium"
+                                ? <span className="text-xs px-1.5 py-0.5 rounded-sm font-medium"
                                     style={{ background: `${color}20`, color, fontSize: '9px' }}>{t('double_label')}</span>
                                 : <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{p.num}</span>
                               }
@@ -311,7 +311,7 @@ function ListView({ basePath }) {
                     className="w-full flex items-center justify-between px-5 py-4 text-left"
                     style={{ background: isOpen ? `${chag.color}0d` : 'var(--bg-card)' }}>
                     <div className="flex items-center gap-3">
-                      <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ background: chag.color }} />
+                      <div className="w-1 h-10 flex-shrink-0" style={{ background: chag.color }} />
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>{chag.name}</span>
@@ -321,7 +321,7 @@ function ListView({ basePath }) {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs px-2 py-0.5 rounded-full"
+                      <span className="text-xs px-2 py-0.5 rounded-sm"
                         style={{ background: `${chag.color}15`, color: chag.color, border: `1px solid ${chag.color}20` }}>
                         {chag.readings.length}
                       </span>
@@ -387,7 +387,7 @@ function ReaderView({ parasha, basePath }) {
     Math.max(0, parseInt(searchParams.get('aliyah') || '0', 10)),
     parasha.aliyot.length - 1
   )
-  const color = parasha.color || BOOK_COLORS[parasha.book] || '#6c33e6'
+  const color = parasha.color || BOOK_COLORS[parasha.book] || '#1b2f6b'
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden" style={{ height: '100%' }}>

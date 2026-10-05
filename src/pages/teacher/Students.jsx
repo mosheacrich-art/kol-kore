@@ -7,7 +7,7 @@ import { ALL_MOADIM, MOADIM_LIST } from '../../data/moadim'
 import { useLang } from '../../context/LangContext'
 import WordRangePicker from '../../components/WordRangePicker'
 
-const COLORS = ['#6c33e6', '#f9b800', '#2dd4bf', '#f87171', '#a78bfa']
+const COLORS = ['#1b2f6b', '#c8941f', '#1b2f6b', '#b42318', '#1b2f6b']
 
 function formatTime(seconds) {
   if (!seconds || seconds < 60) return `${seconds || 0}s`
@@ -217,9 +217,9 @@ function BarMitzvahCalc({ student, onAssign, onClose, t }) {
             <button onClick={calculate} disabled={!birthDate || loading}
               className="px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap"
               style={{
-                background: birthDate && !loading ? 'rgba(249,184,0,0.18)' : 'var(--bg-card)',
-                color: birthDate && !loading ? '#d97706' : 'var(--text-muted)',
-                border: `1px solid ${birthDate && !loading ? 'rgba(249,184,0,0.35)' : 'var(--border)'}`,
+                background: birthDate && !loading ? 'rgba(200,148,31,0.18)' : 'var(--bg-card)',
+                color: birthDate && !loading ? '#c8941f' : 'var(--text-muted)',
+                border: `1px solid ${birthDate && !loading ? 'rgba(200,148,31,0.35)' : 'var(--border)'}`,
               }}>
               {loading ? '…' : t('calc_label')}
             </button>
@@ -228,7 +228,7 @@ function BarMitzvahCalc({ student, onAssign, onClose, t }) {
 
         {error && (
           <div className="p-3 rounded-xl mb-4 text-xs"
-            style={{ background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
+            style={{ background: '#fdf3f2', color: '#b42318', border: '1px solid rgba(180,35,24,0.2)' }}>
             {error}
           </div>
         )}
@@ -236,7 +236,7 @@ function BarMitzvahCalc({ student, onAssign, onClose, t }) {
         {loading && (
           <div className="flex flex-col items-center py-8 gap-3">
             <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin"
-              style={{ borderColor: 'rgba(249,184,0,0.25)', borderTopColor: '#f9b800' }} />
+              style={{ borderColor: 'rgba(200,148,31,0.25)', borderTopColor: '#c8941f' }} />
             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('heb_calendar_loading')}</p>
           </div>
         )}
@@ -267,13 +267,13 @@ function BarMitzvahCalc({ student, onAssign, onClose, t }) {
             {/* Parasha highlight */}
             <div className="rounded-xl p-4 text-center"
               style={{
-                background: 'linear-gradient(135deg, rgba(249,184,0,0.14) 0%, rgba(249,184,0,0.04) 100%)',
-                border: '1px solid rgba(249,184,0,0.35)',
+                background: '#fbf7ec',
+                border: '1px solid rgba(200,148,31,0.35)',
               }}>
               <p className="text-xs mb-2" style={{ color: 'var(--text-gold)' }}>פָּרָשַׁת הַשָּׁבוּעַ · Perashá asignada</p>
-              <div className="text-2xl font-medium" style={{ color: '#d97706' }}>{result.parashaName}</div>
+              <div className="text-2xl font-medium" style={{ color: '#c8941f' }}>{result.parashaName}</div>
               {result.parashaHebrew && (
-                <div className="text-lg hebrew mt-1" style={{ color: 'rgba(249,184,0,0.75)' }}>
+                <div className="text-lg hebrew mt-1" style={{ color: 'rgba(200,148,31,0.75)' }}>
                   {result.parashaHebrew}
                 </div>
               )}
@@ -282,8 +282,8 @@ function BarMitzvahCalc({ student, onAssign, onClose, t }) {
             {/* Special birthday banner */}
             {specialDay && (
               <div className="rounded-xl p-3.5"
-                style={{ background: 'rgba(249,184,0,0.06)', border: '1px solid rgba(249,184,0,0.28)' }}>
-                <p className="text-xs font-semibold mb-1" style={{ color: '#d97706' }}>
+                style={{ background: '#fbf7ec', border: '1px solid rgba(200,148,31,0.28)' }}>
+                <p className="text-xs font-semibold mb-1" style={{ color: '#c8941f' }}>
                   ⚠️ Nació en {specialDay.label}
                 </p>
                 <p className="text-xs mb-2.5" style={{ color: 'var(--text-3)' }}>
@@ -291,16 +291,16 @@ function BarMitzvahCalc({ student, onAssign, onClose, t }) {
                 </p>
                 <button type="button" onClick={() => setIncludeExtra(v => !v)}
                   className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-lg"
-                  style={{ background: includeExtra ? 'rgba(249,184,0,0.1)' : 'var(--bg-card)', border: `1px solid ${includeExtra ? 'rgba(249,184,0,0.3)' : 'var(--border)'}` }}>
+                  style={{ background: includeExtra ? 'rgba(200,148,31,0.1)' : 'var(--bg-card)', border: `1px solid ${includeExtra ? 'rgba(200,148,31,0.3)' : 'var(--border)'}` }}>
                   <div className="w-4 h-4 rounded border flex items-center justify-center flex-shrink-0"
-                    style={{ borderColor: includeExtra ? '#d97706' : 'var(--border)', background: includeExtra ? '#d97706' : 'transparent' }}>
+                    style={{ borderColor: includeExtra ? '#c8941f' : 'var(--border)', background: includeExtra ? '#c8941f' : 'transparent' }}>
                     {includeExtra && (
                       <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
                         <path d="M1.5 4l2 2L6.5 2" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     )}
                   </div>
-                  <span className="text-xs" style={{ color: includeExtra ? '#d97706' : 'var(--text-2)' }}>
+                  <span className="text-xs" style={{ color: includeExtra ? '#c8941f' : 'var(--text-2)' }}>
                     Incluir también: {resolveParasha(specialDay.suggestedId)?.name || specialDay.label}
                   </span>
                 </button>
@@ -418,16 +418,16 @@ function AssignParashaModal({ student, onAssign, onClose, t }) {
                 return (
                   <button key={p.id} onClick={() => toggle(p.id)} disabled={saving}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5 text-left transition-all"
-                    style={{ background: sel ? 'rgba(249,184,0,0.1)' : 'transparent', border: `1px solid ${sel ? 'rgba(249,184,0,0.3)' : 'transparent'}` }}
+                    style={{ background: sel ? 'rgba(200,148,31,0.1)' : 'transparent', border: `1px solid ${sel ? 'rgba(200,148,31,0.3)' : 'transparent'}` }}
                     onMouseEnter={e => { if (!sel) e.currentTarget.style.background = 'var(--bg-card)' }}
                     onMouseLeave={e => { if (!sel) e.currentTarget.style.background = 'transparent' }}>
                     <div className="w-4 h-4 rounded border flex items-center justify-center flex-shrink-0"
-                      style={{ borderColor: sel ? '#d97706' : 'var(--border-subtle)', background: sel ? '#d97706' : 'transparent' }}>
+                      style={{ borderColor: sel ? '#c8941f' : 'var(--border-subtle)', background: sel ? '#c8941f' : 'transparent' }}>
                       {sel && checkIcon()}
                     </div>
                     <span className="text-xs w-5 text-right flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{p.num}</span>
                     <span className="text-sm flex-1" style={{ color: 'var(--text-2)' }}>{p.name}</span>
-                    <span className="hebrew text-sm" style={{ color: sel ? '#d97706' : 'var(--text-3)' }}>{p.heb}</span>
+                    <span className="hebrew text-sm" style={{ color: sel ? '#c8941f' : 'var(--text-3)' }}>{p.heb}</span>
                   </button>
                 )
               })}
@@ -478,8 +478,8 @@ function AssignParashaModal({ student, onAssign, onClose, t }) {
           {selectedIds.size > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-3">
               {[...selectedIds].map(id => (
-                <span key={id} className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
-                  style={{ background: 'rgba(249,184,0,0.1)', color: '#d97706', border: '1px solid rgba(249,184,0,0.25)' }}>
+                <span key={id} className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-sm"
+                  style={{ background: '#fbf7ec', color: '#c8941f', border: '1px solid rgba(200,148,31,0.25)' }}>
                   {displayParashaName(id)}
                   <button type="button" onClick={() => toggle(id)}
                     className="opacity-60 hover:opacity-100 ml-0.5">✕</button>
@@ -602,12 +602,12 @@ function SendHomeworkModal({ student, teacherId, onClose, t }) {
               <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-3)' }}>{t('fragment_label')}</label>
               {form.word_start != null ? (
                 <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm"
-                  style={{ background: 'rgba(249,184,0,0.1)', border: '1px solid rgba(249,184,0,0.3)' }}>
-                  <span style={{ color: '#d97706' }}>{t('words_range').replace('{s}', form.word_start + 1).replace('{e}', form.word_end + 1)}</span>
+                  style={{ background: '#fbf7ec', border: '1px solid rgba(200,148,31,0.3)' }}>
+                  <span style={{ color: '#c8941f' }}>{t('words_range').replace('{s}', form.word_start + 1).replace('{e}', form.word_end + 1)}</span>
                   <button type="button"
                     onClick={() => setForm(f => ({ ...f, word_start: null, word_end: null }))}
                     className="ml-auto text-xs px-2 py-0.5 rounded-md"
-                    style={{ background: 'rgba(249,184,0,0.15)', color: '#92400e' }}>
+                    style={{ background: '#fbf7ec', color: '#92400e' }}>
                     {t('full_aliyah_btn')}
                   </button>
                 </div>
@@ -631,20 +631,20 @@ function SendHomeworkModal({ student, teacherId, onClose, t }) {
             <button type="button" onClick={() => setForm(f => ({ ...f, require_audio: !f.require_audio }))}
               className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-left transition-all"
               style={{
-                background: form.require_audio ? 'rgba(108,51,230,0.1)' : 'var(--bg-card)',
-                border: `1px solid ${form.require_audio ? 'rgba(108,51,230,0.3)' : 'var(--border)'}`,
+                background: form.require_audio ? 'rgba(27,47,107,0.1)' : 'var(--bg-card)',
+                border: `1px solid ${form.require_audio ? 'rgba(27,47,107,0.3)' : 'var(--border)'}`,
               }}>
               <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ background: form.require_audio ? 'rgba(108,51,230,0.2)' : 'var(--border-subtle)' }}>
+                style={{ background: form.require_audio ? 'rgba(27,47,107,0.2)' : 'var(--border-subtle)' }}>
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <rect x="5" y="1" width="4" height="7" rx="2"
-                    stroke={form.require_audio ? '#6c33e6' : 'var(--text-3)'} strokeWidth="1.2"/>
+                    stroke={form.require_audio ? '#1b2f6b' : 'var(--text-3)'} strokeWidth="1.2"/>
                   <path d="M2 7c0 2.8 2.2 5 5 5s5-2.2 5-5"
-                    stroke={form.require_audio ? '#6c33e6' : 'var(--text-3)'} strokeWidth="1.2" strokeLinecap="round"/>
+                    stroke={form.require_audio ? '#1b2f6b' : 'var(--text-3)'} strokeWidth="1.2" strokeLinecap="round"/>
                 </svg>
               </div>
               <div className="flex-1">
-                <div className="text-xs font-medium" style={{ color: form.require_audio ? '#6c33e6' : 'var(--text)' }}>
+                <div className="text-xs font-medium" style={{ color: form.require_audio ? '#1b2f6b' : 'var(--text)' }}>
                   {t('require_audio_label')}
                 </div>
                 <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
@@ -652,7 +652,7 @@ function SendHomeworkModal({ student, teacherId, onClose, t }) {
                 </div>
               </div>
               <div className="w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0"
-                style={{ borderColor: form.require_audio ? '#6c33e6' : 'var(--border)', background: form.require_audio ? '#6c33e6' : 'transparent' }}>
+                style={{ borderColor: form.require_audio ? '#1b2f6b' : 'var(--border)', background: form.require_audio ? '#1b2f6b' : 'transparent' }}>
                 {form.require_audio && (
                   <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
                     <path d="M1.5 4l2 2L6.5 2" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
@@ -808,7 +808,7 @@ export default function TeacherStudents() {
                         })()}
                         {!s.parasha_id && (
                           <span className="text-xs px-1.5 py-0.5 rounded-md"
-                            style={{ background: 'rgba(249,184,0,0.1)', color: '#d97706', border: '1px solid rgba(249,184,0,0.2)' }}>
+                            style={{ background: '#fbf7ec', color: '#c8941f', border: '1px solid rgba(200,148,31,0.2)' }}>
                             {t('pending_label')}
                           </span>
                         )}
@@ -816,7 +816,7 @@ export default function TeacherStudents() {
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-1.5 rounded-full" style={{ background: 'var(--border)' }}>
                           <div className="h-full rounded-full"
-                            style={{ width: `${s.progress || 0}%`, background: `linear-gradient(90deg, ${color}60, ${color})` }} />
+                            style={{ width: `${s.progress || 0}%`, background: `${color}` }} />
                         </div>
                         <span className="text-xs" style={{ color }}>{s.progress || 0}%</span>
                       </div>
@@ -860,7 +860,7 @@ export default function TeacherStudents() {
                     {[
                       { label: t('listens'), value: student.listens || 0, color },
                       { label: t('progress'), value: `${student.progress || 0}%`, color },
-                      { label: t('streak'), value: `${student.streak || 0}d`, color: '#f9b800' },
+                      { label: t('streak'), value: `${student.streak || 0}d`, color: '#c8941f' },
                     ].map(stat => (
                       <div key={stat.label} className="rounded-xl p-3 text-center"
                         style={{ background: `${stat.color}10`, border: `1px solid ${stat.color}20` }}>
@@ -890,18 +890,18 @@ export default function TeacherStudents() {
                     <div className="mb-5 flex flex-col gap-3">
                       {/* Time */}
                       <div className="rounded-xl p-4"
-                        style={{ background: 'rgba(45,212,191,0.07)', border: '1px solid rgba(45,212,191,0.18)' }}>
-                        <p className="text-xs mb-2" style={{ color: '#0d9488' }}>{t('app_time')}</p>
+                        style={{ background: '#f6f7f9', border: '1px solid rgba(27,47,107,0.18)' }}>
+                        <p className="text-xs mb-2" style={{ color: '#1b2f6b' }}>{t('app_time')}</p>
                         <div className="flex items-center gap-4">
                           <div>
-                            <div className="text-2xl font-light" style={{ color: '#0d9488' }}>
+                            <div className="text-2xl font-light" style={{ color: '#1b2f6b' }}>
                               {formatTime(trackData.totalSeconds)}
                             </div>
                             <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('total_acc')}</div>
                           </div>
-                          <div className="w-px h-8 self-center" style={{ background: 'rgba(45,212,191,0.2)' }} />
+                          <div className="w-px h-8 self-center" style={{ background: '#f6f7f9' }} />
                           <div>
-                            <div className="text-lg font-light" style={{ color: '#2dd4bf' }}>
+                            <div className="text-lg font-light" style={{ color: '#1b2f6b' }}>
                               {formatTime(trackData.todaySeconds)}
                             </div>
                             <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('today_label')}</div>
@@ -953,10 +953,10 @@ export default function TeacherStudents() {
                                 <span className="col-span-2 truncate" style={{ color: 'var(--text-2)' }}>
                                   {row.parashaLabel} · {row.aliyahLabel}
                                 </span>
-                                <span className="text-center font-medium" style={{ color: '#6c33e6' }}>
+                                <span className="text-center font-medium" style={{ color: '#1b2f6b' }}>
                                   {row.count > 0 ? `${row.count}×` : '—'}
                                 </span>
-                                <span className="text-right font-medium" style={{ color: '#0d9488' }}>
+                                <span className="text-right font-medium" style={{ color: '#1b2f6b' }}>
                                   {row.seconds > 0 ? formatTime(row.seconds) : '—'}
                                 </span>
                               </div>
@@ -971,7 +971,7 @@ export default function TeacherStudents() {
                   <div className="grid grid-cols-2 gap-2 mb-2">
                     <button onClick={() => setAssignOpen(true)}
                       className="py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5"
-                      style={{ background: 'linear-gradient(135deg, rgba(108,51,230,0.18), rgba(108,51,230,0.06))', border: '1px solid rgba(108,51,230,0.3)', color: '#8b5cf6' }}>
+                      style={{ background: '#f6f7f9', border: '1px solid rgba(27,47,107,0.3)', color: '#1b2f6b' }}>
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                         <rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.2"/>
                         <path d="M4 6h4M6 4v4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
@@ -980,7 +980,7 @@ export default function TeacherStudents() {
                     </button>
                     <button onClick={() => setCalcOpen(true)}
                       className="py-2.5 rounded-xl text-xs font-medium"
-                      style={{ background: 'rgba(249,184,0,0.1)', color: '#d97706', border: '1px solid rgba(249,184,0,0.2)' }}>
+                      style={{ background: '#fbf7ec', color: '#c8941f', border: '1px solid rgba(200,148,31,0.2)' }}>
                       {t('bar_mitzvah_calc')}
                     </button>
                   </div>

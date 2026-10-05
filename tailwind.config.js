@@ -6,6 +6,7 @@ export default {
   ],
   theme: {
     extend: {
+      borderRadius: { md: '3px', lg: '4px', xl: '5px', '2xl': '6px', '3xl': '8px' },
       colors: {
         night: {
           900: '#0d0b1e',
@@ -13,9 +14,9 @@ export default {
         },
         gold: {
           300: '#ffe082',
-          400: '#ffd54f',
+          400: '#c8941f',
           500: '#ffca28',
-          600: '#f9b800',
+          600: '#c8941f',
         },
       },
       animation: {

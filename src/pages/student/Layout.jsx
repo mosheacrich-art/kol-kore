@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import { useStudyTimer } from '../../hooks/useStudyTimer'
 import { supabase } from '../../lib/supabase'
+import Logo from '../../components/Logo'
 import LangToggle from '../../components/LangToggle'
 import ContactModal from '../../components/ContactModal'
 
@@ -96,7 +97,7 @@ export default function StudentLayout() {
 
       {/* ── Desktop sidebar ───────────────────────────────────────────────── */}
       <aside className={`${isLandscape ? 'hidden' : 'hidden md:flex'} flex-shrink-0 flex-col py-8 px-4 w-64 sticky top-0 h-screen`}
-        style={{ background: 'var(--bg-deep)', borderInlineEnd: '1px solid var(--border-subtle)' }}>
+        style={{ background: '#ffffff', borderInlineEnd: '1px solid var(--border-subtle)' }}>
         <SidebarContent profile={profile} location={location} isDark={isDark}
           toggle={toggle} go={go} signOut={signOut} navigate={navigate} showClose={false} navItems={navItems} unreadEvals={unreadEvals} onContactOpen={() => setContactOpen(true)} />
       </aside>
@@ -106,7 +107,7 @@ export default function StudentLayout() {
         transition-transform duration-300 ease-in-out sidebar-drawer
         ${isRTL ? 'right-0' : 'left-0'}
         ${sidebarOpen ? 'translate-x-0' : isRTL ? 'translate-x-full' : '-translate-x-full'}`}
-        style={{ background: 'var(--bg-deep)', borderInlineEnd: '1px solid var(--border-subtle)' }}>
+        style={{ background: '#ffffff', borderInlineEnd: '1px solid var(--border-subtle)' }}>
         <SidebarContent profile={profile} location={location} isDark={isDark}
           toggle={toggle} go={go} signOut={signOut} navigate={navigate} showClose
           onClose={() => setSidebarOpen(false)} navItems={navItems} unreadEvals={unreadEvals} onContactOpen={() => setContactOpen(true)} />
@@ -118,7 +119,7 @@ export default function StudentLayout() {
 
         {/* Native: floating hamburger only, no bar — hidden when sidebar is open */}
         {isNative && !isLandscape && !sidebarOpen && (
-          <button className="fixed z-50 md:hidden p-2.5 rounded-xl"
+          <button className="fixed z-50 md:hidden p-2.5 rounded"
             style={{
               top: 'calc(env(safe-area-inset-top, 0px) + 8px)',
               left: '16px',
@@ -134,18 +135,17 @@ export default function StudentLayout() {
         {/* Web/Desktop: full header bar */}
         {!isNative && !isLandscape && (
           <div className="sticky top-0 z-30 flex items-center gap-3 px-4 flex-shrink-0 app-header"
-            style={{ background: 'var(--bg-deep)', borderBottom: '1px solid var(--border-subtle)', minHeight: '3.5rem' }}>
-            <button className="md:hidden p-2 rounded-xl" onClick={() => setSidebarOpen(true)}
+            style={{ background: '#ffffff', borderBottom: '1px solid var(--border)', minHeight: '3.5rem' }}>
+            <button className="md:hidden p-2 rounded" onClick={() => setSidebarOpen(true)}
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-2)' }}>
               <HamburgerIcon />
             </button>
-            <StarOfDavidSmall />
-            <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashapp</span>
+            <Logo size={26} />
             <div className="ml-auto flex items-center gap-2">
               <div className="hidden md:flex items-center gap-2">
                 <LangToggle />
                 <button onClick={() => setContactOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all"
                   style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border-subtle)' }}
                   title={t('contact_us')}>
                   <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -154,16 +154,10 @@ export default function StudentLayout() {
                   </svg>
                   {t('contact_us')}
                 </button>
-                <button onClick={toggle}
-                  className="p-2 rounded-xl text-xs transition-all"
-                  style={{ color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
-                  title={isDark ? t('light_mode') : t('dark_mode')}>
-                  <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
-                </button>
                 <button onClick={async () => { await signOut(); navigate('/login') }}
-                  className="p-2 rounded-xl transition-all"
+                  className="p-2 rounded transition-all"
                   title={t('logout')}
-                  style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
+                  style={{ color: '#1b2f6b', background: 'transparent', border: '1px solid var(--border)' }}>
                   <LogoutIcon />
                 </button>
               </div>
@@ -187,8 +181,7 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
     <>
       <div className="px-3 mb-8 flex items-center justify-between">
         <button onClick={() => go('/student/profile')} className="flex items-center gap-2">
-          <StarOfDavidSmall />
-          <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Parashapp</span>
+          <Logo size={26} />
         </button>
         {showClose && (
           <button onClick={onClose} className="p-1.5 rounded-lg" style={{ color: 'var(--text-3)' }}>
@@ -198,25 +191,20 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
       </div>
 
       <button onClick={() => go('/student/profile')}
-        className="mx-3 mb-6 flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all"
-        style={{ background: 'rgba(108,51,230,0.08)', border: '1px solid rgba(108,51,230,0.15)' }}
-        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(108,51,230,0.15)' }}
-        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(108,51,230,0.08)' }}>
-        <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-          style={{ background: 'rgba(108,51,230,0.3)', color: '#c4b5fd' }}>
+        className="mx-3 mb-6 flex items-center gap-2.5 px-1 pb-4 text-left"
+        style={{ background: 'transparent', borderBottom: '1px solid var(--border)', borderRadius: 0 }}>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0"
+          style={{ background: '#1b2f6b', color: '#fff' }}>
           {profile?.name?.[0]?.toUpperCase() ?? 'A'}
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-xs font-medium truncate" style={{ color: 'var(--text)' }}>
             {profile?.name ?? 'Alumno'}
           </div>
-          <div className="text-xs" style={{ color: '#a78bfa' }}>
+          <div className="text-xs" style={{ color: '#c8941f' }}>
             {t('role_student') ?? 'Alumno'}
           </div>
         </div>
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0, color: 'rgba(139,92,246,0.5)' }}>
-          <path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
       </button>
 
       <nav className="flex flex-col gap-1">
@@ -226,11 +214,12 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
           const showBadge = item.badge && unreadEvals > 0
           return (
             <button key={item.path} onClick={() => go(item.path)}
-              className="sidebar-item flex items-center gap-3 px-3 py-3 rounded-xl text-left"
+              className="sidebar-item flex items-center gap-3 px-3 py-3 rounded text-left"
               style={{
-                background: active ? 'rgba(108,51,230,0.13)' : 'transparent',
-                borderInlineStart: active ? '2px solid #8b5cf6' : '2px solid transparent',
-                color: active ? '#8b5cf6' : 'var(--text-3)',
+                background: 'transparent',
+                borderInlineStart: active ? '3px solid #c8941f' : '3px solid transparent',
+                fontWeight: active ? 600 : 400,
+                color: active ? '#1b2f6b' : 'var(--text-3)',
               }}>
               <Icon active={active} />
               <div className="flex-1 min-w-0">
@@ -238,7 +227,7 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
               </div>
               {showBadge && (
                 <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                  style={{ background: '#ef4444', color: '#fff' }}>{unreadEvals > 9 ? '9+' : unreadEvals}</span>
+                  style={{ background: '#c8941f', color: '#fff' }}>{unreadEvals > 9 ? '9+' : unreadEvals}</span>
               )}
             </button>
           )
@@ -250,15 +239,9 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
         {/* Mobile-only: lang, dark mode, contact */}
         <div className="md:hidden flex flex-col gap-2 pb-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
           <LangButton t={t} />
-          <button onClick={toggle}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs text-left transition-all"
-            style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
-            <span style={{ fontSize: '14px' }}>{isDark ? '☀️' : '🌙'}</span>
-            {isDark ? (t ? t('light_mode') ?? 'Modo claro' : 'Modo claro') : (t ? t('dark_mode') ?? 'Modo oscuro' : 'Modo oscuro')}
-          </button>
           {onContactOpen && (
             <button onClick={() => { onContactOpen(); onClose?.() }}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs text-left transition-all"
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded text-xs text-left transition-all"
               style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ flexShrink: 0 }}>
                 <rect x="1" y="2.5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
@@ -269,8 +252,8 @@ function SidebarContent({ profile, location, isDark, toggle, go, signOut, naviga
           )}
         </div>
         <button onClick={async () => { await signOut(); navigate('/login') }}
-          className="w-full text-xs py-2.5 px-3 rounded-xl text-left transition-all"
-          style={{ color: '#ef4444', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
+          className="w-full text-xs py-2.5 px-3 rounded text-left transition-all"
+          style={{ color: '#1b2f6b', background: 'transparent', border: '1px solid var(--border)' }}>
           → {t('logout')}
         </button>
       </div>
@@ -293,7 +276,7 @@ function LangButton({ t }) {
   const current = LANGS.find(l => l.code === lang) || LANGS[0]
   return (
     <button onClick={() => window.__langSheetOpen?.()}
-      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all"
+      className="w-full flex items-center justify-between px-3 py-2.5 rounded text-xs transition-all"
       style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border-subtle)' }}>
       <span>{t ? t('language') ?? 'Idioma' : 'Idioma'}</span>
       <span>{current.flag} {current.label}</span>
@@ -317,17 +300,17 @@ function LangSheet({ t }) {
         </p>
         {LANGS.map(l => (
           <button key={l.code} onClick={() => { setLang(l.code); setOpen(false) }}
-            className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all"
+            className="flex items-center gap-3 px-3 py-3 rounded text-sm transition-all"
             style={{
-              background: lang === l.code ? 'rgba(108,51,230,0.12)' : 'var(--bg-card)',
-              border: `1px solid ${lang === l.code ? 'rgba(108,51,230,0.3)' : 'var(--border-subtle)'}`,
-              color: lang === l.code ? '#8b5cf6' : 'var(--text)',
+              background: lang === l.code ? '#f6f7f9' : 'var(--bg-card)',
+              border: `1px solid ${lang === l.code ? 'rgba(27,47,107,0.3)' : 'var(--border-subtle)'}`,
+              color: lang === l.code ? '#1b2f6b' : 'var(--text)',
             }}>
             <span style={{ fontSize: '20px' }}>{l.flag}</span>
             <span className="font-medium">{l.label}</span>
             {lang === l.code && (
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="ml-auto">
-                <path d="M2.5 7l3 3L11.5 4" stroke="#8b5cf6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M2.5 7l3 3L11.5 4" stroke="#1b2f6b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             )}
           </button>
@@ -374,7 +357,7 @@ function Paywall({ user, profile, navigate }) {
 
   const Spinner = () => (
     <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
-      style={{ borderColor: 'rgba(108,51,230,0.3)', borderTopColor: '#8b5cf6' }} />
+      style={{ borderColor: 'rgba(27,47,107,0.3)', borderTopColor: '#1b2f6b' }} />
   )
 
   return (
@@ -385,9 +368,9 @@ function Paywall({ user, profile, navigate }) {
       <div className="flex items-center gap-3 mb-6">
         <svg width="36" height="36" viewBox="0 0 28 28" fill="none">
           <polygon points="14,3 18,10 22,10 18,14 22,18 14,15 6,18 10,14 6,10 10,10"
-            fill="none" stroke="rgba(255,202,40,0.7)" strokeWidth="1.2" strokeLinejoin="round"/>
+            fill="none" stroke="rgba(200,148,31,0.7)" strokeWidth="1.2" strokeLinejoin="round"/>
           <polygon points="14,25 10,18 6,18 10,14 6,10 14,13 22,10 18,14 22,18 18,18"
-            fill="none" stroke="rgba(255,202,40,0.7)" strokeWidth="1.2" strokeLinejoin="round"/>
+            fill="none" stroke="rgba(200,148,31,0.7)" strokeWidth="1.2" strokeLinejoin="round"/>
         </svg>
         <div>
           <div className="text-base font-semibold" style={{ color: 'var(--text)' }}>Parashapp</div>
@@ -408,21 +391,21 @@ function Paywall({ user, profile, navigate }) {
         <div className="grid grid-cols-2 gap-3 mb-4">
 
           <button onClick={() => setPlan('annual')}
-            className="rounded-2xl p-4 text-left transition-all relative"
+            className="rounded p-4 text-left transition-all relative"
             style={{
-              background: plan === 'annual' ? 'rgba(249,184,0,0.07)' : 'var(--bg-card)',
-              border: `1.5px solid ${plan === 'annual' ? '#f9b800' : 'var(--border)'}`,
+              background: plan === 'annual' ? 'rgba(200,148,31,0.07)' : 'var(--bg-card)',
+              border: `1.5px solid ${plan === 'annual' ? '#c8941f' : 'var(--border)'}`,
             }}>
             <div className="absolute -top-2.5 right-3">
-              <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                style={{ background: 'linear-gradient(135deg, #f9b800, #ffd54f)', color: '#0d0b1e', fontSize: '10px' }}>
+              <span className="text-xs px-2 py-0.5 rounded-sm font-semibold"
+                style={{ background: '#c8941f', color: '#ffffff', fontSize: '10px' }}>
                 {t('save_17')}
               </span>
             </div>
             <div className="flex items-center gap-1.5 mb-2">
               <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
-                style={{ borderColor: plan === 'annual' ? '#f9b800' : 'var(--border)' }}>
-                {plan === 'annual' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#f9b800' }} />}
+                style={{ borderColor: plan === 'annual' ? '#c8941f' : 'var(--border)' }}>
+                {plan === 'annual' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#c8941f' }} />}
               </div>
               <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>{t('annual_plan')}</span>
             </div>
@@ -435,15 +418,15 @@ function Paywall({ user, profile, navigate }) {
           </button>
 
           <button onClick={() => setPlan('monthly')}
-            className="rounded-2xl p-4 text-left transition-all"
+            className="rounded p-4 text-left transition-all"
             style={{
-              background: plan === 'monthly' ? 'rgba(108,51,230,0.08)' : 'var(--bg-card)',
-              border: `1.5px solid ${plan === 'monthly' ? '#8b5cf6' : 'var(--border)'}`,
+              background: plan === 'monthly' ? 'rgba(27,47,107,0.08)' : 'var(--bg-card)',
+              border: `1.5px solid ${plan === 'monthly' ? '#1b2f6b' : 'var(--border)'}`,
             }}>
             <div className="flex items-center gap-1.5 mb-2">
               <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
-                style={{ borderColor: plan === 'monthly' ? '#8b5cf6' : 'var(--border)' }}>
-                {plan === 'monthly' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#8b5cf6' }} />}
+                style={{ borderColor: plan === 'monthly' ? '#1b2f6b' : 'var(--border)' }}>
+                {plan === 'monthly' && <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#1b2f6b' }} />}
               </div>
               <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>{t('monthly_plan')}</span>
             </div>
@@ -456,15 +439,15 @@ function Paywall({ user, profile, navigate }) {
         </div>
 
         {/* Features included */}
-        <div className="rounded-2xl p-4 mb-4"
+        <div className="rounded p-4 mb-4"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
           <p className="text-xs font-semibold mb-2.5" style={{ color: 'var(--text-2)' }}>{t('includes')}:</p>
           <ul className="flex flex-col gap-1.5">
             {t('sub_features').map(f => (
               <li key={f} className="flex items-start gap-2">
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ flexShrink: 0, marginTop: '1px' }}>
-                  <circle cx="6.5" cy="6.5" r="5.5" stroke="#22c55e" strokeWidth="1.1"/>
-                  <path d="M4 6.5l2 2L9.5 4.5" stroke="#22c55e" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="6.5" cy="6.5" r="5.5" stroke="#c8941f" strokeWidth="1.1"/>
+                  <path d="M4 6.5l2 2L9.5 4.5" stroke="#c8941f" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <span className="text-xs" style={{ color: 'var(--text-2)' }}>{f}</span>
               </li>
@@ -474,12 +457,12 @@ function Paywall({ user, profile, navigate }) {
 
         {/* Primary CTA */}
         <button onClick={handlePay} disabled={paying}
-          className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 mb-3"
+          className="w-full py-3.5 rounded font-semibold text-sm transition-all flex items-center justify-center gap-2 mb-3"
           style={{
-            background: paying ? 'var(--bg-card)' : 'linear-gradient(135deg, #6c33e6, #8b5cf6)',
+            background: paying ? 'var(--bg-card)' : '#1b2f6b',
             color: paying ? 'var(--text-3)' : '#fff',
             border: paying ? '1px solid var(--border)' : 'none',
-            boxShadow: paying ? 'none' : '0 4px 20px rgba(108,51,230,0.35)',
+            boxShadow: 'none',
           }}>
           {paying ? <><Spinner /> Redirigiendo…</> : 'Suscribirse →'}
         </button>
@@ -491,7 +474,7 @@ function Paywall({ user, profile, navigate }) {
         {/* Guest access */}
         <div className="flex flex-col items-center gap-2">
           <button onClick={handleGuest}
-            className="text-xs py-2 px-5 rounded-xl transition-all"
+            className="text-xs py-2 px-5 rounded transition-all"
             style={{ color: 'var(--text-muted)', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             Continuar como invitado (sin audio)
           </button>
@@ -515,9 +498,9 @@ function StarOfDavidSmall() {
   return (
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
       <polygon points="14,3 18,10 22,10 18,14 22,18 14,15 6,18 10,14 6,10 10,10"
-        fill="none" stroke="rgba(255,202,40,0.6)" strokeWidth="1.2" strokeLinejoin="round"/>
+        fill="none" stroke="rgba(200,148,31,0.6)" strokeWidth="1.2" strokeLinejoin="round"/>
       <polygon points="14,25 10,18 6,18 10,14 6,10 14,13 22,10 18,14 22,18 18,18"
-        fill="none" stroke="rgba(255,202,40,0.6)" strokeWidth="1.2" strokeLinejoin="round"/>
+        fill="none" stroke="rgba(200,148,31,0.6)" strokeWidth="1.2" strokeLinejoin="round"/>
     </svg>
   )
 }
@@ -539,7 +522,7 @@ function XIcon() {
 }
 
 function ProfileIcon({ active }) {
-  const c = active ? '#8b5cf6' : 'var(--text-3)'
+  const c = active ? '#1b2f6b' : 'var(--text-3)'
   return (
     <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
       <circle cx="9" cy="6" r="3" stroke={c} strokeWidth="1.3"/>
@@ -549,7 +532,7 @@ function ProfileIcon({ active }) {
 }
 
 function StudyIcon({ active }) {
-  const c = active ? '#8b5cf6' : 'var(--text-3)'
+  const c = active ? '#1b2f6b' : 'var(--text-3)'
   return (
     <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
       <path d="M3 3h5l3 3h4v9H3V3z" stroke={c} strokeWidth="1.3" strokeLinejoin="round"/>
@@ -559,7 +542,7 @@ function StudyIcon({ active }) {
 }
 
 function TikunIcon({ active }) {
-  const c = active ? '#8b5cf6' : 'var(--text-3)'
+  const c = active ? '#1b2f6b' : 'var(--text-3)'
   return (
     <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
       <rect x="1.5" y="1.5" width="15" height="15" rx="1.5" stroke={c} strokeWidth="1.3"/>
@@ -571,7 +554,7 @@ function TikunIcon({ active }) {
 }
 
 function PrintIcon({ active }) {
-  const c = active ? '#8b5cf6' : 'var(--text-3)'
+  const c = active ? '#1b2f6b' : 'var(--text-3)'
   return (
     <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
       <rect x="3" y="6" width="12" height="8" rx="1" stroke={c} strokeWidth="1.3"/>
@@ -582,7 +565,7 @@ function PrintIcon({ active }) {
 }
 
 function SubscriptionIcon({ active }) {
-  const c = active ? '#8b5cf6' : 'var(--text-3)'
+  const c = active ? '#1b2f6b' : 'var(--text-3)'
   return (
     <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
       <rect x="2" y="4" width="14" height="10" rx="2" stroke={c} strokeWidth="1.3"/>
@@ -593,7 +576,7 @@ function SubscriptionIcon({ active }) {
 }
 
 function NotifIcon({ active }) {
-  const c = active ? '#8b5cf6' : 'var(--text-3)'
+  const c = active ? '#1b2f6b' : 'var(--text-3)'
   return (
     <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
       <path d="M9 2C6 2 4 4.5 4 7v4l-1.5 2H15.5L14 11V7c0-2.5-2-5-5-5z" stroke={c} strokeWidth="1.3" strokeLinejoin="round"/>
@@ -603,7 +586,7 @@ function NotifIcon({ active }) {
 }
 
 function TefilaIcon({ active }) {
-  const c = active ? '#8b5cf6' : 'var(--text-3)'
+  const c = active ? '#1b2f6b' : 'var(--text-3)'
   return (
     <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
       <path d="M9 2C6 2 4 4 4 7v5l-1 2h12l-1-2V7c0-3-2-5-5-5z" stroke={c} strokeWidth="1.3" strokeLinejoin="round"/>
@@ -614,7 +597,7 @@ function TefilaIcon({ active }) {
 }
 
 function HaftaraIcon({ active }) {
-  const c = active ? '#8b5cf6' : 'var(--text-3)'
+  const c = active ? '#1b2f6b' : 'var(--text-3)'
   return (
     <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
       <path d="M3 4h12" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
@@ -628,7 +611,7 @@ function HaftaraIcon({ active }) {
 }
 
 function AccountIcon({ active }) {
-  const c = active ? '#8b5cf6' : 'var(--text-3)'
+  const c = active ? '#1b2f6b' : 'var(--text-3)'
   return (
     <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
       <circle cx="9" cy="9" r="7" stroke={c} strokeWidth="1.3"/>
