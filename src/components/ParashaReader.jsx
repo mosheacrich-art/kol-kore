@@ -1626,8 +1626,9 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
             const inHwRange = homeworkRange != null && i >= homeworkRange.start && i <= homeworkRange.end
             let color = 'inherit'
             if (isMarked) color = '#b42318'
-            else if (isActive) color = '#1b2f6b'
-            else if (isHover) color = onWordMark ? '#b42318' : '#1b2f6b'
+            else if (isActive) color = 'var(--word-active)'
+            else if (isHover) color = onWordMark ? '#b42318' : 'var(--word-active)'
+            const showBg = (isActive || (isHover && !onWordMark)) && !isMarked
             return (
               <span
                 key={i}
@@ -1638,10 +1639,10 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
                 style={{
                   color,
                   cursor: canInteract ? 'pointer' : 'default',
-                  transition: 'color 0.08s',
+                  transition: 'color 0.08s, background 0.08s',
                   textDecoration: isMarked ? 'underline wavy #b42318' : 'none',
-                  background: inHwRange ? 'rgba(200,148,31,0.22)' : 'transparent',
-                  borderRadius: inHwRange ? '3px' : '0',
+                  background: showBg ? 'var(--word-active-bg)' : inHwRange ? 'rgba(200,148,31,0.22)' : 'transparent',
+                  borderRadius: showBg || inHwRange ? '4px' : '0',
                   padding: inHwRange ? '2px 1px' : '0',
                 }}
               >
@@ -1902,12 +1903,15 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
     const isHover = forLeft && hoverIdx === i && !isActive && !isMarked
     let color = 'inherit'
     if (isMarked) color = '#b42318'
-    else if (isActive) color = '#1b2f6b'
-    else if (isHover) color = onWordMark ? '#b42318' : '#1b2f6b'
+    else if (isActive) color = 'var(--word-active)'
+    else if (isHover) color = onWordMark ? '#b42318' : 'var(--word-active)'
+    const showBg = (isActive || (isHover && !onWordMark)) && !isMarked
     return {
       color,
+      background: showBg ? 'var(--word-active-bg)' : 'transparent',
+      borderRadius: '4px',
       cursor: forLeft && canInteract ? 'pointer' : 'default',
-      transition: 'color 0.08s',
+      transition: 'color 0.08s, background 0.08s',
       textDecoration: isMarked ? 'underline wavy #b42318' : 'none',
     }
   }
