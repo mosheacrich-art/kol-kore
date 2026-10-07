@@ -119,7 +119,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
   const [evalComment, setEvalComment] = useState('')
   const [evalSending, setEvalSending] = useState(false)
   const evalAudioRef = useRef(null)
-  const { get, upload, uploadStudentRecording, remove } = useAudio()
+  const { get, upload, uploadStudentRecording, remove, generateSync, syncingKeys, syncErrors } = useAudio()
   const { profile, user } = useAuth()
   const isAdmin = user?.id === '1f4d0329-ddf5-48a4-965f-5f37d7416447'
   const notifiedRef = useRef(new Set())    // aliyot ya notificadas en esta sesión
@@ -1096,6 +1096,26 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
           </div>
         )
       )}
+
+      {/* Teacher: sync status of the current aliyah's audio */}
+      {isTeacher && (() => {
+        const key = `${parasha.id}-${aliyahIdx}`
+        const syncing = syncingKeys?.has(key)
+        const err = syncErrors?.[key]
+        if (!syncing && !err) return null
+        return (
+          <div className="flex-shrink-0 flex items-center gap-2 px-5 py-2 text-xs"
+            style={{ background: err ? '#fdf3f2' : '#f6f7f9', borderBottom: '1px solid var(--border-subtle)', color: err ? '#b42318' : '#1b2f6b' }}>
+            {syncing
+              ? <><div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#1b2f6b' }} />{t('sync_in_progress')}</>
+              : <>
+                  <span className="flex-1 min-w-0 break-words">{t('sync_failed')}: {err}</span>
+                  <button onClick={() => generateSync(parasha.id, aliyahIdx, currentAliyah?.ref)}
+                    className="underline flex-shrink-0">{t('sync_retry')}</button>
+                </>}
+          </div>
+        )
+      })()}
 
       {/* Student upload success message */}
       {uploadedMsg && (

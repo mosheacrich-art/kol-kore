@@ -1,5 +1,8 @@
 export const translations = {
   es: {
+    sync_in_progress: 'Sincronizando el audio palabra por palabra…',
+    sync_failed: 'La sincronización falló',
+    sync_retry: 'Reintentar',
     resync_mine: 'Resincronizar mis audios',
     resync_confirm: 'Se volverá a sincronizar palabra por palabra cada audio tuyo cuya sincronización no esté alineada con el texto. Los audios ya correctos y los tramos no se tocan. Puede tardar unos minutos. ¿Continuar?',
     resync_running: 'Resincronizando… {done}/{total}',
@@ -705,6 +708,9 @@ export const translations = {
   },
 
   en: {
+    sync_in_progress: 'Syncing the audio word by word…',
+    sync_failed: 'Sync failed',
+    sync_retry: 'Retry',
     resync_mine: 'Re-sync my audios',
     resync_confirm: "Every audio of yours whose timing isn't aligned to the text will be re-synced word by word. Correct audios and ranges are left untouched. This may take a few minutes. Continue?",
     resync_running: 'Re-syncing… {done}/{total}',
@@ -1410,6 +1416,9 @@ export const translations = {
   },
 
   fr: {
+    sync_in_progress: 'Synchronisation de l’audio mot à mot…',
+    sync_failed: 'La synchronisation a échoué',
+    sync_retry: 'Réessayer',
     resync_mine: 'Resynchroniser mes audios',
     resync_confirm: "Chaque audio dont la synchronisation n'est pas alignée sur le texte sera resynchronisé mot à mot. Les audios corrects et les passages ne sont pas modifiés. Cela peut prendre quelques minutes. Continuer ?",
     resync_running: 'Resynchronisation… {done}/{total}',
@@ -2114,6 +2123,9 @@ export const translations = {
   },
 
   it: {
+    sync_in_progress: 'Sincronizzazione dell’audio parola per parola…',
+    sync_failed: 'Sincronizzazione non riuscita',
+    sync_retry: 'Riprova',
     resync_mine: 'Risincronizza i miei audio',
     resync_confirm: 'Ogni tuo audio la cui sincronizzazione non è allineata al testo verrà risincronizzato parola per parola. Gli audio corretti e i tratti non vengono toccati. Potrebbe richiedere alcuni minuti. Continuare?',
     resync_running: 'Risincronizzazione… {done}/{total}',
@@ -2818,6 +2830,9 @@ export const translations = {
   },
 
   he: {
+    sync_in_progress: 'מסנכרן את ההקלטה מילה במילה…',
+    sync_failed: 'הסנכרון נכשל',
+    sync_retry: 'נסה שוב',
     resync_mine: 'סנכרן מחדש את ההקלטות שלי',
     resync_confirm: 'כל הקלטה שלך שהסנכרון שלה אינו מותאם לטקסט תסונכרן מחדש מילה במילה. הקלטות תקינות וקטעים לא ישתנו. זה עשוי לקחת כמה דקות. להמשיך?',
     resync_running: 'מסנכרן… {done}/{total}',
@@ -3522,6 +3537,9 @@ export const translations = {
   },
 
   de: {
+    sync_in_progress: 'Audio wird Wort für Wort synchronisiert…',
+    sync_failed: 'Synchronisierung fehlgeschlagen',
+    sync_retry: 'Erneut versuchen',
     resync_mine: 'Meine Audios neu synchronisieren',
     resync_confirm: 'Jedes deiner Audios, dessen Timing nicht am Text ausgerichtet ist, wird Wort für Wort neu synchronisiert. Korrekte Audios und Bereiche bleiben unverändert. Das kann einige Minuten dauern. Fortfahren?',
     resync_running: 'Synchronisiere… {done}/{total}',

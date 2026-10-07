@@ -42,7 +42,12 @@ async function callSyncApi(audioUrl, fileType, aliyahRef, prompt, words) {
     },
     body: JSON.stringify({ audioUrl, fileType, ...(aliyahRef ? { aliyahRef } : {}), ...(prompt ? { prompt } : {}), ...(words ? { words } : {}) }),
   })
-  const json = await res.json()
+  // A Vercel timeout/crash returns plain text, not JSON — surface the status instead of a parse error
+  const raw = await res.text()
+  let json
+  try { json = JSON.parse(raw) } catch {
+    throw new Error(`Error ${res.status}${res.status === 504 ? ' (tiempo agotado en el servidor)' : ''}: ${raw.slice(0, 120)}`)
+  }
   if (!res.ok) throw new Error(json.error || `Error ${res.status}`)
   if (json.format === 'v2') {
     if (json.needs_review) console.warn(`Sync needs_review: anchor_pct=${json.anchor_pct}`)
@@ -300,12 +305,14 @@ export function AudioProvider({ children }) {
   const generateSync = useCallback(async (parashaId, aliyahIdx, aliyahRef) => {
     const key = `${parashaId}-${aliyahIdx}`
 
-    const { data: row } = await supabase
+    const { data: { session } } = await supabase.auth.getSession()
+    let q = supabase
       .from('audio_files')
       .select('public_url, file_type, teacher_id')
       .eq('parasha_id', parashaId)
       .eq('aliyah_idx', aliyahIdx)
-      .maybeSingle()
+    if (session?.user?.id) q = q.eq('teacher_id', session.user.id)
+    const { data: row } = await q.maybeSingle()
     if (!row?.public_url) return false
 
     setSyncingKeys(prev => new Set([...prev, key]))
