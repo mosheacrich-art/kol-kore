@@ -11,7 +11,8 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { sendPushToUser } from '../lib/sendPush'
 import AudioPlayer from './AudioPlayer'
-import RangeRecorder from './RangeRecorder'
+import WordRangePicker from './WordRangePicker'
+import { buildRangeTimestamps, buildSyncRange } from '../utils/rangeSync'
 import { BOOK_COLORS } from '../data/parashot'
 import { useLang } from '../context/LangContext'
 import { AdminUploadButton, AdminRecordButton } from './AdminAudioUpload'
@@ -171,6 +172,12 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
   const chunksRef = useRef([])
   const timerRef = useRef(null)
   const uploadInputRef = useRef(null)
+  const recRangeRef = useRef(null)      // { s, e, words } when the teacher records only a range
+  const recStartRef = useRef(0)
+  const recModeRef = useRef('desktop')  // which record action to run after the teacher picks full/range
+  const [recChoiceOpen, setRecChoiceOpen] = useState(false)
+  const [pickingRange, setPickingRange] = useState(false)
+  const [recRange, setRecRange] = useState(null)  // mirror of recRangeRef for display
   const [uploadedMsg, setUploadedMsg] = useState(false)
 
   const currentAliyah = parasha.aliyot[aliyahIdx]
@@ -386,17 +393,30 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
           }
           await autoSubmitHomework(url)
         } else {
-          await upload(parasha.id, aliyahIdx, file)
+          const range = recRangeRef.current
+          recRangeRef.current = null
+          setRecRange(null)
+          if (range) {
+            const duration = (Date.now() - recStartRef.current) / 1000
+            await upload(parasha.id, aliyahIdx, file, currentAliyah?.ref,
+              buildRangeTimestamps(range.words, range.s, range.e, duration),
+              buildSyncRange(range.words, range.s, range.e))
+          } else {
+            await upload(parasha.id, aliyahIdx, file, currentAliyah?.ref)
+          }
           await autoSubmitHomework()
         }
         stream.getTracks().forEach(t => t.stop())
         setRecState('idle')
       }
+      recStartRef.current = Date.now()
       mr.start()
       setRecState('recording')
       setRecSeconds(0)
       timerRef.current = setInterval(() => setRecSeconds(s => s + 1), 1000)
     } catch (err) {
+      recRangeRef.current = null
+      setRecRange(null)
       setRecordingMode(false)
       setCountdown(null)
       alert(err.name === 'NotAllowedError'
@@ -428,6 +448,15 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
     }, 1000)
   }
 
+  // Teachers choose between recording the whole aliyah or a word range; both go through
+  // the same recorder and the same upload + Whisper sync. Students record directly.
+  const runRecord = (mode) => (mode === 'mobile' ? startRecordingMode() : startRec())
+  const handleRecordClick = (mode) => {
+    if (!isTeacher) { runRecord(mode); return }
+    recModeRef.current = mode
+    setRecChoiceOpen(true)
+  }
+
   const handleUploadFile = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -444,7 +473,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
       }
       await autoSubmitHomework(url)
     } else {
-      await upload(parasha.id, aliyahIdx, file)
+      await upload(parasha.id, aliyahIdx, file, currentAliyah?.ref)
       await autoSubmitHomework()
     }
     e.target.value = ''
@@ -1265,16 +1294,42 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
         )}
       </div>
 
+      {recChoiceOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-5"
+          style={{ background: 'rgba(17,24,39,0.55)' }} onClick={() => setRecChoiceOpen(false)}>
+          <div className="w-full max-w-xs p-2 flex flex-col gap-1"
+            style={{ background: 'var(--bg-card)', borderRadius: 8, boxShadow: 'var(--shadow-lg)' }}
+            onClick={e => e.stopPropagation()}>
+            <p className="px-3 pt-2 pb-1 text-xs" style={{ color: 'var(--text-3)' }}>{t('record')} · {currentAliyah?.label || `${aliyahIdx + 1}ª`}</p>
+            <button className="text-left px-3 py-2.5 rounded-md text-sm font-medium"
+              style={{ color: 'var(--text)', background: 'var(--overlay)' }}
+              onClick={() => { setRecChoiceOpen(false); recRangeRef.current = null; runRecord(recModeRef.current) }}>
+              ● {t('x_rec_full')}
+            </button>
+            <button className="text-left px-3 py-2.5 rounded-md text-sm font-medium"
+              style={{ color: 'var(--text)', background: 'var(--overlay)' }}
+              title={t('x_rec_range_title')}
+              onClick={() => { setRecChoiceOpen(false); setPickingRange(true) }}>
+              ◐ {t('x_rec_range')}
+            </button>
+          </div>
+        </div>
+      )}
+      {pickingRange && (
+        <WordRangePicker aliyahRef={currentAliyah.ref} heText={currentAliyah.heText || null}
+          onClose={() => setPickingRange(false)}
+          onConfirm={(s, e, words) => {
+            setPickingRange(false)
+            recRangeRef.current = { s, e, words }
+            setRecRange({ s, e })
+            runRecord(recModeRef.current)
+          }} />
+      )}
+
       {/* Audio bar */}
       {<div className="flex-shrink-0 px-4 py-2.5 flex items-center justify-end gap-2"
         style={isMobileUI && profile?.role === 'student' ? {} : { borderTop: '1px solid var(--border-subtle)', background: 'var(--overlay)' }}>
 
-        {isTeacher && recState === 'idle' && (
-          <div className="flex items-center gap-2 mr-auto">
-            <RangeRecorder parashaId={parasha.id} aliyahIdx={aliyahIdx} aliyahRef={currentAliyah.ref}
-              heText={currentAliyah.heText || null} />
-          </div>
-        )}
 
         {recState === 'recording' ? (
           <>
@@ -1283,6 +1338,11 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
               <span className="text-xs font-medium tabular-nums" style={{ color: '#b42318' }}>
                 {t('record')}… {fmtSec(recSeconds)}
               </span>
+              {recRange && (
+                <span className="text-xs" style={{ color: 'var(--text-3)' }}>
+                  · {t('x_words')} {recRange.s + 1}–{recRange.e + 1}
+                </span>
+              )}
             </div>
             <button onClick={stopRec}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium flex-shrink-0 transition-all"
@@ -1306,7 +1366,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
                 onDurationChange={setAudioDuration}
               />
             </div>
-            <button onClick={startRecordingMode} title={t('tooltip_record_send')}
+            <button onClick={() => handleRecordClick('mobile')} title={t('tooltip_record_send')}
               className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all text-lg"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               🎙️
@@ -1314,7 +1374,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
           </>
         ) : isMobileUI && !audio ? (
           <div className="w-full flex items-center justify-end">
-            <button onClick={startRecordingMode} title={t('tooltip_record_send')}
+            <button onClick={() => handleRecordClick('mobile')} title={t('tooltip_record_send')}
               className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all text-lg"
               style={{ background: `${bookColor}15`, border: `1px solid ${bookColor}30` }}>
               🎙️
@@ -1346,7 +1406,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
               </button>
             )}
             {profile?.role !== 'student' && (
-              <button onClick={startRec} title={t('tooltip_record_replace')}
+              <button onClick={() => handleRecordClick('desktop')} title={t('tooltip_record_replace')}
                 className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
                 style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -1387,7 +1447,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
               </svg>
               {t('upload')}
             </button>
-            <button onClick={startRec}
+            <button onClick={() => handleRecordClick('desktop')}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium flex-shrink-0 transition-all"
               style={{ background: `${bookColor}15`, color: bookColor, border: `1px solid ${bookColor}30` }}>
               <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
