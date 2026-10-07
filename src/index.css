@@ -331,12 +331,12 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #c8941f; outline-
   --parchment-2:    #f3ead3;
   --parchment-ink:  #1c1710;
   --parchment-line: rgba(92, 70, 30, 0.16);
-  --word-active:    #1d6ff2;
-  --word-active-bg: rgba(29, 111, 242, 0.16);
+  --word-active:    #0057ff;
+  --word-active-bg: rgba(0, 110, 255, 0.28);
 }
 .dark {
-  --word-active:    #6cb4ff;
-  --word-active-bg: rgba(108, 180, 255, 0.2);
+  --word-active:    #8cc8ff;
+  --word-active-bg: rgba(80, 160, 255, 0.35);
   --surface:        #0d0b1e;
   --surface-2:      rgba(255, 255, 255, 0.05);
   --border-strong:  rgba(255, 255, 255, 0.14);
