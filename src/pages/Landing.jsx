@@ -21,27 +21,25 @@ export default function Landing() {
   return (
     <div style={{ background: '#fff', color: '#111827' }}>
       {/* Full-screen entrance */}
-      <section className="relative flex flex-col items-center justify-between text-center overflow-hidden" style={{ minHeight: '100svh', color: '#fff' }}>
-        <div aria-hidden className="absolute inset-0" style={{ backgroundImage: 'url(/entrada-bg.webp)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div aria-hidden className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(10,20,50,0.55) 0%, rgba(10,20,50,0.35) 45%, rgba(10,20,50,0.75) 100%)' }} />
-
-        <div className="relative w-full flex justify-end px-6 pt-5">
+      <section className="relative flex flex-col items-center justify-between text-center" style={{ minHeight: '100svh', background: '#faf7f0' }}>
+        <div className="w-full flex justify-end px-6 pt-5">
           <LangToggle compact />
         </div>
 
-        <div className="relative flex flex-col items-center px-6">
-          <LogoMark size={72} tile />
-          <h1 className="serif mt-6" style={{ fontSize: 'clamp(3rem, 12vw, 7rem)', lineHeight: 1, fontWeight: 700, letterSpacing: '-0.03em', textShadow: '0 4px 30px rgba(0,0,0,0.45)' }}>
+        <div className="flex flex-col items-center px-6">
+          <LogoMark size={84} />
+          <h1 className="serif mt-6" style={{ color: NAVY, fontSize: 'clamp(3rem, 12vw, 7rem)', lineHeight: 1, fontWeight: 700, letterSpacing: '-0.03em' }}>
             Parashapp
           </h1>
-          <p className="hebrew mt-4" style={{ fontSize: 'clamp(1.5rem, 5vw, 2.5rem)', color: '#e3b448', textShadow: '0 2px 16px rgba(0,0,0,0.5)' }}>פָּרָשָׁה</p>
+          <div className="mt-5" style={{ width: 56, height: 3, background: GOLD, borderRadius: 2 }} />
+          <p className="hebrew mt-5" style={{ fontSize: 'clamp(1.5rem, 5vw, 2.5rem)', color: GOLD }}>פָּרָשָׁה</p>
         </div>
 
-        <div className="relative flex flex-col items-center gap-6 px-6 pb-10">
-          <button onClick={go} className="px-14 py-4 text-base" style={{ background: '#fff', color: NAVY, fontWeight: 600, borderRadius: 999, boxShadow: '0 8px 30px rgba(0,0,0,0.35)' }}>
+        <div className="flex flex-col items-center gap-6 px-6 pb-10">
+          <button onClick={go} className="btn-navy px-16 py-4 text-base" style={{ borderRadius: 999, boxShadow: '0 8px 24px rgba(27,47,107,0.25)' }}>
             {t('enter')}
           </button>
-          <a href="#about" aria-label={t('landing_features_title')} style={{ color: 'rgba(255,255,255,0.8)', fontSize: 22 }}>↓</a>
+          <a href="#about" aria-label={t('landing_features_title')} style={{ color: NAVY, opacity: 0.6, fontSize: 22 }}>↓</a>
         </div>
       </section>
 
