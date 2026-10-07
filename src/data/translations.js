@@ -1,5 +1,7 @@
 export const translations = {
   es: {
+    sync_missing: 'Este audio no está sincronizado palabra por palabra',
+    sync_now: 'Sincronizar ahora',
     sync_in_progress: 'Sincronizando el audio palabra por palabra…',
     sync_failed: 'La sincronización falló',
     sync_retry: 'Reintentar',
@@ -708,6 +710,8 @@ export const translations = {
   },
 
   en: {
+    sync_missing: 'This audio isn't synced word by word',
+    sync_now: 'Sync now',
     sync_in_progress: 'Syncing the audio word by word…',
     sync_failed: 'Sync failed',
     sync_retry: 'Retry',
@@ -1416,6 +1420,8 @@ export const translations = {
   },
 
   fr: {
+    sync_missing: 'Cet audio n’est pas synchronisé mot à mot',
+    sync_now: 'Synchroniser',
     sync_in_progress: 'Synchronisation de l’audio mot à mot…',
     sync_failed: 'La synchronisation a échoué',
     sync_retry: 'Réessayer',
@@ -2123,6 +2129,8 @@ export const translations = {
   },
 
   it: {
+    sync_missing: 'Questo audio non è sincronizzato parola per parola',
+    sync_now: 'Sincronizza ora',
     sync_in_progress: 'Sincronizzazione dell’audio parola per parola…',
     sync_failed: 'Sincronizzazione non riuscita',
     sync_retry: 'Riprova',
@@ -2830,6 +2838,8 @@ export const translations = {
   },
 
   he: {
+    sync_missing: 'ההקלטה אינה מסונכרנת מילה במילה',
+    sync_now: 'סנכרן עכשיו',
     sync_in_progress: 'מסנכרן את ההקלטה מילה במילה…',
     sync_failed: 'הסנכרון נכשל',
     sync_retry: 'נסה שוב',
@@ -3537,6 +3547,8 @@ export const translations = {
   },
 
   de: {
+    sync_missing: 'Dieses Audio ist nicht Wort für Wort synchronisiert',
+    sync_now: 'Jetzt synchronisieren',
     sync_in_progress: 'Audio wird Wort für Wort synchronisiert…',
     sync_failed: 'Synchronisierung fehlgeschlagen',
     sync_retry: 'Erneut versuchen',

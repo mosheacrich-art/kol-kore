@@ -1102,16 +1102,20 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
         const key = `${parasha.id}-${aliyahIdx}`
         const syncing = syncingKeys?.has(key)
         const err = syncErrors?.[key]
-        if (!syncing && !err) return null
+        const unsynced = !!teacherAudio && !teacherAudio.wordTimestamps
+        if (!syncing && !err && !unsynced) return null
         return (
           <div className="flex-shrink-0 flex items-center gap-2 px-5 py-2 text-xs"
-            style={{ background: err ? '#fdf3f2' : '#f6f7f9', borderBottom: '1px solid var(--border-subtle)', color: err ? '#b42318' : '#1b2f6b' }}>
+            style={{ background: err ? '#fdf3f2' : '#eef4ff', borderBottom: '1px solid var(--border-subtle)', color: err ? '#b42318' : '#1b2f6b' }}>
             {syncing
               ? <><div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#1b2f6b' }} />{t('sync_in_progress')}</>
               : <>
-                  <span className="flex-1 min-w-0 break-words">{t('sync_failed')}: {err}</span>
+                  <span className="flex-1 min-w-0 break-words">{err ? `${t('sync_failed')}: ${err}` : t('sync_missing')}</span>
                   <button onClick={() => generateSync(parasha.id, aliyahIdx, currentAliyah?.ref)}
-                    className="underline flex-shrink-0">{t('sync_retry')}</button>
+                    className="px-3 py-1 rounded-md font-medium flex-shrink-0"
+                    style={{ background: err ? '#b42318' : '#1b2f6b', color: '#fff' }}>
+                    {err ? t('sync_retry') : t('sync_now')}
+                  </button>
                 </>}
           </div>
         )
