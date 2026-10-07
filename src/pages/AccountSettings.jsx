@@ -18,8 +18,8 @@ export default function AccountSettings() {
   const handleSaveName = async (e) => {
     e.preventDefault()
     const trimmed = displayName.trim()
-    if (!trimmed) { setNameMsg({ ok: false, text: 'Name cannot be empty' }); return }
-    if (trimmed === profile?.name) { setNameMsg({ ok: false, text: 'That is already your current name' }); return }
+    if (!trimmed) { setNameMsg({ ok: false, text: t('x_name_empty') }); return }
+    if (trimmed === profile?.name) { setNameMsg({ ok: false, text: t('x_name_same') }); return }
     setNameLoading(true)
     setNameMsg(null)
     const { error } = await supabase.from('profiles').update({ name: trimmed }).eq('id', profile.id)
@@ -28,7 +28,7 @@ export default function AccountSettings() {
       setNameMsg({ ok: false, text: error.message })
     } else {
       setProfile(p => ({ ...p, name: trimmed }))
-      setNameMsg({ ok: true, text: 'Name updated' })
+      setNameMsg({ ok: true, text: t('x_name_updated') })
     }
   }
 
@@ -81,7 +81,7 @@ export default function AccountSettings() {
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
         const debugInfo = body.debug ? ` | debug: ${JSON.stringify(body.debug)}` : ''
-        throw new Error((body.error || 'Error al eliminar la cuenta') + debugInfo)
+        throw new Error((body.error || t('x_delete_account_err')) + debugInfo)
       }
       await signOut()
       navigate('/login')
@@ -105,13 +105,13 @@ export default function AccountSettings() {
       <section className="rounded-2xl p-5 mb-4"
         style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--text)' }}>
-          Display name
+          {t('x_display_name')}
         </h2>
 
         <form onSubmit={handleSaveName} className="flex flex-col gap-3">
           <input
             type="text"
-            placeholder="Your name"
+            placeholder={t('x_your_name')}
             value={displayName}
             onChange={e => { setDisplayName(e.target.value); setNameMsg(null) }}
             className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
@@ -136,7 +136,7 @@ export default function AccountSettings() {
               color: nameLoading || !displayName.trim() ? 'var(--text-3)' : isTeacher ? '#0d0b1e' : '#fff',
               border: `1px solid ${nameLoading || !displayName.trim() ? 'var(--border)' : accent}`,
             }}>
-            {nameLoading ? '…' : 'Save name'}
+            {nameLoading ? '…' : t('x_save_name')}
           </button>
         </form>
       </section>

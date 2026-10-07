@@ -156,10 +156,28 @@ CITE = re.compile(r"\s*\((?:בא[\"״'׳]?ח|סנסן)[^)]*\)")
 SOF = "׃"
 
 
+# Variantes femeninas ("האשה אומרת: מוֹדָה", "(לאשה תְּנִיחֶנָּה)"): se quitan, solo queda el texto masculino.
+FEM_PAREN = re.compile(r"\s*\(\s*(?:ה?אשה אומרת|לאשה|לנקבה|ובאשה|ולאשה)[^)]*\)")
+FEM_INLINE = re.compile(r"\s*(?:ה?אשה אומרת):?\s*[^\s:]+:?")
+FEM_ONLY = {"בָּרוּךְ שֶׁעָשַׂנִי כִּרְצוֹנוֹ:"}
+PAREN = re.compile(r"\(([^()]*)\)")
+
+
+def strip_paren_notes(s):
+    """Paréntesis: quita las palabras sin nikud (notas, citas); si no queda texto, quita el paréntesis entero."""
+    def rep(m):
+        kept = [w for w in m.group(1).split() if NIKUD.search(w)]
+        return "(" + " ".join(kept) + ")" if kept else ""
+    return PAREN.sub(rep, s)
+
+
 def clean(s: str) -> str:
     s = s.replace(SOF, ":")
     s = TAAMIM.sub("", s)
     s = CITE.sub("", s)
+    s = FEM_PAREN.sub("", s)
+    s = FEM_INLINE.sub("", s)
+    s = strip_paren_notes(s)
     s = s.replace("־", "־")  # maqaf se conserva
     s = re.sub(r"[ \t ]+", " ", s).strip()
     return s
@@ -200,9 +218,7 @@ def tokens_to_html(text):
         joined = " ".join(run)
         letters = len(LETTER.findall(joined))
         if letters >= 3:
-            sp = rub_span(joined)
-            if sp:
-                out.append(sp)
+            pass  # indicación / comentario: no se muestra
         else:
             out.append(esc(joined))
         run.clear()
@@ -230,13 +246,11 @@ def paragraphs(parts):
         drops += 1
     out = []
     for x in items:
-        if not pointed(x):
-            es = RUB_ES.get(x)
-            if es == "":
-                continue
-            out.append(("r", esc(es) if es else esc(x), len(x.split()), bool(es)))
-        else:
-            out.append(("p", tokens_to_html(x), 0, False))
+        if not pointed(x) or x in FEM_ONLY:
+            continue  # indicaciones y comentarios fuera
+        h = tokens_to_html(x).strip()
+        if NIKUD.search(h):
+            out.append(("p", h, 0, False))
     return out
 
 

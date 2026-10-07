@@ -17,7 +17,6 @@
     var s = JSON.parse(localStorage.getItem('sidur-prefs') || '{}');
     if (s.theme) document.documentElement.setAttribute('data-theme', s.theme);
     if (s.size) document.documentElement.style.setProperty('--fs', s.size + 'px');
-    if (s.rubrics === false) document.documentElement.classList.add('no-rubrics');
   } catch (e) {}
 })();
 </script>
@@ -62,13 +61,6 @@
       <button data-t="light">Blanco</button>
       <button data-t="auto">Auto</button>
       <button data-t="dark">Noche</button>
-    </div>
-  </div>
-  <div class="row">
-    <span class="lbl">Indicaciones</span>
-    <div class="seg" id="rubSeg">
-      <button data-r="1">Ver</button>
-      <button data-r="0">Ocultar</button>
     </div>
   </div>
 </div>

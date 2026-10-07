@@ -400,7 +400,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
       setRecordingMode(false)
       setCountdown(null)
       alert(err.name === 'NotAllowedError'
-        ? 'Permiso de micrófono denegado. Actívalo en Ajustes → Permisos.'
+        ? `${t('x_mic_denied')}. ${t('x_mic_enable')}`
         : err.message || err)
     }
   }
@@ -595,7 +595,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
               onClick={() => setMobileAliyahOpen(true)}
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
               style={{ background: `${bookColor}18`, color: bookColor, border: `1px solid ${bookColor}35` }}>
-              {currentAliyah.n === 8 ? 'Maftir' : `${currentAliyah.n}ª`} Aliyá ▾
+              {currentAliyah.n === 8 ? 'Maftir' : `${currentAliyah.n}ª`} {t('x_aliyah')} ▾
             </button>
 
             {/* Audio source cycle — only when sources available */}
@@ -898,7 +898,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
               {/* Font size */}
               {mode !== 'sefer' && (
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>Tamaño fuente</span>
+                  <span className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{t('x_font_size')}</span>
                   <div className="flex items-center gap-2">
                     <button onClick={() => setFontSize(f => Math.max(MIN_FONT, f - 2))}
                       className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition-all"
@@ -918,7 +918,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
               {/* Modes */}
               {MODES.length > 1 && (
                 <div className="flex flex-col gap-2">
-                  <span className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>Modo</span>
+                  <span className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{t('x_mode')}</span>
                   <div className="flex gap-2 flex-wrap">
                     {MODES.map(m => (
                       <button key={m.id} onClick={() => { setMode(m.id); setMobileSettingsOpen(false) }}
@@ -938,7 +938,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
               {/* Sefer fonts */}
               {mode === 'sefer' && (
                 <div className="flex flex-col gap-2">
-                  <span className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>Fuente sefer</span>
+                  <span className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{t('x_sefer_font')}</span>
                   <div className="flex gap-2">
                     {[{ id: 'stam', label: 'סטם' }, { id: 'keter', label: 'כתר' }, { id: 'frank', label: 'פרנק' }].map(({ id, label }) => (
                       <button key={id} onClick={() => { setSeferFont(id); try { localStorage.setItem('seferFont', id) } catch {} setMobileSettingsOpen(false) }}
@@ -1029,7 +1029,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
                 <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>{pendingHomework.task}</p>
                 {pendingHomework.word_start != null && (
                   <p className="text-xs mt-0.5" style={{ color: '#c8941f' }}>
-                    📍 Palabras {pendingHomework.word_start + 1}–{pendingHomework.word_end + 1}
+                    📍 {t('x_words')} {pendingHomework.word_start + 1}–{pendingHomework.word_end + 1}
                   </p>
                 )}
               </div>
@@ -1793,6 +1793,7 @@ function SeferView({ parasha, isDark, aliyahRef, wordTimestamps, audioCurrentTim
 }
 
 function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTime, audioPlaying, audioDuration, onWordClick, onWordMark, markedWordIndices }) {
+  const { t } = useLang()
   const flexRef = useRef(null)
   const [leftPct, setLeftPct] = useState(50)
   const [hoverIdx, setHoverIdx] = useState(-1)
@@ -1917,7 +1918,7 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div style={{ padding: '16px 20px 20px', background: `${bookColor}05`, borderBottom: '1px solid var(--border-subtle)' }}>
           <p className="text-xs mb-3" style={{ color: bookColor }}>
-            <span className="hebrew">עִם טְעָמִים</span> · Con taamim
+            <span className="hebrew">עִם טְעָמִים</span> · {t('x_with_taamim')}
           </p>
           <div className="hebrew-reader" style={{ ...textBase, color: 'var(--text)' }}>
             {allWordsTaamim.map((w, i) => (
@@ -1933,7 +1934,7 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
         </div>
         <div style={{ padding: '16px 20px 40px', background: 'var(--bg-card)' }}>
           <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>
-            <span className="hebrew">כְּתָב בִּלְבָד</span> · Solo consonantes
+            <span className="hebrew">כְּתָב בִּלְבָד</span> · {t('x_consonants')}
           </p>
           <div className="hebrew-reader" style={{ ...textBase, color: 'var(--text-3)' }}>
             {allWordsPlain.map((w, i) => (
@@ -1952,13 +1953,13 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
         <div className="px-5 py-2 text-xs text-center"
           style={{ flex: `0 0 ${leftPct}%`, background: `${bookColor}10`, color: bookColor }}>
           <span className="hebrew">עִם טְעָמִים</span>
-          <span className="hidden sm:inline"> · Con taamim</span>
+          <span className="hidden sm:inline"> · {t('x_with_taamim')}</span>
         </div>
         <div style={{ width: '6px', flexShrink: 0, background: 'var(--bg-card)' }} />
         <div className="px-5 py-2 text-xs text-center"
           style={{ flex: 1, background: 'var(--bg-card)', color: 'var(--text-3)' }}>
           <span className="hebrew">כְּתָב בִּלְבָד</span>
-          <span className="hidden sm:inline"> · Solo consonantes</span>
+          <span className="hidden sm:inline"> · {t('x_consonants')}</span>
         </div>
       </div>
 
@@ -2037,13 +2038,14 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
 
 
 function LoadingState({ bookColor }) {
+  const { t } = useLang()
   const color = bookColor || '#1b2f6b'
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-4">
       <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin"
         style={{ borderColor: `${color}30`, borderTopColor: color }} />
       <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-        Cargando desde Sefaria…
+        {t('x_loading_sefaria')}
       </p>
       <p className="text-xs hebrew" style={{ color: 'var(--text-gold)' }}>
         טוֹעֵן…
@@ -2053,6 +2055,7 @@ function LoadingState({ bookColor }) {
 }
 
 function ErrorState({ error, ref_ }) {
+  const { t } = useLang()
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6">
       <div className="w-10 h-10 rounded-full flex items-center justify-center"

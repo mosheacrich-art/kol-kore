@@ -283,7 +283,7 @@ function ListView({ basePath }) {
                 <h2 className="text-2xl">{picked.name}</h2>
                 {picked.ref && <p className="text-xs mt-1 text-ink-3">{picked.ref}</p>}
               </div>
-              <button onClick={() => setPicked(null)} aria-label="Cerrar" className="text-xl leading-none px-2 text-ink-3">×</button>
+              <button onClick={() => setPicked(null)} aria-label={t('close')} className="text-xl leading-none px-2 text-ink-3">×</button>
             </div>
             <div className="flex-1 overflow-y-auto px-3 pb-6">
               {picked.aliyot.map((a, i) => (

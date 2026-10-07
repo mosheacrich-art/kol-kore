@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
+import { useLang } from '../context/LangContext'
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5]
 
@@ -17,6 +18,7 @@ function pauseOthers(me) {
 }
 
 const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTimeUpdate, onPlayingChange, onDurationChange }, ref) {
+  const { t } = useLang()
   const audioRef = useRef(null)
 
   const attemptPlay = () => {
@@ -226,7 +228,7 @@ const AudioPlayer = forwardRef(function AudioPlayer({ audio, label, onPlay, onTi
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-xs font-medium truncate" style={{ color: error ? '#b42318' : 'var(--text-2)' }}>
-            {error ? '⚠️ Audio no disponible' : `🎧 ${label}`}
+            {error ? `⚠️ ${t('x_audio_unavailable')}` : `🎧 ${label}`}
           </span>
           <span className="text-xs flex-shrink-0 ml-2" style={{ color: 'var(--text-muted)' }}>
             {fmt(current)} / {fmt(duration)}

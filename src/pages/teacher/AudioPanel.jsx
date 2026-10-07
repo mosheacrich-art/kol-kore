@@ -134,7 +134,7 @@ export default function TeacherAudioPanel() {
       {/* Header */}
       <div className="mb-8 fade-up-1">
         <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          הֶקְלָטוֹת · Audios
+          הֶקְלָטוֹת · {t('x_audios')}
         </p>
         <div className="flex items-end justify-between gap-4">
           <div>
@@ -148,7 +148,7 @@ export default function TeacherAudioPanel() {
           {totalAudios > 0 && (
             <div className="px-3 py-2 rounded-xl text-xs"
               style={{ background: '#fbf7ec', border: '1px solid rgba(200,148,31,0.2)', color: '#9a6f12' }}>
-              {totalAudios} audio{totalAudios > 1 ? 's' : ''} subido{totalAudios > 1 ? 's' : ''}
+              {totalAudios > 1 ? t('x_audios_uploaded').replace('{n}', totalAudios) : t('x_audio_uploaded_1')}
             </div>
           )}
         </div>
@@ -310,7 +310,7 @@ export default function TeacherAudioPanel() {
                     <div className="flex items-center justify-center py-8 text-xs" style={{ color: 'var(--text-muted)' }}>
                       <span className="inline-block w-4 h-4 rounded-full border border-t-transparent animate-spin mr-2"
                         style={{ borderColor: 'var(--border)', borderTopColor: '#1b2f6b' }} />
-                      Cargando...
+                      {t('loading')}
                     </div>
                   )}
                   {!tefilaLoading && tefilaServices.map(service => {
@@ -632,11 +632,11 @@ export default function TeacherAudioPanel() {
                 </svg>
               </div>
               <p className="text-base font-semibold mb-1.5" style={{ color: 'var(--text)' }}>
-                Sincronizando audio
+                {t('x_syncing_audio')}
               </p>
               <p className="text-sm leading-relaxed" style={{ color: 'var(--text-3)' }}>
-                La IA está alineando el audio con el texto.<br/>
-                Puede tardar entre <span style={{ color: '#1b2f6b' }}>5 y 50 segundos</span>.
+                {t('x_ai_aligning')}<br/>
+                {t('x_may_take')}
               </p>
             </>
           ) : (
@@ -649,15 +649,15 @@ export default function TeacherAudioPanel() {
                 </svg>
               </div>
               <p className="text-base font-semibold mb-1.5" style={{ color: 'var(--text)' }}>
-                Sincronización completada
+                {t('x_sync_done')}
               </p>
               <p className="text-sm mb-6" style={{ color: 'var(--text-3)' }}>
-                El audio ya está sincronizado con el texto.
+                {t('x_sync_done_desc')}
               </p>
               <button onClick={() => setJustFinished(false)}
                 className="px-7 py-2.5 rounded-xl text-sm font-semibold transition-all"
                 style={{ background: '#f6f7f9', color: '#1b2f6b', border: '1px solid rgba(200,148,31,0.3)' }}>
-                Cerrar
+                {t('close')}
               </button>
             </>
           )}

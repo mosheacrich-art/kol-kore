@@ -92,7 +92,7 @@ export default function ImprimirTikun() {
 
         <div className="ml-auto flex items-center gap-2">
           <span className="text-xs hidden md:inline" style={{ color: 'var(--text-muted)' }}>
-            {t('print_hint') || 'Ctrl+P para imprimir'}
+            {t('print_hint')}
           </span>
           <button
             onClick={printTikun}

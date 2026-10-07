@@ -18,16 +18,11 @@
   function pressed(seg, attr, val) {
     $$('button', seg).forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute(attr) === String(val))); });
   }
-  var themeSeg = $('#themeSeg'), rubSeg = $('#rubSeg');
+  var themeSeg = $('#themeSeg');
   pressed(themeSeg, 'data-t', prefs.theme || 'auto');
-  pressed(rubSeg, 'data-r', prefs.rubrics === false ? 0 : 1);
   themeSeg.onclick = function (e) {
     var t = e.target.closest('button'); if (!t) return;
     prefs.theme = t.dataset.t; root.setAttribute('data-theme', prefs.theme); pressed(themeSeg, 'data-t', prefs.theme); save();
-  };
-  rubSeg.onclick = function (e) {
-    var t = e.target.closest('button'); if (!t) return;
-    prefs.rubrics = t.dataset.r === '1'; root.classList.toggle('no-rubrics', !prefs.rubrics); pressed(rubSeg, 'data-r', prefs.rubrics ? 1 : 0); save();
   };
 
   /* ───────── paneles ───────── */

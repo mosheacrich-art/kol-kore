@@ -73,7 +73,7 @@ export default function StudentNotifications() {
     <div className="p-8 max-w-3xl">
       <div className="mb-8 fade-up-1">
         <h1 className="text-3xl font-light" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-          Notificaciones
+          {t('x_notifications')}
         </h1>
       </div>
 
@@ -87,7 +87,7 @@ export default function StudentNotifications() {
             color: tab === 'homework' ? '#1b2f6b' : 'var(--text-3)',
             border: `1px solid ${tab === 'homework' ? 'rgba(27,47,107,0.3)' : 'var(--border)'}`,
           }}>
-          Deberes
+          {t('x_homework')}
           {hwUnread > 0 && (
             <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
               style={{ background: '#b42318', color: '#fff' }}>
@@ -103,7 +103,7 @@ export default function StudentNotifications() {
             color: tab === 'evaluations' ? '#1b2f6b' : 'var(--text-3)',
             border: `1px solid ${tab === 'evaluations' ? 'rgba(27,47,107,0.3)' : 'var(--border)'}`,
           }}>
-          Evaluaciones
+          {t('x_evaluations')}
           {evUnread > 0 && (
             <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
               style={{ background: '#b42318', color: '#fff' }}>
@@ -129,7 +129,7 @@ export default function StudentNotifications() {
                 onClick={() => markAllRead(homework, setHomework)}
                 className="text-xs px-3 py-1.5 rounded-xl transition-all"
                 style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-                Marcar todas como leídas
+                {t('mark_all_read')}
               </button>
             </div>
           )}
@@ -144,8 +144,8 @@ export default function StudentNotifications() {
                   <path d="M9 12h6M9 16h4" stroke="rgba(27,47,107,0.5)" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
               </div>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin deberes por ahora</p>
-              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Aquí aparecerán las tareas que te envíe tu profesor</p>
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('x_no_hw_now')}</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{t('x_no_hw_hint')}</p>
             </div>
           )}
 
@@ -203,7 +203,7 @@ export default function StudentNotifications() {
                       onClick={e => { e.stopPropagation(); markRead(hw.id, setHomework) }}
                       className="text-xs px-3 py-1 rounded-lg transition-all"
                       style={{ background: '#f6f7f9', color: '#1b2f6b', border: '1px solid rgba(27,47,107,0.2)' }}>
-                      Marcar como leída
+                      {t('x_mark_read')}
                     </button>
                   )}
                 </div>
@@ -223,7 +223,7 @@ export default function StudentNotifications() {
                 onClick={() => markAllRead(evals, setEvals)}
                 className="text-xs px-3 py-1.5 rounded-xl transition-all"
                 style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)' }}>
-                Marcar todas como leídas
+                {t('mark_all_read')}
               </button>
             </div>
           )}
@@ -321,7 +321,7 @@ export default function StudentNotifications() {
                         onClick={() => markRead(ev.id, setEvals)}
                         className="text-xs px-3 py-1 rounded-lg transition-all"
                         style={{ background: '#f6f7f9', color: '#1b2f6b', border: '1px solid rgba(27,47,107,0.2)' }}>
-                        Marcar como leída
+                        {t('x_mark_read')}
                       </button>
                     </div>
                   )}

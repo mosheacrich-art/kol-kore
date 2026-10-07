@@ -79,10 +79,10 @@ export default function HomeworkQuickModal({ onClose, preType, preRef, preName, 
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs tracking-widest uppercase mb-1" style={{ color: 'var(--text-gold)' }}>
-              שִׁעוּרֵי בַּיִת · Deberes
+              שִׁעוּרֵי בַּיִת · {t('x_homework')}
             </p>
             <h2 className="text-lg font-light" style={{ color: 'var(--text)', letterSpacing: '-0.5px' }}>
-              Asignar deber
+              {t('x_assign_hw')}
             </h2>
           </div>
           <button onClick={onClose}

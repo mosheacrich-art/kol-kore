@@ -72,10 +72,10 @@ function ActiveView({ profile, justPaid, navigate, t }) {
     <div className="p-4 sm:p-8 max-w-2xl mx-auto">
       <div className="mb-8 fade-up-1">
         <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          הַרְשָׁמָה · Suscripción
+          הַרְשָׁמָה · {t('x_subscription')}
         </p>
         <h1 className="text-3xl font-light" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
-          Tu suscripción
+          {t('x_your_subscription')}
         </h1>
       </div>
 
@@ -134,7 +134,7 @@ function ActiveView({ profile, justPaid, navigate, t }) {
                 style={{ color: daysLeft <= 7 ? '#c8941f' : '#1b2f6b' }}>
                 {Math.max(0, daysLeft)}
               </p>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>días</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('days')}</p>
             </div>
           )}
         </div>
@@ -189,7 +189,7 @@ function CheckoutView({ user, profile, t }) {
         }),
       })
       const data = await res.json()
-      if (!res.ok || !data.url) throw new Error(data.error || 'Error al iniciar el pago')
+      if (!res.ok || !data.url) throw new Error(data.error || t('x_pay_error'))
       window.location.href = data.url
     } catch (err) {
       alert(err.message)
@@ -206,7 +206,7 @@ function CheckoutView({ user, profile, t }) {
     <div className="p-4 sm:p-8 max-w-2xl mx-auto">
       <div className="mb-8 fade-up-1">
         <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          הַרְשָׁמָה · Suscripción
+          הַרְשָׁמָה · {t('x_subscription')}
         </p>
         <h1 className="text-3xl font-light" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>
           {t('choose_plan')}
@@ -494,11 +494,11 @@ function NativeCheckoutView({ user, setProfile, t }) {
       <button onClick={handleRestore} disabled={restoring}
         className="w-full mt-4 py-2.5 rounded-xl text-sm transition-all"
         style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-3)', opacity: restoring ? 0.6 : 1 }}>
-        {restoring ? '…' : 'Restore purchases'}
+        {restoring ? '…' : t('x_restore')}
       </button>
 
       <p className="text-xs text-center mt-4" style={{ color: 'var(--text-muted)' }}>
-        To cancel go to Settings → your name → Subscriptions on your device.
+        {t('x_cancel_ios')}
       </p>
     </div>
   )

@@ -29,24 +29,24 @@ function AccountSection({ user }) {
 
   const handleEmail = async (e) => {
     e.preventDefault()
-    if (!newEmail.includes('@')) { setMsg({ type: 'err', text: 'Email no válido' }); return }
+    if (!newEmail.includes('@')) { setMsg({ type: 'err', text: t('x_email_invalid') }); return }
     setLoading(true)
     const { error } = await supabase.auth.updateUser({ email: newEmail })
     setLoading(false)
     if (error) { setMsg({ type: 'err', text: error.message }); return }
-    setMsg({ type: 'ok', text: 'Te hemos enviado un enlace de confirmación al nuevo email.' })
+    setMsg({ type: 'ok', text: t('x_email_sent') })
     setSection(null)
   }
 
   const handlePassword = async (e) => {
     e.preventDefault()
-    if (newPass.length < 6) { setMsg({ type: 'err', text: 'Mínimo 6 caracteres' }); return }
-    if (newPass !== confirmPass) { setMsg({ type: 'err', text: 'Las contraseñas no coinciden' }); return }
+    if (newPass.length < 6) { setMsg({ type: 'err', text: t('password_min_error') }); return }
+    if (newPass !== confirmPass) { setMsg({ type: 'err', text: t('passwords_no_match') }); return }
     setLoading(true)
     const { error } = await supabase.auth.updateUser({ password: newPass })
     setLoading(false)
     if (error) { setMsg({ type: 'err', text: error.message }); return }
-    setMsg({ type: 'ok', text: 'Contraseña actualizada correctamente.' })
+    setMsg({ type: 'ok', text: t('password_updated') })
     setSection(null)
   }
 
@@ -302,7 +302,7 @@ export default function StudentProfile() {
               className="btn-navy w-full flex items-center justify-between gap-4 px-6 py-5 text-left">
               <span>
                 <span className="block text-xs uppercase tracking-widest" style={{ color: '#e3b448' }}>
-                  {i === 0 ? t('go_my_parasha') : 'Ir a mi perashá'}
+                  {t('go_my_parasha')}
                 </span>
                 <span className="serif block text-2xl mt-1">{p.name}</span>
               </span>
@@ -419,9 +419,9 @@ export default function StudentProfile() {
           <section>
             <p className="eyebrow pb-3">{t('achievements')}</p>
             <div className="grid grid-cols-3 py-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-              <StatPill value={totalListens} label="escuchas" />
-              <StatPill value={done} label="deberes" />
-              <StatPill value={profile.streak || 0} label="días racha" />
+              <StatPill value={totalListens} label={t('x_listens')} />
+              <StatPill value={done} label={t('x_homework_lc')} />
+              <StatPill value={profile.streak || 0} label={t('x_streak_days')} />
             </div>
             <ul className="mt-2">
               {ACHIEVEMENTS.map(a => {

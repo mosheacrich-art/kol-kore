@@ -226,7 +226,7 @@ function StudentModal({ onClose, isDark, t, tl }) {
     const result = await signUp(email, password, name.trim(), 'student', marketingConsent)
     setLoading(false)
     if (result?.needsConfirmation) { setConfirmationSent(true); return }
-    if (result) { setError('Error al registrarse: ' + result.message); return }
+    if (result) { setError(t('x_signup_error') + ' ' + result.message); return }
     // null → success, profile useEffect redirects
   }
 

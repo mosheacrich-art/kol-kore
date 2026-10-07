@@ -88,7 +88,7 @@ export default function TeacherNotifications() {
       {/* Header */}
       <div className="mb-10 fade-up-1">
         <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--text-gold)' }}>
-          הוֹדָעוֹת · Notificaciones
+          הוֹדָעוֹת · {t('x_notifications')}
         </p>
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-light" style={{ color: 'var(--text)', letterSpacing: '-1px' }}>

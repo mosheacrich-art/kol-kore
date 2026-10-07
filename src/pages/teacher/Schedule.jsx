@@ -364,7 +364,7 @@ function ClassDetailModal({ cls, t, locale, fmtTime, onClose, onDelete }) {
       subtitle={`${capitalize(d.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' }))} · ${fmtTime(cls.scheduled_at)} – ${fmtTime(cls.scheduled_at, cls.duration_min || 60)}`}
       footer={confirming ? (
         <>
-          <span className="me-auto text-[13px] text-ink-2">{t('delete_class_confirm') || '¿Eliminar esta clase?'}</span>
+          <span className="me-auto text-[13px] text-ink-2">{t('delete_class_confirm')}</span>
           <button onClick={() => setConfirming(false)} className="btn btn-secondary btn-sm">{t('cancel')}</button>
           <button onClick={onDelete} className="btn btn-sm" style={{ background: 'rgb(var(--danger-rgb))', color: '#fff' }}>{t('ui_delete')}</button>
         </>
