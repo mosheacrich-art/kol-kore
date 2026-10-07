@@ -31,7 +31,20 @@ export default function TeacherAudioPanel() {
   const [dragging, setDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef(null)
-  const { upload, remove, get, audios, generateSync, syncingKeys, syncErrors } = useAudio()
+  const { upload, remove, get, audios, generateSync, resyncMine, restoreResync, syncingKeys, syncErrors } = useAudio()
+  const [resync, setResync] = useState(null) // null | { running, done, total, fixed, failed, restored }
+
+  const handleResync = async () => {
+    if (!window.confirm(t('resync_confirm'))) return
+    setResync({ running: true, done: 0, total: 0 })
+    const res = await resyncMine(p => setResync(r => ({ ...r, ...p })))
+    setResync({ running: false, ...res })
+  }
+  const handleRestore = async () => {
+    setResync({ running: true, done: 0, total: 0 })
+    const restored = await restoreResync()
+    setResync({ running: false, restored })
+  }
   const { t } = useLang()
 
   // Sync popup
@@ -145,12 +158,36 @@ export default function TeacherAudioPanel() {
               {t('audio_panel_sub')}
             </p>
           </div>
+          <div className="flex flex-col items-end gap-2">
           {totalAudios > 0 && (
             <div className="px-3 py-2 rounded-xl text-xs"
               style={{ background: '#fbf7ec', border: '1px solid rgba(200,148,31,0.2)', color: '#9a6f12' }}>
               {totalAudios > 1 ? t('x_audios_uploaded').replace('{n}', totalAudios) : t('x_audio_uploaded_1')}
             </div>
           )}
+          {totalAudios > 0 && (
+            <div className="flex flex-col items-end gap-1">
+              <button onClick={handleResync} disabled={resync?.running}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                style={{ background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border)', opacity: resync?.running ? 0.6 : 1 }}>
+                ↻ {t('resync_mine')}
+              </button>
+              {resync && (
+                <p className="text-[11px] text-right" style={{ color: 'var(--text-3)' }}>
+                  {resync.running
+                    ? t('resync_running').replace('{done}', resync.done).replace('{total}', resync.total)
+                    : resync.error ? resync.error
+                    : resync.restored != null ? t('resync_restored').replace('{n}', resync.restored)
+                    : resync.total === 0 ? t('resync_none')
+                    : t('resync_done').replace('{fixed}', resync.fixed).replace('{total}', resync.total)}
+                  {!resync.running && resync.fixed > 0 && (
+                    <> · <button onClick={handleRestore} className="underline">{t('resync_undo')}</button></>
+                  )}
+                </p>
+              )}
+            </div>
+          )}
+          </div>
         </div>
       </div>
 

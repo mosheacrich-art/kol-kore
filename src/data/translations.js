@@ -1,5 +1,12 @@
 export const translations = {
   es: {
+    resync_mine: 'Resincronizar mis audios',
+    resync_confirm: 'Se volverá a sincronizar palabra por palabra cada audio tuyo cuya sincronización no esté alineada con el texto. Los audios ya correctos y los tramos no se tocan. Puede tardar unos minutos. ¿Continuar?',
+    resync_running: 'Resincronizando… {done}/{total}',
+    resync_done: '{fixed} de {total} audios resincronizados',
+    resync_none: 'Todos tus audios ya estaban bien sincronizados',
+    resync_undo: 'Deshacer',
+    resync_restored: '{n} audios restaurados',
     // Nav — student
     nav_profile: 'Mi Perfil',
     nav_study: 'Estudiar Perashá',
@@ -698,6 +705,13 @@ export const translations = {
   },
 
   en: {
+    resync_mine: 'Re-sync my audios',
+    resync_confirm: "Every audio of yours whose timing isn't aligned to the text will be re-synced word by word. Correct audios and ranges are left untouched. This may take a few minutes. Continue?",
+    resync_running: 'Re-syncing… {done}/{total}',
+    resync_done: '{fixed} of {total} audios re-synced',
+    resync_none: 'All your audios were already synced correctly',
+    resync_undo: 'Undo',
+    resync_restored: '{n} audios restored',
     // Nav — student
     nav_profile: 'My Profile',
     nav_study: 'Study Torah',
@@ -1396,6 +1410,13 @@ export const translations = {
   },
 
   fr: {
+    resync_mine: 'Resynchroniser mes audios',
+    resync_confirm: "Chaque audio dont la synchronisation n'est pas alignée sur le texte sera resynchronisé mot à mot. Les audios corrects et les passages ne sont pas modifiés. Cela peut prendre quelques minutes. Continuer ?",
+    resync_running: 'Resynchronisation… {done}/{total}',
+    resync_done: '{fixed} sur {total} audios resynchronisés',
+    resync_none: 'Tous vos audios étaient déjà bien synchronisés',
+    resync_undo: 'Annuler',
+    resync_restored: '{n} audios restaurés',
     // Nav — student
     nav_profile: 'Mon Profil',
     nav_study: 'Étudier la Paracha',
@@ -2093,6 +2114,13 @@ export const translations = {
   },
 
   it: {
+    resync_mine: 'Risincronizza i miei audio',
+    resync_confirm: 'Ogni tuo audio la cui sincronizzazione non è allineata al testo verrà risincronizzato parola per parola. Gli audio corretti e i tratti non vengono toccati. Potrebbe richiedere alcuni minuti. Continuare?',
+    resync_running: 'Risincronizzazione… {done}/{total}',
+    resync_done: '{fixed} su {total} audio risincronizzati',
+    resync_none: 'Tutti i tuoi audio erano già sincronizzati correttamente',
+    resync_undo: 'Annulla',
+    resync_restored: '{n} audio ripristinati',
     // Nav — student
     nav_profile: 'Il Mio Profilo',
     nav_study: 'Studiare la Parashah',
@@ -2790,6 +2818,13 @@ export const translations = {
   },
 
   he: {
+    resync_mine: 'סנכרן מחדש את ההקלטות שלי',
+    resync_confirm: 'כל הקלטה שלך שהסנכרון שלה אינו מותאם לטקסט תסונכרן מחדש מילה במילה. הקלטות תקינות וקטעים לא ישתנו. זה עשוי לקחת כמה דקות. להמשיך?',
+    resync_running: 'מסנכרן… {done}/{total}',
+    resync_done: '{fixed} מתוך {total} הקלטות סונכרנו מחדש',
+    resync_none: 'כל ההקלטות שלך כבר מסונכרנות כראוי',
+    resync_undo: 'בטל',
+    resync_restored: '{n} הקלטות שוחזרו',
     // Nav — student
     nav_profile: 'הפרופיל שלי',
     nav_study: 'לימוד פרשה',
@@ -3487,6 +3522,13 @@ export const translations = {
   },
 
   de: {
+    resync_mine: 'Meine Audios neu synchronisieren',
+    resync_confirm: 'Jedes deiner Audios, dessen Timing nicht am Text ausgerichtet ist, wird Wort für Wort neu synchronisiert. Korrekte Audios und Bereiche bleiben unverändert. Das kann einige Minuten dauern. Fortfahren?',
+    resync_running: 'Synchronisiere… {done}/{total}',
+    resync_done: '{fixed} von {total} Audios neu synchronisiert',
+    resync_none: 'Alle deine Audios waren bereits korrekt synchronisiert',
+    resync_undo: 'Rückgängig',
+    resync_restored: '{n} Audios wiederhergestellt',
     // Nav — student
     nav_profile: 'Mein Profil',
     nav_study: 'Tora lernen',

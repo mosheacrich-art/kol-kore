@@ -2,8 +2,17 @@ import { createContext, useContext, useState, useCallback, useEffect, useRef } f
 import { supabase } from '../lib/supabase'
 import { sendPushToUser } from '../lib/sendPush'
 import { useLang } from './LangContext'
+import { ALL_PARASHOT } from '../data/parashot'
+import { ALL_HAFTAROT } from '../data/haftarot'
+import { ALL_MOADIM } from '../data/moadim'
 
 const AudioCtx = createContext(null)
+
+// Sefaria ref of an aliyah, for parashot, combined parashot, haftarot and moadim.
+function resolveAliyahRef(id, idx) {
+  const e = ALL_PARASHOT.find(p => p.id === id) || ALL_HAFTAROT.find(h => h.id === id) || ALL_MOADIM.find(m => m.id === id)
+  return e?.aliyot?.[idx]?.ref || null
+}
 
 async function callSyncApi(audioUrl, fileType, aliyahRef, prompt, words) {
   const { data: { session } } = await supabase.auth.getSession()
@@ -319,8 +328,89 @@ export function AudioProvider({ children }) {
     }
   }, [])
 
+  // Re-sync the signed-in teacher's own audios whose timing was never aligned to the text
+  // (raw Whisper output from the old record button, or no sync at all).
+  // Safe by design: one audio at a time, a backup of the old timing is kept in localStorage,
+  // a result is only written if alignment succeeded, and never if the audio was re-uploaded meanwhile.
+  // Untouched: already-aligned audios, word-range recordings, sidur audios and the audio files.
+  const resyncMine = useCallback(async (onProgress) => {
+    const { data: { session } } = await supabase.auth.getSession()
+    const teacherId = session?.user?.id
+    if (!teacherId) return { error: 'no-session' }
+
+    const { data: rows, error } = await supabase.from('audio_files')
+      .select('parasha_id, aliyah_idx, public_url, file_type, word_timestamps, anchor_pct, needs_review, uploaded_at')
+      .eq('teacher_id', teacherId)
+    if (error) return { error: error.message }
+
+    const targets = (rows || []).filter(r => {
+      if (String(r.parasha_id).includes(':')) return false        // sidur:/berajot: ranges
+      if (r.anchor_pct != null) return false                        // already aligned to the text
+      const ts = r.word_timestamps
+      if (Array.isArray(ts) && ts.some(x => x == null)) return false // word-range recording
+      return !!resolveAliyahRef(r.parasha_id, r.aliyah_idx)
+    })
+
+    const backup = targets.map(r => ({
+      parasha_id: r.parasha_id, aliyah_idx: r.aliyah_idx, uploaded_at: r.uploaded_at,
+      word_timestamps: r.word_timestamps, anchor_pct: r.anchor_pct, needs_review: r.needs_review,
+    }))
+    try { if (backup.length) localStorage.setItem(`resync-backup-${teacherId}`, JSON.stringify(backup)) } catch { /* storage unavailable */ }
+
+    let fixed = 0, failed = 0
+    for (let i = 0; i < targets.length; i++) {
+      const r = targets[i]
+      const key = `${r.parasha_id}-${r.aliyah_idx}`
+      onProgress?.({ done: i, total: targets.length })
+      setSyncingKeys(prev => new Set([...prev, key]))
+      try {
+        const { words, anchorPct, needsReview } = await callSyncApi(
+          r.public_url.split('?')[0], r.file_type || 'audio/webm', resolveAliyahRef(r.parasha_id, r.aliyah_idx))
+        if (!words.length || anchorPct == null) { failed++; continue }
+        const { data: upd, error: updErr } = await supabase.from('audio_files')
+          .update({ word_timestamps: words, anchor_pct: anchorPct, needs_review: needsReview })
+          .eq('teacher_id', teacherId).eq('parasha_id', r.parasha_id).eq('aliyah_idx', r.aliyah_idx)
+          .eq('uploaded_at', r.uploaded_at)
+          .select('parasha_id')
+        if (updErr || !upd?.length) { failed++; continue }
+        setAudios(prev => prev[key] ? { ...prev, [key]: { ...prev[key], wordTimestamps: words, anchorPct, needsReview } } : prev)
+        fixed++
+      } catch (err) {
+        console.error(`Resync ${key} failed:`, err)
+        failed++
+      } finally {
+        setSyncingKeys(prev => { const n = new Set([...prev]); n.delete(key); return n })
+      }
+    }
+    onProgress?.({ done: targets.length, total: targets.length })
+    return { total: targets.length, fixed, failed }
+  }, [])
+
+  // Undo resyncMine using the localStorage backup (skips audios re-uploaded since).
+  const restoreResync = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    const teacherId = session?.user?.id
+    if (!teacherId) return 0
+    let backup = []
+    try { backup = JSON.parse(localStorage.getItem(`resync-backup-${teacherId}`) || '[]') } catch { backup = [] }
+    let restored = 0
+    for (const b of backup) {
+      const { data } = await supabase.from('audio_files')
+        .update({ word_timestamps: b.word_timestamps, anchor_pct: b.anchor_pct, needs_review: b.needs_review })
+        .eq('teacher_id', teacherId).eq('parasha_id', b.parasha_id).eq('aliyah_idx', b.aliyah_idx)
+        .eq('uploaded_at', b.uploaded_at)
+        .select('parasha_id')
+      if (data?.length) {
+        restored++
+        const key = `${b.parasha_id}-${b.aliyah_idx}`
+        setAudios(prev => prev[key] ? { ...prev, [key]: { ...prev[key], wordTimestamps: b.word_timestamps, anchorPct: b.anchor_pct, needsReview: b.needs_review } } : prev)
+      }
+    }
+    return restored
+  }, [])
+
   return (
-    <AudioCtx.Provider value={{ upload, uploadStudentRecording, remove, get, hasAny, audios, generateSync, syncingKeys, syncErrors }}>
+    <AudioCtx.Provider value={{ upload, uploadStudentRecording, remove, get, hasAny, audios, generateSync, resyncMine, restoreResync, syncingKeys, syncErrors }}>
       {children}
     </AudioCtx.Provider>
   )
