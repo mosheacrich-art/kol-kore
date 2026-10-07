@@ -14,6 +14,24 @@ function resolveAliyahRef(id, idx) {
   return e?.aliyot?.[idx]?.ref || null
 }
 
+// Persist sync results. word_timestamps is written on its own so it always saves; the
+// quality columns (anchor_pct / needs_review) are best-effort because they may not exist
+// in audio_files — bundling them made every save fail since 2026-09-07.
+// Returns the number of rows updated (0 = nothing matched or the write failed).
+async function saveSync({ teacherId, parashaId, aliyahIdx, uploadedAt = null }, wordTimestamps, anchorPct = null, needsReview = false) {
+  const match = q => {
+    q = q.eq('teacher_id', teacherId).eq('parasha_id', parashaId).eq('aliyah_idx', aliyahIdx)
+    return uploadedAt ? q.eq('uploaded_at', uploadedAt) : q
+  }
+  const { data, error } = await match(supabase.from('audio_files').update({ word_timestamps: wordTimestamps })).select('parasha_id')
+  if (error) { console.error('saveSync failed:', error); return 0 }
+  if (data?.length) {
+    const { error: qErr } = await match(supabase.from('audio_files').update({ anchor_pct: anchorPct, needs_review: needsReview }))
+    if (qErr) console.warn('saveSync: quality columns not saved:', qErr.message)
+  }
+  return data?.length || 0
+}
+
 async function callSyncApi(audioUrl, fileType, aliyahRef, prompt, words) {
   const { data: { session } } = await supabase.auth.getSession()
   const res = await fetch('/api/generate-sync', {
@@ -177,9 +195,7 @@ export function AudioProvider({ children }) {
             if (!res.length || needsReview) return
             const full = new Array(syncRange.size).fill(null)
             res.forEach((x, i) => { if (x && syncRange.indices[i] != null) full[syncRange.indices[i]] = { start: x.start, end: x.end } })
-            await supabase.from('audio_files')
-              .update({ word_timestamps: full, anchor_pct: anchorPct, needs_review: false })
-              .eq('parasha_id', parashaId).eq('aliyah_idx', aliyahIdx).eq('teacher_id', teacherId)
+            await saveSync({ teacherId, parashaId, aliyahIdx }, full, anchorPct, false)
             setAudios(prev => ({ ...prev, [key]: { ...prev[key], wordTimestamps: full, anchorPct, needsReview: false } }))
           })
           .catch(err => console.error('Range auto-sync failed (keeping manual timing):', err))
@@ -194,12 +210,8 @@ export function AudioProvider({ children }) {
     callSyncApi(publicUrl, contentType, aliyahRef)
       .then(async ({ words: wordTimestamps, anchorPct, needsReview }) => {
         if (!wordTimestamps.length) { console.warn('Auto-sync: no words returned'); return }
-        await supabase
-          .from('audio_files')
-          .update({ word_timestamps: wordTimestamps, anchor_pct: anchorPct, needs_review: needsReview })
-          .eq('parasha_id', parashaId)
-          .eq('aliyah_idx', aliyahIdx)
-          .eq('teacher_id', teacherId)
+        const saved = await saveSync({ teacherId, parashaId, aliyahIdx }, wordTimestamps, anchorPct, needsReview)
+        if (!saved) setSyncErrors(prev => ({ ...prev, [key]: 'No se pudo guardar la sincronización' }))
         setAudios(prev => ({
           ...prev,
           [key]: { ...prev[key], wordTimestamps, anchorPct, needsReview },
@@ -306,12 +318,11 @@ export function AudioProvider({ children }) {
         return false
       }
 
-      await supabase
-        .from('audio_files')
-        .update({ word_timestamps: wordTimestamps, anchor_pct: anchorPct, needs_review: needsReview })
-        .eq('parasha_id', parashaId)
-        .eq('aliyah_idx', aliyahIdx)
-        .eq('teacher_id', row.teacher_id)
+      const saved = await saveSync({ teacherId: row.teacher_id, parashaId, aliyahIdx }, wordTimestamps, anchorPct, needsReview)
+      if (!saved) {
+        setSyncErrors(prev => ({ ...prev, [key]: 'No se pudo guardar la sincronización' }))
+        return false
+      }
 
       setAudios(prev => ({
         ...prev,
@@ -339,21 +350,23 @@ export function AudioProvider({ children }) {
     if (!teacherId) return { error: 'no-session' }
 
     const { data: rows, error } = await supabase.from('audio_files')
-      .select('parasha_id, aliyah_idx, public_url, file_type, word_timestamps, anchor_pct, needs_review, uploaded_at')
+      .select('parasha_id, aliyah_idx, public_url, file_type, word_timestamps, uploaded_at')
       .eq('teacher_id', teacherId)
     if (error) return { error: error.message }
 
     const targets = (rows || []).filter(r => {
       if (String(r.parasha_id).includes(':')) return false        // sidur:/berajot: ranges
-      if (r.anchor_pct != null) return false                        // already aligned to the text
       const ts = r.word_timestamps
-      if (Array.isArray(ts) && ts.some(x => x == null)) return false // word-range recording
+      if (Array.isArray(ts) && ts.length) {
+        if (ts.some(x => x == null)) return false                   // word-range recording
+        if (!('word' in ts[0])) return false                         // already aligned to the text (v2)
+      }
       return !!resolveAliyahRef(r.parasha_id, r.aliyah_idx)
     })
 
     const backup = targets.map(r => ({
       parasha_id: r.parasha_id, aliyah_idx: r.aliyah_idx, uploaded_at: r.uploaded_at,
-      word_timestamps: r.word_timestamps, anchor_pct: r.anchor_pct, needs_review: r.needs_review,
+      word_timestamps: r.word_timestamps,
     }))
     try { if (backup.length) localStorage.setItem(`resync-backup-${teacherId}`, JSON.stringify(backup)) } catch { /* storage unavailable */ }
 
@@ -367,12 +380,9 @@ export function AudioProvider({ children }) {
         const { words, anchorPct, needsReview } = await callSyncApi(
           r.public_url.split('?')[0], r.file_type || 'audio/webm', resolveAliyahRef(r.parasha_id, r.aliyah_idx))
         if (!words.length || anchorPct == null) { failed++; continue }
-        const { data: upd, error: updErr } = await supabase.from('audio_files')
-          .update({ word_timestamps: words, anchor_pct: anchorPct, needs_review: needsReview })
-          .eq('teacher_id', teacherId).eq('parasha_id', r.parasha_id).eq('aliyah_idx', r.aliyah_idx)
-          .eq('uploaded_at', r.uploaded_at)
-          .select('parasha_id')
-        if (updErr || !upd?.length) { failed++; continue }
+        const saved = await saveSync({ teacherId, parashaId: r.parasha_id, aliyahIdx: r.aliyah_idx, uploadedAt: r.uploaded_at },
+          words, anchorPct, needsReview)
+        if (!saved) { failed++; continue }
         setAudios(prev => prev[key] ? { ...prev, [key]: { ...prev[key], wordTimestamps: words, anchorPct, needsReview } } : prev)
         fixed++
       } catch (err) {
@@ -396,14 +406,14 @@ export function AudioProvider({ children }) {
     let restored = 0
     for (const b of backup) {
       const { data } = await supabase.from('audio_files')
-        .update({ word_timestamps: b.word_timestamps, anchor_pct: b.anchor_pct, needs_review: b.needs_review })
+        .update({ word_timestamps: b.word_timestamps })
         .eq('teacher_id', teacherId).eq('parasha_id', b.parasha_id).eq('aliyah_idx', b.aliyah_idx)
         .eq('uploaded_at', b.uploaded_at)
         .select('parasha_id')
       if (data?.length) {
         restored++
         const key = `${b.parasha_id}-${b.aliyah_idx}`
-        setAudios(prev => prev[key] ? { ...prev, [key]: { ...prev[key], wordTimestamps: b.word_timestamps, anchorPct: b.anchor_pct, needsReview: b.needs_review } } : prev)
+        setAudios(prev => prev[key] ? { ...prev, [key]: { ...prev[key], wordTimestamps: b.word_timestamps, anchorPct: null, needsReview: false } } : prev)
       }
     }
     return restored
