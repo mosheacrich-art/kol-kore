@@ -142,7 +142,7 @@ GROUPS = [
         ("sefirat-haomer", "ספירת העומר", "Sefirat HaÓmer", "Cuenta del Ómer", [
             S("Sefirat HaÓmer", "ספירת העומר", "Counting_of_the_Omer"),
         ]),
-        ("kidush-levana", "קידוש לבנה", "Kidush Leváná", "Bendición de la luna", [
+        ("kidush-levana", "קידוש לבנה", "Kidush Levaná", "Bendición de la luna", [
             S("Birkat HaLevaná", "ברכת הלבנה", "Blessing_of_the_Moon"),
         ]),
     ]),
@@ -337,7 +337,7 @@ def build():
             )
             if pid in SHORTCUTS:
                 quick = "".join(
-                    f'<li><a href="#{t}"><span class="es">{esc(l)}</span><span class="dots"></span>'
+                    f'<li><a href="#{t}"><span class="es{"" if h else " solo"}">{esc(l)}</span><span class="dots"></span>'
                     f'<span class="he" lang="he">{esc(h)}</span></a></li>'
                     for l, h, t in SHORTCUTS[pid]
                 )
@@ -352,7 +352,7 @@ def build():
                 )
             if pid in SHORTCUTS:
                 drawer_items = "".join(
-                    f'<li><a href="#{t}"><span class="es">{esc(l)}</span>'
+                    f'<li><a href="#{t}"><span class="es{"" if h else " solo"}">{esc(l)}</span>'
                     f'<span class="he" lang="he">{esc(h)}</span></a></li>'
                     for l, h, t in SHORTCUTS[pid]
                 )
@@ -379,6 +379,8 @@ def build():
     )
     css = open(os.path.join(HERE, "style.css"), encoding="utf8").read()
     js = open(os.path.join(HERE, "app.js"), encoding="utf8").read()
+    i18n = open(os.path.join(HERE, "i18n.js"), encoding="utf8").read()
+    out = out.replace('<script src="i18n.js"></script>', "<script>\n" + i18n + "\n</script>")
     out = out.replace('<link rel="stylesheet" href="style.css">', "<style>\n" + css + "\n</style>")
     out = out.replace('<script src="app.js"></script>', "<script>\n" + js + "\n</script>")
     with open(os.path.join(HERE, "index.html"), "w", encoding="utf8") as f:

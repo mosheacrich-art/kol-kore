@@ -215,3 +215,6 @@ p.t .r { font-size: .7em; font-weight: 400; padding: 0 .15em; }
 @media print { .topbar, .progress, .drawer, .sheet, .scrim, .cover, .contents, .start { display: none; } body { background: #fff; color: #000; } .half-title { min-height: 0; page-break-before: always; } }
 
 html:not(.ready) .drawer, html:not(.ready) .sheet, html:not(.ready) .scrim { transition: none !important; }
+
+/* Hebreo: solo nombres hebreos */
+html[data-lang="he"] .half-title .es, html[data-lang="he"] .sec-head .es, html[data-lang="he"] .es-title { display: none; }

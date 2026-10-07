@@ -26,6 +26,7 @@
     '#rfab{position:fixed;right:16px;bottom:16px;z-index:9998}';
   document.head.appendChild(css);
 
+  var T = window.sidurT || function (s) { return s; };
   function post(m) { try { parent.postMessage(m, location.origin); } catch (e) {} }
 
   /* ── word wrapping per section (rubrics excluded) ── */
@@ -136,13 +137,13 @@
   }
   function askEnd() {
     closeBar();
-    bar = mk('<span>Ahora toca la <b>última</b> palabra</span><button class="ghost" id="rc">Cancelar</button>');
+    bar = mk('<span>' + T('Ahora toca la <b>última</b> palabra') + '</span><button class="ghost" id="rc">' + T('Cancelar') + '</button>');
     bar.querySelector('#rc').onclick = reset;
   }
   function begin() {
     wrapAll(); picking = true; sel = null; document.body.classList.add('pick'); fab.style.display = 'none';
     closeBar();
-    bar = mk('<span>Toca la <b>primera</b> palabra del tramo</span><button class="ghost" id="rc">Cancelar</button>');
+    bar = mk('<span>' + T('Toca la <b>primera</b> palabra del tramo') + '</span><button class="ghost" id="rc">' + T('Cancelar') + '</button>');
     bar.querySelector('#rc').onclick = reset;
   }
   document.addEventListener('click', function (e) {
@@ -158,7 +159,7 @@
   }, true);
   function readyBar() {
     closeBar();
-    bar = mk('<span>Palabras ' + (sel.a + 1) + '–' + (sel.b + 1) + '</span><button class="ghost" id="rc">Cancelar</button><button class="rec" id="rr">● Grabar</button>');
+    bar = mk('<span>' + T('Palabras') + ' ' + (sel.a + 1) + '–' + (sel.b + 1) + '</span><button class="ghost" id="rc">' + T('Cancelar') + '</button><button class="rec" id="rr">● ' + T('Grabar') + '</button>');
     bar.querySelector('#rc').onclick = reset;
     bar.querySelector('#rr').onclick = startRec;
   }
@@ -182,20 +183,20 @@
         clearInterval(timer); mr = null;
         if (cancelled) { reset(); return; }
         var dur = (Date.now() - t0) / 1000, type = rec.mimeType || 'audio/webm';
-        closeBar(); bar = mk('<span>Guardando…</span>');
+        closeBar(); bar = mk('<span>' + T('Guardando…') + '</span>');
         var rw = [];
         for (var k = sel.a; k <= sel.b; k++) rw.push({ i: k, t: sel.sec._words[k].textContent });
         post({ type: 'sidur:save', secId: sel.sec.id, ts: stamps(sel, dur), rw: rw, size: sel.sec._words.length, blob: new Blob(chunks, { type: type }), mime: type });
       };
       t0 = Date.now(); secs = 0; rec.start();
       closeBar();
-      bar = mk('<span id="rt" style="color:' + RED + ';font-variant-numeric:tabular-nums">● 0:00</span><button class="ghost" id="rc">Cancelar</button><button class="rec" id="rs">■ Parar y guardar</button>');
+      bar = mk('<span id="rt" style="color:' + RED + ';font-variant-numeric:tabular-nums">● 0:00</span><button class="ghost" id="rc">' + T('Cancelar') + '</button><button class="rec" id="rs">■ ' + T('Parar y guardar') + '</button>');
       bar.querySelector('#rc').onclick = function () { cancelled = true; rec.stop(); };
       bar.querySelector('#rs').onclick = function () { rec.stop(); };
       timer = setInterval(function () { secs++; var el = document.getElementById('rt'); if (el) el.textContent = '● ' + fmt(secs); }, 1000);
     }).catch(function (err) {
       closeBar();
-      bar = mk('<span style="color:' + RED + '">' + (err && err.name === 'NotAllowedError' ? 'Permiso de micrófono denegado' : 'No se pudo usar el micrófono') + '</span><button class="ghost" id="rc">Cerrar</button>');
+      bar = mk('<span style="color:' + RED + '">' + (err && err.name === 'NotAllowedError' ? T('Permiso de micrófono denegado') : T('No se pudo usar el micrófono')) + '</span><button class="ghost" id="rc">' + T('Cerrar') + '</button>');
       bar.querySelector('#rc').onclick = reset;
     });
   }
@@ -203,7 +204,7 @@
   if (teacher) {
     fab = document.createElement('div'); fab.id = 'rfab';
     var fb = document.createElement('button');
-    fb.textContent = '🎙 Grabar tramo';
+    fb.textContent = '🎙 ' + T('Grabar tramo');
     fb.style.cssText = 'font:600 13px Inter,system-ui,sans-serif;padding:10px 16px;border-radius:4px;cursor:pointer;border:1px solid ' + NAVY + ';background:' + NAVY + ';color:#fff;box-shadow:4px 4px 0 ' + GOLD;
     fb.onclick = begin;
     fab.appendChild(fb); document.body.appendChild(fab);
@@ -216,7 +217,7 @@
     if (m.type === 'sidur:saved') reset();
     if (m.type === 'sidur:error') {
       closeBar();
-      bar = mk('<span style="color:' + RED + '">' + (m.error || 'No se pudo guardar') + '</span><button class="ghost" id="rc">Cerrar</button>');
+      bar = mk('<span style="color:' + RED + '">' + (m.error || T('No se pudo guardar')) + '</span><button class="ghost" id="rc">' + T('Cerrar') + '</button>');
       bar.querySelector('#rc').onclick = reset;
     }
   });

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useAudio } from '../../context/AudioContext'
+import { useLang } from '../../context/LangContext'
 
 // Tefilá = the full siddur, embedded (public/sidur/index.html).
 // Teachers get a word-range recorder inside it (public/sidur/embed.js); the audio is stored
@@ -8,6 +9,7 @@ import { useAudio } from '../../context/AudioContext'
 export default function TefilaStudy() {
   const { profile } = useAuth()
   const { upload, audios } = useAudio()
+  const { lang, t } = useLang()
   const frameRef = useRef(null)
   const readyRef = useRef(false)
   const isTeacher = profile?.role === 'teacher'
@@ -34,18 +36,19 @@ export default function TefilaStudy() {
         const he = (m.rw || []).filter(x => /[א-ת]/.test(x.t))
         const range = he.length ? { words: he.map(x => x.t), indices: he.map(x => x.i), size: m.size } : null
         const ok = first >= 0 && await upload(`sidur:${m.secId}`, first, file, null, m.ts, range)
-        e.source.postMessage(ok ? { type: 'sidur:saved' } : { type: 'sidur:error', error: 'No se pudo guardar el audio' }, window.location.origin)
+        e.source.postMessage(ok ? { type: 'sidur:saved' } : { type: 'sidur:error', error: t('x_save_audio_err') }, window.location.origin)
       }
     }
     window.addEventListener('message', onMsg)
     return () => window.removeEventListener('message', onMsg)
-  }, [isTeacher, upload, sendRanges])
+  }, [isTeacher, upload, sendRanges, t])
 
   return (
     <iframe
+      key={lang}
       ref={frameRef}
       title="Sidur"
-      src={`/sidur/index.html?embed=1${isTeacher ? '&teacher=1' : ''}`}
+      src={`/sidur/index.html?embed=1&lang=${lang}${isTeacher ? '&teacher=1' : ''}`}
       allow="microphone"
       className="w-full flex-1 border-0 bg-white"
       style={{ minHeight: '100%' }}
