@@ -710,7 +710,7 @@ export const translations = {
   },
 
   en: {
-    sync_missing: 'This audio isn't synced word by word',
+    sync_missing: 'This audio is not synced word by word',
     sync_now: 'Sync now',
     sync_in_progress: 'Syncing the audio word by word…',
     sync_failed: 'Sync failed',
