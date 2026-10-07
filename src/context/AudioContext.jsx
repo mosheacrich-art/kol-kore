@@ -60,6 +60,7 @@ export function AudioProvider({ children }) {
   const [audios, setAudios] = useState({})
   const [syncingKeys, setSyncingKeys] = useState(new Set())
   const [syncErrors, setSyncErrors] = useState({}) // key → error string
+  const [teacherSessionId, setTeacherSessionId] = useState(null) // signed-in teacher, for the background re-sync
 
   // Guards against overlapping load() calls (e.g. rapid tab focus/blur)
   // overwriting fresher data with a stale, slower response.
@@ -70,7 +71,7 @@ export function AudioProvider({ children }) {
       const seq = ++loadSeqRef.current
       const isStale = () => seq !== loadSeqRef.current
 
-      if (!userId) { setAudios({}); return }
+      if (!userId) { setAudios({}); setTeacherSessionId(null); return }
 
       const { data: profile, error: profileErr } = await supabase
         .from('profiles')
@@ -84,6 +85,7 @@ export function AudioProvider({ children }) {
       let teacherIdFilter = null
       if (profile?.role === 'teacher') teacherIdFilter = userId
       else if (profile?.role === 'student') teacherIdFilter = profile.teacher_id
+      setTeacherSessionId(profile?.role === 'teacher' ? userId : null)
 
       if (!teacherIdFilter) { setAudios({}); return }
 
@@ -395,6 +397,19 @@ export function AudioProvider({ children }) {
     onProgress?.({ done: targets.length, total: targets.length })
     return { total: targets.length, fixed, failed }
   }, [])
+
+  // Background re-sync: when a teacher signs in, quietly repair their audios left without
+  // timing (at most once a day per teacher, so failures are not retried on every load).
+  useEffect(() => {
+    if (!teacherSessionId) return
+    const flag = `auto-resync-${teacherSessionId}`
+    const today = new Date().toISOString().slice(0, 10)
+    try {
+      if (localStorage.getItem(flag) === today) return
+      localStorage.setItem(flag, today)
+    } catch { /* storage unavailable: still run once this session */ }
+    resyncMine().then(r => { if (r?.total) console.info('Auto re-sync:', r) })
+  }, [teacherSessionId, resyncMine])
 
   // Undo resyncMine using the localStorage backup (skips audios re-uploaded since).
   const restoreResync = useCallback(async () => {
