@@ -41,5 +41,5 @@ GRANT EXECUTE ON FUNCTION bump_streak(uuid) TO authenticated;
 UPDATE profiles
 SET streak = 22,
     streak_last_date = (now() AT TIME ZONE 'Europe/Madrid')::date - 1
-WHERE name ILIKE '%milan%'
+WHERE name ILIKE '%milan%kara%'
 RETURNING id, name, streak, streak_last_date;
