@@ -16,6 +16,7 @@ import {
 import HomeworkComposer from '../../components/homework/HomeworkComposer'
 import HomeworkItem, { HomeworkEditModal, RowMenu, homeworkStatus } from '../../components/homework/HomeworkItem'
 import { capitalize, daysUntil, displayParashaName, formatDuration, resolveParasha, studentParashot } from '../../utils/parasha'
+import { currentStreak } from '../../lib/streak'
 
 /* ══════════════════════════════════════════════════════════════════════════
    Bar Mitzvah calculation (Hebcal) — logic unchanged
@@ -722,7 +723,7 @@ function StudentDetail({ student, teacher, homework, setHomework, onBack, onUpda
               {[
                 { icon: Headphones, label: t('listens'), value: student.listens || 0 },
                 { icon: BookOpen, label: t('progress'), value: `${student.progress || 0}%` },
-                { icon: Star, label: t('streak'), value: `${student.streak || 0}d` },
+                { icon: Star, label: t('streak'), value: `${currentStreak(student)}d` },
                 { icon: Clock, label: t('app_time'), value: trackData ? formatDuration(trackData.totalSeconds) : '—' },
               ].map(s => (
                 <div key={s.label} className="card-flat p-4">

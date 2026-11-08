@@ -5,6 +5,7 @@ import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
 import { PARASHOT } from '../../data/parashot'
 import { ALL_MOADIM } from '../../data/moadim'
+import { currentStreak } from '../../lib/streak'
 
 function resolveAnyParasha(idOrName) {
   if (!idOrName) return null
@@ -363,7 +364,7 @@ export default function StudentProfile() {
               { label: t('bar_mitzvah'), value: profile.bar_mitzvah ? new Date(profile.bar_mitzvah).toLocaleDateString(t('date_locale'), dateFmt) : '—' },
               { label: 'Perashá', value: resolved.map(p => p.name).join(' + ') || '—' },
               { label: t('progress'), value: `${profile.progress || 0}%` },
-              { label: t('streak'), value: `${profile.streak || 0} ${t('days')}` },
+              { label: t('streak'), value: `${currentStreak(profile)} ${t('days')}` },
             ].map(item => (
               <div key={item.label} className="flex justify-between items-baseline py-2.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                 <span className="text-xs" style={{ color: '#6b7280' }}>{item.label}</span>
@@ -406,11 +407,11 @@ export default function StudentProfile() {
           <section>
             <p className="eyebrow pb-3">{t('study_streak')}</p>
             <div className="flex items-baseline gap-3 py-4">
-              <span className="serif text-5xl leading-none" style={{ color: NAVY }}>{profile.streak || 0}</span>
+              <span className="serif text-5xl leading-none" style={{ color: NAVY }}>{currentStreak(profile)}</span>
               <span className="text-sm" style={{ color: GOLD }}>{t('days')}</span>
             </div>
             <p className="text-xs" style={{ color: '#6b7280' }}>
-              {(profile.streak || 0) > 5 ? t('keep_going') : t('start_streak')}
+              {currentStreak(profile) > 5 ? t('keep_going') : t('start_streak')}
             </p>
           </section>
 
@@ -421,11 +422,11 @@ export default function StudentProfile() {
             <div className="grid grid-cols-3 py-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
               <StatPill value={totalListens} label={t('x_listens')} />
               <StatPill value={done} label={t('x_homework_lc')} />
-              <StatPill value={profile.streak || 0} label={t('x_streak_days')} />
+              <StatPill value={currentStreak(profile)} label={t('x_streak_days')} />
             </div>
             <ul className="mt-2">
               {ACHIEVEMENTS.map(a => {
-                const unlocked = a.check({ totalListens, homeworkDone: done, streak: profile.streak || 0 })
+                const unlocked = a.check({ totalListens, homeworkDone: done, streak: currentStreak(profile) })
                 return (
                   <li key={a.id} title={t(a.descKey)} className="flex items-center gap-3 py-2"
                     style={{ borderBottom: '1px solid var(--border-subtle)', opacity: unlocked ? 1 : 0.4 }}>

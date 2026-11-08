@@ -143,6 +143,12 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
       p_aliyah_idx: aliyahIdx,
     }).then(({ error }) => { if (error) console.error('increment_audio_listen:', error) })
 
+    // Streak: counts once per day when the student studies with their teacher's audio
+    if (teacherAudio && audio === teacherAudio) {
+      supabase.rpc('bump_streak', { p_student_id: profile.id })
+        .then(({ error }) => { if (error) console.error('bump_streak:', error) })
+    }
+
     if (profile.teacher_id) {
       const notifKey = `${parasha.id}-${aliyahIdx}`
       const aliyahLabel = currentAliyah.n === 8 ? 'Maftir' : t('aliyah_n_label').replace('{n}', currentAliyah.n)
