@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Capacitor } from '@capacitor/core'
-import { ChevronRight, LogOut, Mail, Menu, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, LogOut, Mail, Menu, X } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import Logo from '../Logo'
@@ -55,6 +55,18 @@ export default function AppShell({ sections, profilePath, roleLabel, homePath })
   const handleSignOut = async () => { await signOut(); navigate('/login') }
   const go = (path) => { navigate(path); setDrawerOpen(false) }
 
+  // Where the back button goes: from a sub-page (e.g. /student/study/bereshit)
+  // to its section; from any other section to home. iOS has no hardware back
+  // button, so this is the only way out of a section in the native app.
+  const path = location.pathname.replace(/\/+$/, '')
+  const allItems = sections.flatMap(s => s.items)
+  const parent = allItems.find(i => path.startsWith(i.path + '/'))
+  const backTarget = parent ? parent.path : (path !== homePath ? homePath : null)
+
+  // In native landscape the sidebar is hidden to give the reader room, so the
+  // drawer must be available at every width.
+  const drawerOnly = isLandscape ? '' : 'lg:hidden'
+
   const sidebarProps = { sections, profile, roleLabel, profilePath, homePath, location, go, onSignOut: handleSignOut }
 
   return (
@@ -71,13 +83,13 @@ export default function AppShell({ sections, profilePath, roleLabel, homePath })
       <AnimatePresence>
         {drawerOpen && (
           <>
-            <motion.div key="scrim" className="fixed inset-0 z-[90] lg:hidden" style={{ background: 'rgba(17,24,39,0.35)' }}
+            <motion.div key="scrim" className={`fixed inset-0 z-[90] ${drawerOnly}`} style={{ background: 'rgba(17,24,39,0.35)' }}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
               onClick={() => setDrawerOpen(false)} />
             <motion.aside key="drawer" role="dialog" aria-modal="true" aria-label={t('ui_navigation')}
-              className={`fixed inset-y-0 z-[100] lg:hidden flex flex-col sidebar-drawer ${isRTL ? 'right-0' : 'left-0'}`}
+              className={`fixed inset-y-0 z-[100] ${drawerOnly} flex flex-col sidebar-drawer ${isRTL ? 'left-0' : 'right-0'}`}
               style={{ width: 'min(86vw, 300px)', background: 'var(--surface)', boxShadow: 'var(--shadow-lg)' }}
-              initial={{ x: isRTL ? '100%' : '-100%' }} animate={{ x: 0 }} exit={{ x: isRTL ? '100%' : '-100%' }}
+              initial={{ x: isRTL ? '-100%' : '100%' }} animate={{ x: 0 }} exit={{ x: isRTL ? '-100%' : '100%' }}
               transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}>
               <button onClick={() => setDrawerOpen(false)} aria-label={t('close')}
                 className="btn btn-ghost btn-sm btn-icon absolute end-3" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
@@ -100,30 +112,40 @@ export default function AppShell({ sections, profilePath, roleLabel, homePath })
 
       {/* ── Main column ────────────────────────────────────────────── */}
       <div className="flex-1 min-w-0 flex flex-col h-full">
-        {!isLandscape && (
-          <header className="flex-shrink-0 app-header z-30" style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border-subtle)' }}>
-            <div className="flex items-center gap-2 px-3 sm:px-6 lg:px-8" style={{ height: 60 }}>
-              <button className="btn btn-ghost btn-icon lg:hidden" onClick={() => setDrawerOpen(true)}
-                aria-label={t('ui_open_menu')} aria-expanded={drawerOpen}>
-                <Menu size={20} strokeWidth={1.8} />
+        <header className="flex-shrink-0 app-header z-30" style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border-subtle)' }}>
+          <div className="flex items-center gap-1.5 px-3 sm:px-6 lg:px-8"
+            style={{
+              height: isLandscape ? 44 : 60,
+              paddingLeft: 'max(env(safe-area-inset-left, 0px), 0.75rem)',
+              paddingRight: 'max(env(safe-area-inset-right, 0px), 0.75rem)',
+            }}>
+            {backTarget && (
+              <button className="btn btn-ghost btn-sm flex-shrink-0" onClick={() => navigate(backTarget)}
+                aria-label={t('back')} style={{ paddingInline: '0.5rem' }}>
+                <ChevronLeft size={20} strokeWidth={1.9} className="rtl:rotate-180" />
+                <span className="text-[14px]">{t('back')}</span>
               </button>
-              <button className="lg:hidden flex items-center" onClick={() => navigate(homePath)} aria-label="Parashapp">
-                <Logo size={24} />
-              </button>
+            )}
+            <button className={`${drawerOnly} flex items-center ${backTarget ? 'ms-1' : ''}`} onClick={() => navigate(homePath)} aria-label="Parashapp">
+              <Logo size={isLandscape ? 20 : 24} />
+            </button>
 
-              <div className="ms-auto flex items-center gap-2">
-                <div className="hidden sm:block"><LangToggle /></div>
-                <button onClick={() => setContactOpen(true)} className="btn btn-secondary btn-sm hidden md:inline-flex">
-                  <Mail size={15} strokeWidth={1.8} />{t('contact_us')}
-                </button>
-                <button onClick={handleSignOut} className="btn btn-secondary btn-sm btn-icon hidden md:inline-flex"
-                  aria-label={t('logout')} title={t('logout')}>
-                  <LogOut size={16} strokeWidth={1.8} className="rtl:rotate-180" />
-                </button>
-              </div>
+            <div className="ms-auto flex items-center gap-2">
+              <div className="hidden sm:block"><LangToggle /></div>
+              <button onClick={() => setContactOpen(true)} className="btn btn-secondary btn-sm hidden md:inline-flex">
+                <Mail size={15} strokeWidth={1.8} />{t('contact_us')}
+              </button>
+              <button onClick={handleSignOut} className="btn btn-secondary btn-sm btn-icon hidden md:inline-flex"
+                aria-label={t('logout')} title={t('logout')}>
+                <LogOut size={16} strokeWidth={1.8} className="rtl:rotate-180" />
+              </button>
+              <button className={`btn btn-ghost btn-icon ${drawerOnly}`} onClick={() => setDrawerOpen(true)}
+                aria-label={t('ui_open_menu')} aria-expanded={drawerOpen}>
+                <Menu size={22} strokeWidth={1.8} />
+              </button>
             </div>
-          </header>
-        )}
+          </div>
+        </header>
 
         <main id="main" className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col scroll-smooth-ios">
           <Outlet />
