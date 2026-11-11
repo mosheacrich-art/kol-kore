@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useAudio } from '../../context/AudioContext'
 import { useLang } from '../../context/LangContext'
+import { useTheme } from '../../context/ThemeContext'
 
 // Tefilá = the full siddur, embedded (public/sidur/index.html).
 // Teachers get a word-range recorder inside it (public/sidur/embed.js); the audio is stored
@@ -10,6 +11,7 @@ export default function TefilaStudy() {
   const { profile } = useAuth()
   const { upload, audios } = useAudio()
   const { lang, t } = useLang()
+  const { isDark } = useTheme()
   const frameRef = useRef(null)
   const readyRef = useRef(false)
   const isTeacher = profile?.role === 'teacher'
@@ -45,13 +47,13 @@ export default function TefilaStudy() {
 
   return (
     <iframe
-      key={lang}
+      key={`${lang}-${isDark ? 'd' : 'l'}`}
       ref={frameRef}
       title="Sidur"
-      src={`/sidur/index.html?embed=1&lang=${lang}${isTeacher ? '&teacher=1' : ''}`}
+      src={`/sidur/index.html?embed=1&lang=${lang}${isDark ? '&theme=dark' : ''}${isTeacher ? '&teacher=1' : ''}`}
       allow="microphone"
-      className="w-full flex-1 border-0 bg-white"
-      style={{ minHeight: '100%' }}
+      className="w-full flex-1 border-0"
+      style={{ minHeight: '100%', background: 'var(--bg)' }}
     />
   )
 }

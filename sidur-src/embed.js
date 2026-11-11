@@ -5,24 +5,34 @@
   var q = new URLSearchParams(location.search);
   if (q.get('embed') !== '1') return;
   var teacher = q.get('teacher') === '1';
-  document.documentElement.setAttribute('data-theme', 'light');
-  var GOLD = '#c8941f', NAVY = '#1b2f6b', RED = '#b42318';
+  var dark = q.get('theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-embed', '1');
+  var GOLD = dark ? '#ffca28' : '#d4a017', NAVY = dark ? '#ffd54f' : '#7a5200', RED = '#dc2626';
+  var PAPER = dark ? '#0d0b1e' : '#f5f0e4';
 
   var css = document.createElement('style');
   css.textContent =
+    /* Parashapp palette: warm parchment (light) / night + gold (dark) */
+    'html[data-embed][data-theme="light"]{--paper:#f5f0e4;--paper-2:#ede8da;--ink:#1a1200;--muted:rgba(26,18,0,.62);' +
+    '--faint:rgba(26,18,0,.32);--rule:rgba(0,0,0,.1);--accent:#7a5200;--gold:#a07000;--bar:rgba(245,240,228,.9);' +
+    '--shadow:0 18px 50px -18px rgba(60,40,0,.3);color-scheme:light}' +
+    'html[data-embed][data-theme="dark"]{--paper:#07060f;--paper-2:#0d0b1e;--ink:rgba(240,239,255,.92);--muted:rgba(180,170,220,.6);' +
+    '--faint:rgba(180,170,220,.3);--rule:rgba(255,255,255,.08);--accent:#ffca28;--gold:rgba(255,202,40,.75);--bar:rgba(7,6,15,.85);' +
+    '--shadow:0 18px 50px -18px rgba(0,0,0,.8);color-scheme:dark}' +
     '.pw{border-radius:3px;transition:background .08s}' +
     '.pick .pw{cursor:pointer}.pick .pw:hover{background:rgba(200,148,31,.25)}' +
     '.pw.sel{background:rgba(200,148,31,.3)}' +
     '.pw.cur{background:rgba(200,148,31,.45);color:' + NAVY + '}' +
     '.pw.has{cursor:pointer}' +
     '.pl{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin:0 6px;border-radius:50%;' +
-    'background:' + NAVY + ';color:#fff;font:12px/1 sans-serif;border:0;cursor:pointer;vertical-align:middle}' +
-    '#rbar{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:9999;background:#fff;color:' + NAVY + ';' +
-    'border:1px solid ' + NAVY + ';border-radius:6px;box-shadow:5px 5px 0 ' + GOLD + ';padding:10px 14px;font:14px Inter,system-ui,sans-serif;' +
+    'background:' + NAVY + ';color:' + PAPER + ';font:12px/1 sans-serif;border:0;cursor:pointer;vertical-align:middle}' +
+    '#rbar{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:9999;background:' + PAPER + ';color:' + NAVY + ';' +
+    'border:1px solid ' + GOLD + ';border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:10px 14px;font:14px Inter,system-ui,sans-serif;' +
     'display:flex;align-items:center;gap:12px;max-width:94vw}' +
-    '#rbar button{font:600 13px Inter,system-ui,sans-serif;padding:8px 14px;border-radius:4px;cursor:pointer;border:1px solid ' + NAVY + ';background:#fff;color:' + NAVY + '}' +
+    '#rbar button{font:600 13px Inter,system-ui,sans-serif;padding:8px 14px;border-radius:12px;cursor:pointer;border:1px solid ' + NAVY + ';background:' + PAPER + ';color:' + NAVY + '}' +
     '#rbar button.rec{background:' + RED + ';border-color:' + RED + ';color:#fff}' +
-    '#rbar button.ghost{border:0;background:none;color:#6b7280;text-decoration:underline}' +
+    '#rbar button.ghost{border:0;background:none;color:inherit;opacity:.6;text-decoration:underline}' +
     '#rfab{position:fixed;right:16px;bottom:16px;z-index:9998}';
   document.head.appendChild(css);
 
@@ -205,7 +215,7 @@
     fab = document.createElement('div'); fab.id = 'rfab';
     var fb = document.createElement('button');
     fb.textContent = '🎙 ' + T('Grabar tramo');
-    fb.style.cssText = 'font:600 13px Inter,system-ui,sans-serif;padding:10px 16px;border-radius:4px;cursor:pointer;border:1px solid ' + NAVY + ';background:' + NAVY + ';color:#fff;box-shadow:4px 4px 0 ' + GOLD;
+    fb.style.cssText = 'font:600 13px Inter,system-ui,sans-serif;padding:10px 16px;border-radius:12px;cursor:pointer;border:1px solid ' + NAVY + ';background:' + NAVY + ';color:' + PAPER + ';box-shadow:0 8px 24px rgba(0,0,0,.2)';
     fb.onclick = begin;
     fab.appendChild(fb); document.body.appendChild(fab);
   }

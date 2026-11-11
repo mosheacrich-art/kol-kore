@@ -187,7 +187,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
   const [uploadedMsg, setUploadedMsg] = useState(false)
 
   const currentAliyah = parasha.aliyot[aliyahIdx]
-  const bookColor = parasha.color || BOOK_COLORS[parasha.book] || '#1b2f6b'
+  const bookColor = parasha.color || BOOK_COLORS[parasha.book] || '#6c33e6'
   const teacherAudio = get(parasha.id, aliyahIdx)
 
   // Generic public audios for this parasha/aliyah
@@ -577,14 +577,14 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
             <div className="flex-shrink-0 flex items-center justify-between px-6 py-4"
               style={{ borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-deep)' }}>
               <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: '#b42318' }} />
-                <span className="text-sm font-medium tabular-nums" style={{ color: '#b42318' }}>
+                <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: '#ef4444' }} />
+                <span className="text-sm font-medium tabular-nums" style={{ color: '#ef4444' }}>
                   {fmtSec(recSeconds)}
                 </span>
               </div>
               <button onClick={stopRec}
                 className="w-16 h-16 rounded-full flex items-center justify-center transition-all active:scale-95"
-                style={{ background: '#b42318', boxShadow: '0 0 30px rgba(180,35,24,0.4)' }}>
+                style={{ background: '#ef4444', boxShadow: '0 0 30px rgba(239,68,68,0.4)' }}>
                 <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
                   <rect x="4" y="4" width="14" height="14" rx="2" fill="white"/>
                 </svg>
@@ -856,9 +856,9 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
                         <button
                           onClick={e => { e.stopPropagation(); deleteGenericAudio(src.key) }}
                           className="px-2.5 py-2.5 flex-shrink-0 transition-all"
-                          style={{ color: 'rgba(180,35,24,0.5)' }}
-                          onMouseEnter={e => e.currentTarget.style.color = '#b42318'}
-                          onMouseLeave={e => e.currentTarget.style.color = 'rgba(180,35,24,0.5)'}>
+                          style={{ color: 'rgba(239,68,68,0.5)' }}
+                          onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                          onMouseLeave={e => e.currentTarget.style.color = 'rgba(239,68,68,0.5)'}>
                           <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
                             <path d="M2 3h7M4.5 3V2h2v1M4 3l.5 6M7 3l-.5 6" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
@@ -887,7 +887,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
                 return (
                   <button key={i}
                     onClick={() => setAliyahIdxPersisted(i)}
-                    className="flex-shrink-0 px-3 py-1 rounded-sm text-xs font-medium transition-all relative"
+                    className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all relative"
                     style={{
                       background: aliyahIdx === i ? bookColor : 'var(--bg-card)',
                       color: aliyahIdx === i ? '#fff' : 'var(--text-3)',
@@ -899,7 +899,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
                         title={aliyahAudio.wordTimestamps ? t('tooltip_audio_synced') : t('tooltip_audio_available')}
                         className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
                         style={{
-                          background: aliyahAudio.wordTimestamps ? '#c8941f' : bookColor,
+                          background: aliyahAudio.wordTimestamps ? '#22c55e' : bookColor,
                           border: '1px solid var(--bg)',
                         }}
                       />
@@ -1019,7 +1019,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
                     <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>{a.n === 8 ? 'Maftir' : `${a.n}ª`}</span>
                     {aliyahAudio && (
                       <span className="absolute top-1 right-1 w-2 h-2 rounded-full"
-                        style={{ background: aliyahAudio.wordTimestamps ? '#c8941f' : bookColor, border: '1px solid var(--bg)' }} />
+                        style={{ background: aliyahAudio.wordTimestamps ? '#22c55e' : bookColor, border: '1px solid var(--bg)' }} />
                     )}
                   </button>
                 )
@@ -1038,39 +1038,39 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
       {pendingHomework && (
         hwMinimized ? (
           <div className="flex-shrink-0 flex items-center gap-2 px-4 py-1.5"
-            style={{ background: '#f6f7f9', borderBottom: '1px solid rgba(27,47,107,0.15)' }}>
-            <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#1b2f6b' }} />
-            <span className="text-xs flex-1 truncate" style={{ color: '#1b2f6b' }}>{t('pending_hw')}</span>
+            style={{ background: 'rgba(108,51,230,0.08)', borderBottom: '1px solid rgba(108,51,230,0.15)' }}>
+            <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#6c33e6' }} />
+            <span className="text-xs flex-1 truncate" style={{ color: '#6c33e6' }}>{t('pending_hw')}</span>
             <button onClick={() => setHwMinimized(false)}
               className="text-xs px-2 py-0.5 rounded transition-all"
-              style={{ color: '#1b2f6b', background: '#f6f7f9', border: '1px solid rgba(27,47,107,0.2)' }}>
+              style={{ color: '#6c33e6', background: 'rgba(108,51,230,0.12)', border: '1px solid rgba(108,51,230,0.2)' }}>
               ▾
             </button>
           </div>
         ) : (
           <div className="flex-shrink-0 px-5 py-3 flex flex-col gap-2"
-            style={{ background: '#f6f7f9', borderBottom: '1px solid rgba(27,47,107,0.2)' }}>
+            style={{ background: 'rgba(108,51,230,0.1)', borderBottom: '1px solid rgba(108,51,230,0.2)' }}>
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ background: '#f6f7f9' }}>
+                style={{ background: 'rgba(108,51,230,0.2)' }}>
                 <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                  <path d="M2 2h6l3 3v7H2V2z" stroke="#1b2f6b" strokeWidth="1.2" strokeLinejoin="round"/>
-                  <path d="M8 2v3h3" stroke="#1b2f6b" strokeWidth="1.2" strokeLinejoin="round"/>
-                  <path d="M4 7h5M4 9.5h3" stroke="#1b2f6b" strokeWidth="1.2" strokeLinecap="round"/>
+                  <path d="M2 2h6l3 3v7H2V2z" stroke="#6c33e6" strokeWidth="1.2" strokeLinejoin="round"/>
+                  <path d="M8 2v3h3" stroke="#6c33e6" strokeWidth="1.2" strokeLinejoin="round"/>
+                  <path d="M4 7h5M4 9.5h3" stroke="#6c33e6" strokeWidth="1.2" strokeLinecap="round"/>
                 </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold" style={{ color: '#1b2f6b' }}>{t('pending_hw')}</p>
+                <p className="text-xs font-semibold" style={{ color: '#6c33e6' }}>{t('pending_hw')}</p>
                 <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>{pendingHomework.task}</p>
                 {pendingHomework.word_start != null && (
-                  <p className="text-xs mt-0.5" style={{ color: '#c8941f' }}>
+                  <p className="text-xs mt-0.5" style={{ color: '#d97706' }}>
                     📍 {t('x_words')} {pendingHomework.word_start + 1}–{pendingHomework.word_end + 1}
                   </p>
                 )}
               </div>
               <button onClick={() => setHwMinimized(true)}
                 className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
-                style={{ background: '#f6f7f9', color: '#1b2f6b', border: '1px solid rgba(27,47,107,0.25)' }}>
+                style={{ background: 'rgba(108,51,230,0.15)', color: '#6c33e6', border: '1px solid rgba(108,51,230,0.25)' }}>
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                   <path d="M2 6.5l3-3 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
@@ -1080,7 +1080,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
               <div className="flex gap-2 pl-10">
                 <button onClick={startRecordingMode}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                  style={{ background: '#f6f7f9', color: '#1b2f6b', border: '1px solid rgba(27,47,107,0.3)' }}>
+                  style={{ background: 'rgba(108,51,230,0.18)', color: '#6c33e6', border: '1px solid rgba(108,51,230,0.3)' }}>
                   <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
                     <rect x="3.5" y="0.5" width="4" height="6" rx="2" stroke="currentColor" strokeWidth="1.2"/>
                     <path d="M1.5 5.5c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
@@ -1112,14 +1112,14 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
         if (!syncing && !err && !unsynced) return null
         return (
           <div className="flex-shrink-0 flex items-center gap-2 px-5 py-2 text-xs"
-            style={{ background: err ? '#fdf3f2' : '#eef4ff', borderBottom: '1px solid var(--border-subtle)', color: err ? '#b42318' : '#1b2f6b' }}>
+            style={{ background: err ? 'rgba(239,68,68,0.08)' : 'rgba(108,51,230,0.08)', borderBottom: '1px solid var(--border-subtle)', color: err ? '#dc2626' : '#6c33e6' }}>
             {syncing
-              ? <><div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#1b2f6b' }} />{t('sync_in_progress')}</>
+              ? <><div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#6c33e6' }} />{t('sync_in_progress')}</>
               : <>
                   <span className="flex-1 min-w-0 break-words">{err ? `${t('sync_failed')}: ${err}` : t('sync_missing')}</span>
                   <button onClick={() => generateSync(parasha.id, aliyahIdx, currentAliyah?.ref)}
                     className="px-3 py-1 rounded-md font-medium flex-shrink-0"
-                    style={{ background: err ? '#b42318' : '#1b2f6b', color: '#fff' }}>
+                    style={{ background: err ? '#dc2626' : '#6c33e6', color: '#fff' }}>
                     {err ? t('sync_retry') : t('sync_now')}
                   </button>
                 </>}
@@ -1130,12 +1130,12 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
       {/* Student upload success message */}
       {uploadedMsg && (
         <div className="flex-shrink-0 flex items-center gap-2 px-5 py-2"
-          style={{ background: '#f6f7f9', borderBottom: '1px solid rgba(200,148,31,0.2)' }}>
+          style={{ background: 'rgba(34,197,94,0.08)', borderBottom: '1px solid rgba(34,197,94,0.2)' }}>
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0 }}>
-            <circle cx="6" cy="6" r="5" stroke="#1b2f6b" strokeWidth="1.2"/>
-            <path d="M3.5 6l2 2L8.5 4" stroke="#1b2f6b" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+            <circle cx="6" cy="6" r="5" stroke="#16a34a" strokeWidth="1.2"/>
+            <path d="M3.5 6l2 2L8.5 4" stroke="#16a34a" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span className="text-xs font-medium" style={{ color: '#1b2f6b' }}>{t('audio_sent')}</span>
+          <span className="text-xs font-medium" style={{ color: '#16a34a' }}>{t('audio_sent')}</span>
         </div>
       )}
 
@@ -1146,7 +1146,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
           <button
             onClick={() => setStudentAudiosOpen(o => !o)}
             className="w-full flex items-center gap-2 px-5 py-2 text-xs font-medium transition-all"
-            style={{ background: evalMode ? 'rgba(180,35,24,0.06)' : 'rgba(27,47,107,0.06)', color: evalMode ? '#b42318' : '#1b2f6b' }}>
+            style={{ background: evalMode ? 'rgba(239,68,68,0.06)' : 'rgba(108,51,230,0.06)', color: evalMode ? '#ef4444' : '#8b5cf6' }}>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <rect x="3.5" y="0.5" width="3" height="5" rx="1.5" stroke="currentColor" strokeWidth="1.1"/>
               <path d="M1.5 5c0 2 1.5 3.5 3.5 3.5S8.5 7 8.5 5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
@@ -1160,18 +1160,18 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
           </button>
           {studentAudiosOpen && (
             <div className="flex flex-col gap-1 px-4 pb-3 pt-1"
-              style={{ background: '#f6f7f9' }}>
+              style={{ background: 'rgba(108,51,230,0.04)' }}>
               {studentAudios.map((sa, i) => {
                 const isEvalTarget = evalMode && evalTarget?.id === sa.id
                 return (
                   <div key={sa.id}
                     className="flex items-center gap-3 px-3 py-2 rounded-xl"
                     style={{
-                      background: isEvalTarget ? 'rgba(180,35,24,0.08)' : playingStudentUrl === sa.recording_url ? 'rgba(27,47,107,0.1)' : 'var(--bg-card)',
-                      border: `1px solid ${isEvalTarget ? 'rgba(180,35,24,0.25)' : playingStudentUrl === sa.recording_url ? 'rgba(27,47,107,0.25)' : 'var(--border-subtle)'}`,
+                      background: isEvalTarget ? 'rgba(239,68,68,0.08)' : playingStudentUrl === sa.recording_url ? 'rgba(108,51,230,0.1)' : 'var(--bg-card)',
+                      border: `1px solid ${isEvalTarget ? 'rgba(239,68,68,0.25)' : playingStudentUrl === sa.recording_url ? 'rgba(108,51,230,0.25)' : 'var(--border-subtle)'}`,
                     }}>
                     <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-semibold"
-                      style={{ background: isEvalTarget ? 'rgba(180,35,24,0.15)' : 'rgba(27,47,107,0.15)', color: isEvalTarget ? '#b42318' : '#1b2f6b' }}>
+                      style={{ background: isEvalTarget ? 'rgba(239,68,68,0.15)' : 'rgba(108,51,230,0.15)', color: isEvalTarget ? '#ef4444' : '#8b5cf6' }}>
                       {i + 1}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -1201,7 +1201,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
                       <button
                         onClick={() => { setEvalMode(true); setEvalTarget(sa); setEvalErrors([]); setEvalComment('') }}
                         className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium flex-shrink-0 transition-all"
-                        style={{ background: '#fdf3f2', color: '#b42318', border: '1px solid rgba(180,35,24,0.2)' }}>
+                        style={{ background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                           <path d="M1 7.5V9h1.5l4.5-4.5-1.5-1.5L1 7.5z" stroke="currentColor" strokeWidth="1" strokeLinejoin="round"/>
                           <path d="M6.5 2l1.5 1.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
@@ -1223,9 +1223,9 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
               {/* Eval panel */}
               {evalMode && (
                 <div className="mt-2 rounded-xl p-3 flex flex-col gap-2.5"
-                  style={{ background: '#fdf3f2', border: '1px solid rgba(180,35,24,0.18)' }}>
+                  style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.18)' }}>
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold" style={{ color: '#b42318' }}>
+                    <p className="text-xs font-semibold" style={{ color: '#ef4444' }}>
                       {evalErrors.length === 0
                         ? t('eval_errors_hint')
                         : evalErrors.length === 1
@@ -1239,10 +1239,10 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
                         <button key={i}
                           onClick={() => setEvalErrors(prev => prev.filter(e => e.wordIdx !== err.wordIdx))}
                           className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg"
-                          style={{ background: '#fdf3f2', border: '1px solid rgba(180,35,24,0.25)' }}
+                          style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)' }}
                           title={t('eval_remove_error')}>
                           <span className="text-xs font-mono tabular-nums" style={{ color: 'var(--text-muted)' }}>{err.label}</span>
-                          <span className="hebrew text-sm" style={{ color: '#b42318' }}>{err.word}</span>
+                          <span className="hebrew text-sm" style={{ color: '#ef4444' }}>{err.word}</span>
                           <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>×</span>
                         </button>
                       ))}
@@ -1261,9 +1261,9 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
                     disabled={evalSending || evalErrors.length === 0}
                     className="w-full py-2 rounded-xl text-xs font-semibold transition-all"
                     style={{
-                      background: evalErrors.length === 0 || evalSending ? 'var(--bg-card)' : 'rgba(180,35,24,0.12)',
-                      color: evalErrors.length === 0 || evalSending ? 'var(--text-muted)' : '#b42318',
-                      border: `1px solid ${evalErrors.length === 0 || evalSending ? 'var(--border)' : 'rgba(180,35,24,0.3)'}`,
+                      background: evalErrors.length === 0 || evalSending ? 'var(--bg-card)' : 'rgba(239,68,68,0.12)',
+                      color: evalErrors.length === 0 || evalSending ? 'var(--text-muted)' : '#ef4444',
+                      border: `1px solid ${evalErrors.length === 0 || evalSending ? 'var(--border)' : 'rgba(239,68,68,0.3)'}`,
                     }}>
                     {evalSending ? t('sending') : evalErrors.length === 0 ? t('eval_send_no_errors') : t('eval_send').replace('{name}', evalTarget?.student_name)}
                   </button>
@@ -1326,9 +1326,9 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
 
       {recChoiceOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-5"
-          style={{ background: 'rgba(17,24,39,0.55)' }} onClick={() => setRecChoiceOpen(false)}>
+          style={{ background: 'rgba(0,0,0,0.55)' }} onClick={() => setRecChoiceOpen(false)}>
           <div className="w-full max-w-xs p-2 flex flex-col gap-1"
-            style={{ background: 'var(--bg-card)', borderRadius: 8, boxShadow: 'var(--shadow-lg)' }}
+            style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: '0 12px 40px rgba(0,0,0,0.25)' }}
             onClick={e => e.stopPropagation()}>
             <p className="px-3 pt-2 pb-1 text-xs" style={{ color: 'var(--text-3)' }}>{t('record')} · {currentAliyah?.label || `${aliyahIdx + 1}ª`}</p>
             <button className="text-left px-3 py-2.5 rounded-md text-sm font-medium"
@@ -1365,7 +1365,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
           <>
             <div className="flex items-center gap-2 flex-1 justify-start">
               <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
-              <span className="text-xs font-medium tabular-nums" style={{ color: '#b42318' }}>
+              <span className="text-xs font-medium tabular-nums" style={{ color: '#ef4444' }}>
                 {t('record')}… {fmtSec(recSeconds)}
               </span>
               {recRange && (
@@ -1376,9 +1376,9 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
             </div>
             <button onClick={stopRec}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium flex-shrink-0 transition-all"
-              style={{ background: '#fdf3f2', color: '#b42318', border: '1px solid rgba(180,35,24,0.25)' }}>
+              style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.25)' }}>
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                <rect x="1.5" y="1.5" width="7" height="7" rx="1" fill="#b42318"/>
+                <rect x="1.5" y="1.5" width="7" height="7" rx="1" fill="#ef4444"/>
               </svg>
               {t('stop')}
             </button>
@@ -1449,7 +1449,7 @@ export default function ParashaReader({ parasha, initialAliyah = 0, availableMod
             {profile?.role !== 'student' && (
               <button onClick={() => remove(parasha.id, aliyahIdx)} title={t('tooltip_delete_audio')}
                 className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
-                style={{ background: '#fdf3f2', color: '#b42318', border: '1px solid rgba(180,35,24,0.15)' }}>
+                style={{ background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.15)' }}>
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                   <path d="M1.5 3h7M3.5 3V2h3v1M4 5v2.5M6 5v2.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
                   <path d="M2.5 3l.5 5h4l.5-5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
@@ -1715,10 +1715,9 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
             const isHover = hoverIdx === i && !isActive && !isMarked
             const inHwRange = homeworkRange != null && i >= homeworkRange.start && i <= homeworkRange.end
             let color = 'inherit'
-            if (isMarked) color = '#b42318'
-            else if (isActive) color = 'var(--word-active)'
-            else if (isHover) color = onWordMark ? '#b42318' : 'var(--word-active)'
-            const showBg = (isActive || (isHover && !onWordMark)) && !isMarked
+            if (isMarked) color = '#ef4444'
+            else if (isActive) color = '#3b82f6'
+            else if (isHover) color = onWordMark ? '#ef4444' : '#3b82f6'
             return (
               <span
                 key={i}
@@ -1729,10 +1728,10 @@ function SingleView({ verses, mode, bookColor, fontSize, wordTimestamps, audioCu
                 style={{
                   color,
                   cursor: canInteract ? 'pointer' : 'default',
-                  transition: 'color 0.08s, background 0.08s',
-                  textDecoration: isMarked ? 'underline wavy #b42318' : 'none',
-                  background: showBg ? 'var(--word-active-bg)' : inHwRange ? 'rgba(200,148,31,0.22)' : 'transparent',
-                  borderRadius: showBg || inHwRange ? '4px' : '0',
+                  transition: 'color 0.08s',
+                  textDecoration: isMarked ? 'underline wavy #ef4444' : 'none',
+                  background: inHwRange ? 'rgba(249,184,0,0.22)' : 'transparent',
+                  borderRadius: inHwRange ? '3px' : '0',
                   padding: inHwRange ? '2px 1px' : '0',
                 }}
               >
@@ -1992,17 +1991,14 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
     const isMarked = forLeft && markedWordIndices?.has(i)
     const isHover = forLeft && hoverIdx === i && !isActive && !isMarked
     let color = 'inherit'
-    if (isMarked) color = '#b42318'
-    else if (isActive) color = 'var(--word-active)'
-    else if (isHover) color = onWordMark ? '#b42318' : 'var(--word-active)'
-    const showBg = (isActive || (isHover && !onWordMark)) && !isMarked
+    if (isMarked) color = '#ef4444'
+    else if (isActive) color = '#3b82f6'
+    else if (isHover) color = onWordMark ? '#ef4444' : '#3b82f6'
     return {
       color,
-      background: showBg ? 'var(--word-active-bg)' : 'transparent',
-      borderRadius: '4px',
       cursor: forLeft && canInteract ? 'pointer' : 'default',
-      transition: 'color 0.08s, background 0.08s',
-      textDecoration: isMarked ? 'underline wavy #b42318' : 'none',
+      transition: 'color 0.08s',
+      textDecoration: isMarked ? 'underline wavy #ef4444' : 'none',
     }
   }
 
@@ -2133,7 +2129,7 @@ function SplitView({ verses, bookColor, fontSize, wordTimestamps, audioCurrentTi
 
 function LoadingState({ bookColor }) {
   const { t } = useLang()
-  const color = bookColor || '#1b2f6b'
+  const color = bookColor || '#6c33e6'
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-4">
       <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin"
@@ -2153,13 +2149,13 @@ function ErrorState({ error, ref_ }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6">
       <div className="w-10 h-10 rounded-full flex items-center justify-center"
-        style={{ background: '#fdf3f2', border: '1px solid rgba(180,35,24,0.2)' }}>
+        style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-          <circle cx="9" cy="9" r="7" stroke="#b42318" strokeWidth="1.3"/>
-          <path d="M9 5.5v4M9 11.5v1" stroke="#b42318" strokeWidth="1.5" strokeLinecap="round"/>
+          <circle cx="9" cy="9" r="7" stroke="#f87171" strokeWidth="1.3"/>
+          <path d="M9 5.5v4M9 11.5v1" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round"/>
         </svg>
       </div>
-      <p className="text-sm font-medium" style={{ color: '#b42318' }}>{t('text_load_error')}</p>
+      <p className="text-sm font-medium" style={{ color: '#f87171' }}>{t('text_load_error')}</p>
       <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
         {ref_} · {error}
       </p>
